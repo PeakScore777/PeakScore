@@ -227,7 +227,7 @@ function communityNameCharacters(value: string) {
 
 function communityNameCharacterDelay(index: number, count: number, animation: CommunityDisplayNameAnimation) {
   if (count <= 1) return "0ms";
-  const window = animation === "typewriter" ? 620 : animation === "glitch" ? 300 : 460;
+  const window = animation === "typewriter" ? 620 : animation === "decrypt" ? 300 : 460;
   const step = Math.min(animation === "typewriter" ? 72 : 56, window / Math.max(1, count - 1));
   return Math.round(index * step) + "ms";
 }

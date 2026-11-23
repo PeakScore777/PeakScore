@@ -124,6 +124,7 @@ export default function DecryptedDisplayName({
     let restartTimer: ReturnType<typeof setTimeout> | null = null;
     let observer: IntersectionObserver | null = null;
 
+    hasPlayedRef.current = false;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     const initial = () => {
       const next = makeFrame(graphemes, pool);

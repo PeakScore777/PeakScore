@@ -32,6 +32,8 @@ export default function InklineDisplayName({
   const clipId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const Tag = tag;
+  const chromaflow = className.split(/\\s+/).includes("effect-chromaflow");
+  const chromaflowGradientId = `ps-inkline-${clipId}-chromaflow`;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -63,6 +65,20 @@ export default function InklineDisplayName({
       <span ref={rootRef} className="ps-inkline-measure" aria-hidden="true">
         <svg className="ps-inkline-svg" viewBox={viewBox} preserveAspectRatio="xMinYMid meet" aria-hidden="true" style={{ visibility: box ? "visible" : "hidden" }}>
           <defs>
+            {chromaflow && (
+              <linearGradient id={chromaflowGradientId} x1="-50%" y1="0%" x2="150%" y2="0%">
+                <stop offset="0%" stopColor="#ffb52e"/>
+                <stop offset="12.5%" stopColor="#f5e84a"/>
+                <stop offset="25%" stopColor="#43df9a"/>
+                <stop offset="37.5%" stopColor="#35c9dc"/>
+                <stop offset="50%" stopColor="#4d8cff"/>
+                <stop offset="62.5%" stopColor="#a66cff"/>
+                <stop offset="75%" stopColor="#f05bc8"/>
+                <stop offset="87.5%" stopColor="#ff665e"/>
+                <stop offset="100%" stopColor="#ffb52e"/>
+                <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.5 0;0.5 0;-0.5 0" dur="4.8s" repeatCount="indefinite"/>
+              </linearGradient>
+            )}
             <clipPath id={`ps-inkline-${clipId}`} clipPathUnits="objectBoundingBox">
               <rect className="ps-inkline-wipe" x="0" y="0" width="1" height="1" />
             </clipPath>
@@ -70,7 +86,7 @@ export default function InklineDisplayName({
           <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
-          <text x="0" y="0" fill={fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
+          <text x="0" y="0" fill={chromaflow ? `url(#${chromaflowGradientId})` : fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
         </svg>

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -39,6 +39,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011500_community_display_name_shuffle_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/ShuffleDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123011600_community_display_name_shuffle_variants.sql", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -782,7 +783,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name animation picker includes the original catalogue plus Shuffle and keeps adaptive typography", () => {
-  for (const preset of ["decrypt","signal-break","fuzzy-text","shuffle"]) {
+  for (const preset of ["decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
@@ -827,10 +828,10 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag="span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle"]) {
+  for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle-blur", "shuffle-flip", "shuffle"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle", label:'].filter((entry) => catalogue.includes(entry)).length, 4);
+  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:'].filter((entry) => catalogue.includes(entry)).length, 6);
   assert.ok(studio.includes("<DecryptedDisplayName"));
   assert.ok(studio.includes("<SignalBreakDisplayName"));
   assert.ok(studio.includes("<FuzzyText"));
@@ -840,17 +841,17 @@ test("motion gallery previews use the exact renderer for each selected animation
 });
 
 
-test("display-name animation catalogue includes Hacking Decode, Signal Break, Noise Reveal and Shuffle", () => {
-  const expected = ["decrypt","signal-break","fuzzy-text","shuffle"];
+test("display-name animation catalogue includes Hacking Decode, Signal Break, Noise Reveal and three Shuffle styles", () => {
+  const expected = ["decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 4);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 6);
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!route.includes('"' + removed + '"'));
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /"decrypt","signal-break","fuzzy-text","shuffle"/);
+  assert.match(route, /"decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle"/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
@@ -865,24 +866,35 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
   assert.match(allowedConstraint, /'decrypt', 'signal-break', 'fuzzy-text'/);
   assert.doesNotMatch(allowedConstraint, /'glyph-storm'|'none'|'typewriter'|'cascade'|'cinematic'|'orbit'|'magnetic'|'spotlight'|'wave'|'bounce'|'fold'/);
   assert.match(shuffleAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text', 'shuffle'/);
+  assert.match(shuffleVariantsMigration, /'shuffle-blur', 'shuffle-flip', 'shuffle'/);
 });
 
 
 
-test("Shuffle loops continuously while visible and pauses offscreen without hover", () => {
-  assert.match(studio, /import ShuffleDisplayName from "@\/components\/community\/ShuffleDisplayName"/);
-  assert.match(page, /import ShuffleDisplayName from "@\/components\/community\/ShuffleDisplayName"/);
-  assert.match(studio, /if \(animation === "shuffle"\)/);
-  assert.match(page, /if \(animation === "shuffle"\)/);
-  assert.match(shuffleName, /effect = "slide"/);
-  assert.match(shuffleName, /shuffleDirection = "right"/);
-  assert.match(shuffleName, /animationMode = "evenodd"/);
-  assert.match(shuffleName, /const play = \(visible: boolean\)/);
-  assert.match(shuffleName, /play\(visible\)/);
-  assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover|triggerOnce/);
-  assert.match(nameStyleCss, /\.ps-name-shuffle__track\.is-playing/);
-  assert.match(nameStyleCss, /var\(--shuffle-delay\) infinite/);
-  assert.match(route, /"fuzzy-text","shuffle"/);
+
+test("three Shuffle presets match the reference with distinct looping effects and no hover", () => {
+  assert.match(studio, /import ShuffleDisplayName from "@\\/components\\/community\\/ShuffleDisplayName"/);
+  assert.match(page, /import ShuffleDisplayName from "@\\/components\\/community\\/ShuffleDisplayName"/);
+  for (const preset of ["shuffle-blur", "shuffle-flip", "shuffle"]) {
+    assert.ok(studio.includes('id: "' + preset + '"'));
+    assert.ok(studio.includes('animation === "' + preset + '"'));
+    assert.ok(page.includes('animation === "' + preset + '"'));
+    assert.ok(route.includes('"' + preset + '"'));
+  }
+  assert.match(studio, /label: "Blur Cascade"/);
+  assert.match(studio, /label: "Flip Roll"/);
+  assert.match(studio, /label: "Classic Slide"/);
+  assert.match(studio, /duration=\\{1\\.5\\}[\\s\\S]*?shuffleTimes=\\{14\\}[\\s\\S]*?stagger=\\{0\\.06\\}/);
+  assert.match(studio, /duration=\\{1\\.1\\}[\\s\\S]*?shuffleTimes=\\{7\\}[\\s\\S]*?stagger=\\{0\\.07\\}/);
+  assert.match(studio, /duration=\\{0\\.55\\}[\\s\\S]*?shuffleTimes=\\{1\\}[\\s\\S]*?stagger=\\{0\\.05\\}/);
+  assert.match(shuffleName, /new IntersectionObserver/);
+  assert.match(shuffleName, /updateVisibility\\(visible\\)/);
+  assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);
+  assert.match(nameStyleCss, /data-shuffle-effect="blur"/);
+  assert.match(nameStyleCss, /data-shuffle-effect="flip"/);
+  assert.match(nameStyleCss, /data-shuffle-effect="slide"/);
+  assert.match(nameStyleCss, /infinite/);
+  assert.match(route, /"shuffle-blur","shuffle-flip","shuffle"/);
 });
 
 test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt component", () => {
@@ -913,7 +925,7 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
 test("Signal Break is a branded animated profile renderer with slices, RGB, scan and noise modes", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 4);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 6);
   assert.match(studio, /<SignalBreakDisplayName/);
   assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);
@@ -940,7 +952,7 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
 test("Noise Reveal uses the React Bits canvas renderer with its curated motion preset", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 4);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 6);
   assert.match(studio, /<FuzzyText/);
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","signal-break","fuzzy-text"/);

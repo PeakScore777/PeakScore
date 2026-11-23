@@ -21,6 +21,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010400_community_display_name_motion_atelier.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010500_community_display_name_motion_signatures.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010500_community_display_name_motion_signatures.sql", import.meta.url), "utf8"),
 
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
@@ -831,4 +832,20 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(nameStyleCss, /animation-iteration-count:infinite !important/);
   assert.match(nameStyleCss, /ps-community-name-animation-option\.is-selected/);
   assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);
+});
+
+test("Peak Motion Signatures offer six original hybrid entrance effects with live atmospheres", () => {
+  for (const preset of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"]) {
+    assert.ok(studio.includes('id: "' + preset + '"'));
+    assert.ok(nameStyleCss.includes("name-enter-" + preset));
+    assert.ok(nameStyleCss.includes("ps-signature-" + preset));
+    assert.ok(nameStyleCss.includes("ps-signature-demo-" + preset));
+  }
+  for (const label of ["Eclipse","Mercury","Supernova","Prism Forge","Royal Foil","Velvet Bloom"]) assert.ok(studio.includes('label: "' + label + '"'));
+  assert.match(studio, /ps-name-animation-atmosphere/);
+  assert.match(page, /ps-name-animation-atmosphere/);
+  assert.match(route, /"eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"/);
+  assert.match(entranceSignatureMigration, /eclipse/);
+  assert.match(entranceSignatureMigration, /velvetbloom/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });

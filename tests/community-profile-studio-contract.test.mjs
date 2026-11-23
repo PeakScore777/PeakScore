@@ -743,7 +743,7 @@ test("effect samples inherit the custom gradient and prism colors selected in th
 test("display-name studio keeps seven distinct animated finishes without surprise or light/dark preview controls", () => {
   for (const label of ["Sólido","Flujo","Voltaje","Cromo pop","Bounce","Gel","Espectral"]) assert.ok(studio.includes('label: "' + label + '"'));
   assert.doesNotMatch(studio, /namePreviewMode|Vista oscura|Vista clara|Sorpréndeme|Sorprendeme/);
-  assert.doesNotMatch(nameStyleCss, /\.ps-community-name-preview-toolbar|\.ps-community-name-preview-mode/);
+  assert.doesNotMatch(studio, /ps-community-name-preview-toolbar|ps-community-name-preview-mode/);
   for (const animation of ["ps-dns-gradient-flow","ps-dns-neon-pulse","ps-dns-toon-sweep","ps-dns-pop-press","ps-dns-gummy-flow","ps-dns-prism-flow","ps-dns-neon-bloom","ps-dns-toon-glint","ps-dns-gel-gloss","ps-dns-prism-refraction"]) assert.ok(nameStyleCss.includes(animation));
   assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism"/);
   assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);

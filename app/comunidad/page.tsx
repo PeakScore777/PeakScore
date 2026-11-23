@@ -248,7 +248,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value} data-name={value}>
     <span className="ps-name-animation-atmosphere" aria-hidden="true" />
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
-      <span className="ps-name-animation-char" style={{
+      <span className="ps-name-animation-char" data-char={character} style={{
         "--char-index": index,
         "--char-delay": communityNameCharacterDelay(index, characters.length, animation),
         "--char-direction": index % 2 === 0 ? "-1" : "1",

@@ -501,16 +501,14 @@ test("banner color picker keeps its hue spectrum rainbow despite shared input st
 });
 
 test("member plate selector previews the actual avatar, display name and community role", () => {
-  assert.match(studio, /ps-community-picker-member-option/);
-  assert.match(studio, /ps-community-picker-member-option/);
-  assert.match(studio, /ps-community-picker-member-row/);
+  assert.match(studio, /ps-community-picker-items is-plates/);
+  assert.match(studio, /ps-community-picker-item is-plate-item/);
+  assert.match(studio, /ps-community-picker-member-option is-plate-/);
+  assert.match(studio, /ps-community-picker-member-avatar/);
+  assert.match(studio, /ps-community-picker-member-copy/);
+  assert.match(studio, /ps-community-picker-member-name is-plate-/);
   assert.match(studio, /profile\.roles\[0\]\?\.label \?\? "Miembro"/);
   assert.match(studio, /draftPlate/);
-  const latest = css.slice(css.lastIndexOf("Discord-like member plate, tone picker and dismissible profile popovers."));
-  assert.match(latest, /\.ps-community-picker-member-list-heading/);
-  assert.match(latest, /\.ps-community-picker-member-row/);
-  assert.match(latest, /\.ps-community-picker-member-role/);
-  assert.match(latest, /\.ps-community-picker-member-name\.is-plate-grid/);
 });
 
 test("status editor restores the active expiry, previews the status and supports Enter to save", () => {

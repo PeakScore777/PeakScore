@@ -418,7 +418,9 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       frame = 0;
       if (cancelled || document.hidden || !visible) return;
       const tuning = tuningRef.current;
-      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 24) : tuning.fps;
+      // Keep the gallery lightweight, while the actual profile renderer follows
+      // the reference's 60fps cadence whenever the browser can sustain it.
+      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 30) : tuning.fps;
       const interval = 1000 / Math.max(1, targetFps);
       if (now - lastFrame < interval - 1) {
         // A throttled frame must schedule its successor; returning here without
@@ -439,9 +441,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const base = reduceMotion ? 0 : tuning.baseIntensity;
       const active =
         tuning.trigger === 'always'
-          ? reduceMotion
-            ? base
-            : tuning.hoverIntensity
+          ? (!reduceMotion && hovering && tuning.enableHover ? tuning.hoverIntensity : base)
           : tuning.trigger !== 'click' && hovering && tuning.enableHover
             ? tuning.hoverIntensity
             : base;

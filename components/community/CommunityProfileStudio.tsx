@@ -138,23 +138,23 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
-  { id: "plain", label: "Sólido", description: "Tinta nítida con acabado limpio" },
-  { id: "gradient", label: "Flujo", description: "Degradado vivo con luz que recorre las letras" },
-  { id: "neon", label: "Voltaje", description: "Halo luminoso con pulso cromático" },
-  { id: "toon", label: "Cromo pop", description: "Volumen pulido con un destello diagonal" },
-  { id: "pop", label: "Bounce", description: "Microrebote elástico y sombra de profundidad" },
-  { id: "gummy", label: "Gel", description: "Brillo húmedo y color líquido en movimiento" },
-  { id: "prism", label: "Espectral", description: "Espectro iridiscente que se desplaza" },
+  { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },
+  { id: "gradient", label: "Aurora", description: "Luz cromática que atraviesa el nombre en un ciclo continuo" },
+  { id: "neon", label: "Neón", description: "Halo de luz con respiración y núcleo brillante" },
+  { id: "toon", label: "Cromo", description: "Letras con volumen, borde pulido y reflejo móvil" },
+  { id: "pop", label: "Rebote", description: "Movimiento elástico muy sutil con sombra dimensional" },
+  { id: "gummy", label: "Gloss", description: "Superficie translúcida con brillo líquido en movimiento" },
+  { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
-  { id: "pink", label: "Rosa intenso", value: "#F72585" },
-  { id: "green", label: "Verde", value: "#25E66B" },
-  { id: "blue", label: "Azul", value: "#269EE5" },
-  { id: "purple", label: "Violeta", value: "#A72CF0" },
-  { id: "magenta", label: "Fucsia", value: "#E60063" },
-  { id: "red", label: "Rojo", value: "#F2382E" },
-  { id: "gold", label: "Dorado", value: "#D1B11B" },
+  { id: "pink", label: "Rosa", value: "#F06AA8" },
+  { id: "green", label: "Jade", value: "#55CFA3" },
+  { id: "blue", label: "Zafiro", value: "#63A9F5" },
+  { id: "purple", label: "Amatista", value: "#A88AF2" },
+  { id: "magenta", label: "Fucsia", value: "#D96BCB" },
+  { id: "red", label: "Granate", value: "#E46E79" },
+  { id: "gold", label: "Champán", value: "#D8B875" },
   { id: "custom-gradient", label: "Personalizado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
 ];
 const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"];

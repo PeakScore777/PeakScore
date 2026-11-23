@@ -197,7 +197,7 @@ export default function MistfallDisplayName({
       resizeObserver.disconnect();
       intersectionObserver?.disconnect();
     };
-  }, [text, previewMode]);
+  }, [text, previewMode, chromaflow]);
 
   return (
     <Tag className={className + " ps-mistfall-name" + (formed ? " is-formed" : "")} style={style} aria-label={text}>

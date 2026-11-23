@@ -396,16 +396,16 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       className={className}
       style={safeStyle}
       mode="slices"
-      speed={1}
+      speed={0.72}
       fontWeight={900}
       enableShadows
-      offset={10}
-      shadowColors={["#ff0000", "#00ffff"]}
-      intensity={0.5}
-      skew={0}
+      offset={4}
+      shadowColors={["#ff5368", "#43d9ee"]}
+      intensity={0.22}
+      skew={0.18}
       flicker={false}
       trigger="always"
-      burstDuration={0.6}
+      burstDuration={0.34}
     />;
   }
     if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;

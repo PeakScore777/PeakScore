@@ -4182,3 +4182,42 @@
     text-shadow:none;
   }
 }
+
+
+/* Domino Flow — each glyph topples in sequence, then rebuilds cleanly. */
+.ps-domino-flow {
+  display:inline-block;
+  max-width:100%;
+  line-height:1.12;
+  white-space:pre-wrap;
+  perspective:900px;
+  isolation:isolate;
+}
+.ps-domino-flow__word {
+  display:inline-block;
+  white-space:pre-wrap;
+  transform-style:preserve-3d;
+}
+.ps-domino-flow__tile {
+  display:inline-block;
+  position:relative;
+  transform-origin:50% 88%;
+  transform:translate3d(0,0,0) rotateZ(0deg);
+  backface-visibility:hidden;
+  animation:ps-domino-flow-topple var(--domino-cycle,10.2s) cubic-bezier(.22,.72,.2,1) infinite;
+  animation-delay:calc(var(--domino-index,0) * var(--domino-step,82ms));
+  will-change:transform;
+}
+@keyframes ps-domino-flow-topple {
+  0%, 12% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+  19% { transform:translate3d(.015em,.015em,0) rotateZ(-8deg) rotateX(3deg); }
+  31% { transform:translate3d(.10em,.055em,0) rotateZ(72deg) rotateX(0deg); }
+  38% { transform:translate3d(.13em,.065em,0) rotateZ(82deg) rotateX(0deg); }
+  46% { transform:translate3d(.07em,.035em,0) rotateZ(38deg) rotateX(0deg); }
+  54%, 65% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+  72% { transform:translate3d(-.015em,-.015em,0) rotateZ(5deg); }
+  82%, 100% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-domino-flow__tile { animation:none !important; transform:none !important; }
+}

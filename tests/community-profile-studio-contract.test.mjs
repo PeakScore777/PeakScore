@@ -740,11 +740,10 @@ test("effect samples inherit the custom gradient and prism colors selected in th
   assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
 });
 
-test("display-name studio keeps seven distinct animated finishes without surprise or light/dark preview controls", () => {
-  for (const label of ["Sólido","Flujo","Voltaje","Cromo pop","Bounce","Gel","Espectral"]) assert.ok(studio.includes('label: "' + label + '"'));
-  assert.doesNotMatch(studio, /namePreviewMode|Vista oscura|Vista clara|Sorpréndeme|Sorprendeme/);
-  assert.doesNotMatch(studio, /ps-community-name-preview-toolbar|ps-community-name-preview-mode/);
-  for (const animation of ["ps-dns-gradient-flow","ps-dns-neon-pulse","ps-dns-toon-sweep","ps-dns-pop-press","ps-dns-gummy-flow","ps-dns-prism-flow","ps-dns-neon-bloom","ps-dns-toon-glint","ps-dns-gel-gloss","ps-dns-prism-refraction"]) assert.ok(nameStyleCss.includes(animation));
+test("display-name studio offers a premium seven-finish catalogue and accessible motion", () => {
+  for (const label of ["Tinta","Aurora","Neón","Cromo","Rebote","Gloss","Prisma"]) assert.ok(studio.includes('label: "' + label + '"'));
+  for (const animation of ["ps-atelier-aurora","ps-atelier-neon-breathe","ps-atelier-chrome","ps-atelier-bounce","ps-atelier-gloss","ps-atelier-prism","ps-atelier-card-light"]) assert.ok(nameStyleCss.includes(animation));
+  assert.match(nameStyleCss, /prefers-reduced-motion/);
   assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism"/);
   assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
   assert.match(discordVideoEffectsRepeatMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);

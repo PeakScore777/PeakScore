@@ -773,6 +773,9 @@ test("display-name entrance presets are separate from finishes and persisted thr
   assert.match(studio, /Animación de entrada/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation/);
+  assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
+  assert.match(studio, /<AnimatedDisplayName value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
+  assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(page, /display_name_animation/);

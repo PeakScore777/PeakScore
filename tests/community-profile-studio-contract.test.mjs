@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -28,6 +28,8 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/DecryptedDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010800_community_display_name_decrypted_text_animation.sql", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -771,7 +773,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
-  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
+  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","wipe"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
@@ -781,6 +783,10 @@ test("display-name entrance picker saves only the compact original catalogue and
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
   assert.match(studio, /animation=\{item\.id\}/);
+  assert.match(studio, /animateOn=\{isGalleryDemo \? "mount" : "view"\}/);
+  assert.match(studio, /loop=\{isGalleryDemo\}/);
+  assert.match(page, /animateOn="view"/);
+  assert.match(page, /revealDirection="random"/);
   assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
   assert.match(page, /CommunityAnimatedName key=\{hoverCommunityProfile\.userId\} tag="h3"/);
@@ -810,10 +816,14 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(studio, /<small>\{item\.hint\}<\/small>/);
   assert.doesNotMatch(studio, /item\.duration/);
   assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","glitch","wipe"]) {
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","decrypt","wipe"]) {
     assert.match(nameStyleCss, new RegExp("ps-preview-" + preset));
   }
   assert.match(nameStyleCss, /@keyframes ps-preview-spotlight-beam/);
+  assert.match(decryptedName, /DEFAULT_GLYPHS = "0123456789ABCDEF"/);
+  assert.match(decryptedName, /setInterval\(/);
+  assert.match(decryptedName, /revealDirection/);
+  assert.match(studio, /label: "Hacking Decode"/);
   assert.match(nameStyleCss, / infinite both !important/);
   assert.match(nameStyleCss, /ps-community-name-animation-option\.is-selected/);
   assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);
@@ -832,7 +842,7 @@ test("display-name animation catalogue stays at the original 12 and every previe
   const previewKeyframes = [
     "ps-preview-typewriter","ps-preview-cascade","ps-preview-cinematic","ps-preview-orbit",
     "ps-preview-magnetic","ps-preview-spotlight-beam","ps-preview-wave","ps-preview-bounce",
-    "ps-preview-fold","ps-preview-glitch","ps-preview-wipe"
+    "ps-preview-fold","ps-preview-wipe"
   ];
   for (const keyframe of previewKeyframes) assert.ok(nameStyleCss.includes("@keyframes " + keyframe));
   assert.match(nameStyleCss, /name-enter-cinematic \.ps-name-animation-text/);
@@ -840,7 +850,7 @@ test("display-name animation catalogue stays at the original 12 and every previe
   assert.match(nameStyleCss, /name-enter-wipe \.ps-name-animation-text/);
   assert.match(nameStyleCss, /name-enter-wave \.ps-name-animation-char/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"\]\)/);
+  assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","wipe"\]\)/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
@@ -853,4 +863,21 @@ test("compact animation migration maps removed presets and restores a 12-value d
   const allowedConstraint = compactAnimationCatalogueMigration.split("check (display_name_animation in (")[1] ?? "";
   assert.ok(allowedConstraint.length > 0);
   assert.doesNotMatch(allowedConstraint, /'eclipse'|'mercury'|'supernova'|'stardust'|'inferno'/);
+});
+
+
+test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt component", () => {
+  assert.match(studio, /id: "decrypt", label: "Hacking Decode"/);
+  assert.match(studio, /<DecryptedDisplayName/);
+  assert.match(page, /<DecryptedDisplayName/);
+  assert.match(route, /"decrypt"/);
+  assert.match(decryptedName, /speed = 40/);
+  assert.match(decryptedName, /sequential = true/);
+  assert.match(decryptedName, /revealDirection = "random"/);
+  assert.match(decryptedName, /scrambleColor = "#2bb673"/);
+  assert.match(decryptedName, /animateOn === "mount"/);
+  assert.match(decryptedName, /prefers-reduced-motion/);
+  assert.match(nameStyleCss, /\.ps-decrypted-glyph/);
+  assert.match(decryptedAnimationMigration, /when 'glitch' then 'decrypt'/);
+  assert.match(decryptedAnimationMigration, /'decrypt'/);
 });

@@ -34,12 +34,14 @@ export default function HaloSignalDisplayName({
   const Tag = tag;
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const order = useMemo(() => buildOrder(chars.length), [chars.length]);
+  const chromaScale = Math.max(2.6, chars.length);
   const rootStyle = {
     ...style,
     "--halo-cycle": previewMode ? "8.8s" : "10.8s",
     "--halo-step": previewMode ? "42ms" : "55ms",
     "--ps-chroma-char-count": Math.max(1, chars.length),
-    "--ps-chroma-background-size": Math.max(1, chars.length) * 100 + "%",
+    "--ps-chroma-background-size": chromaScale * 100 + "%",
+    "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
   } as CSSProperties;
 
   return (

@@ -855,16 +855,6 @@ test("display-name animation catalogue contains only Hacking Decode, Signal Brea
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!route.includes('"' + removed + '"'));
   }
-  const previewKeyframes = [
-    "ps-preview-typewriter","ps-preview-cascade","ps-preview-cinematic","ps-preview-orbit",
-    "ps-preview-magnetic","ps-preview-spotlight-beam","ps-preview-wave","ps-preview-bounce",
-    "ps-preview-fold"
-  ];
-  for (const keyframe of previewKeyframes) assert.ok(nameStyleCss.includes("@keyframes " + keyframe));
-  assert.match(nameStyleCss, /name-enter-cinematic \.ps-name-animation-text/);
-  assert.match(nameStyleCss, /name-enter-spotlight::after/);
-  assert.match(nameStyleCss, /\.ps-glitch-slice--a/);
-  assert.match(nameStyleCss, /name-enter-wave \.ps-name-animation-char/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
   assert.match(route, /"decrypt","signal-break","glyph-storm"/);
   assert.match(studio, /animation=\{item\.id\}/);

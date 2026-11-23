@@ -150,15 +150,15 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
 ];
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; duration: string }[] = [
   { id: "none", label: "Sin entrada", description: "El nombre aparece inmediatamente", duration: "0 ms" },
-  { id: "typewriter", label: "Máquina de escribir", description: "Revela el nombre carácter por carácter", duration: "1.2 s" },
-  { id: "rise", label: "Ascenso", description: "Cada letra sube suavemente hasta su posición", duration: "650 ms" },
-  { id: "fade", label: "Aparición", description: "Las letras aparecen en secuencia con opacidad", duration: "700 ms" },
-  { id: "blur", label: "Enfoque", description: "Cada letra pasa de desenfocada a nítida", duration: "850 ms" },
-  { id: "bounce", label: "Rebote", description: "Las letras aterrizan una por una con elasticidad", duration: "900 ms" },
-  { id: "flip", label: "Giro 3D", description: "Las letras giran hacia el frente", duration: "800 ms" },
+  { id: "typewriter", label: "Máquina de escribir", description: "Revela el nombre carácter por carácter", duration: "72 ms / letra" },
+  { id: "rise", label: "Ascenso", description: "Cada letra sube suavemente hasta su posición", duration: "620 ms + secuencia" },
+  { id: "fade", label: "Aparición", description: "Las letras aparecen en secuencia con opacidad", duration: "500 ms + secuencia" },
+  { id: "blur", label: "Enfoque", description: "Cada letra pasa de desenfocada a nítida", duration: "620 ms + secuencia" },
+  { id: "bounce", label: "Rebote", description: "Las letras aterrizan una por una con elasticidad", duration: "680 ms + secuencia" },
+  { id: "flip", label: "Giro 3D", description: "Las letras giran hacia el frente", duration: "620 ms + secuencia" },
   { id: "wipe", label: "Barrido", description: "El nombre se descubre de izquierda a derecha", duration: "750 ms" },
-  { id: "glitch", label: "Glitch", description: "Entrada digital con cortes cromáticos breves", duration: "520 ms" },
-  { id: "wave", label: "Onda", description: "Las letras llegan siguiendo una ola vertical", duration: "900 ms" },
+  { id: "glitch", label: "Glitch", description: "Entrada digital con cortes cromáticos breves", duration: "540 ms + secuencia" },
+  { id: "wave", label: "Onda", description: "Las letras llegan siguiendo una ola vertical", duration: "650 ms + secuencia" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },

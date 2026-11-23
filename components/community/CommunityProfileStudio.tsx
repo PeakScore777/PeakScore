@@ -21,7 +21,7 @@ type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "mage
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
-type ProfileFrameId = "none" | "lunar" | "crimson" | "aurora";
+type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
 type ProfileEffectId = "none" | "aurora" | "embers" | "starlight" | "scanline";
 type StatusDuration = "30m" | "1h" | "4h" | "1d" | "1w" | "never";
 
@@ -320,8 +320,8 @@ function displayNameCharacters(value: string) {
 
 function displayNameCharacterDelay(index: number, count: number, animation: DisplayNameAnimation) {
   if (count <= 1) return "0ms";
-  const staggerWindow = animation === "typewriter" ? 620 : animation === "decrypt" ? 300 : 460;
-  const stepCap = animation === "typewriter" ? 72 : 56;
+  const staggerWindow = animation === "decrypt" ? 300 : 460;
+  const stepCap = 56;
   const step = Math.min(stepCap, staggerWindow / Math.max(1, count - 1));
   return Math.round(index * step) + "ms";
 }
@@ -1401,7 +1401,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
                       : appearancePicker === "profileFrame" ? "Marcos de perfil"
                       : appearancePicker === "profileEffect" ? "Efectos animados"
-                      : appearancePicker === "nameStyle" ? "Estilos de nombre"
                       : "Placas de identificación"}
                   </strong>
                   <span>Opciones disponibles</span>

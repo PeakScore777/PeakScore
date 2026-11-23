@@ -25,11 +25,11 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010700_community_display_name_restore_compact_animation_catalogue.sql", import.meta.url), "utf8"),
 
 
+  readFile(new URL("../components/community/DecryptedDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010800_community_display_name_decrypted_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
-  readFile(new URL("../components/community/DecryptedDisplayName.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261123010800_community_display_name_decrypted_text_animation.sql", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -831,7 +831,7 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
 
 
 test("display-name animation catalogue stays at the original 12 and every preview has its own motion choreography", () => {
-  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"];
+  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","wipe"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
   assert.equal((catalogue.match(/id:/g) || []).length, 12);

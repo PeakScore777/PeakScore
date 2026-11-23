@@ -943,7 +943,7 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   assert.match(glitchName, /requestAnimationFrame\(frame\)/);
   assert.match(glitchName, /prefers-reduced-motion/);
   assert.match(studio, /mode="slices"/);
-  assert.match(studio, /speed=\{0\.72\}/);
+  assert.match(studio, /speed=\{1\.05\}/);
   assert.match(studio, /offset=\{4\}/);
   assert.match(studio, /shadowColors=\{\["#ff5368", "#43d9ee"\]\}/);
   assert.match(studio, /trigger="always"/);
@@ -969,13 +969,15 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   const expectedProps = [
     'colorSplit={fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
     'baseIntensity={fuzzySettings.baseIntensity}', 'hoverIntensity={fuzzySettings.hoverIntensity}', 'fuzzRange={fuzzySettings.fuzzRange}',
-    'sliceSize={fuzzySettings.sliceSize}', 'fps={fuzzySettings.fps}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
+    'sliceSize={fuzzySettings.sliceSize}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
     'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
     'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
     'glitchDuration={fuzzySettings.glitchDuration}'
   ];
   assert.ok(studio.includes('trigger="always"'));
   assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
+  assert.match(studio, /fps=\{previewMode \? 14 : fuzzySettings\.fps\}/);
+  assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
   for (const prop of expectedProps) {
     assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);
     assert.ok(page.includes(prop), 'Missing FuzzyText setting in community renderer: ' + prop);

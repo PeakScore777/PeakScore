@@ -213,6 +213,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     let intensity = eased;
     let coarse = 1;
     let drawn = -1;
+    let noisePhase = 0;
     let ink = '';
     let blend: GlobalCompositeOperation = 'lighter';
     let dpr = 1;
@@ -330,17 +331,25 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawn = intensity;
       if (amp >= 0.5) {
+        // Travelling deterministic waves keep the distortion fluid and the letters readable.
+        noisePhase += 0.13;
         if (direction === 'vertical') {
           for (let index = 0; index * step < source.width; index++) {
-            cols[index] = Math.round((Math.random() - 0.5) * amp);
+            const wave = Math.sin(noisePhase + index * 0.62) * 0.62
+              + Math.sin(noisePhase * 0.57 + index * 1.31) * 0.24;
+            cols[index] = Math.round(wave * amp * 0.62);
           }
         } else {
           for (let index = 0; index * step < source.height; index++) {
-            rows[index] = Math.round((Math.random() - 0.5) * amp);
+            const wave = Math.sin(noisePhase + index * 0.83) * 0.68
+              + Math.sin(noisePhase * 0.71 + index * 1.47) * 0.22;
+            rows[index] = Math.round(wave * amp * 0.72);
           }
           if (direction === 'both') {
             for (let index = 0; index * step < canvas.width; index++) {
-              cols[index] = Math.round((Math.random() - 0.5) * amp * 0.5);
+              const wave = Math.sin(noisePhase * 0.82 + index * 0.49)
+                + Math.sin(noisePhase * 0.46 + index * 1.12) * 0.28;
+              cols[index] = Math.round(wave * amp * 0.22);
             }
           }
         }
@@ -409,7 +418,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       frame = 0;
       if (cancelled || document.hidden || !visible) return;
       const tuning = tuningRef.current;
-      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 20) : tuning.fps;
+      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 24) : tuning.fps;
       const interval = 1000 / Math.max(1, targetFps);
       if (now - lastFrame < interval - 1) {
         // A throttled frame must schedule its successor; returning here without

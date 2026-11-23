@@ -4221,3 +4221,34 @@
 @media (prefers-reduced-motion:reduce) {
   .ps-domino-flow__tile { animation:none !important; transform:none !important; }
 }
+
+
+/* Particle Drift — fine-grain text disintegration and reconstruction. */
+.ps-particle-drift {
+  display:inline-block;
+  position:relative;
+  width:max-content;
+  max-width:100%;
+  vertical-align:baseline;
+  line-height:1.2;
+  isolation:isolate;
+}
+.ps-particle-drift__canvas {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+}
+.ps-particle-drift__sr {
+  display:inline-block;
+  visibility:hidden;
+  white-space:pre;
+  pointer-events:none;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-particle-drift__canvas { display:none; }
+  .ps-particle-drift__sr { visibility:visible; }
+}

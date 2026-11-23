@@ -847,6 +847,12 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
   assert.ok(glitchName.includes("requestAnimationFrame(frame)"));
+  assert.match(glitchName, /makeEvent\(performance\.now\(\), stepLength\(settings\.speed\)\)/);
+  assert.match(glitchName, /root\.classList\.toggle\("is-glitching", Boolean\(live\)\)/);
+  assert.match(glitchName, /0\.035 \+ power \* 0\.085/);
+  assert.match(nameStyleCss, /\.ps-glitch-name\.is-glitching > \.ps-glitch-text/);
+  assert.doesNotMatch(nameStyleCss, /@media\(prefers-reduced-motion:reduce\)\s*\{\s*\.ps-glitch-slice,/);
+  assert.match(nameStyleCss, /\.ps-glitch-name:not\(\.ps-community-name-preview-live\) \.ps-glitch-slice/);
   assert.ok(fuzzyText.includes("getContext('2d'"));
 });
 

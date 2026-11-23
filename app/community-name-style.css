@@ -2404,15 +2404,6 @@
   48% { transform:translateX(-.025em);text-shadow:-.025em 0 #71d8ff,.025em 0 #ff6ab5; }
   100% { opacity:1;clip-path:inset(0);transform:translateX(0);text-shadow:none; }
 }
-@keyframes ps-motion-silk-reveal {
-  0% { clip-path:inset(0 100% 0 0);filter:brightness(1.3); }
-  100% { clip-path:inset(0);filter:brightness(1); }
-}
-@keyframes ps-motion-silk-flare {
-  0% { opacity:0;transform:translateX(-160%) skewX(-18deg); }
-  22% { opacity:.75; }
-  100% { opacity:0;transform:translateX(340%) skewX(-18deg); }
-}
 .ps-name-animation-text {
   display:inline-block;
   position:relative;
@@ -2454,19 +2445,6 @@
 .name-enter-wave .ps-name-animation-char { animation-name:ps-motion-wave;animation-duration:680ms; }
 .name-enter-bounce .ps-name-animation-char { animation-name:ps-motion-bounce;animation-duration:690ms;animation-timing-function:cubic-bezier(.18,.82,.22,1); }
 .name-enter-fold .ps-name-animation-char { animation-name:ps-motion-fold;animation-duration:680ms; }
-.name-enter-wipe .ps-name-animation-text {
-  clip-path:inset(0 100% 0 0);
-  animation:ps-motion-silk-reveal 780ms cubic-bezier(.68,0,.18,1) 60ms both;
-}
-.name-enter-wipe { position:relative;isolation:isolate; }
-.name-enter-wipe::after {
-  content:"";position:absolute;z-index:2;top:-.1em;bottom:-.1em;left:0;width:22%;
-  pointer-events:none;opacity:0;
-  background:linear-gradient(90deg,transparent,rgb(255 255 255 / 74%),rgb(178 222 255 / 28%),transparent);
-  filter:blur(1.5px);
-  animation:ps-motion-silk-flare 820ms cubic-bezier(.2,.72,.22,1) both;
-}
-.name-enter-wipe .ps-name-animation-char { opacity:1;animation:none; }
 .ps-community-name-animation-grid { grid-template-columns:repeat(3,minmax(0,1fr));gap:10px !important; }
 .ps-community-name-animation-option {
   min-height:116px !important;grid-template-rows:1fr auto auto !important;gap:7px !important;
@@ -2502,7 +2480,7 @@
 }
 @media (prefers-reduced-motion:reduce) {
   .ps-name-animation-text,.ps-name-animation-char,
-  .name-enter-spotlight::after,.name-enter-wipe::after,.name-enter-wipe .ps-name-animation-text {
+  .name-enter-spotlight::after {
     animation:none !important;clip-path:none !important;opacity:1 !important;
     transform:none !important;filter:none !important;will-change:auto !important;
   }
@@ -2742,11 +2720,6 @@
   62% { opacity:1;transform:perspective(520px) rotateX(-12deg) translateY(-.025em) scale(1.025); }
   82%,100% { opacity:1;transform:perspective(520px) rotateX(0) translateY(0) scale(1); }
 }
-@keyframes ps-preview-wipe {
-  0% { clip-path:inset(0 100% 0 0);filter:brightness(1.2); }
-  38% { clip-path:inset(0);filter:brightness(1.08); }
-  55%,100% { clip-path:inset(0);filter:none; }
-}
 .ps-community-name-animation-option .ps-name-motion-demo .ps-name-animation-char {
   animation-fill-mode:both !important;
   animation-iteration-count:infinite !important;
@@ -2784,10 +2757,6 @@
 }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-fold .ps-name-animation-char {
   animation:ps-preview-fold 4.25s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe .ps-name-animation-char { animation:none !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe .ps-name-animation-text {
-  animation:ps-preview-wipe 4.0s cubic-bezier(.68,0,.18,1) 0ms infinite both !important;
 }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-none .ps-name-animation-char { animation:none !important; }
 @media (prefers-reduced-motion:reduce) {

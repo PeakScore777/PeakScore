@@ -297,7 +297,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       </Tag>
     );
   }
-  if (animation === "signal-break") {  if (animation === "signal-break") {
+  if (animation === "signal-break") {
     return <SignalBreakDisplayName
       text={value}
       tag={tag}

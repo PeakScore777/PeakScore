@@ -61,8 +61,9 @@ export default function ShuffleDisplayName({
     const reduced = respectReducedMotion
       && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      setIsVisible(false);
-      return;
+      visibleRef.current = false;
+      const reducedMotionFrame = window.requestAnimationFrame(() => setIsVisible(false));
+      return () => window.cancelAnimationFrame(reducedMotionFrame);
     }
 
     let observer: IntersectionObserver | null = null;

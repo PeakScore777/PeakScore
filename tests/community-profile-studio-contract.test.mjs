@@ -1077,6 +1077,10 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(decryptedName, /--ps-chroma-position/);
   assert.match(glitchName, /--ps-chroma-position/);
   assert.match(shuffleName, /--ps-chroma-position/);
+  assert.match(shuffleName, /forceVisible\?: boolean/);
+  assert.match(shuffleName, /if \(forceVisible\)/);
+  assert.match(studio, /forceVisible=\{previewMode\}/);
+  assert.match(shuffleName, /--ps-chroma-shift-end/);
   assert.match(haloSignalName, /--ps-chroma-position/);
   assert.match(dominoFlowName, /--ps-chroma-position/);
   assert.match(inklineName, /chromaflowGradientId/);
@@ -1095,6 +1099,8 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   const dominoKeyframes = nameStyleCss.slice(nameStyleCss.lastIndexOf("@keyframes ps-domino-flow-topple"));
   assert.match(dominoKeyframes, /rotateZ\(30deg\)/);
   assert.doesNotMatch(dominoKeyframes, /rotateZ\(82deg\)/);
+  assert.match(nameStyleCss, /\.ps-domino-flow__tile\s*\{[\s\S]*?backface-visibility:visible !important/);
+  assert.match(nameStyleCss, /\.ps-name-shuffle\[data-shuffle-active="false"\] \.ps-name-shuffle__sizer/);
 });
 
 test("explicit animation previews stay alive on touch layouts and the three live views render clean name text", () => {

@@ -337,13 +337,24 @@ function displayNameCharacterDelay(index: number, count: number, animation: Disp
   return Math.round(index * step) + "ms";
 }
 
-function DisplayNameMotionPreview({ value, animation, className = "", style }: {
+function DisplayNameMotionPreview({ value, animation, className = "", style, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS }: {
   value: string;
   animation: DisplayNameAnimation;
   className?: string;
   style?: CSSProperties;
+  fuzzySettings?: FuzzyTextSettings;
 }) {
-  return <span className={className + " ps-name-preview-motion name-preview-" + animation} style={style} aria-label={value}>{value}</span>;
+  return (
+    <AnimatedDisplayName
+      value={value}
+      animation={animation}
+      fuzzySettings={fuzzySettings}
+      tag="span"
+      previewMode
+      className={className}
+      style={style}
+    />
+  );
 }
 
 function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className = "", style, tag = "strong", previewMode = false }: {
@@ -547,6 +558,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
+  const [previewedNameAnimation, setPreviewedNameAnimation] = useState<DisplayNameAnimation | null>(null);
   const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
@@ -1581,7 +1593,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <div className="ps-community-name-style-heading">Animación continua <span>SIEMPRE ACTIVA</span></div>
                       <div className="ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => {
-                          const previewClass = "ps-community-name-animation-sample ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor;
+                          const activePreview = previewedNameAnimation ?? draftDisplayNameAnimation;
+                          const isActive = activePreview === item.id;
+                          const previewClass = "ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor;
                           const previewStyle = {
                             "--name-gradient-start": draftDisplayNameGradientStart,
                             "--name-gradient-end": draftDisplayNameGradientEnd,
@@ -1593,15 +1607,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
                               data-animation={item.id}
                               onClick={() => setDraftDisplayNameAnimation(item.id)}
+                              onMouseEnter={() => setPreviewedNameAnimation(item.id)}
+                              onMouseLeave={() => setPreviewedNameAnimation(null)}
+                              onFocus={() => setPreviewedNameAnimation(item.id)}
+                              onBlur={() => setPreviewedNameAnimation(null)}
                               aria-pressed={draftDisplayNameAnimation === item.id}
                               title={item.description}>
                               <span className="ps-community-name-animation-stage" data-animation={item.id}>
-                                <DisplayNameMotionPreview
-                                  value={displayName || "OMEGA"}
-                                  animation={item.id}
-                                  className={previewClass}
-                                  style={previewStyle}
-                                />
+                                {isActive ? (
+                                  <DisplayNameMotionPreview
+                                    value={displayName || "OMEGA"}
+                                    animation={item.id}
+                                    fuzzySettings={draftDisplayNameFuzzySettings}
+                                    className={previewClass}
+                                    style={previewStyle}
+                                  />
+                                ) : (
+                                  <span className={previewClass} style={previewStyle}>{displayName || "OMEGA"}</span>
+                                )}
                               </span>
                               <strong>{item.label}</strong>
                               <small>{item.hint}</small>

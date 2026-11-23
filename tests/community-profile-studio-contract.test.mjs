@@ -874,28 +874,28 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
 
 
 test("three Shuffle presets match the reference with distinct looping effects and no hover", () => {
-  assert.match(studio, /import ShuffleDisplayName from "@\\/components\\/community\\/ShuffleDisplayName"/);
-  assert.match(page, /import ShuffleDisplayName from "@\\/components\\/community\\/ShuffleDisplayName"/);
+  assert.ok(studio.includes('import ShuffleDisplayName from "@/components/community/ShuffleDisplayName"'));
+  assert.ok(page.includes('import ShuffleDisplayName from "@/components/community/ShuffleDisplayName"'));
   for (const preset of ["shuffle-blur", "shuffle-flip", "shuffle"]) {
     assert.ok(studio.includes('id: "' + preset + '"'));
     assert.ok(studio.includes('animation === "' + preset + '"'));
     assert.ok(page.includes('animation === "' + preset + '"'));
     assert.ok(route.includes('"' + preset + '"'));
   }
-  assert.match(studio, /label: "Blur Cascade"/);
-  assert.match(studio, /label: "Flip Roll"/);
-  assert.match(studio, /label: "Classic Slide"/);
-  assert.match(studio, /duration=\\{1\\.5\\}[\\s\\S]*?shuffleTimes=\\{14\\}[\\s\\S]*?stagger=\\{0\\.06\\}/);
-  assert.match(studio, /duration=\\{1\\.1\\}[\\s\\S]*?shuffleTimes=\\{7\\}[\\s\\S]*?stagger=\\{0\\.07\\}/);
-  assert.match(studio, /duration=\\{0\\.55\\}[\\s\\S]*?shuffleTimes=\\{1\\}[\\s\\S]*?stagger=\\{0\\.05\\}/);
-  assert.match(shuffleName, /new IntersectionObserver/);
-  assert.match(shuffleName, /updateVisibility\\(visible\\)/);
+  assert.ok(studio.includes('label: "Blur Cascade"'));
+  assert.ok(studio.includes('label: "Flip Roll"'));
+  assert.ok(studio.includes('label: "Classic Slide"'));
+  assert.ok(studio.includes('duration={1.5}') && studio.includes('shuffleTimes={14}') && studio.includes('stagger={0.06}'));
+  assert.ok(studio.includes('duration={1.1}') && studio.includes('shuffleTimes={7}') && studio.includes('stagger={0.07}'));
+  assert.ok(studio.includes('duration={0.55}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.05}'));
+  assert.ok(shuffleName.includes("new IntersectionObserver"));
+  assert.ok(shuffleName.includes("updateVisibility(visible)"));
   assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);
-  assert.match(nameStyleCss, /data-shuffle-effect="blur"/);
-  assert.match(nameStyleCss, /data-shuffle-effect="flip"/);
-  assert.match(nameStyleCss, /data-shuffle-effect="slide"/);
-  assert.match(nameStyleCss, /infinite/);
-  assert.match(route, /"shuffle-blur","shuffle-flip","shuffle"/);
+  assert.ok(nameStyleCss.includes('data-shuffle-effect="blur"'));
+  assert.ok(nameStyleCss.includes('data-shuffle-effect="flip"'));
+  assert.ok(nameStyleCss.includes('data-shuffle-effect="slide"'));
+  assert.ok(nameStyleCss.includes('infinite'));
+  assert.ok(route.includes('"shuffle-blur","shuffle-flip","shuffle"'));
 });
 
 test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt component", () => {

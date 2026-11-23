@@ -15,7 +15,7 @@ import CommunityProfileStudio from "@/components/community/CommunityProfileStudi
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
-import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -251,6 +251,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
   const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as React.CSSProperties;
+  const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "decrypt") {
     return <DecryptedDisplayName
       id={id}
@@ -280,7 +281,8 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
           fontSize="1em"
           fontWeight="inherit"
           fontFamily="inherit"
-          color={fuzzySettings.color}
+          color={fuzzyAppearance.color}
+          gradient={fuzzyAppearance.gradient}
           baseIntensity={fuzzySettings.baseIntensity}
           hoverIntensity={fuzzySettings.hoverIntensity}
           fuzzRange={fuzzySettings.fuzzRange}
@@ -309,16 +311,16 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       className={className}
       style={safeStyle}
       mode="slices"
-      speed={1}
+      speed={0.72}
       fontWeight={900}
       enableShadows
-      offset={10}
-      shadowColors={["#ff0000", "#00ffff"]}
-      intensity={0.5}
-      skew={0}
+      offset={4}
+      shadowColors={["#ff5368", "#43d9ee"]}
+      intensity={0.22}
+      skew={0.18}
       flicker={false}
       trigger="always"
-      burstDuration={0.6}
+      burstDuration={0.34}
     />;
   }
     if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;

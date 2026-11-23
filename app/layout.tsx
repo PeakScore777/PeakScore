@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import { Kalam, Press_Start_2P, Silkscreen } from "next/font/google";
+import { Inter, Kalam, Press_Start_2P, Silkscreen } from "next/font/google";
 import {
   Audiowide, Bebas_Neue, Black_Ops_One, Bodoni_Moda, Bungee_Shade,
   Cherry_Bomb_One, Chicle, Creepster, Dancing_Script, DM_Serif_Display,
@@ -34,6 +34,7 @@ const silkscreenFont = Silkscreen({
   preload: false,
 });
 
+const nameFont_classic = Inter({ subsets: ["latin"], display: "swap", variable: "--font-name-classic", preload: false });
 const nameFont_tempo = Zilla_Slab({ weight: "400", subsets: ["latin"], display: "swap", variable: "--font-name-tempo", preload: false });
 const nameFont_sakura = Cherry_Bomb_One({ weight: "400", subsets: ["latin"], display: "swap", variable: "--font-name-sakura", preload: false });
 const nameFont_jellybean = Chicle({ weight: "400", subsets: ["latin"], display: "swap", variable: "--font-name-jellybean", preload: false });
@@ -109,7 +110,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body className={`${pixelFont.variable} ${silkscreenFont.variable} ${handwritingFont.variable} ${nameFont_tempo.variable} ${nameFont_sakura.variable} ${nameFont_jellybean.variable} ${nameFont_modern.variable} ${nameFont_medieval.variable} ${nameFont_pixel.variable} ${nameFont_vampyre.variable} ${nameFont_monkey.variable} ${nameFont_mainframe.variable} ${nameFont_headbang.variable} ${nameFont_display.variable} ${nameFont_editorial.variable} ${nameFont_elegant.variable} ${nameFont_geometric.variable} ${nameFont_retro.variable} ${nameFont_handwritten.variable} ${nameFont_signature.variable} ${nameFont_techno.variable} ${nameFont_rounded.variable} ${nameFont_stencil.variable}`}>
+      <body className={`${pixelFont.variable} ${silkscreenFont.variable} ${handwritingFont.variable} ${nameFont_classic.variable} ${nameFont_tempo.variable} ${nameFont_sakura.variable} ${nameFont_jellybean.variable} ${nameFont_modern.variable} ${nameFont_medieval.variable} ${nameFont_pixel.variable} ${nameFont_vampyre.variable} ${nameFont_monkey.variable} ${nameFont_mainframe.variable} ${nameFont_headbang.variable} ${nameFont_display.variable} ${nameFont_editorial.variable} ${nameFont_elegant.variable} ${nameFont_geometric.variable} ${nameFont_retro.variable} ${nameFont_handwritten.variable} ${nameFont_signature.variable} ${nameFont_techno.variable} ${nameFont_rounded.variable} ${nameFont_stencil.variable}`}>
         <GlobalNavbar initialProfile={initialProfile} />
         {children}
         <GlobalOrbyClassroomLauncher

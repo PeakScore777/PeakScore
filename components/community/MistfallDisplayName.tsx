@@ -30,7 +30,7 @@ export default function MistfallDisplayName({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [formed, setFormed] = useState(false);
   const Tag = tag;
-  const chromaflow = className.split(/\\s+/).includes("effect-chromaflow");
+  const chromaflow = className.split(/\s+/).includes("effect-chromaflow");
 
   useEffect(() => {
     setFormed(false);

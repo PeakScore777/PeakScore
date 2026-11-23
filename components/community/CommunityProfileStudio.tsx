@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
-type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal";
-type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
+type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
+type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "metallic" | "outline" | "shadow" | "aurora" | "fire" | "ice" | "glitch" | "holographic";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -114,24 +114,38 @@ const STATUS_EMOJI_ITEMS: { emoji: string; name: string; category: typeof STATUS
 ];
 
 const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string; description: string }[] = [
-  { id: "classic", label: "gg sans", sample: "Gg", description: "La tipografía base de PeakScore" },
-  { id: "tempo", label: "Tempo", sample: "Gg", description: "Geométrica y dinámica" },
-  { id: "sakura", label: "Sakura", sample: "Gg", description: "Suave y expresiva" },
-  { id: "jellybean", label: "Jellybean", sample: "Gg", description: "Redondeada y amable" },
-  { id: "modern", label: "Modern", sample: "Gg", description: "Contemporánea y limpia" },
-  { id: "medieval", label: "Medieval", sample: "Gg", description: "Inspiración clásica" },
-  { id: "8bit", label: "8Bit", sample: "Gg", description: "Estética arcade" },
-  { id: "vampyre", label: "Vampyre", sample: "Gg", description: "Gótica y dramática" },
-  { id: "monkey-bars", label: "Monkey Bars", sample: "Gg", description: "Irregular y juguetona" },
-  { id: "mainframe", label: "Mainframe", sample: "Gg", description: "Técnica y monoespaciada" },
-  { id: "headbang", label: "Headbang", sample: "Gg", description: "Pesada y enérgica" },
-  { id: "journal", label: "Journal", sample: "Gg", description: "Editorial y manuscrita" },
+  { id: "classic", label: "gg sans", sample: "Aa", description: "Sans limpia y equilibrada" },
+  { id: "tempo", label: "Tempo", sample: "Aa", description: "Serif contemporánea con carácter" },
+  { id: "sakura", label: "Sakura", sample: "Aa", description: "Display expresiva y juguetona" },
+  { id: "jellybean", label: "Jellybean", sample: "Aa", description: "Redondeada y contundente" },
+  { id: "modern", label: "Modern", sample: "Aa", description: "Geométrica y contemporánea" },
+  { id: "medieval", label: "Medieval", sample: "Aa", description: "Blackletter ornamental" },
+  { id: "8bit", label: "8Bit", sample: "Aa", description: "Pixel art de videojuego" },
+  { id: "vampyre", label: "Vampyre", sample: "Aa", description: "Horror tipográfico" },
+  { id: "monkey-bars", label: "Monkey Bars", sample: "Aa", description: "Manuscrita espontánea" },
+  { id: "mainframe", label: "Mainframe", sample: "Aa", description: "Tecnológica y monoespaciada" },
+  { id: "headbang", label: "Headbang", sample: "Aa", description: "Rock pesado y angular" },
+  { id: "journal", label: "Journal", sample: "Aa", description: "Caligrafía cercana" },
+  { id: "display", label: "Display", sample: "Aa", description: "Condensada de alto impacto" },
+  { id: "editorial", label: "Editorial", sample: "Aa", description: "Serif de revista" },
+  { id: "elegant", label: "Elegante", sample: "Aa", description: "Contraste fino y sofisticado" },
+  { id: "geometric", label: "Geométrica", sample: "Aa", description: "Minimalista y precisa" },
+  { id: "retro", label: "Retro", sample: "Aa", description: "Volumen arcade vintage" },
+  { id: "handwritten", label: "Marker", sample: "Aa", description: "Trazo manual con energía" },
+  { id: "signature", label: "Firma", sample: "Aa", description: "Cursiva fluida" },
+  { id: "techno", label: "Techno", sample: "Aa", description: "Futurista de formas circulares" },
+  { id: "rounded", label: "Rounded", sample: "Aa", description: "Display redondeada y sólida" },
+  { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string }[] = [
   { id: "plain", label: "Sólido" }, { id: "gradient", label: "Degradado" },
   { id: "neon", label: "Neón" }, { id: "toon", label: "Toon" },
   { id: "pop", label: "Pop" }, { id: "gummy", label: "Gummy" },
-  { id: "prism", label: "Prisma" },
+  { id: "prism", label: "Prisma" }, { id: "metallic", label: "Cromo" },
+  { id: "outline", label: "Contorno" }, { id: "shadow", label: "Profundidad" },
+  { id: "aurora", label: "Aurora" }, { id: "fire", label: "Llama" },
+  { id: "ice", label: "Hielo" }, { id: "glitch", label: "Glitch" },
+  { id: "holographic", label: "Holográfico" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -1411,63 +1425,69 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </span>
                   </article>
                 )}
-                {appearancePicker === "nameStyle" && (                    <div className="ps-community-name-preview-stage">
-                      <section className="ps-community-name-preview-profile-view">
-                        <div className="ps-community-name-context-label">PERFIL</div>
-                        <article className={"ps-community-name-profile-card is-profile-frame-" + profileFrameId}>
-                          <div className="ps-community-name-profile-banner" style={{ backgroundImage: profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : undefined, backgroundColor: "#20242D" }}>
-                            <span className="ps-community-name-profile-banner-shade" aria-hidden="true"/>
-                          </div>
-                          <div className="ps-community-name-profile-content" style={{ "--name-card-color": cardColor, "--name-card-secondary": themeColorSecondary, "--name-card-text": readableThemeText(cardColor) } as CSSProperties}>
-                            <div className="ps-community-name-profile-avatar-row">
-                              <span className={"ps-community-name-profile-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : initials(displayName || "PeakScore")}
-                                <i className={isOnline ? "is-online" : "is-offline"}/>
-                              </span>
-                            </div>
-                            <strong className={"ps-community-name-preview-primary-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
-                              {displayName || "Tu nombre"}
-                            </strong>
-                          </div>
-                        </article>
-                      </section>
-                      <section className="ps-community-name-preview-members-view">
-                        <div className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD</div>
-                        <div className="ps-community-name-community-shell">
-                          <div className="ps-community-name-community-channel"><span className="ps-community-name-channel-hash">#</span> general</div>
-                          <div className="ps-community-name-members-title">MIEMBROS — 1</div>
-                          <div className="ps-community-name-member-row">
-                            <span className={"ps-community-name-member-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                              {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
-                              <i className={isOnline ? "is-online" : "is-offline"}/>
-                            </span>
-                            <span className="ps-community-name-member-copy">
-                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
-                            </span>
-                            <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
-                          </div>
+                {appearancePicker === "nameStyle" && (
+                  <div className="ps-community-name-preview-stage">
+                    <section className="ps-community-name-preview-profile-view">
+                      <div className="ps-community-name-context-label">PERFIL</div>
+                      <article className="ps-community-status-profile-preview ps-community-name-style-profile-preview"
+                        aria-live="polite"
+                        style={{
+                          "--status-theme": cardColor,
+                          "--status-theme-secondary": themeColorSecondary,
+                          "--status-theme-text": readableThemeText(cardColor),
+                          "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none",
+                          "--name-gradient-start": draftDisplayNameGradientStart,
+                          "--name-gradient-end": draftDisplayNameGradientEnd,
+                          "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
+                          "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor",
+                        } as CSSProperties}>
+                        <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}
+                          <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
-                      </section>
-                      <section className="ps-community-name-preview-chat-view">
-                        <div className="ps-community-name-context-label">CHAT</div>
-                        <div className="ps-community-name-chat-message">
-                          <span className="ps-community-name-chat-avatar">
-                            {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/> : initials(displayName || "PeakScore")}
+                        <div className="ps-community-status-profile-copy ps-community-name-style-profile-copy">
+                          <strong className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}>
+                            {displayName || "Tu nombre"}
+                          </strong>
+                        </div>
+                      </article>
+                    </section>
+                    <section className="ps-community-name-preview-members-view">
+                      <div className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD</div>
+                      <div className="ps-community-name-community-shell">
+                        <div className="ps-community-name-community-channel"><span className="ps-community-name-channel-hash">#</span> general</div>
+                        <div className="ps-community-name-members-title">MIEMBROS — 1</div>
+                        <div className="ps-community-name-member-row">
+                          <span className={"ps-community-name-member-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                            {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
+                            <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
-                          <div className="ps-community-name-chat-content">
-                            <div className="ps-community-name-chat-meta">
-                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
-                              <time>ahora</time>
-                            </div>
-                            <p>Así se verá tu nombre al participar en la conversación.</p>
-                          </div>
+                          <span className="ps-community-name-member-copy">
+                            <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                          </span>
+                          <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>
-                      </section>
-                    </div>)}
-
+                      </div>
+                    </section>
+                    <section className="ps-community-name-preview-chat-view">
+                      <div className="ps-community-name-context-label">CHAT</div>
+                      <div className="ps-community-name-chat-message">
+                        <span className="ps-community-name-chat-avatar">
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/> : initials(displayName || "PeakScore")}
+                        </span>
+                        <div className="ps-community-name-chat-content">
+                          <div className="ps-community-name-chat-meta">
+                            <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            <time>ahora</time>
+                          </div>
+                          <p>Así se verá tu nombre al participar en la conversación.</p>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                )}
                 {appearancePicker !== "nameStyle" && <div className="ps-community-picker-selection">
                   <span>SELECCIÓN ACTUAL</span>
                   <strong>

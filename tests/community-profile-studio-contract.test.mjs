@@ -777,7 +777,9 @@ test("Motion Atelier entrance presets use adaptive per-grapheme timing and persi
   assert.match(studio, /fontSize: \(fitScale \* tagScale\)/);
   assert.match(page, /fontSize: \(fitScale \* tagScale\)/);
   assert.match(nameStyleCss, /overflow-wrap:anywhere/);
-  assert.match(studio, /const tagScale = tag === "h2" \? 1\.5 : tag === "h3" \? 1\.17 : 1/);
+  assert.match(studio, /tag === "h2" \? \(fitScale \* 1\.5\)/);
+  assert.match(studio, /ps-community-name-animation-sample ps-community-name-render is-name-style-/);
+  assert.match(studio, /draftDisplayNamePrismColors\.join\(", "\)/);
   assert.match(studio, /Animación de entrada/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);

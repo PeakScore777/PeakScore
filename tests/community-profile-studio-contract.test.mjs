@@ -804,7 +804,8 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
   assert.match(studio, /if \(animation === "signal-break"\)/);
-  assert.match(studio, /if \(animation === "fuzzy-text"\)/);\n  assert.match(studio, /if \(animation === "shuffle"\)/);
+  assert.match(studio, /if \(animation === "fuzzy-text"\)/);
+  assert.match(studio, /if \(animation === "shuffle"\)/);
   assert.match(nameStyleCss, /\.ps-fuzzy-text-canvas/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });

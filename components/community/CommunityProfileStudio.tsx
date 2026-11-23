@@ -352,7 +352,6 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       ease="power3.out"
       stagger={0.03}
       threshold={0.1}
-      triggerOnce
       respectReducedMotion
       tag={tag}
       className={className}

@@ -1025,7 +1025,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className={"ps-community-editor-name-style-preview is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} onClick={() => openAppearancePicker("nameStyle")} aria-label="Cambiar estilo del nombre">
                 <strong>{displayName || "Tu nombre"}</strong><Type size={15}/>
               </button>
-              <small className="ps-community-editor-settings-hint">Prueba la fuente de Grand Theft Auto.</small>
+              <small className="ps-community-editor-settings-hint">Tipografías seleccionadas y acabados animados en tiempo real.</small>
             </section>
 
             <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>

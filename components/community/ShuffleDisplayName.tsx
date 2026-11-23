@@ -145,6 +145,7 @@ export default function ShuffleDisplayName({
           return (
             <span className="ps-name-shuffle__cell" key={index}>
               <span className="ps-name-shuffle__sizer">{character}</span>
+              <span className="ps-name-shuffle__window">
               <span
                 className="ps-name-shuffle__track"
                 style={{
@@ -170,6 +171,7 @@ export default function ShuffleDisplayName({
                     {glyph}
                   </span>
                 ))}
+              </span>
               </span>
             </span>
           );

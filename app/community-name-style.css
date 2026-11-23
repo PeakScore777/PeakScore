@@ -3966,3 +3966,34 @@
   .ps-name-shuffle[data-shuffle-effect="flip"] .ps-name-shuffle__track { transform:none !important; }
   .ps-name-shuffle__track > span { animation:none !important; transform:none !important; opacity:1 !important; }
 }
+
+
+/* Inkline — measured SVG outline drawing with a calm, non-flashing cycle. */
+.ps-inkline-name { display:inline-block; max-width:100%; vertical-align:baseline; line-height:1.15; }
+.ps-inkline-measure { display:block; width:100%; max-width:100%; }
+.ps-inkline-svg { display:block; width:100%; height:auto; max-height:1.55em; overflow:visible; }
+.ps-inkline-outline, .ps-inkline-fill { font-size:1em; letter-spacing:inherit; }
+.ps-inkline-outline {
+  stroke-dasharray:1200;
+  stroke-dashoffset:1200;
+  animation:ps-inkline-draw 8.6s cubic-bezier(.22,1,.36,1) infinite;
+}
+.ps-inkline-wipe {
+  width:0;
+  animation:ps-inkline-fill-wipe 8.6s cubic-bezier(.22,1,.36,1) infinite;
+}
+@keyframes ps-inkline-draw {
+  0%, 7% { stroke-dashoffset:1200; }
+  31%, 68% { stroke-dashoffset:0; }
+  91%, 100% { stroke-dashoffset:1200; }
+}
+@keyframes ps-inkline-fill-wipe {
+  0%, 28% { width:0; }
+  48%, 68% { width:var(--ps-inkline-width,100%); }
+  91%, 100% { width:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-inkline-outline, .ps-inkline-wipe { animation:none !important; }
+  .ps-inkline-outline { stroke-dashoffset:0; }
+  .ps-inkline-wipe { width:100%; }
+}

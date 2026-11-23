@@ -271,13 +271,14 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   }
   if (animation === "fuzzy-text") {
     return (
-      <Tag className={className} style={safeStyle}>
+      <Tag className={className + ' ps-fuzzy-text-wrap'} style={safeStyle}>
+        <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
           colorSplit={fuzzySettings.colorSplit}
           trigger={fuzzySettings.trigger}
           direction={fuzzySettings.direction}
           fontSize="1em"
-          fontWeight={safeStyle.fontWeight ?? 900}
+          fontWeight="inherit"
           fontFamily="inherit"
           color={fuzzySettings.color}
           baseIntensity={fuzzySettings.baseIntensity}

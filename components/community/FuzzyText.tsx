@@ -86,10 +86,10 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   fontFamily = 'inherit',
   color = 'currentColor',
   enableHover = true,
-  baseIntensity = 0.18,
-  hoverIntensity = 0.5,
-  fuzzRange = 30,
-  fps = 60,
+  baseIntensity = 0.08,
+  hoverIntensity = 0.24,
+  fuzzRange = 12,
+  fps = 30,
   direction = 'horizontal',
   transitionDuration = 0,
   clickEffect = false,
@@ -98,7 +98,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   glitchDuration = 200,
   gradient = null,
   letterSpacing = 0,
-  sliceSize = 1,
+  sliceSize = 2,
   trigger = 'hover',
   intro = false,
   introDuration = 1400,
@@ -219,8 +219,13 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     let cols = new Int32Array(1);
     let box = { left: 0, ascent: 0, width: 0, height: 0, cssWidth: 0, cssHeight: 0 };
 
-    const family = () => (fontFamily === 'inherit' ? getComputedStyle(canvas).fontFamily || 'sans-serif' : fontFamily);
-    const font = () => `${fontWeight} ${fontPx}px ${family()}`;
+    const computedTypography = () => getComputedStyle(canvas);
+    const family = () => (fontFamily === 'inherit' ? computedTypography().fontFamily || 'sans-serif' : fontFamily);
+    const font = () => {
+      const computed = computedTypography();
+      const weight = fontWeight === 'inherit' ? computed.fontWeight : fontWeight;
+      return String(weight) + ' ' + fontPx + 'px ' + family();
+    };
     const resolveInk = () => (usesInk ? getComputedStyle(canvas).color || '#000' : color);
     const pixelRatio = () => Math.min(window.devicePixelRatio || 1, 2);
     const introPending = () => !introRef.current.done && tuningRef.current.intro && !reduceMotion;
@@ -519,6 +524,21 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     canvas.addEventListener('click', handleClick);
     window.addEventListener('resize', handleResize);
 
+    // Rebuild when the selected name font changes its wrapper class or style.
+    const handleTypographyChange = () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        if (!cancelled && built) build();
+      });
+    };
+    const typographyObserver = typeof MutationObserver !== 'undefined' && canvas.parentElement
+      ? new MutationObserver(handleTypographyChange)
+      : null;
+    if (typographyObserver && canvas.parentElement) {
+      typographyObserver.observe(canvas.parentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+    }
+    document.fonts?.addEventListener?.('loadingdone', handleTypographyChange);
+
     const start = async () => {
       fontPx = measureFontSize();
       try {
@@ -546,6 +566,8 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       canvas.removeEventListener('pointercancel', handlePointerLeave);
       canvas.removeEventListener('click', handleClick);
       window.removeEventListener('resize', handleResize);
+      typographyObserver?.disconnect();
+      document.fonts?.removeEventListener?.('loadingdone', handleTypographyChange);
     };
   }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn]);
 

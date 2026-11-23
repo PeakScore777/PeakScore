@@ -3236,3 +3236,33 @@
 @media(max-width:460px) {
   .ps-community-fuzzy-customizer-grid { grid-template-columns:minmax(0,1fr); }
 }
+
+/* Keep Fuzzy Text in the same inline name slot; canvas noise never changes layout. */
+.ps-fuzzy-text-wrap {
+  position:relative;
+  display:inline-block !important;
+  max-width:100%;
+  vertical-align:baseline;
+  line-height:inherit;
+  overflow:visible !important;
+}
+.ps-fuzzy-text-layout {
+  display:inline-block;
+  max-width:100%;
+  visibility:hidden;
+  white-space:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+}
+.ps-fuzzy-text-wrap > .ps-fuzzy-text-canvas {
+  position:absolute;
+  z-index:1;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  display:block;
+  max-width:none;
+  margin:0;
+  vertical-align:baseline;
+  pointer-events:auto;
+}

@@ -850,7 +850,7 @@ test("display-name animation catalogue contains only Hacking Decode, Signal Brea
   const expected = ["decrypt","signal-break","glyph-storm"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal((catalogue.match(/id: "(?:decrypt|signal-break|glyph-storm)"/g) || []).length, 3);
+  assert.equal((catalogue.match(/^  \\{ id: "/gm) || []).length, 3);
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!route.includes('"' + removed + '"'));
@@ -900,7 +900,7 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
 test("Signal Break is a branded animated profile renderer with slices, RGB, scan and noise modes", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
-  assert.equal((catalogue.match(/id: "(?:decrypt|signal-break|glyph-storm)"/g) || []).length, 3);
+  assert.equal((catalogue.match(/^  \\{ id: "/gm) || []).length, 3);
   assert.match(studio, /<SignalBreakDisplayName/);
   assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);
@@ -927,7 +927,7 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
 test("GlyphStorm uses the supplied React Bits WebGL2 ASCII renderer and its original controls", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "glyph-storm", label: "GlyphStorm"/);
-  assert.equal((catalogue.match(/id: "(?:decrypt|signal-break|glyph-storm)"/g) || []).length, 3);
+  assert.equal((catalogue.match(/^  \\{ id: "/gm) || []).length, 3);
   assert.match(studio, /<GlyphStorm/);
   assert.match(page, /<GlyphStorm/);
   assert.match(route, /"decrypt","signal-break","glyph-storm"/);

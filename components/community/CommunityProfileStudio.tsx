@@ -356,12 +356,13 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
   if (animation === "glyph-storm") {
     const isGalleryDemo = className.includes("ps-name-motion-demo");
     const isCompactName = className.includes("ps-community-name-render");
-    // ASCIIText needs a viewport that preserves the source text's aspect ratio.
-    // A ch-based width clipped most of the glyph plane, leaving only 1–2 characters visible.
-    const glyphWidth = Math.max(isCompactName ? 112 : 144, characters.length * (isCompactName ? 24 : 32));
+    // ASCIIText's 3D plane is proportional to canvas height (React Bits demo: 440px).
+    // Scale that composition for a real name line without collapsing it into a few pixels.
     const hostStyle: CSSProperties = isGalleryDemo
-      ? { width: "100%", height: "76px" }
-      : { width: glyphWidth + "px", height: (isCompactName ? 44 : 64) + "px", maxWidth: "100%" };
+      ? { width: "100%", height: "104px" }
+      : isCompactName
+        ? { width: "min(100%, 184px)", height: "88px", maxWidth: "100%" }
+        : { width: "min(100%, 320px)", height: "148px", maxWidth: "100%" };
     return (
       <span className={"ps-glyph-storm-host" + (isGalleryDemo ? " is-gallery" : "")} style={hostStyle}>
         <GlyphStorm
@@ -370,7 +371,7 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
           asciiFontSize={8}
           charset=" ░▒▓█"
           colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
-          textScale={1}
+          textScale={isGalleryDemo ? 1.25 : isCompactName ? 1.45 : 1.25}
           blocks={0.2}
           waves={1}
           waveSpeed={1}

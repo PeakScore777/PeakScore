@@ -266,11 +266,13 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     />;
   }
   if (animation === "glyph-storm") {
-    const isCompactName = className.includes("ps-community-name-render");
-    // Keep the full ASCII composition visible instead of clipping it to a few ch.
+    const isCompactName = className.includes("ps-community-name-render")
+      || className.includes("community-member-nameplate")
+      || className.includes("community-chat-author");
+    // Profile surfaces get a larger stage; member rows and chat keep a compact but legible canvas.
     const hostStyle: React.CSSProperties = {
-      width: Math.max(isCompactName ? 112 : 144, characters.length * (isCompactName ? 24 : 32)) + "px",
-      height: (isCompactName ? 44 : 64) + "px",
+      width: isCompactName ? "min(100%, 184px)" : "min(100%, 320px)",
+      height: isCompactName ? "88px" : "148px",
       maxWidth: "100%",
     };
     return (
@@ -281,7 +283,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
           asciiFontSize={8}
           charset=" ░▒▓█"
           colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
-          textScale={1}
+          textScale={isCompactName ? 1.45 : 1.25}
           blocks={0.2}
           waves={1}
           waveSpeed={1}

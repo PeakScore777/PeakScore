@@ -818,7 +818,7 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(studio, /<small>\{item\.hint\}<\/small>/);
   assert.doesNotMatch(studio, /item\.duration/);
   assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","decrypt","wipe"]) {
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","decrypt","glitch"]) {
     assert.match(nameStyleCss, new RegExp("ps-preview-" + preset));
   }
   assert.match(nameStyleCss, /@keyframes ps-preview-spotlight-beam/);
@@ -833,7 +833,7 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
 
 
 test("display-name animation catalogue stays at the original 12 and every preview has its own motion choreography", () => {
-  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","wipe"];
+  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","glitch"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
   assert.equal((catalogue.match(/id:/g) || []).length, 12);
@@ -844,7 +844,7 @@ test("display-name animation catalogue stays at the original 12 and every previe
   const previewKeyframes = [
     "ps-preview-typewriter","ps-preview-cascade","ps-preview-cinematic","ps-preview-orbit",
     "ps-preview-magnetic","ps-preview-spotlight-beam","ps-preview-wave","ps-preview-bounce",
-    "ps-preview-fold","ps-preview-glitch"
+    "ps-preview-fold"
   ];
   for (const keyframe of previewKeyframes) assert.ok(nameStyleCss.includes("@keyframes " + keyframe));
   assert.match(nameStyleCss, /name-enter-cinematic \.ps-name-animation-text/);

@@ -11,12 +11,12 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe" | "eclipse" | "mercury" | "supernova" | "prismforge" | "royalfoil" | "velvetbloom" | "stardust" | "afterglow" | "obsidian" | "inferno";
+type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
-type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
+type ProfileFrameId = "none" | "lunar" | "crimson" | "aurora";
 type ProfileEffectId = "none" | "aurora" | "embers" | "starlight" | "scanline";
 type StatusDuration = "30m" | "1h" | "4h" | "1d" | "1w" | "never";
 
@@ -161,16 +161,6 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", hint: "Despliegue 3D" },
   { id: "glitch", label: "Signal", description: "Una interferencia digital breve recompone el nombre con nitidez", hint: "Interferencia digital" },
   { id: "wipe", label: "Silk reveal", description: "Una máscara de seda descubre el nombre con un barrido de luz", hint: "Revelado de seda" },
-  { id: "eclipse", label: "Eclipse", description: "Una sombra orbital abre paso a un filo de luz que revela el nombre", hint: "Oclusión luminosa" },
-  { id: "mercury", label: "Mercury", description: "El nombre se ensambla con reflejos de metal líquido y una pasada cromada", hint: "Metal líquido" },
-  { id: "supernova", label: "Supernova", description: "Una expansión de chispas converge y enciende cada carácter", hint: "Estallido estelar" },
-  { id: "prismforge", label: "Prism Forge", description: "Facetas iridiscentes refractan la luz mientras las letras toman forma", hint: "Cristal refractado" },
-  { id: "royalfoil", label: "Royal Foil", description: "Una lámina dorada se revela con volumen y un destello de precisión", hint: "Lámina dorada" },
-  { id: "velvetbloom", label: "Velvet Bloom", description: "El nombre florece desde una bruma suave y queda nítido", hint: "Aura sedosa" },
-  { id: "stardust", label: "Stardust", description: "Polvo de estrellas se enciende dentro de la silueta de cada letra", hint: "Partículas en la tipografía" },
-  { id: "afterglow", label: "Afterglow", description: "Un eco de luz queda detrás del nombre mientras termina de aparecer", hint: "Eco luminoso" },
-  { id: "obsidian", label: "Obsidian", description: "Vidrio volcánico negro con bisel frío y reflejo de obsidiana", hint: "Vidrio volcánico" },
-  { id: "inferno", label: "Inferno", description: "Un núcleo incandescente recorre las letras y deja una brasa sutil", hint: "Núcleo incandescente" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -351,10 +341,9 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
     : tag === "span" ? undefined : (fitScale * 1).toFixed(3) + "em";
   const safeStyle = { ...style, ...(tagFontSize ? { fontSize: tagFontSize } : {}), maxWidth: "100%" } as CSSProperties;
   if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
-  return <Tag className={className + " name-enter-" + animation} style={safeStyle} aria-label={value} data-name={value}>
-    <span className="ps-name-animation-atmosphere" aria-hidden="true" />
+  return <Tag className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
-      <span className="ps-name-animation-char" data-char={character} style={{
+      <span className="ps-name-animation-char" style={{
         "--char-index": index,
         "--char-delay": displayNameCharacterDelay(index, characters.length, animation),
         "--char-direction": index % 2 === 0 ? "-1" : "1",

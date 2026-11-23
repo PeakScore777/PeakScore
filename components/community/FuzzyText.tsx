@@ -227,7 +227,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       return String(weight) + ' ' + fontPx + 'px ' + family();
     };
     const resolveInk = () => (usesInk ? getComputedStyle(canvas).color || '#000' : color);
-    const pixelRatio = () => Math.min(window.devicePixelRatio || 1, 2);
+    const pixelRatio = () => Math.min(window.devicePixelRatio || 1, 1.5);
     const introPending = () => !introRef.current.done && tuningRef.current.intro && !reduceMotion;
 
     const measureFontSize = () => {
@@ -398,16 +398,23 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     };
 
     const wake = () => {
-      if (!cancelled && visible && built && !frame) frame = requestAnimationFrame(tick);
+      if (!cancelled && !document.hidden && visible && built && !frame) {
+        frame = requestAnimationFrame(tick);
+      }
     };
 
     const tick = (now: number) => {
       frame = 0;
-      if (cancelled || !visible) return;
+      if (cancelled || document.hidden || !visible) return;
       const tuning = tuningRef.current;
       const interval = 1000 / Math.max(1, tuning.fps);
-      if (now - lastFrame < interval - 1) return;
-      lastFrame = Math.max(lastFrame + interval, now - interval);
+      if (now - lastFrame < interval - 1) {
+        // A throttled frame must schedule its successor; returning here without
+        // doing so silently freezes the canvas whenever RAF fires too early.
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+      lastFrame = now;
       if (usesInk && now - lastInkCheck > 250) {
         lastInkCheck = now;
         const next = resolveInk();
@@ -488,6 +495,15 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
           })
         : null;
     observer?.observe(canvas);
+    const handleVisibilityChange = () => {
+      if (document.hidden && frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      } else {
+        wake();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const isOverText = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -586,6 +602,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       cancelAnimationFrame(resizeFrame);
       clearTimeout(clickTimer);
       observer?.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerdown', handlePointerMove);
       canvas.removeEventListener('pointerup', handlePointerUp);

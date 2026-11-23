@@ -30,11 +30,11 @@ const DEFAULT_PROFILE_EFFECT = "none";
 const PLATE_STYLES = new Set(["classic", "grid", "arcade", "signal"]);
 const DISPLAY_NAME_STYLES = new Set(["classic", "tempo", "sakura", "jellybean", "modern", "medieval", "8bit", "vampyre", "monkey-bars", "mainframe", "headbang", "journal", "display", "editorial", "elegant", "geometric", "retro", "handwritten", "signature", "techno", "rounded", "stencil"]);
 const DISPLAY_NAME_EFFECTS = new Set(["plain", "gradient", "neon", "toon", "pop", "gummy", "prism"]);
-const DISPLAY_NAME_ANIMATIONS = new Set(["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe","eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]);
+const DISPLAY_NAME_ANIMATIONS = new Set(["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]);
 const DISPLAY_NAME_COLORS = new Set(["default", "pink", "green", "blue", "purple", "magenta", "red", "gold", "custom-gradient"]);
 const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
 const AVATAR_DECORATIONS = new Set(["none", "bloom", "electric", "glitch"]);
-const PROFILE_FRAMES = new Set(["none", "obsidian", "lunar", "crimson", "aurora"]);
+const PROFILE_FRAMES = new Set(["none",  "lunar", "crimson", "aurora"]);
 const PROFILE_EFFECTS = new Set(["none", "aurora", "embers", "starlight", "scanline"]);
 const ACCENT_COLORS = new Set(["#3987FF", "#9A72F5", "#E75DA6", "#F16E65", "#E5B64C", "#52C7A4"]);
 

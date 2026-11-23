@@ -924,18 +924,22 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
 });
 
 
-test("GlyphStorm is a branded ASCII display-name animation with reduced-motion and offscreen safeguards", () => {
+test("GlyphStorm uses the supplied React Bits WebGL2 ASCII renderer and its original controls", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "glyph-storm", label: "GlyphStorm"/);
   assert.equal((catalogue.match(/id:/g) || []).length, 3);
   assert.match(studio, /<GlyphStorm/);
   assert.match(page, /<GlyphStorm/);
-  assert.match(route, /"signal-break","glyph-storm"/);
-  assert.match(glyphStorm, /requestAnimationFrame/);
+  assert.match(route, /"decrypt","signal-break","glyph-storm"/);
+  assert.match(glyphStorm, /getContext\('webgl2'/);
+  assert.match(glyphStorm, /const FRAGMENT/);
+  assert.match(glyphStorm, /uRipples/);
+  assert.match(glyphStorm, /drawGlyphs/);
+  assert.match(glyphStorm, /asciiFontSize = 8/);
+  assert.match(studio, /charset=" ░▒▓█"/);
+  assert.match(studio, /chroma=\{0\.6\}/);
+  assert.match(studio, /scramble=\{0\.6\}/);
   assert.match(glyphStorm, /prefers-reduced-motion/);
   assert.match(glyphStorm, /IntersectionObserver/);
-  assert.match(glyphStorm, /aria-label=\{text\}/);
-  assert.match(glyphStorm, /sourcePixels/);
-  assert.match(glyphStorm, /ps-glyph-storm/);
   assert.match(threeAnimationCatalogueMigration, /glyph-storm/);
 });

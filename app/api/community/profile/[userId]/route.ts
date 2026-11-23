@@ -270,7 +270,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       plateStyle: PLATE_STYLES.has(data.plate_style ?? "") ? data.plate_style : DEFAULT_PLATE_STYLE,
       displayNameStyle: DISPLAY_NAME_STYLES.has(data.display_name_style ?? "") ? data.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       displayNameEffect: DISPLAY_NAME_EFFECTS.has(data.display_name_effect ?? "") ? data.display_name_effect : "plain",
-      displayNameAnimation: DISPLAY_NAME_ANIMATIONS.has(data.display_name_animation === "glitch" ? "signal-break" : data.display_name_animation ?? "") ? (data.display_name_animation === "glitch" ? "signal-break" : data.display_name_animation) : "none",
+      displayNameAnimation: DISPLAY_NAME_ANIMATIONS.has(data.display_name_animation === "glitch" ? "signal-break" : data.display_name_animation ?? "") ? (data.display_name_animation === "glitch" ? "signal-break" : data.display_name_animation) : "decrypt",
       displayNameColor: DISPLAY_NAME_COLORS.has(data.display_name_color ?? "") ? data.display_name_color : "default",
       displayNameGradientStart: data.display_name_gradient_start ?? "#B86BFF",
       displayNameGradientEnd: data.display_name_gradient_end ?? "#4E9BFF",

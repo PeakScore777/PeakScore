@@ -26,6 +26,7 @@ type Props = {
   fontSize?: number | string;
   fontWeight?: number | string;
   frameRate?: number;
+  previewMode?: boolean;
 };
 
 type Settings = {
@@ -121,7 +122,8 @@ export default function SignalBreakDisplayName({
   color,
   fontSize,
   fontWeight,
-  frameRate = 30
+  frameRate = 30,
+  previewMode = false
 }: Props) {
   const Tag = tag;
   const rootRef = useRef<HTMLElement | null>(null);
@@ -157,7 +159,7 @@ export default function SignalBreakDisplayName({
     const root = rootRef.current;
     if (!root) return undefined;
 
-    const reducedMotion = Boolean(
+    const reducedMotion = !previewMode && Boolean(
       window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
     );
     const cells = charRefs.current

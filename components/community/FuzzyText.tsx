@@ -35,6 +35,7 @@ interface FuzzyTextProps {
   introDuration?: number;
   colorSplit?: number;
   className?: string;
+  performanceMode?: "preview" | "full";
 }
 
 interface Tuning {
@@ -103,7 +104,8 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   intro = false,
   introDuration = 1400,
   colorSplit = 0,
-  className = ''
+  className = '',
+  performanceMode = 'full'
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glitchRef = useRef(false);
@@ -227,7 +229,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       return String(weight) + ' ' + fontPx + 'px ' + family();
     };
     const resolveInk = () => (usesInk ? getComputedStyle(canvas).color || '#000' : color);
-    const pixelRatio = () => Math.min(window.devicePixelRatio || 1, 1.5);
+    const pixelRatio = () => Math.min(window.devicePixelRatio || 1, performanceMode === 'preview' ? 1 : 1.5);
     const introPending = () => !introRef.current.done && tuningRef.current.intro && !reduceMotion;
 
     const measureFontSize = () => {
@@ -407,7 +409,8 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       frame = 0;
       if (cancelled || document.hidden || !visible) return;
       const tuning = tuningRef.current;
-      const interval = 1000 / Math.max(1, tuning.fps);
+      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 18) : tuning.fps;
+      const interval = 1000 / Math.max(1, targetFps);
       if (now - lastFrame < interval - 1) {
         // A throttled frame must schedule its successor; returning here without
         // doing so silently freezes the canvas whenever RAF fires too early.
@@ -613,7 +616,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       typographyObserver?.disconnect();
       document.fonts?.removeEventListener?.('loadingdone', handleTypographyChange);
     };
-  }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn]);
+  }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn, performanceMode]);
 
   return (
     <canvas

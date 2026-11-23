@@ -2541,3 +2541,8 @@
   line-height:1.08;
 }
 .ps-name-animation-char { vertical-align:baseline; }
+
+.ps-community-name-animation-sample {
+  line-height:1.1 !important;
+  text-align:center;
+}

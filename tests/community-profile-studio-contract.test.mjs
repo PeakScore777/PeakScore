@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -19,6 +19,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010106_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010203_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010400_community_display_name_motion_atelier.sql", import.meta.url), "utf8"),
 
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
@@ -765,27 +766,28 @@ test("default display-name typeface is self-hosted and applied consistently", ()
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
 
-test("display-name entrance presets are separate from finishes and persisted through profile API", () => {
-  for (const preset of ["typewriter","rise","fade","blur","bounce","flip","wipe","glitch","wave"]) {
+test("Motion Atelier entrance presets use adaptive per-grapheme timing and persist on profile surfaces", () => {
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
     assert.ok(studio.includes('id: "' + preset + '"'));
     assert.ok(nameStyleCss.includes("name-enter-" + preset));
   }
+  assert.match(studio, /IntlWithSegmenter\.Segmenter/);
+  assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
+  assert.match(studio, /const staggerWindow = animation === "typewriter" \? 620/);
+  assert.match(studio, /fontSize: \(fitScale \* 100\)/);
   assert.match(studio, /Animación de entrada/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
-  assert.match(studio, /displayNameAnimation/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
-  assert.match(studio, /<AnimatedDisplayName value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
-  assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
+  assert.match(studio, /value=\{displayName \|\| "OMEGA"\} animation=\{item\.id\}/);
+  assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
+  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
+  assert.match(page, /CommunityAnimatedName key=\{hoverCommunityProfile\.userId\} tag="h3"/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
-  assert.match(page, /display_name_animation/);
-  assert.match(page, /name-enter-/);
-  assert.ok(!page.split("\\n").some((line) => line.includes("community-chat-author-link") && line.includes("name-enter-")));
-  assert.ok(!page.split("\\n").some((line) => line.includes("community-member-nameplate") && line.includes("name-enter-")));
-  assert.match(page, /CommunityAnimatedName key=\\{selectedCommunityProfile\\.userId\\} tag="h2"/);
-  assert.match(page, /CommunityAnimatedName key=\\{hoverCommunityProfile\\.userId\\} tag="h3"/);
-  assert.match(entranceAnimationMigration, /display_name_animation in/);
-  assert.match(nameStyleCss, /ps-enter-typewriter-caret/);
-  assert.match(nameStyleCss, /prefers-reduced-motion/);
+  assert.match(entranceMotionMigration, /when 'rise' then 'cascade'/);
+  assert.match(entranceMotionMigration, /display_name_animation in/);
+  assert.match(nameStyleCss, /ps-motion-spotlight-sweep/);
+  assert.match(nameStyleCss, /ps-motion-silk-reveal/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 

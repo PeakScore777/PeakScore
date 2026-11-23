@@ -959,6 +959,8 @@ test("Fuzzy Text customizer exposes React Bits controls and persists validated s
   assert.match(studio, /displayNameFuzzySettings,/);
   assert.match(page, /fuzzySettings=\{normalizeFuzzyTextSettings\(selectedCommunityProfile\.displayNameFuzzySettings\)\}/);
   assert.match(page, /display_name_fuzzy_settings/);
+  assert.match(page, /community-member-name-render/);
+  assert.match(page, /community-chat-name-render/);
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
   assert.match(route, /normalizeFuzzyTextSettings\(payload\.displayNameFuzzySettings\)/);
   assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);

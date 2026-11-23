@@ -622,7 +622,7 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings: FuzzyTextSettings | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
@@ -846,6 +846,7 @@ export default function CommunityPage() {
     const authorRows = (authors ?? []) as Array<{
       user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
       display_name_style?: CommunityDisplayNameStyle | null; display_name_effect?: CommunityDisplayNameEffect | null;
+      display_name_animation?: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings?: FuzzyTextSettings | null;
       display_name_color?: CommunityDisplayNameColor | null; display_name_gradient_start?: string | null; display_name_gradient_end?: string | null; display_name_prism_colors?: string[] | null;
     }>;
     const authorMap = new Map<string, CommunityMemberSummary>(
@@ -1629,7 +1630,13 @@ export default function CommunityPage() {
                                       "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
                                       "--name-solid-color": message.author.display_name_color === "custom-gradient" ? message.author.display_name_gradient_start ?? "#B86BFF" : message.author.display_name_color === "pink" ? "#F72585" : message.author.display_name_color === "green" ? "#25E66B" : message.author.display_name_color === "blue" ? "#269EE5" : message.author.display_name_color === "purple" ? "#A72CF0" : message.author.display_name_color === "magenta" ? "#E60063" : message.author.display_name_color === "red" ? "#F2382E" : message.author.display_name_color === "gold" ? "#D1B11B" : "currentColor",
                                     } as React.CSSProperties}>
-                                    {message.author.full_name}
+                                    <CommunityAnimatedName
+                                      tag="span"
+                                      value={message.author.full_name}
+                                      animation={message.author.display_name_animation ?? "decrypt"}
+                                      fuzzySettings={normalizeFuzzyTextSettings(message.author.display_name_fuzzy_settings)}
+                                      className="community-chat-name-render"
+                                    />
                                   </button>
                                 </>
                               ) : <span className="community-chat-author">Estudiante</span>}
@@ -1899,7 +1906,13 @@ export default function CommunityPage() {
                             "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
                             "--name-solid-color": member.display_name_color === "custom-gradient" ? member.display_name_gradient_start ?? "#B86BFF" : member.display_name_color === "pink" ? "#F72585" : member.display_name_color === "green" ? "#25E66B" : member.display_name_color === "blue" ? "#269EE5" : member.display_name_color === "purple" ? "#A72CF0" : member.display_name_color === "magenta" ? "#E60063" : member.display_name_color === "red" ? "#F2382E" : member.display_name_color === "gold" ? "#D1B11B" : "currentColor",
                           } as React.CSSProperties}>
-                            <span>{member.full_name}</span>
+                            <CommunityAnimatedName
+                              tag="span"
+                              value={member.full_name}
+                              animation={member.display_name_animation ?? "decrypt"}
+                              fuzzySettings={normalizeFuzzyTextSettings(member.display_name_fuzzy_settings)}
+                              className="community-member-name-render"
+                            />
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}
                         </span>

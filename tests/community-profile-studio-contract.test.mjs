@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -38,6 +38,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011500_community_display_name_shuffle_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/ShuffleDisplayName.tsx", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -866,6 +867,21 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
   assert.match(shuffleAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text', 'shuffle'/);
 });
 
+
+
+test("Shuffle is an automatic one-shot slide reveal, not a hover interaction", () => {
+  assert.match(studio, /import ShuffleDisplayName from "@\/components\/community\/ShuffleDisplayName"/);
+  assert.match(page, /import ShuffleDisplayName from "@\/components\/community\/ShuffleDisplayName"/);
+  assert.match(studio, /if \(animation === "shuffle"\)/);
+  assert.match(page, /if \(animation === "shuffle"\)/);
+  assert.match(shuffleName, /effect = "slide"/);
+  assert.match(shuffleName, /shuffleDirection = "right"/);
+  assert.match(shuffleName, /animationMode = "evenodd"/);
+  assert.match(shuffleName, /triggerOnce = true/);
+  assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);
+  assert.match(nameStyleCss, /\.ps-name-shuffle__track\.is-playing/);
+  assert.match(route, /"fuzzy-text","shuffle"/);
+});
 
 test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt component", () => {
   assert.match(studio, /id: "decrypt", label: "Hacking Decode"/);

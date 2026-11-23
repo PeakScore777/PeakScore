@@ -1816,3 +1816,227 @@
   .ps-community-name-effect-sample,.ps-community-name-render,
   .community-member-nameplate,.community-chat-author,.ps-community-profile-name { animation:none !important; }
 }
+
+/* Name styles: reproduce the seven expressive finishes in Discord's video.
+   The visual language is shared by profile, member list, chat and the picker samples. */
+@keyframes ps-dns-gradient-flow {
+  0% { background-position:0% 50%; }
+  50% { background-position:100% 50%; }
+  100% { background-position:0% 50%; }
+}
+@keyframes ps-dns-neon-pulse {
+  0%,100% { opacity:.9; text-shadow:0 0 2px #fff,0 0 6px #d7a0ff,0 0 15px #a35cff; }
+  50% { opacity:1; text-shadow:0 0 3px #fff,0 0 8px #d7a0ff,0 0 22px #a35cff,0 0 30px rgb(147 51 234 / 24%); }
+}
+@keyframes ps-dns-toon-sweep {
+  0% { background-position:180% 50%; }
+  100% { background-position:-80% 50%; }
+}
+@keyframes ps-dns-pop-press {
+  0%,100% { transform:translateY(0) scale(1); }
+  45% { transform:translateY(-1px) scale(1.015); }
+  70% { transform:translateY(0) scale(.995); }
+}
+@keyframes ps-dns-gummy-flow {
+  0% { background-position:0% 50%; }
+  100% { background-position:200% 50%; }
+}
+@keyframes ps-dns-prism-flow {
+  0% { background-position:0% 50%; }
+  100% { background-position:200% 50%; }
+}
+
+/* Baseline type face resembles Discord's clean sans without relying on a local font. */
+.ps-community-name-font-option.is-name-style-classic span,
+.ps-community-name-render.is-name-style-classic,
+.ps-community-editor-preview-name-static.is-name-style-classic,
+.community-member-nameplate.is-name-style-classic,
+.ps-community-profile-name.is-name-style-classic,
+.community-chat-author.is-name-style-classic,
+.ps-community-status-profile-copy > strong.is-name-style-classic {
+  font-family:var(--font-name-classic),Inter,system-ui,sans-serif !important;
+  font-weight:760 !important;letter-spacing:-.035em !important;
+}
+
+/* Solid */
+.ps-community-name-effect-sample.effect-plain,
+.ps-community-name-render.effect-plain,
+.ps-community-editor-preview-name-static.effect-plain,
+.community-member-nameplate.effect-plain,
+.ps-community-profile-name.effect-plain,
+.community-chat-author.effect-plain,
+.ps-community-member-popout__identity h3.effect-plain,
+.ps-community-status-profile-copy > strong.effect-plain {
+  animation:none !important;text-shadow:none !important;
+}
+
+/* Gradient — custom two-colour sweep, matching the animated gradient swatches. */
+.ps-community-name-effect-sample.effect-gradient,
+.ps-community-name-render.effect-gradient,
+.ps-community-editor-preview-name-static.effect-gradient,
+.community-member-nameplate.effect-gradient,
+.ps-community-profile-name.effect-gradient,
+.community-chat-author.effect-gradient,
+.ps-community-member-popout__identity h3.effect-gradient,
+.ps-community-status-profile-copy > strong.effect-gradient {
+  color:transparent !important;
+  background-image:linear-gradient(100deg,var(--name-gradient-start,#55d8cd) 0%,var(--name-gradient-end,#9b6bff) 48%,var(--name-gradient-start,#55d8cd) 100%) !important;
+  background-size:220% 100% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;filter:none !important;
+  animation:ps-dns-gradient-flow 4.8s ease-in-out infinite !important;
+}
+
+/* Neon — real light halo, with a slow pulse rather than a permanent heavy blur. */
+.ps-community-name-effect-sample.effect-neon,
+.ps-community-name-render.effect-neon,
+.ps-community-editor-preview-name-static.effect-neon,
+.community-member-nameplate.effect-neon,
+.ps-community-profile-name.effect-neon,
+.community-chat-author.effect-neon,
+.ps-community-member-popout__identity h3.effect-neon,
+.ps-community-status-profile-copy > strong.effect-neon {
+  color:#f2dcff !important;
+  text-shadow:0 0 1px #fff,0 0 5px #d8a0ff,0 0 12px #a35cff,0 0 20px rgb(147 51 234 / 32%) !important;
+  animation:ps-dns-neon-pulse 2.2s ease-in-out infinite !important;
+}
+
+/* Toon — outlined dimensional lettering with a travelling gloss highlight. */
+.ps-community-name-effect-sample.effect-toon,
+.ps-community-name-render.effect-toon,
+.ps-community-editor-preview-name-static.effect-toon,
+.community-member-nameplate.effect-toon,
+.ps-community-profile-name.effect-toon,
+.community-chat-author.effect-toon,
+.ps-community-member-popout__identity h3.effect-toon,
+.ps-community-status-profile-copy > strong.effect-toon {
+  color:transparent !important;
+  -webkit-text-stroke:.42px var(--name-solid-color,#f2f3f5) !important;
+  background-image:linear-gradient(105deg,
+    var(--name-solid-color,#f2f3f5) 0%,
+    var(--name-solid-color,#f2f3f5) 34%,
+    #fff 46%,#fff 50%,
+    var(--name-solid-color,#f2f3f5) 62%,
+    var(--name-solid-color,#f2f3f5) 100%) !important;
+  background-size:260% 100% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 35%),0 2px 0 rgb(25 20 45 / 42%) !important;
+  animation:ps-dns-toon-sweep 3.4s linear infinite !important;
+}
+
+/* Pop — a small elastic lift that stays readable at chat size. */
+.ps-community-name-effect-sample.effect-pop,
+.ps-community-name-render.effect-pop,
+.ps-community-editor-preview-name-static.effect-pop,
+.community-member-nameplate.effect-pop,
+.ps-community-profile-name.effect-pop,
+.community-chat-author.effect-pop,
+.ps-community-member-popout__identity h3.effect-pop,
+.ps-community-status-profile-copy > strong.effect-pop {
+  color:var(--name-solid-color,#65e3c0) !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 38%),0 2px 0 rgb(18 83 76 / 52%),0 4px 9px rgb(38 194 168 / 16%) !important;
+  transform-origin:50% 85%;
+  animation:ps-dns-pop-press 2.4s ease-in-out infinite !important;
+}
+
+/* Gummy — glossy, juicy multi-colour bands using the custom five-colour strip. */
+.ps-community-name-effect-sample.effect-gummy,
+.ps-community-name-render.effect-gummy,
+.ps-community-editor-preview-name-static.effect-gummy,
+.community-member-nameplate.effect-gummy,
+.ps-community-profile-name.effect-gummy,
+.community-chat-author.effect-gummy,
+.ps-community-member-popout__identity h3.effect-gummy,
+.ps-community-status-profile-copy > strong.effect-gummy {
+  color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9ccb,#ffd0a7,#fff0a6,#9de8d3,#9fc8ff)) !important;
+  background-size:240% 100% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 62%),0 2px 0 rgb(119 60 100 / 30%),0 3px 7px rgb(0 0 0 / 16%) !important;
+  animation:ps-dns-gummy-flow 5.2s linear infinite !important;
+}
+
+/* Prism — full spectrum animation, independently configurable in five stops. */
+.ps-community-name-effect-sample.effect-prism,
+.ps-community-name-render.effect-prism,
+.ps-community-editor-preview-name-static.effect-prism,
+.community-member-nameplate.effect-prism,
+.ps-community-profile-name.effect-prism,
+.community-chat-author.effect-prism,
+.ps-community-member-popout__identity h3.effect-prism,
+.ps-community-status-profile-copy > strong.effect-prism {
+  color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c45,#36e58c,#ffe05d,#e84abf,#686bff)) !important;
+  background-size:260% 100% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 30%),0 2px 6px rgb(0 0 0 / 14%) !important;
+  animation:ps-dns-prism-flow 4.2s linear infinite !important;
+}
+
+.ps-community-name-effect-grid { grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:7px !important; }
+.ps-community-name-effect-option {
+  min-height:68px !important;padding:9px 8px !important;gap:6px !important;
+  display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;
+  background:#2b2d34 !important;border:1px solid #3a3d45 !important;border-radius:8px !important;
+  box-shadow:none !important;transition:background-color 90ms ease,border-color 90ms ease !important;
+}
+.ps-community-name-effect-option:hover { transform:none !important;background:#343740 !important;border-color:#626775 !important; }
+.ps-community-name-effect-option.is-selected { border-color:#687bff !important;background:#34374b !important;box-shadow:inset 0 0 0 1px rgb(104 123 255 / 23%) !important; }
+.ps-community-name-effect-sample { display:block !important;max-width:100%;overflow:hidden;font-size:17px !important;line-height:1.1 !important;white-space:nowrap !important;text-overflow:ellipsis !important; }
+.ps-community-name-effect-option > strong { color:#d8dbe2 !important;font-size:10px !important;line-height:1.15 !important;font-weight:700 !important; }
+.ps-community-name-preset-grid { display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px; }
+.ps-community-name-spectrum-presets { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px; }
+.ps-community-name-preset-swatch,.ps-community-name-spectrum-swatch {
+  display:block;position:relative;min-width:0;height:36px;padding:0;
+  border:2px solid #25272d;border-radius:8px;box-shadow:0 0 0 1px #454852;cursor:pointer;
+  transition:border-color 90ms ease,box-shadow 90ms ease;
+}
+.ps-community-name-spectrum-swatch { height:42px; }
+.ps-community-name-preset-swatch.is-selected,.ps-community-name-spectrum-swatch.is-selected {
+  border-color:#fff;box-shadow:0 0 0 2px #5865f2,0 0 0 4px #5865f2;
+}
+.ps-community-name-custom-color {
+  position:relative;display:grid;place-items:center;min-width:0;height:42px;
+  border:2px solid #25272d;border-radius:9px;background:#343740;color:#e7eaf0;
+  box-shadow:0 0 0 1px #525661;cursor:pointer;overflow:hidden;
+}
+.ps-community-name-custom-color input {
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+}
+.ps-community-name-custom-color.is-selected { box-shadow:0 0 0 2px #aeb9ff,0 0 0 4px #5869f2; }
+.ps-community-name-prism-editor label { border-radius:8px !important;background:#2d3038 !important; }
+.ps-community-name-prism-editor input { border-radius:6px !important; }
+.ps-community-name-preview-toolbar {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:2px;padding-top:10px;border-top:1px solid #343740;
+}
+.ps-community-name-preview-toolbar > span { color:#aab0bd;font-size:10px;font-weight:800;letter-spacing:.09em; }
+.ps-community-name-preview-toolbar > div { display:flex;gap:4px;padding:3px;border:1px solid #343740;border-radius:8px;background:#15161b; }
+.ps-community-name-preview-toolbar button { display:grid;place-items:center;width:30px;height:28px;border:0;border-radius:6px;background:transparent;color:#9ba2af;cursor:pointer; }
+.ps-community-name-preview-toolbar button.is-active { background:#343740;color:#fff; }
+.ps-community-name-preview-stage.is-light { color:#22252c; }
+.ps-community-name-preview-stage.is-light .ps-community-name-community-shell,
+.ps-community-name-preview-stage.is-light .ps-community-name-chat-message {
+  background:#f1f2f5 !important;border-color:#d6d9e0 !important;color:#252832 !important;
+}
+.ps-community-name-preview-stage.is-light .ps-community-name-community-channel,
+.ps-community-name-preview-stage.is-light .ps-community-name-members-title,
+.ps-community-name-preview-stage.is-light .ps-community-name-member-presence,
+.ps-community-name-preview-stage.is-light .ps-community-name-chat-content > p,
+.ps-community-name-preview-stage.is-light .ps-community-name-chat-meta time { color:#666c78 !important; }
+.ps-community-name-preview-stage.is-light .ps-community-name-member-row { background:#e5e7ec !important; }
+.ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar { border-top-color:#d7d9df; }
+.ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar > span { color:#6b7280; }
+.ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar > div { background:#e3e5ea;border-color:#d4d7df; }
+.ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar button { color:#6b7280; }
+.ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar button.is-active { background:#fff;color:#202127;box-shadow:0 1px 3px #0002; }
+
+@media (prefers-reduced-motion: reduce), (hover:none), (max-width:720px) {
+  .ps-community-name-effect-sample,.ps-community-name-render,
+  .ps-community-editor-preview-name-static,.community-member-nameplate,
+  .ps-community-profile-name,.community-chat-author,
+  .ps-community-member-popout__identity h3,
+  .ps-community-status-profile-copy > strong {
+    animation:none !important;transition:none !important;transform:none !important;
+  }
+}

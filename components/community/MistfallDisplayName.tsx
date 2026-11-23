@@ -33,7 +33,7 @@ export default function MistfallDisplayName({
     const ctx = canvas?.getContext("2d", { alpha: true, desynchronized: true });
     if (!canvas || !host || !ctx) return;
 
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const reduced = !previewMode && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     if (reduced) { setFormed(true); return; }
 
     let raf = 0, resizeRaf = 0, lastFrame = 0, startedAt = 0;

@@ -4311,6 +4311,24 @@
   pointer-events:none;
   overflow:visible;
 }
+.ps-mistfall-layout {
+  opacity:0;
+  visibility:hidden;
+  transition:opacity 360ms ease, visibility 0s linear 360ms;
+}
+.ps-mistfall-canvas {
+  opacity:1;
+  transition:opacity 360ms ease;
+}
+.ps-mistfall-name.is-formed .ps-mistfall-layout {
+  opacity:1;
+  visibility:visible;
+  transition:opacity 360ms ease;
+}
+.ps-mistfall-name.is-formed .ps-mistfall-canvas {
+  opacity:0;
+}
+
 .ps-mistfall-name.is-formed .ps-mistfall-layout {
   visibility:visible;
 }

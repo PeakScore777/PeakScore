@@ -2394,3 +2394,33 @@
 .ps-community-name-animation-stage > span { font-size:18px;font-weight:850;letter-spacing:-.04em;white-space:nowrap; }
 .ps-community-name-animation-option > strong { font-size:11px;font-weight:800; }
 .ps-community-name-animation-option > small { color:#929bad;font-size:10px; }
+
+
+/* Final entrance choreography — independent from the persistent visual finish. */
+@keyframes ps-enter-wipe-reveal {
+  from { clip-path:inset(0 100% 0 0); }
+  to { clip-path:inset(0 0 0 0); }
+}
+.name-enter-wipe .ps-name-animation-text {
+  display:inline-block;
+  clip-path:inset(0 100% 0 0);
+  animation:ps-enter-wipe-reveal 760ms cubic-bezier(.22,.75,.24,1) both;
+}
+.name-enter-typewriter .ps-name-animation-char {
+  opacity:0;
+  animation:ps-enter-fade 1ms steps(1,end) both;
+  animation-delay:calc(var(--char-index) * 72ms);
+}
+.name-enter-typewriter .ps-name-animation-text {
+  display:inline-block;
+  border-right:1px solid currentColor;
+  animation:ps-enter-typewriter-caret 820ms steps(1,end) infinite;
+}
+.ps-community-name-animation-stage { display:grid;place-items:center;min-height:46px;overflow:hidden; }
+.ps-community-name-animation-sample { display:inline-block;font-size:19px;font-weight:850;white-space:nowrap; }
+.ps-community-name-animation-option { grid-template-rows:52px auto auto !important; }
+@media (prefers-reduced-motion:reduce) {
+  .ps-name-animation-text,.ps-name-animation-char,.name-enter-wipe .ps-name-animation-text {
+    animation:none !important;clip-path:none !important;opacity:1 !important;filter:none !important;transform:none !important;
+  }
+}

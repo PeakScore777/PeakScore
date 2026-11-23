@@ -409,7 +409,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       frame = 0;
       if (cancelled || document.hidden || !visible) return;
       const tuning = tuningRef.current;
-      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 18) : tuning.fps;
+      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 20) : tuning.fps;
       const interval = 1000 / Math.max(1, targetFps);
       if (now - lastFrame < interval - 1) {
         // A throttled frame must schedule its successor; returning here without

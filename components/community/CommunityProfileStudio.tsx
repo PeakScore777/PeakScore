@@ -8,7 +8,7 @@ import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyText
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Pencil, Pipette,
+  Camera, Check, ChevronDown, Copy, ImagePlus, Pencil, Pipette,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
@@ -1492,8 +1492,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             onClick={() => setDraftDisplayNameAnimation(item.id)}
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
-                            <span className="ps-community-name-animation-stage" data-animation={item.id} key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
-                              <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={item.id} fuzzySettings={draftDisplayNameFuzzySettings} className={"ps-community-name-animation-sample ps-name-motion-demo ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <span className="ps-community-name-animation-stage" data-animation={item.id}>
+                              <span
+                                className={"ps-community-name-animation-sample ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                                data-preview-animation={item.id}
+                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}
+                              >{displayName || "OMEGA"}</span>
                             </span>
                             <strong>{item.label}</strong>
                             <small>{item.hint}</small>

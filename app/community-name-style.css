@@ -3628,3 +3628,19 @@
 @media(max-width:460px) {
   .ps-community-name-style-group > .ps-community-name-animation-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
 }
+
+/* Lightweight static gallery samples: keep the selector responsive; animate only the actual preview. */
+.ps-community-name-animation-option [data-preview-animation="decrypt"] {
+  color:#d8f8e8 !important;
+  text-shadow:0 0 10px rgb(43 182 115 / 24%) !important;
+  letter-spacing:.025em !important;
+}
+.ps-community-name-animation-option [data-preview-animation="signal-break"] {
+  color:#f2f3f5 !important;
+  text-shadow:-1px 0 rgb(255 55 75 / 75%),1px 0 rgb(0 220 255 / 75%) !important;
+}
+.ps-community-name-animation-option [data-preview-animation="fuzzy-text"] {
+  color:#f2f3f5 !important;
+  text-shadow:1px 0 rgb(255 55 75 / 50%),-1px 0 rgb(0 220 255 / 50%) !important;
+  filter:none !important;
+}

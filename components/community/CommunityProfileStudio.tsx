@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, Dices, ImagePlus, Pencil, Moon, Pipette, Sun,
+  Camera, Check, Copy, ImagePlus, Pencil, Pipette,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
@@ -138,13 +138,13 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
-  { id: "plain", label: "Liso", description: "Color sólido, limpio y nítido" },
-  { id: "gradient", label: "Degradado", description: "Dos colores con transición animada" },
-  { id: "neon", label: "Neón", description: "Resplandor que respira suavemente" },
-  { id: "toon", label: "Dibujo animado", description: "Tinta con volumen y destello en movimiento" },
-  { id: "pop", label: "Pop", description: "Acabado vivo con un pequeño rebote" },
-  { id: "gummy", label: "Gominola", description: "Bandas de color brillantes y fluidas" },
-  { id: "prism", label: "Prisma", description: "Espectro de cinco colores en movimiento" },
+  { id: "plain", label: "Sólido", description: "Tinta nítida con acabado limpio" },
+  { id: "gradient", label: "Flujo", description: "Degradado vivo con luz que recorre las letras" },
+  { id: "neon", label: "Voltaje", description: "Halo luminoso con pulso cromático" },
+  { id: "toon", label: "Cromo pop", description: "Volumen pulido con un destello diagonal" },
+  { id: "pop", label: "Bounce", description: "Microrebote elástico y sombra de profundidad" },
+  { id: "gummy", label: "Gel", description: "Brillo húmedo y color líquido en movimiento" },
+  { id: "prism", label: "Espectral", description: "Espectro iridiscente que se desplaza" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -316,7 +316,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
-  const [namePreviewMode, setNamePreviewMode] = useState<"dark" | "light">("dark");
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -1501,7 +1500,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className={"ps-community-name-preview-stage" + (namePreviewMode === "light" ? " is-light" : "")}>
+                  <div className="ps-community-name-preview-stage">
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
                       <article className="ps-community-status-profile-preview ps-community-name-style-profile-preview"
@@ -1561,13 +1560,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </div>
                       </div>
                     </section>
-                    <div className="ps-community-name-preview-toolbar">
-                      <span>VISTA PREVIA</span>
-                      <div role="group" aria-label="Tema de la vista previa">
-                        <button type="button" className={namePreviewMode === "dark" ? "is-active" : ""} aria-label="Vista oscura" aria-pressed={namePreviewMode === "dark"} onClick={() => setNamePreviewMode("dark")}><Moon size={15}/></button>
-                        <button type="button" className={namePreviewMode === "light" ? "is-active" : ""} aria-label="Vista clara" aria-pressed={namePreviewMode === "light"} onClick={() => setNamePreviewMode("light")}><Sun size={15}/></button>
-                      </div>
-                    </div>
+                    
                   </div>
                 )}
                 {appearancePicker !== "nameStyle" && <div className="ps-community-picker-selection">
@@ -1593,25 +1586,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </div>
 
             <footer className={"ps-community-picker-footer" + (appearancePicker === "nameStyle" ? " is-name-style-footer" : "")}>
-              {appearancePicker === "nameStyle" && <button type="button" className="ps-community-name-randomize" onClick={() => {
-                const font = DISPLAY_NAME_STYLES[Math.floor(Math.random() * DISPLAY_NAME_STYLES.length)];
-                const effect = DISPLAY_NAME_EFFECTS[Math.floor(Math.random() * DISPLAY_NAME_EFFECTS.length)];
-                setDraftDisplayNameStyle(font.id);
-                setDraftDisplayNameEffect(effect.id);
-                if (effect.id === "gradient") {
-                  const preset = DISPLAY_NAME_GRADIENT_PRESETS[Math.floor(Math.random() * DISPLAY_NAME_GRADIENT_PRESETS.length)];
-                  setDraftDisplayNameGradientStart(preset.start);
-                  setDraftDisplayNameGradientEnd(preset.end);
-                  setDraftDisplayNameColor("custom-gradient");
-                } else if (effect.id === "prism" || effect.id === "gummy") {
-                  const preset = DISPLAY_NAME_SPECTRUM_PRESETS[Math.floor(Math.random() * DISPLAY_NAME_SPECTRUM_PRESETS.length)];
-                  setDraftDisplayNamePrismColors(preset.colors.slice());
-                  setDraftDisplayNameColor("default");
-                } else {
-                  const available = DISPLAY_NAME_COLORS.filter((item) => item.id !== "default" && item.id !== "custom-gradient");
-                  setDraftDisplayNameColor(available[Math.floor(Math.random() * available.length)].id);
-                }
-              }}><Dices size={15}/> Sorpréndeme</button>}
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
               <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>
                 {hasPickerChanges ? "Aplicar" : "Ya equipado"}

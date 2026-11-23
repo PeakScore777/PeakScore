@@ -4516,3 +4516,54 @@
   opacity:1 !important;
   visibility:visible !important;
 }
+
+
+/* Motion gallery: all presets have a visible, lightweight CSS preview.
+   No canvas, timers, observers, or per-card React animation components. */
+.ps-name-preview-motion {
+  display:inline-block !important;
+  position:relative;
+  transform-origin:50% 55%;
+  animation-duration:3.8s;
+  animation-timing-function:cubic-bezier(.2,.72,.2,1);
+  animation-iteration-count:infinite;
+  animation-fill-mode:both;
+  will-change:transform,opacity,filter;
+}
+.name-preview-decrypt { animation-name:ps-preview-decrypt-lite; }
+.name-preview-signal-break { animation-name:ps-preview-signal-lite; }
+.name-preview-fuzzy-text { animation-name:ps-preview-noise-lite; }
+.name-preview-inkline { animation-name:ps-preview-inkline-lite; }
+.name-preview-halo-signal { animation-name:ps-preview-halo-lite; }
+.name-preview-domino-flow { animation-name:ps-preview-domino-lite; }
+.name-preview-mistfall { animation-name:ps-preview-mist-lite; }
+.name-preview-depth-lift { animation-name:ps-preview-depth-lite; }
+.name-preview-shuffle-blur { animation-name:ps-preview-blur-lite; }
+.name-preview-shuffle-flip { animation-name:ps-preview-flip-lite; }
+.name-preview-shuffle { animation-name:ps-preview-slide-lite; }
+@keyframes ps-preview-decrypt-lite { 0%,12%{opacity:.45;filter:blur(2px);letter-spacing:.12em} 40%,100%{opacity:1;filter:none;letter-spacing:inherit} }
+@keyframes ps-preview-signal-lite { 0%,8%,16%,100%{transform:none;filter:none} 10%{transform:translateX(-2px) skewX(-5deg);filter:drop-shadow(2px 0 #ff5368) drop-shadow(-2px 0 #43d9ee)} 13%{transform:translateX(2px) skewX(4deg)} }
+@keyframes ps-preview-noise-lite { 0%,15%,100%{opacity:1;filter:none} 5%{opacity:.55;filter:blur(1.5px)} 9%{opacity:.8;filter:contrast(1.7)} }
+@keyframes ps-preview-inkline-lite { 0%,8%{clip-path:inset(0 100% 0 0)} 52%,100%{clip-path:inset(0 0 0 0)} }
+@keyframes ps-preview-halo-lite { 0%,100%{filter:none;text-shadow:none} 45%,65%{filter:brightness(1.25);text-shadow:0 0 7px currentColor,0 0 15px currentColor} }
+@keyframes ps-preview-domino-lite { 0%,12%{transform:translateY(-5px) rotate(-3deg);opacity:.5} 42%,100%{transform:translateY(0) rotate(0);opacity:1} }
+@keyframes ps-preview-mist-lite { 0%,15%{opacity:.25;filter:blur(4px);transform:translateY(3px)} 55%,100%{opacity:1;filter:blur(0);transform:none} }
+@keyframes ps-preview-depth-lite { 0%,100%{transform:translateY(0);text-shadow:0 1px 0 #111} 48%,65%{transform:translateY(-2px);text-shadow:0 2px 0 #171421,0 4px 0 #171421,0 6px 7px #0008} }
+@keyframes ps-preview-blur-lite { 0%,12%{opacity:.25;filter:blur(5px);transform:translateY(5px)} 52%,100%{opacity:1;filter:none;transform:none} }
+@keyframes ps-preview-flip-lite { 0%,14%{opacity:.25;transform:perspective(160px) rotateX(70deg)} 55%,100%{opacity:1;transform:perspective(160px) rotateX(0)} }
+@keyframes ps-preview-slide-lite { 0%,15%{opacity:.3;transform:translateX(-12px)} 55%,100%{opacity:1;transform:translateX(0)} }
+
+/* The animated text must inherit its selected effect, including Chromaflow. */
+.ps-community-name-animation-option .ps-community-name-animation-sample.effect-chromaflow {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:260% 100% !important;
+  background-position:0 50%;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  animation:ps-chromaflow-spectrum 3.6s linear infinite !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-name-preview-motion { animation:none !important; transform:none !important; filter:none !important; clip-path:none !important; }
+}

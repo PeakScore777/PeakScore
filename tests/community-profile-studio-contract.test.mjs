@@ -838,7 +838,15 @@ test("Peak Motion Signatures offer six original hybrid entrance effects with liv
   for (const preset of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"]) {
     assert.ok(studio.includes('id: "' + preset + '"'));
     assert.ok(nameStyleCss.includes("name-enter-" + preset));
-    assert.ok(nameStyleCss.includes("ps-signature-" + preset));
+    const entranceKeyframe = {
+      eclipse: "ps-signature-eclipse-type",
+      mercury: "ps-signature-mercury-type",
+      supernova: "ps-signature-supernova-type",
+      prismforge: "ps-signature-prism-type",
+      royalfoil: "ps-signature-royal-type",
+      velvetbloom: "ps-signature-velvet-type",
+    }[preset];
+    assert.ok(nameStyleCss.includes(entranceKeyframe), "missing entrance choreography for " + preset);
     assert.ok(nameStyleCss.includes("ps-signature-demo-" + preset));
   }
   for (const label of ["Eclipse","Mercury","Supernova","Prism Forge","Royal Foil","Velvet Bloom"]) assert.ok(studio.includes('label: "' + label + '"'));

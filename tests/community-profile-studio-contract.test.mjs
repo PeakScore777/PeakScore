@@ -774,7 +774,10 @@ test("Motion Atelier entrance presets use adaptive per-grapheme timing and persi
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
   assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(studio, /const staggerWindow = animation === "typewriter" \? 620/);
-  assert.match(studio, /fontSize: \(fitScale \* 100\)/);
+  assert.match(studio, /fontSize: \(fitScale \* tagScale\)/);
+  assert.match(page, /fontSize: \(fitScale \* tagScale\)/);
+  assert.match(nameStyleCss, /overflow-wrap:anywhere/);
+  assert.match(studio, /const tagScale = tag === "h2" \? 1\.5 : tag === "h3" \? 1\.17 : 1/);
   assert.match(studio, /Animación de entrada/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);

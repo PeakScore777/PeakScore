@@ -10,7 +10,7 @@ import {
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
-type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "metallic" | "outline" | "shadow" | "aurora" | "fire" | "ice" | "glitch" | "holographic";
+type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "satin" | "pearl" | "ink" | "aurora";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -137,15 +137,18 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "rounded", label: "Rounded", sample: "Aa", description: "Display redondeada y sólida" },
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
 ];
-const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string }[] = [
-  { id: "plain", label: "Sólido" }, { id: "gradient", label: "Degradado" },
-  { id: "neon", label: "Neón" }, { id: "toon", label: "Toon" },
-  { id: "pop", label: "Pop" }, { id: "gummy", label: "Gummy" },
-  { id: "prism", label: "Prisma" }, { id: "metallic", label: "Cromo" },
-  { id: "outline", label: "Contorno" }, { id: "shadow", label: "Profundidad" },
-  { id: "aurora", label: "Aurora" }, { id: "fire", label: "Llama" },
-  { id: "ice", label: "Hielo" }, { id: "glitch", label: "Glitch" },
-  { id: "holographic", label: "Holográfico" },
+const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
+  { id: "plain", label: "Sólido", description: "Color limpio, sin adornos" },
+  { id: "gradient", label: "Degradado", description: "Dos tonos a medida" },
+  { id: "neon", label: "Neón", description: "Luz suave y concentrada" },
+  { id: "toon", label: "Toon", description: "Volumen ilustrado con borde fino" },
+  { id: "pop", label: "Pop", description: "Color vivo con profundidad sutil" },
+  { id: "gummy", label: "Gummy", description: "Acabado brillante y redondeado" },
+  { id: "prism", label: "Prisma", description: "Cinco tonos espectrales" },
+  { id: "satin", label: "Satinado", description: "Reflejo metálico discreto" },
+  { id: "pearl", label: "Nácar", description: "Iridescencia perlada" },
+  { id: "ink", label: "Tinta", description: "Pigmento sólido y preciso" },
+  { id: "aurora", label: "Aurora", description: "Matiz frío de baja intensidad" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -1292,18 +1295,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige un efecto</div>
+                      <div className="ps-community-name-style-heading">Elige un acabado</div>
                       <div className="ps-community-name-effect-grid">
                         {DISPLAY_NAME_EFFECTS.map((item) => (
                           <button key={item.id} type="button"
                             className={"ps-community-name-effect-option effect-" + item.id + (draftDisplayNameEffect === item.id ? " is-selected" : "")}
-                            onClick={() => { setDraftDisplayNameEffect(item.id); if (item.id === "gradient") setDraftDisplayNameColor("custom-gradient"); }} aria-pressed={draftDisplayNameEffect === item.id}
-                            style={item.id === "gradient"
-                              ? { background: "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")", color: "#fff" }
-                              : item.id === "prism"
-                                ? { "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")" } as CSSProperties
-                                : undefined}>
-                            {item.label}
+                            onClick={() => {
+                              setDraftDisplayNameEffect(item.id);
+                              if (item.id === "gradient") setDraftDisplayNameColor("custom-gradient");
+                            }}
+                            aria-pressed={draftDisplayNameEffect === item.id}
+                            title={item.description}>
+                            <span className={"ps-community-name-effect-sample effect-" + item.id}>{displayName || "Aa"}</span>
+                            <strong>{item.label}</strong>
                           </button>
                         ))}
                       </div>

@@ -3968,32 +3968,57 @@
 }
 
 
-/* Inkline — measured SVG outline drawing with a calm, non-flashing cycle. */
-.ps-inkline-name { display:inline-block; max-width:100%; vertical-align:baseline; line-height:1.15; }
+/* Inkline — premium outline-first lettering with a directional fill reveal. */
+.ps-inkline-name {
+  display:inline-block;
+  position:relative;
+  max-width:100%;
+  vertical-align:baseline;
+  line-height:1.12;
+  isolation:isolate;
+}
 .ps-inkline-measure { display:block; width:100%; max-width:100%; }
-.ps-inkline-svg { display:block; width:100%; height:auto; max-height:1.55em; overflow:visible; }
-.ps-inkline-outline, .ps-inkline-fill { font-size:1em; letter-spacing:inherit; }
+.ps-inkline-svg {
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:1.6em;
+  overflow:visible;
+}
+.ps-inkline-outline,
+.ps-inkline-fill {
+  font-size:1em;
+  letter-spacing:inherit;
+  paint-order:stroke fill;
+}
 .ps-inkline-outline {
-  stroke-dasharray:1200;
-  stroke-dashoffset:1200;
-  animation:ps-inkline-draw 8.6s cubic-bezier(.22,1,.36,1) infinite;
+  stroke-dasharray:1800;
+  stroke-dashoffset:1800;
+  animation:ps-inkline-contour 8.4s cubic-bezier(.65,0,.25,1) infinite;
+  will-change:stroke-dashoffset;
+}
+.ps-inkline-fill {
+  opacity:1;
 }
 .ps-inkline-wipe {
-  width:0;
-  animation:ps-inkline-fill-wipe 8.6s cubic-bezier(.22,1,.36,1) infinite;
+  transform:scaleX(0);
+  transform-box:fill-box;
+  transform-origin:left center;
+  animation:ps-inkline-reveal 8.4s cubic-bezier(.22,1,.36,1) infinite;
+  will-change:transform;
 }
-@keyframes ps-inkline-draw {
-  0%, 7% { stroke-dashoffset:1200; }
-  31%, 68% { stroke-dashoffset:0; }
-  91%, 100% { stroke-dashoffset:1200; }
+@keyframes ps-inkline-contour {
+  0%, 5% { stroke-dashoffset:1800; }
+  34%, 59% { stroke-dashoffset:0; }
+  78%, 100% { stroke-dashoffset:1800; }
 }
-@keyframes ps-inkline-fill-wipe {
-  0%, 28% { width:0; }
-  48%, 68% { width:var(--ps-inkline-width,100%); }
-  91%, 100% { width:0; }
+@keyframes ps-inkline-reveal {
+  0%, 31% { transform:scaleX(0); }
+  48%, 59% { transform:scaleX(1); }
+  76%, 100% { transform:scaleX(0); }
 }
 @media (prefers-reduced-motion:reduce) {
   .ps-inkline-outline, .ps-inkline-wipe { animation:none !important; }
   .ps-inkline-outline { stroke-dashoffset:0; }
-  .ps-inkline-wipe { width:100%; }
+  .ps-inkline-wipe { transform:scaleX(1); }
 }

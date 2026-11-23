@@ -676,7 +676,7 @@ test("profile display name is immutable while typography remains customizable", 
   assert.ok(!studio.includes("setDisplayName("));
   assert.ok(!studio.includes("displayName: displayName.trim()"));
   const patchRoute = route.slice(route.indexOf("export async function PATCH"));
-  assert.doesNotMatch(patchRoute, /display_name\\s*:/);
+  assert.doesNotMatch(patchRoute, /display_name\s*:/);
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(route, /display_name: profileResult\.data\.display_name|displayName: profileResult\.data\.display_name/);
 });

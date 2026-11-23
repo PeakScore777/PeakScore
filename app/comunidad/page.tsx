@@ -303,7 +303,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       ease="power2.out"
       stagger={0.07}
       threshold={0.1}
-      respectReducedMotion
+      respectReducedMotion={!previewMode}
       tag={tag}
       className={className}
       style={safeStyle}
@@ -341,6 +341,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       characters="0123456789ABCDEF"
       scrambleColor="#2bb673"
       animateOn="view"
+      forceMotion={previewMode}
       loop={false}
     />;
   }
@@ -397,6 +398,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       trigger="always"
       burstDuration={0.34}
       frameRate={previewMode ? 14 : 20}
+      previewMode={previewMode}
     />;
   }
     if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;

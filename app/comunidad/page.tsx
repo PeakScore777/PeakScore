@@ -412,7 +412,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       previewMode={previewMode}
     />;
   }
-    if (animation === "none") return <Tag id={id} className={renderedClassName} style={safeStyle}>{value}</Tag>;
+    if (animation === "none") return <Tag id={id} className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag id={id} className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" style={{

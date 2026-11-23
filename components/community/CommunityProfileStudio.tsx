@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Pencil, Moon, Pipette, Sun,
+  Camera, Check, Copy, Dices, ImagePlus, Pencil, Moon, Pipette, Sun,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
@@ -1611,7 +1611,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   const available = DISPLAY_NAME_COLORS.filter((item) => item.id !== "default" && item.id !== "custom-gradient");
                   setDraftDisplayNameColor(available[Math.floor(Math.random() * available.length)].id);
                 }
-              }}>✥ Sorpréndeme</button>}
+              }}><Dices size={15}/> Sorpréndeme</button>}
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
               <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>
                 {hasPickerChanges ? "Aplicar" : "Ya equipado"}

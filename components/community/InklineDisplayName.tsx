@@ -32,7 +32,7 @@ export default function InklineDisplayName({
   const clipId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const Tag = tag;
-  const chromaflow = className.split(/\\s+/).includes("effect-chromaflow");
+  const chromaflow = className.split(/\s+/).includes("effect-chromaflow");
   const chromaflowGradientId = `ps-inkline-${clipId}-chromaflow`;
 
   useLayoutEffect(() => {

@@ -722,7 +722,7 @@ test("display-name style picker uses one live profile surface, synchronized memb
 
 test("display-name effects match Discord video with seven animated finishes", () => {
   assert.match(studio, /label: "Gloss"/);
-  assert.match(studio, /"Dibujo animado"/);
+  assert.match(studio, /label: "Cromo"/);
   assert.match(studio, /"Prisma"/);
   assert.match(route, /"gummy"/);
   assert.match(route, /"toon"/);

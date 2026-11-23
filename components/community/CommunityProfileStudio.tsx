@@ -9,6 +9,7 @@ import InklineDisplayName from "@/components/community/InklineDisplayName";
 import HaloSignalDisplayName from "@/components/community/HaloSignalDisplayName";
 import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName";
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
+import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
@@ -20,7 +21,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall";
+type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -166,6 +167,7 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "halo-signal", label: "Halo Signal", description: "Letras que se encienden en orden variable con brillo violeta y destellos controlados", hint: "Destello violeta · secuencia aleatoria" },
   { id: "domino-flow", label: "Domino Flow", description: "Las letras caen en cadena como fichas de dominó y se reconstruyen en su posición", hint: "Caída escalonada · reconstrucción" },
   { id: "mistfall", label: "Mistfall", description: "El nombre se descompone en partículas luminosas y vuelve a condensarse", hint: "Dispersión de partículas · condensación" },
+  { id: "depth-lift", label: "Depth Lift", description: "Volumen 3D con sombra profunda que se extiende al pasar el cursor", hint: "Profundidad 3D · hover" },
   { id: "shuffle-blur", label: "Blur Cascade", description: "Caracteres que ascienden entre dígitos y símbolos con desenfoque progresivo", hint: "Blur · vertical · 1,5 s" },
   { id: "shuffle-flip", label: "Flip Roll", description: "Caracteres alfabéticos que giran en cascada hacia abajo", hint: "Flip · vertical · 1,1 s" },
   { id: "shuffle", label: "Classic Slide", description: "Deslizamiento horizontal alternado, limpio y preciso", hint: "Slide · derecha · 0,35 s" },
@@ -362,6 +364,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   }
   if (animation === "mistfall") {
     return <MistfallDisplayName text={value} className={className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+  }
+  if (animation === "depth-lift") {
+    return <DepthLiftDisplayName text={value} className={className} style={safeStyle} tag={tag}/>;
   }
   if (animation === "shuffle-blur") {
     return <ShuffleDisplayName

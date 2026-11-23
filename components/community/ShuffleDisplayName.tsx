@@ -1,115 +1,56 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import type { CSSProperties, ElementType } from "react";
-import { gsap } from "gsap";
-
-type ShuffleDirection = "left" | "right" | "up" | "down";
-type AnimationMode = "evenodd" | "sequence" | "center" | "random";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ElementType } from "react";
 
 type ShuffleProps = {
   text: string;
   className?: string;
   style?: CSSProperties;
   effect?: "slide" | "flip" | "blur";
-  shuffleDirection?: ShuffleDirection;
+  shuffleDirection?: "left" | "right" | "up" | "down";
   duration?: number;
   ease?: string;
   threshold?: number;
   tag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "strong";
   textAlign?: CSSProperties["textAlign"];
   shuffleTimes?: number;
-  animationMode?: AnimationMode;
+  animationMode?: "evenodd" | "sequence" | "center" | "random";
   stagger?: number;
   triggerOnce?: boolean;
   respectReducedMotion?: boolean;
 };
 
-/**
- * PeakScore's lightweight React Bits Shuffle adaptation.
- * It runs automatically when the name enters the viewport; there is no hover
- * listener and no perpetual loop. The slide reel is built with native spans,
- * so the same component works in the profile, member list and chat.
- */
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-";
+
 export default function ShuffleDisplayName({
-  text,
-  className = "",
-  style,
-  effect = "slide",
-  shuffleDirection = "right",
-  duration = 0.35,
-  ease = "power3.out",
-  threshold = 0.1,
-  tag = "span",
-  textAlign = "inherit",
-  shuffleTimes = 1,
-  animationMode = "evenodd",
-  stagger = 0.03,
-  triggerOnce = true,
-  respectReducedMotion = true,
+  text, className = "", style, effect = "slide", shuffleDirection = "right",
+  duration = 0.35, ease = "power3.out", threshold = 0.1, tag = "span",
+  textAlign = "inherit", shuffleTimes = 1, animationMode = "evenodd",
+  stagger = 0.03, triggerOnce = true, respectReducedMotion = true,
 }: ShuffleProps) {
   const rootRef = useRef<HTMLElement | null>(null);
-  const trackRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const hasPlayed = useRef(false);
+  const [playing, setPlaying] = useState(false);
+  const [run, setRun] = useState(0);
   const Tag = tag as ElementType;
-  const characters = useMemo(() => Array.from(text), [text]);
+  const chars = useMemo(() => Array.from(text), [text]);
 
   useEffect(() => {
-    const root = rootRef.current;
-    const tracks = trackRefs.current.filter((node): node is HTMLSpanElement => Boolean(node));
-    if (!root || !tracks.length) return;
-
-    let timeline: gsap.core.Timeline | null = null;
-    let observer: IntersectionObserver | null = null;
-    let cancelled = false;
+    const node = rootRef.current;
+    if (!node || !text) return;
     const reduced = respectReducedMotion && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
+    if (reduced) return;
+    let observer: IntersectionObserver | null = null;
+    let fallback = 0;
     const play = () => {
-      if (cancelled || (triggerOnce && hasPlayed.current)) return;
+      if (triggerOnce && hasPlayed.current) return;
       hasPlayed.current = true;
-      if (reduced) return;
-
-      const vertical = shuffleDirection === "up" || shuffleDirection === "down";
-      const reverse = shuffleDirection === "left" || shuffleDirection === "up";
-      const axis = vertical ? "yPercent" : "xPercent";
-      const from = reverse ? 0 : -66.6667;
-      const to = reverse ? -66.6667 : 0;
-      const safeDuration = Math.max(0.12, duration);
-      const safeStagger = Math.max(0, stagger);
-      const safeRolls = Math.max(1, Math.min(3, Math.floor(shuffleTimes)));
-      const offsets = tracks.map((_, index) => {
-        if (animationMode === "sequence") return index * safeStagger;
-        if (animationMode === "center") return Math.abs(index - (tracks.length - 1) / 2) * safeStagger;
-        if (animationMode === "random") return Math.random() * safeStagger * tracks.length;
-        const oddCount = Math.floor(tracks.length / 2);
-        const evenStart = oddCount ? (safeDuration + Math.max(0, oddCount - 1) * safeStagger) * 0.7 : 0;
-        return index % 2 === 1
-          ? Math.floor(index / 2) * safeStagger
-          : evenStart + (index / 2) * safeStagger;
-      });
-
-      tracks.forEach((track) => {
-        gsap.set(track, { xPercent: vertical ? 0 : from, yPercent: vertical ? from : 0 });
-      });
-
-      timeline = gsap.timeline();
-      tracks.forEach((track, index) => {
-        timeline?.to(track, {
-          [axis]: to,
-          duration: safeDuration * safeRolls,
-          ease,
-          force3D: true,
-        }, offsets[index]);
-      });
+      setPlaying(false);
+      setRun((value) => value + 1);
+      requestAnimationFrame(() => setPlaying(true));
     };
-
-    if (reduced) {
-      hasPlayed.current = true;
-      return () => { cancelled = true; };
-    }
-
-    if (typeof IntersectionObserver === "undefined") {
-      play();
+    if (!("IntersectionObserver" in window)) {
+      fallback = window.setTimeout(play, 0);
     } else {
       observer = new IntersectionObserver((entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
@@ -117,18 +58,26 @@ export default function ShuffleDisplayName({
           if (triggerOnce) observer?.disconnect();
         }
       }, { threshold: Math.max(0, Math.min(1, threshold)) });
-      observer.observe(root);
+      observer.observe(node);
     }
-
     return () => {
-      cancelled = true;
       observer?.disconnect();
-      timeline?.kill();
-      tracks.forEach((track) => gsap.set(track, { clearProps: "transform" }));
+      window.clearTimeout(fallback);
     };
-  }, [text, duration, ease, threshold, shuffleDirection, shuffleTimes, animationMode, stagger, triggerOnce, respectReducedMotion, characters.length]);
+  }, [text, threshold, triggerOnce, respectReducedMotion]);
 
-  trackRefs.current = [];
+  const safeDuration = Math.max(0.12, duration);
+  const safeStagger = Math.max(0, stagger);
+  const rolls = Math.max(1, Math.min(3, Math.floor(shuffleTimes)));
+  const total = Math.max(1, chars.length);
+  const order = (index: number) => {
+    if (animationMode === "sequence") return index;
+    if (animationMode === "center") return Math.abs(index - (total - 1) / 2);
+    if (animationMode === "random") return ((index * 17 + 11) % total) / total * total;
+    const oddCount = Math.floor(total / 2);
+    const evenStart = oddCount ? (safeDuration + Math.max(0, oddCount - 1) * safeStagger) * 0.7 : 0;
+    return index % 2 === 1 ? Math.floor(index / 2) : evenStart / Math.max(safeStagger, 0.001) + index / 2;
+  };
 
   return (
     <Tag
@@ -136,20 +85,32 @@ export default function ShuffleDisplayName({
       className={("ps-name-shuffle " + className).trim()}
       style={{ ...style, textAlign }}
       aria-label={text}
+      data-shuffle-run={run}
     >
       <span className="ps-name-shuffle__content" aria-hidden="true">
-        {characters.map((character, index) => {
-          const glyph = character === " " ? "\u00a0" : character;
+        {chars.map((char, index) => {
+          if (char === " ") return <span className="ps-name-shuffle__space" key={index}>{"\u00a0"}</span>;
+          const seed = (index * 13 + run * 7) % GLYPHS.length;
+          const intermediate = Array.from({ length: rolls }, (_, n) => GLYPHS[(seed + n * 9 + 3) % GLYPHS.length]);
+          const glyphs = [char, ...intermediate, char];
+          const delay = animationMode === "random" ? order(index) * safeStagger : order(index) * safeStagger;
+          const vertical = shuffleDirection === "up" || shuffleDirection === "down";
+          const reverse = shuffleDirection === "left" || shuffleDirection === "up";
+          const travel = reverse ? "100%" : "-100%";
           return (
             <span className="ps-name-shuffle__cell" key={index}>
-              <span className="ps-name-shuffle__sizer">{glyph}</span>
+              <span className="ps-name-shuffle__sizer">{char}</span>
               <span
-                className="ps-name-shuffle__track"
-                ref={(node) => { trackRefs.current[index] = node; }}
+                className={"ps-name-shuffle__track" + (playing ? " is-playing" : "")}
+                style={{
+                  ["--shuffle-duration" as string]: safeDuration * (rolls + 1) + "s",
+                  ["--shuffle-delay" as string]: delay + "s",
+                  ["--shuffle-travel" as string]: travel,
+                  ["--shuffle-ease" as string]: ease === "power3.out" ? "cubic-bezier(.16,1,.3,1)" : "cubic-bezier(.2,.8,.2,1)",
+                  ["--shuffle-axis" as string]: vertical ? "Y" : "X",
+                } as CSSProperties}
               >
-                <span>{glyph}</span>
-                <span>{glyph}</span>
-                <span>{glyph}</span>
+                {glyphs.map((glyph, n) => <span key={n}>{glyph}</span>)}
               </span>
             </span>
           );

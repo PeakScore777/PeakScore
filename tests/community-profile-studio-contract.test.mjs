@@ -810,9 +810,10 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(studio, /<small>\{item\.hint\}<\/small>/);
   assert.doesNotMatch(studio, /item\.duration/);
   assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","glitch","wipe"]) {
     assert.match(nameStyleCss, new RegExp("ps-preview-" + preset));
   }
+  assert.match(nameStyleCss, /@keyframes ps-preview-spotlight-beam/);
   assert.match(nameStyleCss, / infinite both !important/);
   assert.match(nameStyleCss, /ps-community-name-animation-option\.is-selected/);
   assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);

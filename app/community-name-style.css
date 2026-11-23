@@ -5171,3 +5171,79 @@
     animation:ps-inkline-reveal 4.8s ease-in-out infinite !important;
   }
 }
+
+
+/* Chromaflow final renderer pass.
+   Each glyph samples a distinct horizontal slice of one shared full-word spectrum.
+   The inherited offset moves the whole spectrum without replacing glyph transforms. */
+.ps-community-name-render.effect-chromaflow {
+  animation:ps-chromaflow-shift 4.8s linear infinite !important;
+}
+.ps-community-name-render.effect-chromaflow .ps-decrypted-cell.is-revealed,
+.ps-community-name-render.effect-chromaflow .ps-decrypted-ghost,
+.ps-community-name-render.effect-chromaflow .ps-decrypted-glyph,
+.ps-community-name-render.effect-chromaflow .ps-glitch-char,
+.ps-community-name-render.effect-chromaflow .ps-halo-signal__glyph,
+.ps-community-name-render.effect-chromaflow .ps-domino-flow__tile,
+.ps-community-name-render.effect-chromaflow .ps-name-animation-char,
+.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span > span {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:var(--ps-chroma-background-size,260%) 100% !important;
+  background-position:calc(var(--ps-chroma-position,0%) + var(--ps-chromaflow-shift,0%)) 50% !important;
+  background-repeat:no-repeat !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:none !important;
+}
+.ps-community-name-render.effect-chromaflow .ps-glitch-slice,
+.ps-community-name-render.effect-chromaflow .ps-glitch-text:not(:has(.ps-glitch-char)),
+.ps-community-name-render.effect-chromaflow .ps-depth-lift__face,
+.ps-community-name-render.effect-chromaflow .ps-mistfall-layout {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:260% 100% !important;
+  background-position:var(--ps-chromaflow-shift,0%) 50% !important;
+  background-repeat:no-repeat !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:none !important;
+}
+.ps-community-name-render.effect-chromaflow .ps-mistfall-canvas,
+.ps-community-name-render.effect-chromaflow .ps-fuzzy-text-canvas {
+  animation:ps-chromaflow-canvas-hue 8s linear infinite !important;
+  filter:saturate(1.35) !important;
+}
+@keyframes ps-chromaflow-canvas-hue {
+  from { filter:hue-rotate(0deg) saturate(1.35); }
+  to { filter:hue-rotate(360deg) saturate(1.35); }
+}
+
+/* Domino keeps its rolling chain, but no longer turns each glyph edge-on.
+   The lower rotation prevents the coloured text antialiasing from leaving bright
+   one-pixel slivers at the fall/recovery keyframes. */
+@keyframes ps-domino-flow-topple {
+  0%, 12% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+  19% { transform:translate3d(.01em,.01em,0) rotateZ(-4deg) rotateX(1deg); }
+  31% { transform:translate3d(.045em,.025em,0) rotateZ(25deg) rotateX(0deg); }
+  38% { transform:translate3d(.05em,.025em,0) rotateZ(30deg) rotateX(0deg); }
+  46% { transform:translate3d(.025em,.012em,0) rotateZ(14deg) rotateX(0deg); }
+  54%, 65% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+  72% { transform:translate3d(-.008em,-.008em,0) rotateZ(2deg); }
+  82%, 100% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-chromaflow {
+    animation:ps-chromaflow-shift 4.8s linear infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
+    animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-mistfall-canvas,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-fuzzy-text-canvas {
+    animation:ps-chromaflow-canvas-hue 8s linear infinite !important;
+  }
+}

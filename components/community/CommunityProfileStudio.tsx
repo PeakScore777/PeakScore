@@ -9,8 +9,8 @@ import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTe
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, ChevronDown, Copy, ImagePlus, Pencil, Pipette,
-  LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
+  Camera, Check, Copy, ImagePlus, Pencil, Pipette,
+  LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";

@@ -348,12 +348,12 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       text={value}
       effect="blur"
       shuffleDirection="up"
-      duration={2.75}
+      duration={3.6}
       animationMode="sequence"
-      shuffleTimes={14}
+      shuffleTimes={10}
       scrambleCharset="0123456789#%&*+-=?"
       ease="expo.out"
-      stagger={0.06}
+      stagger={0.075}
       threshold={0.1}
       respectReducedMotion
       tag={tag}
@@ -366,11 +366,11 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       text={value}
       effect="flip"
       shuffleDirection="down"
-      duration={2.4}
+      duration={3.2}
       animationMode="sequence"
-      shuffleTimes={7}
+      shuffleTimes={5}
       ease="power2.out"
-      stagger={0.07}
+      stagger={0.085}
       threshold={0.1}
       respectReducedMotion
       tag={tag}
@@ -383,11 +383,11 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       text={value}
       effect="slide"
       shuffleDirection="right"
-      duration={1.3}
+      duration={2.2}
       animationMode="evenodd"
       shuffleTimes={1}
       ease="power3.out"
-      stagger={0.05}
+      stagger={0.07}
       threshold={0.1}
       respectReducedMotion
       tag={tag}
@@ -402,16 +402,16 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       tag={tag}
       className={className}
       style={safeStyle}
-      speed={previewMode ? 50 : 40}
+      speed={previewMode ? 68 : 60}
       maxIterations={10}
-      durationMs={previewMode ? 1800 : 2400}
+      durationMs={previewMode ? 2800 : 3200}
       sequential
       revealDirection="random"
       characters="0123456789ABCDEF"
       scrambleColor="#2bb673"
       animateOn={isGalleryDemo ? "mount" : "view"}
       loop={isGalleryDemo}
-      loopDelay={1700}
+      loopDelay={3400}
     />;
   }
   if (animation === "fuzzy-text") {
@@ -456,17 +456,17 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       className={className}
       style={safeStyle}
       mode="slices"
-      speed={0.72}
+      speed={1.05}
       fontWeight={900}
       enableShadows
       offset={4}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.22}
+      intensity={0.14}
       skew={0.18}
       flicker={false}
       trigger="always"
-      burstDuration={0.34}
-      frameRate={previewMode ? 24 : 30}
+      burstDuration={0.58}
+      frameRate={previewMode ? 20 : 24}
     />;
   }
     if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;

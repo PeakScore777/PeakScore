@@ -5041,3 +5041,133 @@
   line-height:1.25 !important;
   box-sizing:border-box !important;
 }
+
+
+/* Animation gallery: reuse the exact compact card language used by the effects gallery.
+   Every tile mounts its own real preview; there is no rotating single-preview slot. */
+.ps-community-name-style-group > .ps-community-name-animation-grid {
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  grid-auto-flow:row !important;
+  align-items:stretch !important;
+  justify-items:stretch !important;
+  gap:8px !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option {
+  display:flex !important;
+  min-width:0 !important;
+  min-height:68px !important;
+  height:auto !important;
+  flex:initial !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px !important;
+  padding:9px 8px !important;
+  text-align:center !important;
+  background:#2b2d34 !important;
+  border:1px solid #3a3d45 !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+  overflow:hidden !important;
+  transition:background-color 90ms ease,border-color 90ms ease !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option:hover {
+  transform:none !important;
+  background:#343740 !important;
+  border-color:#626775 !important;
+  box-shadow:none !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option.is-selected {
+  border-color:#687bff !important;
+  background:#34374b !important;
+  box-shadow:inset 0 0 0 1px rgb(104 123 255 / 23%) !important;
+}
+.ps-community-name-animation-option > .ps-community-name-animation-sample {
+  display:block !important;
+  width:auto !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 auto !important;
+  padding:0 !important;
+  overflow:visible !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background-color:transparent !important;
+  box-shadow:none !important;
+  font-size:17px !important;
+  font-weight:800 !important;
+  line-height:1.1 !important;
+  letter-spacing:-.025em !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+.ps-community-name-animation-option > strong {
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:#c5c9d2 !important;
+  font-size:10px !important;
+  font-weight:750 !important;
+  line-height:1.15 !important;
+  letter-spacing:.035em !important;
+  text-align:center !important;
+  text-transform:uppercase !important;
+}
+@media (max-width:560px) {
+  .ps-community-name-style-group > .ps-community-name-animation-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+/* Chromaflow drives an inherited custom property so each animated glyph uses
+   the same moving spectrum. It must not replace the renderer's own animation. */
+.ps-community-name-render.effect-chromaflow {
+  animation:ps-chromaflow-shift 3.6s linear infinite !important;
+  background-position:var(--ps-chromaflow-shift,0%) 50% !important;
+}
+.ps-community-name-render.effect-chromaflow .ps-decrypted-cell,
+.ps-community-name-render.effect-chromaflow .ps-decrypted-glyph,
+.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-chromaflow .ps-glitch-char,
+.ps-community-name-render.effect-chromaflow .ps-glitch-slice,
+.ps-community-name-render.effect-chromaflow .ps-halo-signal__glyph,
+.ps-community-name-render.effect-chromaflow .ps-domino-flow__tile,
+.ps-community-name-render.effect-chromaflow .ps-name-animation-char,
+.ps-community-name-render.effect-chromaflow .ps-depth-lift__face {
+  background-position:var(--ps-chromaflow-shift,0%) 50% !important;
+}
+
+/* Explicit motion demos continue to play when the OS requests reduced motion.
+   This exception only applies inside the editor's deliberate live previews. */
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-gradient {
+    animation:ps-community-name-gradient-sheen 5.5s ease-in-out infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-neon {
+    animation:ps-community-name-neon-breathe 2.8s ease-in-out infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-prism {
+    animation:ps-community-name-gradient-sheen 4.6s ease-in-out infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-chromaflow {
+    animation:ps-chromaflow-shift 3.6s linear infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-halo-signal__glyph {
+    animation:ps-halo-signal-ignite var(--halo-cycle,8.8s) cubic-bezier(.2,.65,.25,1) infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
+    animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-inkline-outline {
+    animation:ps-inkline-contour 4.8s ease-in-out infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-inkline-wipe {
+    animation:ps-inkline-reveal 4.8s ease-in-out infinite !important;
+  }
+}

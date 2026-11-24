@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, reactBitsGlitchName, reactBitsGlitchCss] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -40,8 +40,6 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/HaloSignalDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/DominoFlowDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/InklineDisplayName.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../components/community/ReactBitsGlitchText.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../components/community/ReactBitsGlitchText.css", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -864,7 +862,7 @@ test("motion gallery previews use the exact renderer for each selected animation
   }
   assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:', 'id: "inkline", label:', 'id: "halo-signal", label:'].filter((entry) => catalogue.includes(entry)).length, 7);
   assert.ok(studio.includes("<DecryptedDisplayName"));
-  assert.ok(studio.includes("<ReactBitsGlitchText"));
+  assert.ok(studio.includes("<SignalBreakDisplayName"));
   assert.ok(studio.includes("<FuzzyText"));
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));
@@ -973,75 +971,62 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
 });
 
 
-test("Signal Break is a branded animated profile renderer with slices, RGB, scan and noise modes", () => {
+test("Signal Break uses the shared slices renderer with exact editor settings and Chroma-compatible layers", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 6);
-  assert.match(studio, /<ReactBitsGlitchText/);
+  assert.match(studio, /<SignalBreakDisplayName/);
   assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);
-  assert.ok(glitchName.includes('safeMode === "rgb"'));
-  assert.match(glitchName, /requestAnimationFrame\(frame\)/);
-  assert.match(glitchName, /prefers-reduced-motion/);
   assert.match(studio, /mode="slices"/);
+  assert.match(studio, /trigger="always"/);
   assert.match(studio, /speed=\{1\}/);
-  assert.match(studio, /offset=\{10\}/);
   assert.match(studio, /intensity=\{0\.5\}/);
-  assert.match(studio, /shadowColors=\{\["#ff0000", "#00ffff"\]\}/);
-  assert.match(studio, /trigger="always"/);
   assert.match(studio, /burstDuration=\{0\.6\}/);
-  assert.match(studio, /trigger="always"/);
-  assert.match(studio, /mode="slices"/);
+  assert.match(studio, /offset=\{10\}/);
   assert.match(studio, /skew=\{0\}/);
   assert.match(studio, /flicker=\{false\}/);
   assert.match(studio, /fontWeight=\{900\}/);
-  assert.ok(studio.includes('import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText"'));
-  assert.ok(glitchName.includes("requestAnimationFrame(frame)"));
-  assert.ok(glitchName.includes('safeMode === "rgb"'));
-  assert.ok(glitchName.includes('safeMode === "scan"'));
-  assert.ok(glitchName.includes('safeMode === "noise"'));
-  assert.match(nameStyleCss, /\.ps-reactbits-glitch \.glitch__slice--a/);
-  assert.match(nameStyleCss, /\.ps-reactbits-glitch \.glitch__slice--b/);
-  assert.match(nameStyleCss, /mask-composite:intersect/);
+  assert.match(studio, /shadowColors=\{\["#ff0000", "#00ffff"\]\}/);
+  assert.match(studio, /previewMode=\{previewMode\}/);
+  assert.match(glitchName, /requestAnimationFrame\(frame\)/);
   assert.match(glitchName, /SIGNAL_BREAK_CYCLE_MS = 480/);
   assert.match(glitchName, /SIGNAL_BREAK_BURST_MS = 300/);
-  assert.ok(glitchName.includes('safeMode === "rgb"'));
-  assert.ok(glitchName.includes('safeMode === "scan"'));
-  assert.ok(glitchName.includes('safeMode === "noise"'));
-  assert.match(glitchAnimationMigration, /where display_name_animation = 'wipe'/);
-  assert.match(glitchAnimationMigration, /set display_name_animation = 'glitch'/);
+  assert.match(glitchName, /safeMode === "slices"/);
+  assert.match(glitchName, /safeMode === "rgb"/);
+  assert.match(glitchName, /safeMode === "scan"/);
+  assert.match(glitchName, /safeMode === "noise"/);
+  assert.match(nameStyleCss, /\.ps-glitch-name--slices \.ps-glitch-slice--a/);
+  assert.match(nameStyleCss, /\.ps-glitch-name--slices \.ps-glitch-slice--b/);
+  assert.match(nameStyleCss, /Signal Break live editor preview: keep the name as inline text/);
+  assert.match(nameStyleCss, /\.ps-glitch-name\.ps-community-name-render\.effect-chromaflow > \.ps-glitch-slice--a/);
+  assert.match(nameStyleCss, /background-position:var\(--ps-chromaflow-shift,0%\) 50% !important/);
 });
 
 
-test("Signal Break uses the React Bits slices renderer consistently in the editor gallery and all three live previews", () => {
+
+test("Signal Break gallery, profile, member and chat previews share one inline name renderer", () => {
   const branchStart = studio.indexOf('if (animation === "signal-break")');
   const branchEnd = studio.indexOf('if (animation === "none")', branchStart);
   const branch = studio.slice(branchStart, branchEnd);
 
-  assert.ok(branch.includes("<ReactBitsGlitchText"));
+  assert.ok(branch.includes("<SignalBreakDisplayName"));
+  assert.match(branch, /tag=\{tag\}/);
+  assert.match(branch, /className=\{renderedClassName\}/);
+  assert.match(branch, /previewMode=\{previewMode\}/);
   assert.match(branch, /mode="slices"/);
-  assert.match(branch, /trigger="always"/);
   assert.match(branch, /speed=\{1\}/);
   assert.match(branch, /intensity=\{0\.5\}/);
-  assert.match(branch, /burstDuration=\{0\.6\}/);
   assert.match(branch, /offset=\{10\}/);
-  assert.match(branch, /skew=\{0\}/);
-  assert.match(branch, /flicker=\{false\}/);
-  assert.match(branch, /fontWeight=\{900\}/);
   assert.match(branch, /shadowColors=\{\["#ff0000", "#00ffff"\]\}/);
-  assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
   assert.equal((studio.match(/animation=\{draftDisplayNameAnimation\}/g) ?? []).length, 3);
   assert.match(studio, /<div className="ps-community-name-member-copy">[\s\S]*?animation=\{draftDisplayNameAnimation\}/);
-  assert.match(reactBitsGlitchName, /bandAt\(pingPong\(clock, 3 \* pace\)\)/);
-  assert.match(reactBitsGlitchName, /bandAt\(pingPong\(clock, 2 \* pace\)\)/);
-  assert.match(reactBitsGlitchName, /write\("--glitch-a-shadow"/);
-  assert.match(reactBitsGlitchName, /write\("--glitch-b-shadow"/);
-  assert.doesNotMatch(reactBitsGlitchName, /ps-glitch-(?:text|slice|char|sr)/);
-  assert.match(reactBitsGlitchCss, /-webkit-mask-composite:source-in/);
-  assert.match(reactBitsGlitchCss, /mask-composite:intersect/);
-  assert.match(reactBitsGlitchCss, /clip-path:inset\(var\(--glitch-a-top/);
-  assert.match(reactBitsGlitchCss, /clip-path:inset\(var\(--glitch-b-top/);
+  assert.match(nameStyleCss, /\.ps-community-name-member-copy > \.ps-glitch-name\.community-member-nameplate\.ps-community-name-preview-live/);
+  assert.match(nameStyleCss, /border:0 !important/);
+  assert.match(nameStyleCss, /box-shadow:none !important/);
+  assert.match(nameStyleCss, /background-size:var\(--ps-chroma-background-size,260%\) 100% !important/);
+  assert.match(nameStyleCss, /\.ps-glitch-name\.ps-community-name-render\.effect-chromaflow > \.ps-glitch-text/);
 });
+
 
 test("Noise Reveal uses the React Bits canvas renderer with its curated motion preset", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));

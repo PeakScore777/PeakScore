@@ -6429,3 +6429,38 @@ html:has(.ps-community-picker-overlay) * {
     transition:none !important;
   }
 }
+
+
+/* Community lists and chat keep the chosen finish, but do not run a second
+   animation loop for every visible message/member. Full motion is reserved
+   for the profile surface and the editor's active profile preview. */
+.ps-community-name-static {
+  animation:none !important;
+  transform:none !important;
+}
+.ps-community-name-static.effect-gradient,
+.ps-community-name-static.effect-toon,
+.ps-community-name-static.effect-gummy,
+.ps-community-name-static.effect-prism,
+.ps-community-name-static.effect-chromaflow {
+  animation:none !important;
+  background-position:50% 50% !important;
+}
+.ps-community-name-static.effect-neon,
+.ps-community-name-static.effect-pop {
+  animation:none !important;
+  transform:none !important;
+}
+
+/* Keep the preview toolbar legible at narrow laptop and tablet widths. */
+@media (max-width:780px) {
+  .ps-community-name-preview-stage {
+    padding:10px !important;
+  }
+  .ps-community-name-preview-theme-switch {
+    width:100% !important;
+  }
+  .ps-community-name-preview-theme-switch button {
+    flex:1 1 0 !important;
+  }
+}

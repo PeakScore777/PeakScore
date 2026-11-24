@@ -1171,8 +1171,8 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(studio, /ps-name-plain/);
   assert.match(page, /ps-name-plain/);
   const dominoKeyframes = nameStyleCss.slice(nameStyleCss.lastIndexOf("@keyframes ps-domino-flow-topple"));
-  assert.match(dominoKeyframes, /rotateZ\(30deg\)/);
-  assert.doesNotMatch(dominoKeyframes, /rotateZ\(82deg\)/);
+  assert.match(dominoKeyframes, /rotate\(10deg\)/);
+  assert.doesNotMatch(dominoKeyframes, /rotate\(82deg\)/);
   assert.match(nameStyleCss, /\.ps-domino-flow__tile\s*\{[\s\S]*?backface-visibility:visible !important/);
   assert.match(nameStyleCss, /\.ps-name-shuffle\[data-shuffle-active="false"\] \.ps-name-shuffle__sizer/);
 });

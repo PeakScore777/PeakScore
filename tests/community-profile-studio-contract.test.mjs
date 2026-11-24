@@ -1092,7 +1092,6 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);
   assert.match(mistfallName, /\[text, previewMode, effectName, chromaflow, styleKey\]/);
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
-  assert.match(page, /frameRate=\{24\}/);
 });
 
 

@@ -955,7 +955,7 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
   assert.match(decryptedName, /durationMs = 2200/);
   assert.match(decryptedName, /elapsed \/ safeDuration/);
   assert.match(decryptedName, /scheduledCount = Math\.floor\(progress \* order\.length\)/);
-  assert.match(studio, /durationMs=\{previewMode \? 1800 : 2400\}/);
+  assert.match(studio, /durationMs=\{previewMode \? 2800 : 3200\}/);
   assert.match(page, /durationMs=\{2400\}/);
   assert.match(decryptedName, /sequential = true/);
   assert.match(decryptedName, /revealDirection = "random"/);

@@ -152,10 +152,10 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "discord-display", label: "Discord Display", sample: "Aa", description: "Archivo · alternativa abierta al estilo Ginto Nord" },
   { id: "creator-sans", label: "Creator Sans", sample: "Aa", description: "DM Sans · alternativa geométrica al estilo Roobert" },
   { id: "stream-mono", label: "Stream Mono", sample: "Aa", description: "IBM Plex Mono · precisión para perfiles gamer y tech" },
-  { id: "street-block", label: "Street Block", sample: "CITY", description: "Bungee · rótulo urbano contundente para una estética open-world, sin copiar logotipos de videojuegos" },
-  { id: "action-condensed", label: "Action Condensed", sample: "CHASE", description: "Teko · display condensada de alto impacto para una estética de acción y carreras" },
-  { id: "cyber-racer", label: "Cyber Racer", sample: "NEXUS", description: "Oxanium · geometría angular inspirada en HUD, ciencia ficción y videojuegos futuristas" },
-  { id: "epic-rpg", label: "Epic RPG", sample: "LEGACY", description: "Cinzel · inscripción épica para nombres de fantasía, aventura y RPG" },
+  { id: "street-block", label: "Street Block", sample: "Aa", description: "Bungee · rótulo urbano contundente para una estética open-world, sin copiar logotipos de videojuegos" },
+  { id: "action-condensed", label: "Action Condensed", sample: "Aa", description: "Teko · display condensada de alto impacto para una estética de acción y carreras" },
+  { id: "cyber-racer", label: "Cyber Racer", sample: "Aa", description: "Oxanium · geometría angular inspirada en HUD, ciencia ficción y videojuegos futuristas" },
+  { id: "epic-rpg", label: "Epic RPG", sample: "Aa", description: "Cinzel · inscripción épica para nombres de fantasía, aventura y RPG" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
   { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },
@@ -1923,7 +1923,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
                           <div className="ps-community-name-member-copy">
-                            <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <strong className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                           </div>
                           <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>
@@ -1937,7 +1937,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </span>
                         <div className="ps-community-name-chat-content">
                           <div className="ps-community-name-chat-meta">
-                            <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <strong className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                             <time>ahora</time>
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>

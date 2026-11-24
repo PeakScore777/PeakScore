@@ -21,7 +21,7 @@ import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName"
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
-import { displayNameColorForEffect } from "@/components/community/display-name-color";
+import { displayNameColorForEffect, displayNameSolidColor } from "@/components/community/display-name-color";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -241,6 +241,24 @@ function communityNameCharacterDelay(index: number, count: number, animation: Co
   const window = animation === "decrypt" ? 300 : 460;
   const step = Math.min(56, window / Math.max(1, count - 1));
   return Math.round(index * step) + "ms";
+}
+
+function CommunityStaticName({ value, className, style, tag = "span" }: {
+  value: string;
+  className: string;
+  style?: React.CSSProperties;
+  tag?: "span" | "strong" | "h2" | "h3";
+}) {
+  const Tag = tag;
+  const characters = communityNameCharacters(value);
+  const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
+  const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
+  const safeStyle = {
+    ...style,
+    fontSize: (fitScale * tagScale).toFixed(3) + "em",
+    maxWidth: "100%",
+  } as React.CSSProperties;
+  return <Tag className={className + " ps-community-name-static"} style={safeStyle}>{value}</Tag>;
 }
 
 function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className, style, tag = "strong", id, previewMode = false }: {
@@ -1706,13 +1724,16 @@ export default function CommunityPage() {
                                       "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
                                       "--name-solid-color": message.author.display_name_color === "custom-gradient" ? message.author.display_name_gradient_start ?? "#B86BFF" : message.author.display_name_color === "pink" ? "#F72585" : message.author.display_name_color === "green" ? "#25E66B" : message.author.display_name_color === "blue" ? "#269EE5" : message.author.display_name_color === "purple" ? "#A72CF0" : message.author.display_name_color === "magenta" ? "#E60063" : message.author.display_name_color === "red" ? "#F2382E" : message.author.display_name_color === "gold" ? "#D1B11B" : "currentColor",
                                     } as React.CSSProperties}>
-                                    <CommunityAnimatedName
+                                    <CommunityStaticName
                                       tag="span"
                                       value={message.author.full_name}
-                                      animation={message.author.display_name_animation ?? "decrypt"}
-                                      fuzzySettings={normalizeFuzzyTextSettings(message.author.display_name_fuzzy_settings)}
                                       className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(message.author.display_name_effect, message.author.display_name_color)}
-                                      previewMode
+                                      style={{
+                                        "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
+                                        "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF",
+                                        "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
+                                        "--name-solid-color": displayNameSolidColor(message.author.display_name_color, message.author.display_name_gradient_start),
+                                      } as React.CSSProperties}
                                     />
                                   </button>
                                 </>
@@ -1977,19 +1998,16 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <CommunityAnimatedName
+                          <CommunityStaticName
                             tag="span"
                             value={member.full_name}
-                            animation={member.display_name_animation ?? "decrypt"}
-                            fuzzySettings={normalizeFuzzyTextSettings(member.display_name_fuzzy_settings)}
                             className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
                             style={{
                               "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
                               "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
                               "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                              "--name-solid-color": member.display_name_color === "custom-gradient" ? member.display_name_gradient_start ?? "#B86BFF" : member.display_name_color === "pink" ? "#F72585" : member.display_name_color === "green" ? "#25E66B" : member.display_name_color === "blue" ? "#269EE5" : member.display_name_color === "purple" ? "#A72CF0" : member.display_name_color === "magenta" ? "#E60063" : member.display_name_color === "red" ? "#F2382E" : member.display_name_color === "gold" ? "#D1B11B" : "currentColor",
+                              "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
                             } as React.CSSProperties}
-                            previewMode
                           />
                           {member.status_text && <small>{member.status_text}</small>}
                         </span>

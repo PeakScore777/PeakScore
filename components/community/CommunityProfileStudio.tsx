@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText";
+import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
@@ -512,7 +512,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     );
   }
   if (animation === "signal-break") {
-    return <ReactBitsGlitchText
+    return <SignalBreakDisplayName
+      text={value}
+      tag={tag}
       className={renderedClassName}
       style={safeStyle}
       mode="slices"
@@ -526,7 +528,8 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       fontWeight={900}
       enableShadows
       shadowColors={["#ff0000", "#00ffff"]}
-    >{value}</ReactBitsGlitchText>;
+      previewMode={previewMode}
+    />;
   }
     if (animation === "none") return <Tag className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>

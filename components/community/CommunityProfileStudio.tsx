@@ -683,6 +683,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen]);
 
   useEffect(() => {
+    if (!appearancePicker) return;
+    const root = document.documentElement;
+    const previousOverflow = root.style.overflow;
+    const previousOverscrollBehavior = root.style.overscrollBehavior;
+    root.style.overflow = "hidden";
+    root.style.overscrollBehavior = "none";
+    return () => {
+      root.style.overflow = previousOverflow;
+      root.style.overscrollBehavior = previousOverscrollBehavior;
+    };
+  }, [appearancePicker]);
+
+  useEffect(() => {
     if (!colorPickerOpen && !avatarMenuOpen && !statusEditorOpen && !appearancePicker && !avatarCropUrl) return;
 
     const handleOutsidePointerDown = (event: PointerEvent) => {
@@ -695,7 +708,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       if (statusEditorOpen && !statusModalRef.current?.contains(target)) setStatusEditorOpen(false);
       if (statusEmojiOpen && !statusEmojiFieldRef.current?.contains(target)) setStatusEmojiOpen(false);
       if (statusDurationOpen && !statusDurationRef.current?.contains(target)) setStatusDurationOpen(false);
-      if (appearancePicker && !appearanceModalRef.current?.contains(target)) setAppearancePicker(null);
       if (avatarCropUrl && !avatarCropModalRef.current?.contains(target)) closeAvatarCrop();
     };
 
@@ -1430,9 +1442,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       </main>
 
       {appearancePicker && (
-        <div className="ps-community-picker-overlay" onPointerDown={(event) => {
-          if (event.target === event.currentTarget) setAppearancePicker(null);
-        }}>
+        <div className="ps-community-picker-overlay">
           <section ref={appearanceModalRef} className={"ps-community-picker-modal" + (appearancePicker === "nameStyle" ? " is-name-style-modal" : "")} role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
             <header className="ps-community-picker-header">
               <div>

@@ -1135,6 +1135,7 @@ test("only the profile runs the selected entrance animation; member and chat nam
   assert.match(page, /<CommunityStaticName[\s\S]*?member\.full_name/);
   assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
   assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
+  assert.equal((page.match(/<CommunityAnimatedName/g) ?? []).length, 1);
   const chatSurface = page.slice(page.indexOf("community-chat-author-link"), page.indexOf("community-member-sidebar-header"));
   const memberSurface = page.slice(page.indexOf("community-member-sidebar-scroll"), page.indexOf("community-member-sidebar-footer"));
   assert.doesNotMatch(chatSurface, /<CommunityAnimatedName/);
@@ -1243,6 +1244,7 @@ test("member and chat swatches use the same canonical color values as the editor
   assert.match(page, /displayNameSolidColor\(message\.author\.display_name_color/);
   assert.match(page, /displayNameSolidColor\(member\.display_name_color/);
   assert.match(page, /displayNameSolidColor\(hoverCommunityProfile\.displayNameColor/);
+  assert.match(page, /displayNameSolidColor\(selectedCommunityProfile\.displayNameColor/);
   assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\s\S]*?color:var\(--name-solid-color,#A88AF2\) !important/);
   assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gummy,[\s\S]*?background-image:var\(--name-prism-gradient/);
 });

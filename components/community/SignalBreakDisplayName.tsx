@@ -81,8 +81,8 @@ function fitBand(top: number, bottom: number): [number, number] {
   return safeTop + safeBottom >= 100 ? [0, 100] : [safeTop, safeBottom];
 }
 
-const SIGNAL_BREAK_CYCLE_MS = 720;
-const SIGNAL_BREAK_BURST_MS = 180;
+const SIGNAL_BREAK_CYCLE_MS = 480;
+const SIGNAL_BREAK_BURST_MS = 300;
 
 function hashSignalName(value: string): number {
   let hash = 2166136261;
@@ -106,9 +106,9 @@ function makeEvent(now: number, stepMs: number, seed?: number): GlitchEvent {
   return {
     until: now + Math.max(stepMs * (1 + Math.floor(random() * 3)), SIGNAL_BREAK_BURST_MS),
     aTop: 12 + random() * 70,
-    aHeight: 7 + random() * 8,
+    aHeight: 10 + random() * 9,
     bTop: 8 + random() * 78,
-    bHeight: 4 + random() * 7,
+    bHeight: 8 + random() * 8,
     ax: sign() * (0.65 + random() * 0.55),
     bx: sign() * (0.55 + random() * 0.5),
     ay: (random() - 0.5) * 0.5,
@@ -196,7 +196,7 @@ export default function SignalBreakDisplayName({
 
     // React Bits' 10px offset is designed for large demo typography.
     // Scale it down for profile names so small glyphs do not fly apart.
-    const offsetScale = clamp(computedFontSize / 32, 0.32, 0.55);
+    const offsetScale = clamp(computedFontSize / 22, 0.58, 0.82);
 
     let raf = 0;
     let last = 0;
@@ -340,7 +340,7 @@ export default function SignalBreakDisplayName({
       const live = event && now < event.until ? event : null;
       root.classList.toggle("is-glitching", Boolean(live));
       const scale = 0.4 + 1.2 * power;
-      const effectiveOffset = Math.min(1.4, Math.max(0, current.offset)) * offsetScale;
+      const effectiveOffset = Math.min(2, Math.max(0, current.offset)) * offsetScale;
       const pace = Math.max(0.05, current.speed);
 
       let bandA: [number, number] = [0, 100];

@@ -5675,7 +5675,7 @@ html:has(.ps-community-picker-overlay) * {
 .ps-gradient-flow-name.effect-chromaflow > .ps-gradient-flow-face {
   background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
   background-size:260% 100% !important;
-  animation:ps-gradient-flow-text 5.2s ease-in-out infinite,ps-chromaflow-spectrum 4.8s linear infinite !important;
+  animation:ps-gradient-flow-text 5.2s ease-in-out infinite,ps-chromaflow-word-hue 8s linear infinite !important;
 }
 
 /* Inactive gallery cards keep their compact CSS motion while the face handles

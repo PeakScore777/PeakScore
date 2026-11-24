@@ -21,6 +21,7 @@ import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName"
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
+import { displayNameColorForEffect } from "@/components/community/display-name-color";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -1711,7 +1712,7 @@ export default function CommunityPage() {
                                       value={message.author.full_name}
                                       animation={message.author.display_name_animation ?? "decrypt"}
                                       fuzzySettings={normalizeFuzzyTextSettings(message.author.display_name_fuzzy_settings)}
-                                      className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
+                                      className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(message.author.display_name_effect, message.author.display_name_color)}
                                       previewMode
                                     />
                                   </button>
@@ -1982,7 +1983,7 @@ export default function CommunityPage() {
                             value={member.full_name}
                             animation={member.display_name_animation ?? "decrypt"}
                             fuzzySettings={normalizeFuzzyTextSettings(member.display_name_fuzzy_settings)}
-                            className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")}
+                            className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
                             style={{
                               "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
                               "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
@@ -2064,7 +2065,7 @@ export default function CommunityPage() {
                 </div>
 
                 <div className="ps-community-member-popout__identity">
-                  <CommunityAnimatedName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} animation={hoverCommunityProfile.displayNameAnimation ?? "decrypt"} fuzzySettings={normalizeFuzzyTextSettings(hoverCommunityProfile.displayNameFuzzySettings)} className={"ps-community-name-render is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + (hoverCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
+                  <CommunityAnimatedName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} animation={hoverCommunityProfile.displayNameAnimation ?? "decrypt"} fuzzySettings={normalizeFuzzyTextSettings(hoverCommunityProfile.displayNameFuzzySettings)} className={"ps-community-name-render is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(hoverCommunityProfile.displayNameEffect, hoverCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
                   <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                 </div>
 
@@ -2190,7 +2191,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-profile-identity">
                   <div className="ps-community-profile-name-row">
-                    <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title" value={selectedCommunityProfile.displayName} animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"} fuzzySettings={normalizeFuzzyTextSettings(selectedCommunityProfile.displayNameFuzzySettings)} className={"ps-community-name-render ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + (selectedCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
+                    <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title" value={selectedCommunityProfile.displayName} animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"} fuzzySettings={normalizeFuzzyTextSettings(selectedCommunityProfile.displayNameFuzzySettings)} className={"ps-community-name-render ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(selectedCommunityProfile.displayNameEffect, selectedCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
                     <span className="ps-community-profile-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                   </div>
 

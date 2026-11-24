@@ -1326,6 +1326,23 @@ test("name colour picker reuses the exact profile-theme HSV selector without rer
   assert.match(studio, /value=\{hue\}/);
 });
 
+test("custom color picker stays open while adjusting color and closes only with Listo", () => {
+  const applyStart = studio.indexOf("function apply(color = draftRef.current)");
+  const applyEnd = studio.indexOf("\\n  }", applyStart);
+  assert.ok(applyStart >= 0 && applyEnd > applyStart);
+  const applyBody = studio.slice(applyStart, applyEnd);
+  assert.doesNotMatch(applyBody, /setOpen\\(false\\)/);
+  assert.match(studio, /onClick=\\{\\(\\) => \\{ apply\\(\\); setOpen\\(false\\); \\}\\}>Listo/);
+  assert.match(studio, /setLocalColor\\(value\\); setOpen\\(false\\); \\}>Restablecer/);
+});
+
+test("profile preview solid text uses the selected color and member preview has no badge frame", () => {
+  assert.match(studio, /"\\-\\-name-solid-color": draftDisplayNameColor === "custom-gradient"[\\s\\S]*?readableThemeText\\(cardColor\\)/);
+  assert.match(nameStyleCss, /ps-community-name-preview-members-view \\.ps-community-name-member-copy > \\.community-member-nameplate[\\s\\S]*?border:0 !important/);
+  assert.match(nameStyleCss, /ps-community-name-style-profile-copy > strong\\.effect-plain[\\s\\S]*?\\-webkit-text-fill-color:var\\(--name-solid-color/);
+  assert.match(nameStyleCss, /ps-community-name-style-profile-copy > strong\\.effect-neon[\\s\\S]*?\\-webkit-text-fill-color:var\\(--name-solid-color/);
+});
+
 test("name colour presets and clear action remain available beside the shared HSV picker", () => {
   assert.match(studio, /ps-community-name-color-picker/);
   assert.match(studio, /role="group" aria-label="Colores predefinidos"/);

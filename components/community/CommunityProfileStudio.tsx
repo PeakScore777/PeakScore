@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
@@ -21,7 +20,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
-type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
+type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -162,7 +161,6 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
 ];
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
-  { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
   { id: "fuzzy-text", label: "Noise Reveal", description: "Ruido orgánico animado que revela el nombre con una textura digital controlada", hint: "Ruido digital en movimiento" },
   { id: "inkline", label: "Inkline", description: "El contorno dibuja cada letra y después el relleno aparece con un barrido limpio", hint: "Trazo dibujado · relleno progresivo" },
   { id: "halo-signal", label: "Halo Signal", description: "Letras que se encienden en orden variable con brillo violeta y destellos controlados", hint: "Destello violeta · secuencia aleatoria" },
@@ -510,26 +508,6 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
         </FuzzyText>
       </Tag>
     );
-  }
-  if (animation === "signal-break") {
-    return <SignalBreakDisplayName
-      text={value}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-      mode="slices"
-      trigger="always"
-      speed={1}
-      intensity={0.5}
-      burstDuration={0.6}
-      offset={10}
-      skew={0}
-      flicker={false}
-      fontWeight={900}
-      enableShadows
-      shadowColors={["#ff0000", "#00ffff"]}
-      previewMode={previewMode}
-    />;
   }
     if (animation === "none") return <Tag className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>

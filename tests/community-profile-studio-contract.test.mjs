@@ -1178,6 +1178,9 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(haloSignalName, /--ps-chroma-position/);
   assert.match(dominoFlowName, /--ps-chroma-position/);
   assert.match(inklineName, /chromaflowGradientId/);
+  assert.match(inklineName, /gummyGradientId/);
+  assert.match(inklineName, /--name-prism-gradient/);
+  assert.match(inklineName, /gummy \? `url\(#\$\{gummyGradientId\}\)`/);
   assert.match(inklineName, /<linearGradient/);
   assert.match(mistfallName, /CHROMAFLOW_STOPS/);
   assert.match(mistfallName, /createLinearGradient/);
@@ -1228,6 +1231,8 @@ test("display-name colour controls follow the selected effect instead of exposin
   assert.match(fuzzySettings, /effect === "prism" \|\| effect === "gummy"/);
   assert.match(fuzzySettings, /return \{ color: "#FFFFFF", gradient: prismStops \}/);
   assert.match(nameStyleCss, /\.ps-community-name-render\.effect-gummy \.ps-decrypted-glyph[\s\S]*?background-image:var\(--name-prism-gradient/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-gummy \.ps-gradient-flow-face/);
+  assert.equal((nameStyleCss.match(/User-selected gummy palette is shared/g) ?? []).length, 1);
   assert.match(page, /displayNameColorForEffect\(message\.author\.display_name_effect/);
   assert.match(page, /displayNameColorForEffect\(member\.display_name_effect/);
 });
@@ -1249,5 +1254,5 @@ test("Halo Signal and Domino Flow use one shared viewport observer and pause off
   assert.match(nameStyleCss, /data-motion-visible="false"/);
   assert.match(nameStyleCss, /animation-play-state:paused !important/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce[\s\S]*?\.ps-community-name-render:not\(\.ps-community-name-preview-live\) \.ps-halo-signal__glyph/);
-  assert.match(nameStyleCss, /\.ps-community-name-render:not\(\.ps-community-name-preview-live\)\.effect-chromaflow\.ps-inkline-name animateTransform \{\s*display:none !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-render:not\(\.ps-community-name-preview-live\)\.ps-inkline-name animateTransform \{\s*display:none !important/);
 });

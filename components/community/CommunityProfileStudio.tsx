@@ -453,7 +453,7 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
             <button type="button" onClick={() => apply()}>Listo</button>
           </div>
         </div>
-      )} )}
+      )}
     </div>
   );
 }

@@ -1110,15 +1110,18 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
 });
 
 
-test("animation gallery mounts every real motion preview simultaneously and reuses the effects card design", () => {
+test("animation gallery runs one real preview and keeps the other cards CSS-only", () => {
   assert.match(studio, /function DisplayNameMotionPreview/);
   assert.match(studio, /<AnimatedDisplayName[\s\S]*?previewMode/);
   assert.match(studio, /className="ps-community-name-effect-grid ps-community-name-animation-grid"/);
   assert.match(studio, /ps-community-name-effect-option ps-community-name-animation-option/);
+  assert.match(studio, /draftDisplayNameAnimation === item\.id \? \(/);
   assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
+  assert.match(studio, /ps-name-preview-motion name-preview-/);
+  assert.match(studio, /ps-name-preview-face/);
   assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\.setInterval/);
-  assert.doesNotMatch(studio, /const activePreview|const isActive/);
   assert.match(nameStyleCss, /ps-community-name-animation-option > \.ps-community-name-animation-sample/);
+  assert.match(nameStyleCss, /name-preview-gradient-flow/);
 });
 
 test("the live community renderer supports every custom display-name animation", () => {
@@ -1205,6 +1208,7 @@ test("explicit animation previews stay alive on touch layouts and the three live
 });
 
 
+
 test("display-name colour controls follow the selected effect instead of exposing irrelevant swatches", () => {
   assert.match(studio, /plain: "single"/);
   assert.match(studio, /gradient: "gradient"/);
@@ -1213,7 +1217,7 @@ test("display-name colour controls follow the selected effect instead of exposin
   assert.match(studio, /toon: "automatic"/);
   assert.match(studio, /chromaflow: "automatic"/);
   assert.match(studio, /draftDisplayNameColorMode !== "automatic"/);
-  assert.match(studio, /if \(colorMode === "automatic" \|\| colorMode === "spectrum"\)[\\s\\S]*?setDraftDisplayNameColor\("default"\)/);
+  assert.match(studio, /if \(colorMode === "automatic" \|\| colorMode === "spectrum"\)[\s\S]*?setDraftDisplayNameColor\("default"\)/);
   assert.match(nameColorHelper, /AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set\(\["toon", "gummy", "prism", "chromaflow"\]\)/);
   assert.match(nameColorHelper, /return "default"/);
   assert.match(page, /displayNameColorForEffect\(message\.author\.display_name_effect/);
@@ -1221,17 +1225,17 @@ test("display-name colour controls follow the selected effect instead of exposin
 });
 
 test("Chromaflow animates an inner paint layer without replacing each renderer's own motion", () => {
-  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \\.ps-decrypted-content,[\\s\\S]*?\\.ps-name-shuffle__content/);
-  assert.match(nameStyleCss, /\\.ps-community-name-render\\.effect-chromaflow \\.ps-halo-signal__text/);
-  assert.match(nameStyleCss, /\\.ps-community-name-render\\.effect-chromaflow \\.ps-domino-flow__word/);
-  assert.match(nameStyleCss, /\\.ps-community-name-render\\.effect-chromaflow:not\\(\\.ps-name-plain\\):not\\(\\.ps-gradient-flow-name\\):not\\(\\.ps-name-preview-face\\)[\\s\\S]*?animation:none !important/);
-  assert.match(nameStyleCss, /\\.ps-gradient-flow-name\\.effect-chromaflow > \\.ps-gradient-flow-face[\\s\\S]*?ps-gradient-flow-text 5\\.2s ease-in-out infinite,ps-chromaflow-word-hue 8s linear infinite/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \.ps-decrypted-content,[\s\S]*?\.ps-name-shuffle__content/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \.ps-halo-signal__text/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \.ps-domino-flow__word/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow:not\(\.ps-name-plain\):not\(\.ps-gradient-flow-name\):not\(\.ps-name-preview-face\)[\s\S]*?animation:none !important/);
+  assert.match(nameStyleCss, /\.ps-gradient-flow-name\.effect-chromaflow > \.ps-gradient-flow-face[\s\S]*?ps-gradient-flow-text 5\.2s ease-in-out infinite,ps-chromaflow-word-hue 8s linear infinite/);
 });
 
 test("Halo Signal and Domino Flow use one shared viewport observer and pause off-screen cycles", () => {
-  assert.match(nameMotionVisibility, /let sharedNameMotionObserver: IntersectionObserver \\| null/);
+  assert.match(nameMotionVisibility, /let sharedNameMotionObserver: IntersectionObserver \| null/);
   assert.match(nameMotionVisibility, /new IntersectionObserver/);
-  assert.match(nameMotionVisibility, /target\\.dataset\\.motionVisible = entry\\.isIntersecting/);
+  assert.match(nameMotionVisibility, /target\.dataset\.motionVisible = entry\.isIntersecting/);
   assert.match(haloSignalName, /observeNameMotionVisibility/);
   assert.match(dominoFlowName, /observeNameMotionVisibility/);
   assert.match(nameStyleCss, /data-motion-visible="false"/);

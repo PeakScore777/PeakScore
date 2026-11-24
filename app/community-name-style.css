@@ -5775,8 +5775,7 @@ html:has(.ps-community-picker-overlay) * {
   .ps-community-name-render.effect-chromaflow.ps-name-plain:not(.ps-community-name-preview-live),
   .ps-community-name-animation-option .ps-name-preview-face.effect-chromaflow,
   .ps-gradient-flow-name:not(.ps-community-name-preview-live) > .ps-gradient-flow-face,
-  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow .ps-inkline-fill linearGradient animateTransform,
-  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow .ps-inkline-fill animateTransform {
+  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow.ps-inkline-name animateTransform {
     animation:none !important;
     background-position:50% 50% !important;
   }
@@ -5806,7 +5805,7 @@ html:has(.ps-community-picker-overlay) * {
   .ps-community-name-render:not(.ps-community-name-preview-live) .ps-domino-flow__glyph {
     animation:none !important;
   }
-  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow .ps-inkline-fill animateTransform {
+  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow.ps-inkline-name animateTransform {
     display:none !important;
   }
 }

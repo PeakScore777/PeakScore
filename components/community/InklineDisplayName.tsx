@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type Ref } from "react";
+import { observeNameMotionVisibility } from "./name-motion-visibility";
 
 type Props = {
   text: string;
@@ -27,6 +28,7 @@ export default function InklineDisplayName({
   tag = "strong",
 }: Props) {
   const rootRef = useRef<HTMLSpanElement | null>(null);
+  const motionRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<SVGTextElement | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const clipId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -44,6 +46,17 @@ export default function InklineDisplayName({
   const gummyStops = gummyPalette.length >= 2
     ? gummyPalette
     : ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"];
+
+  const forceMotion = effectTokens.includes("ps-community-name-preview-live");
+
+  useEffect(() => {
+    const node = motionRef.current;
+    if (forceMotion) {
+      if (node) node.dataset.motionVisible = "true";
+      return;
+    }
+    return observeNameMotionVisibility(node);
+  }, [forceMotion]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -71,7 +84,7 @@ export default function InklineDisplayName({
   const sharedStyle = { ...style, maxWidth: "100%" } as CSSProperties;
 
   return (
-    <Tag className={className + " ps-inkline-name"} style={sharedStyle} aria-label={text}>
+    <Tag ref={motionRef as Ref<HTMLElement>} className={className + " ps-inkline-name"} style={sharedStyle} aria-label={text} data-motion-visible={forceMotion ? "true" : "false"}>
       <span ref={rootRef} className="ps-inkline-measure" aria-hidden="true">
         <svg className="ps-inkline-svg" viewBox={viewBox} preserveAspectRatio="xMinYMid meet" aria-hidden="true" style={{ visibility: box ? "visible" : "hidden" }}>
           <defs>

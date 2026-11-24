@@ -1307,18 +1307,32 @@ test("desktop name-style scrollbars stay invisible until the pointer reaches the
   assert.match(nameStyleCss, /overscroll-behavior-y:contain/);
 });
 
-test("name colour picker uses an isolated HSV control and applies only after interaction completes", () => {
+test("name colour picker reuses the exact profile-theme HSV selector without rerendering the full editor while dragging", () => {
   assert.match(studio, /function DisplayNameCustomColorPicker/);
-  assert.match(studio, /className="ps-community-name-custom-picker-plane"/);
-  assert.match(studio, /className="ps-community-name-custom-picker-controls"/);
-  assert.match(studio, /className="ps-community-name-custom-picker-hex"/);
+  assert.match(studio, /className="ps-community-color-picker-plane"/);
+  assert.match(studio, /className="ps-community-color-picker-hue-wrap"/);
+  assert.match(studio, /className="ps-community-color-picker-hex"/);
+  assert.match(studio, /className="ps-community-color-picker-recent"/);
+  assert.match(studio, /className="ps-community-color-picker-actions"/);
+  assert.match(studio, /className="ps-community-color-picker ps-community-editor-sidebar-color-picker ps-community-name-custom-picker"/);
   assert.match(studio, /draftRef\.current = normalized/);
   assert.match(studio, /onPointerMove=\{\(event\) => \{ if \(event\.buttons === 1\) updateFromPlane\(event\); \}\}/);
-  assert.match(studio, /onPointerUp=\{\(event\) => \{[\s\S]*?requestAnimationFrame\(\(\) => apply\(\)\)/);
+  assert.match(studio, /requestAnimationFrame\(\(\) => apply\(\)\)/);
   assert.match(studio, /onApply\(normalized\)/);
   assert.doesNotMatch(studio, /input type="color" aria-label="Elegir color personalizado"/);
-  assert.match(studio, /ps-community-name-custom-picker-plane\{[\s\S]*?touch-action:none/);
-  assert.match(studio, /ps-community-name-custom-picker\{[\s\S]*?background:#24262d/);
+  assert.match(studio, /ps-community-name-custom-picker\{position:absolute/);
+  assert.match(studio, /value=\{hue\}/);
+});
+
+test("name colour presets and clear action remain available beside the shared HSV picker", () => {
+  assert.match(studio, /ps-community-name-color-picker/);
+  assert.match(studio, /role="group" aria-label="Colores predefinidos"/);
+  assert.match(studio, /ps-community-name-color-option/);
+  assert.match(studio, /ps-community-name-color-clear/);
+  assert.match(studio, /aria-label="Quitar color"/);
+  assert.match(studio, /onClick=\{\(\) => setDraftDisplayNameColor\("default"\)\}/);
+  assert.match(studio, /ps-community-color-picker-plane/);
+  assert.match(studio, /ps-community-color-picker-actions/);
 });
 
 test("name colour presets and clear action remain available beside the custom HSV picker", () => {

@@ -148,9 +148,9 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "techno", label: "Techno", sample: "Aa", description: "Futurista de formas circulares" },
   { id: "rounded", label: "Rounded", sample: "Aa", description: "Display redondeada y sólida" },
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
-  { id: "discord-display", label: "Discord Display", sample: "Aa", description: "Grotesca ancha inspirada en Ginto · alternativa abierta" },
-  { id: "creator-sans", label: "Creator Sans", sample: "Aa", description: "Sans moderna y expresiva para perfiles sociales" },
-  { id: "stream-mono", label: "Stream Mono", sample: "Aa", description: "Monoespaciada precisa para perfiles gamer y tech" },
+  { id: "discord-display", label: "Discord Display", sample: "Aa", description: "Archivo · alternativa abierta al estilo Ginto Nord" },
+  { id: "creator-sans", label: "Creator Sans", sample: "Aa", description: "DM Sans · alternativa geométrica al estilo Roobert" },
+  { id: "stream-mono", label: "Stream Mono", sample: "Aa", description: "IBM Plex Mono · precisión para perfiles gamer y tech" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
   { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },

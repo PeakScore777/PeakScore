@@ -1179,6 +1179,8 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(dominoFlowName, /--ps-chroma-position/);
   assert.match(inklineName, /chromaflowGradientId/);
   assert.match(inklineName, /gummyGradientId/);
+  assert.match(inklineName, /observeNameMotionVisibility/);
+  assert.match(inklineName, /data-motion-visible=\{forceMotion \? "true" : "false"\}/);
   assert.match(inklineName, /--name-prism-gradient/);
   assert.match(inklineName, /gummy \? `url\(#\$\{gummyGradientId\}\)`/);
   assert.match(inklineName, /<linearGradient/);
@@ -1250,6 +1252,7 @@ test("Halo Signal and Domino Flow use one shared viewport observer and pause off
   assert.match(nameMotionVisibility, /new IntersectionObserver/);
   assert.match(nameMotionVisibility, /target\.dataset\.motionVisible = entry\.isIntersecting/);
   assert.match(haloSignalName, /observeNameMotionVisibility/);
+  assert.match(inklineName, /observeNameMotionVisibility/);
   assert.match(dominoFlowName, /observeNameMotionVisibility/);
   assert.match(nameStyleCss, /data-motion-visible="false"/);
   assert.match(nameStyleCss, /animation-play-state:paused !important/);

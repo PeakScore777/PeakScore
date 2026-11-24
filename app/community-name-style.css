@@ -5568,3 +5568,55 @@ html:has(.ps-community-picker-overlay) * {
   font-variant-ligatures:none !important;
 }
 
+
+/* Video-game genre-inspired faces. These are independent, OFL-licensed fonts:
+   no game logo, proprietary wordmark, asset, or non-web font is embedded. */
+.ps-community-name-font-option.is-name-style-street-block span,
+.ps-community-name-render.is-name-style-street-block,
+.ps-community-editor-preview-name-static.is-name-style-street-block,
+.community-member-nameplate.is-name-style-street-block,
+.ps-community-profile-name.is-name-style-street-block,
+.community-chat-author.is-name-style-street-block,
+.ps-community-member-popout__identity h3.is-name-style-street-block,
+.ps-community-status-profile-copy > strong.is-name-style-street-block {
+  font-family:var(--font-name-street-block),system-ui,sans-serif !important;
+  font-weight:400 !important;
+  letter-spacing:.015em !important;
+}
+.ps-community-name-font-option.is-name-style-action-condensed span,
+.ps-community-name-render.is-name-style-action-condensed,
+.ps-community-editor-preview-name-static.is-name-style-action-condensed,
+.community-member-nameplate.is-name-style-action-condensed,
+.ps-community-profile-name.is-name-style-action-condensed,
+.community-chat-author.is-name-style-action-condensed,
+.ps-community-member-popout__identity h3.is-name-style-action-condensed,
+.ps-community-status-profile-copy > strong.is-name-style-action-condensed {
+  font-family:var(--font-name-action-condensed),Impact,sans-serif !important;
+  font-weight:600 !important;
+  letter-spacing:.025em !important;
+}
+.ps-community-name-font-option.is-name-style-cyber-racer span,
+.ps-community-name-render.is-name-style-cyber-racer,
+.ps-community-editor-preview-name-static.is-name-style-cyber-racer,
+.community-member-nameplate.is-name-style-cyber-racer,
+.ps-community-profile-name.is-name-style-cyber-racer,
+.community-chat-author.is-name-style-cyber-racer,
+.ps-community-member-popout__identity h3.is-name-style-cyber-racer,
+.ps-community-status-profile-copy > strong.is-name-style-cyber-racer {
+  font-family:var(--font-name-cyber-racer),system-ui,sans-serif !important;
+  font-weight:700 !important;
+  letter-spacing:.012em !important;
+}
+.ps-community-name-font-option.is-name-style-epic-rpg span,
+.ps-community-name-render.is-name-style-epic-rpg,
+.ps-community-editor-preview-name-static.is-name-style-epic-rpg,
+.community-member-nameplate.is-name-style-epic-rpg,
+.ps-community-profile-name.is-name-style-epic-rpg,
+.community-chat-author.is-name-style-epic-rpg,
+.ps-community-member-popout__identity h3.is-name-style-epic-rpg,
+.ps-community-status-profile-copy > strong.is-name-style-epic-rpg {
+  font-family:var(--font-name-epic-rpg),Georgia,serif !important;
+  font-weight:700 !important;
+  letter-spacing:.012em !important;
+}
+

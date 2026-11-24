@@ -175,6 +175,9 @@ export default function SignalBreakDisplayName({
   const characterCount = characters?.length ?? 0;
   const chromaCharacterCount = characters?.length ?? splitGraphemes(text).length;
   const chromaScale = Math.max(2.6, chromaCharacterCount);
+  // Keep the shared phase in component scope so it is valid in the effect dependency list.
+  const syncSeed = hashSignalName(text);
+  const phaseOffset = syncSeed % SIGNAL_BREAK_CYCLE_MS;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -194,8 +197,6 @@ export default function SignalBreakDisplayName({
     // React Bits' 10px offset is designed for large demo typography.
     // Scale it down for profile names so small glyphs do not fly apart.
     const offsetScale = clamp(computedFontSize / 32, 0.32, 0.55);
-    const syncSeed = hashSignalName(text);
-    const phaseOffset = syncSeed % SIGNAL_BREAK_CYCLE_MS;
 
     let raf = 0;
     let last = 0;

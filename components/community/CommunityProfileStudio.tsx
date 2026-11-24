@@ -362,7 +362,6 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
     const normalized = color.toUpperCase();
     onApply(normalized);
     setRecent((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
-    setOpen(false);
   }
 
   function updateFromPlane(event: ReactPointerEvent<HTMLDivElement>) {
@@ -450,7 +449,7 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
           </div>
           <div className="ps-community-color-picker-actions">
             <button type="button" onClick={() => { setLocalColor(value); setOpen(false); }}>Restablecer</button>
-            <button type="button" onClick={() => apply()}>Listo</button>
+            <button type="button" onClick={() => { apply(); setOpen(false); }}>Listo</button>
           </div>
         </div>
       )}

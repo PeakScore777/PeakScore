@@ -853,7 +853,7 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 
 test("motion gallery previews use the exact renderer for each selected animation", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(studio, /<AnimatedDisplayName[\s\S]*?animation=\{item\.id\}[\s\S]*?ps-community-name-animation-sample/);
+  assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}[\s\S]*?ps-community-name-animation-sample/);
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag="span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
@@ -933,9 +933,9 @@ test("three Shuffle presets match the reference with distinct looping effects an
   assert.ok(studio.includes('label: "Blur Cascade"'));
   assert.ok(studio.includes('label: "Flip Roll"'));
   assert.ok(studio.includes('label: "Classic Slide"'));
-  assert.ok(studio.includes('duration={2.75}') && studio.includes('shuffleTimes={14}') && studio.includes('stagger={0.06}'));
-  assert.ok(studio.includes('duration={2.4}') && studio.includes('shuffleTimes={7}') && studio.includes('stagger={0.07}'));
-  assert.ok(studio.includes('duration={1.3}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.05}'));
+  assert.ok(studio.includes('duration={3.6}') && studio.includes('shuffleTimes={10}') && studio.includes('stagger={0.075}'));
+  assert.ok(studio.includes('duration={3.2}') && studio.includes('shuffleTimes={5}') && studio.includes('stagger={0.085}'));
+  assert.ok(studio.includes('duration={2.2}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.07}'));
   assert.ok(shuffleName.includes("new IntersectionObserver"));
   assert.ok(shuffleName.includes("updateVisibility(entries.some"));
   assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);

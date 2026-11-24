@@ -401,9 +401,9 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       speed={0.72}
       fontWeight={900}
       enableShadows
-      offset={4}
+      offset={5.5}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.22}
+      intensity={0.28}
       skew={0.18}
       flicker={false}
       trigger="always"

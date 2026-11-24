@@ -1122,7 +1122,7 @@ test("animation gallery runs one real preview and keeps the other cards CSS-only
   assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
   assert.match(studio, /ps-name-preview-motion name-preview-/);
   assert.match(studio, /ps-name-preview-face/);
-  assert.match(studio, /<small className="ps-community-name-font-label">\{item\.label\}<\\/small>/);
+  assert.match(studio, /<small className="ps-community-name-font-label">\{item\.label\}<\/small>/);
   assert.match(nameStyleCss, /\.ps-community-name-font-option > \.ps-community-name-font-label/);
   assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\.setInterval/);
   assert.match(nameStyleCss, /ps-community-name-animation-option > \.ps-community-name-animation-sample/);

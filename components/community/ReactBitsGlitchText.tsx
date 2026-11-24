@@ -107,9 +107,6 @@ const makeEvent = (now: number, milliseconds: number): GlitchEvent => {
 const stepLength = (speed: number) =>
   70 * Math.sqrt(Math.max(0.05, speed) / 0.5);
 
-const maskForBand = (band: "a" | "b") =>
-  `linear-gradient(#000 var(--glitch-${band}-top, 0%), transparent var(--glitch-${band}-top, 0%), transparent calc(100% - var(--glitch-${band}-bottom, 100%)), #000 calc(100% - var(--glitch-${band}-bottom, 100%)))`;
-
 export default function ReactBitsGlitchText({
   children,
   className = "",
@@ -127,7 +124,7 @@ export default function ReactBitsGlitchText({
   shadowColors = ["#ff0000", "#00ffff"],
   color,
   fontSize,
-  fontWeight = 900
+  fontWeight
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const charRefs = useRef<Array<HTMLSpanElement | null>>([]);
@@ -158,7 +155,7 @@ export default function ReactBitsGlitchText({
     const written: Record<string, string> = {};
     const swaps = new Map<number, number>();
 
-    let frameId = 0;
+    let raf = 0;
     let last = 0;
     let clock = 0;
     let visible = true;
@@ -197,7 +194,6 @@ export default function ReactBitsGlitchText({
 
     const isActive = (now: number) =>
       !reducedMotion &&
-      !document.hidden &&
       visible &&
       (
         activeTrigger === "always" ||
@@ -257,7 +253,7 @@ export default function ReactBitsGlitchText({
     };
 
     const frame = (now: number) => {
-      frameId = 0;
+      raf = 0;
       if (!isActive(now)) {
         rest();
         last = 0;
@@ -278,7 +274,7 @@ export default function ReactBitsGlitchText({
 
       const live = event && now < event.until ? event : null;
       const scale = 0.4 + 1.2 * power;
-      const effectiveOffset = Math.max(0, current.offset);
+      const off = Math.max(0, current.offset);
       const pace = Math.max(0.05, current.speed);
 
       let bandA: [number, number] = [0, 100];
@@ -292,27 +288,27 @@ export default function ReactBitsGlitchText({
       if (safeMode === "slices") {
         bandA = bandAt(pingPong(clock, 3 * pace));
         bandB = bandAt(pingPong(clock, 2 * pace));
-        ax = effectiveOffset * scale;
-        bx = -effectiveOffset * scale;
+        ax = off * scale;
+        bx = -off * scale;
         if (live) {
           bandA = [live.aTop, 100 - live.aTop - live.aHeight];
           bandB = [live.bTop, 100 - live.bTop - live.bHeight];
-          ax = effectiveOffset * scale * live.ax;
-          bx = effectiveOffset * scale * live.bx;
-          ay = effectiveOffset * live.ay;
-          by = effectiveOffset * live.by;
+          ax = off * scale * live.ax;
+          bx = off * scale * live.bx;
+          ay = off * live.ay;
+          by = off * live.by;
         }
       } else if (safeMode === "rgb") {
-        const spread = effectiveOffset * (0.22 + 0.45 * power);
+        const spread = off * (0.22 + 0.45 * power);
         ax = spread * jitter[0];
         bx = -spread * jitter[1];
-        ay = effectiveOffset * 0.06 * jitter[2];
-        by = effectiveOffset * 0.06 * jitter[3];
+        ay = off * 0.06 * jitter[2];
+        by = off * 0.06 * jitter[3];
         if (live) {
-          ax = effectiveOffset * scale * Math.abs(live.ax);
-          bx = -effectiveOffset * scale * Math.abs(live.bx);
-          ay = effectiveOffset * live.ay;
-          by = effectiveOffset * live.by;
+          ax = off * scale * Math.abs(live.ax);
+          bx = -off * scale * Math.abs(live.bx);
+          ay = off * live.ay;
+          by = off * live.by;
         }
         split = current.enableShadows ? 0.9 : 0.4;
       } else if (safeMode === "scan") {
@@ -327,12 +323,12 @@ export default function ReactBitsGlitchText({
           const thin = height * 0.35;
           bandA = [center - height / 2, 100 - (center + height / 2)];
           bandB = [trail - thin / 2, 100 - (trail + thin / 2)];
-          ax = effectiveOffset * scale * 1.5 * direction * (0.75 + 0.25 * Math.sin(clock * 23));
+          ax = off * scale * 1.5 * direction * (0.75 + 0.25 * Math.sin(clock * 23));
           bx = -ax * 0.5;
         }
         if (live) {
           bandB = [live.bTop, 100 - live.bTop - live.bHeight];
-          bx = effectiveOffset * scale * live.bx * 1.4;
+          bx = off * scale * live.bx * 1.4;
         }
       }
 
@@ -360,13 +356,13 @@ export default function ReactBitsGlitchText({
       write("--glitch-alpha", alpha.toFixed(2));
       write("--glitch-split", String(split));
 
-      frameId = requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     };
 
     const wake = () => {
-      if (frameId || !isActive(performance.now())) return;
+      if (raf || !isActive(performance.now())) return;
       last = 0;
-      frameId = requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     };
 
     const onEnter = () => {
@@ -399,22 +395,11 @@ export default function ReactBitsGlitchText({
         })
       : null;
     observer?.observe(root);
-
-    const onVisibilityChange = () => {
-      if (document.hidden && frameId) {
-        cancelAnimationFrame(frameId);
-        frameId = 0;
-      } else {
-        wake();
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
     wake();
 
     return () => {
-      cancelAnimationFrame(frameId);
+      cancelAnimationFrame(raf);
       observer?.disconnect();
-      document.removeEventListener("visibilitychange", onVisibilityChange);
       root.removeEventListener("pointerenter", onEnter);
       root.removeEventListener("pointerleave", onLeave);
       root.removeEventListener("click", onClick);
@@ -422,29 +407,27 @@ export default function ReactBitsGlitchText({
     };
   }, [safeMode, activeTrigger, characterCount]);
 
-  const visualClasses = className
-    .split(/\s+/)
-    .filter((token) =>
-      token.startsWith("color-") ||
-      token.startsWith("effect-") ||
-      token.startsWith("is-name-style-")
-    )
-    .join(" ");
   const rootStyle: GlitchStyle = {
     ...style,
     color: color ?? style?.color,
-    fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize ?? style?.fontSize,
+    fontSize: typeof fontSize === "number"
+      ? `${fontSize}px`
+      : fontSize ?? style?.fontSize,
     fontWeight: fontWeight ?? style?.fontWeight,
     "--glitch-color-a": enableShadows ? shadowColors[0] : "currentColor",
-    "--glitch-color-b": enableShadows ? shadowColors[1] : "currentColor",
-    "--glitch-mask-a": maskForBand("a"),
-    "--glitch-mask-b": maskForBand("b")
+    "--glitch-color-b": enableShadows ? shadowColors[1] : "currentColor"
   };
-  const layer = safeMode === "rgb" ? "split" : safeMode === "noise" ? "hidden" : "band";
 
   return (
-    <div ref={rootRef} className={`ps-reactbits-glitch glitch glitch--${safeMode} ${className}`} style={rootStyle}>
-      <span className={`glitch__text ps-reactbits-glitch__text ps-glitch-text ${visualClasses}`} aria-hidden={characters ? "true" : undefined}>
+    <div
+      ref={rootRef}
+      className={`ps-reactbits-glitch glitch glitch--${safeMode} ${className}`}
+      style={rootStyle}
+    >
+      <span
+        className="glitch__text ps-glitch-text"
+        aria-hidden={characters ? "true" : undefined}
+      >
         {characters
           ? characters.map((character, index) => (
               <span
@@ -458,10 +441,16 @@ export default function ReactBitsGlitchText({
           : children}
       </span>
       {characters && <span className="glitch__sr ps-glitch-sr">{children}</span>}
-      <span className={`glitch__slice glitch__slice--b ps-glitch-slice ps-glitch-slice--b ${visualClasses}`} aria-hidden="true">
+      <span
+        className="glitch__slice glitch__slice--b ps-glitch-slice ps-glitch-slice--b"
+        aria-hidden="true"
+      >
         {children}
       </span>
-      <span className={`glitch__slice glitch__slice--a ps-glitch-slice ps-glitch-slice--a ${visualClasses}`} aria-hidden="true">
+      <span
+        className="glitch__slice glitch__slice--a ps-glitch-slice ps-glitch-slice--a"
+        aria-hidden="true"
+      >
         {children}
       </span>
     </div>

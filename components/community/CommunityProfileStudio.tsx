@@ -3,6 +3,7 @@
 import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
+import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText";
 import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
 import InklineDisplayName from "@/components/community/InklineDisplayName";
@@ -512,6 +513,20 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     );
   }
   if (animation === "signal-break") {
+    if (previewMode && className.includes("ps-community-name-render")) {
+      return <ReactBitsGlitchText
+        className={renderedClassName}
+        speed={1}
+        intensity={0.5}
+        burstDuration={0.6}
+        offset={10}
+        skew={0}
+        flicker={false}
+        fontWeight={900}
+        enableShadows
+        shadowColors={["#ff0000", "#00ffff"]}
+      >{value}</ReactBitsGlitchText>;
+    }
     return <SignalBreakDisplayName
       text={value}
       tag={tag}

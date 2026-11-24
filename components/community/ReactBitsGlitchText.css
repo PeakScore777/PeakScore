@@ -17,8 +17,7 @@
   font-weight:900;
   white-space:nowrap;
   user-select:none;
-  cursor:inherit;
-  isolation:isolate;
+  cursor:pointer;
 }
 
 .ps-reactbits-glitch .glitch__text {

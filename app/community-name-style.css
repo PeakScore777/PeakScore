@@ -5715,6 +5715,9 @@ html:has(.ps-community-picker-overlay) * {
 .ps-community-name-render[data-motion-visible="false"] .ps-domino-flow__tile {
   animation-play-state:paused !important;
 }
+.ps-community-name-render.ps-inkline-name[data-motion-visible="false"] animateTransform {
+  display:none !important;
+}
 @media (prefers-reduced-motion:reduce) {
   .ps-community-name-render.effect-chromaflow .ps-decrypted-content,
   .ps-community-name-render.effect-chromaflow .ps-name-shuffle__content,

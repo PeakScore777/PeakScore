@@ -518,17 +518,17 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       className={renderedClassName}
       style={safeStyle}
       mode="slices"
-      speed={0.9}
+      speed={0.8}
       fontWeight={900}
       enableShadows
-      offset={6.5}
+      offset={3.2}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.42}
-      skew={0.18}
+      intensity={0.25}
+      skew={0.12}
       flicker={false}
       trigger="always"
-      burstDuration={0.58}
-      frameRate={previewMode ? 16 : 24}
+      burstDuration={0.18}
+      frameRate={24}
       previewMode={previewMode}
     />;
   }

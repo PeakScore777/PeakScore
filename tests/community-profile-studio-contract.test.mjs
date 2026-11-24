@@ -1314,6 +1314,8 @@ test("name colour picker reuses the exact profile-theme HSV selector without rer
   assert.match(studio, /className="ps-community-color-picker-hex"/);
   assert.match(studio, /className="ps-community-color-picker-recent"/);
   assert.match(studio, /className="ps-community-color-picker-actions"/);
+  assert.doesNotMatch(studio, /\\)\\} \\)\\}/);
+  assert.match(studio, /className="ps-community-color-picker-actions"[\\s\\S]*?<button type="button" onClick=\\{\\(\\) => apply\\(\\)\\}>Listo<\\/button>/);
   assert.match(studio, /className="ps-community-color-picker ps-community-editor-sidebar-color-picker ps-community-name-custom-picker"/);
   assert.match(studio, /draftRef\.current = normalized/);
   assert.match(studio, /onPointerMove=\{\(event\) => \{ if \(event\.buttons === 1\) updateFromPlane\(event\); \}\}/);

@@ -1153,6 +1153,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   }
 
+  const handlePickerScrollbarPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "mouse") return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const nearScrollbarEdge = bounds.right - event.clientX <= 18 && event.clientX >= bounds.left;
+    const nextVisibility = nearScrollbarEdge ? "true" : "false";
+    if (event.currentTarget.dataset.scrollbarVisible !== nextVisibility) {
+      event.currentTarget.dataset.scrollbarVisible = nextVisibility;
+    }
+  };
+
   if (!portalReady) return null;
 
   return createPortal(
@@ -1473,7 +1483,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </header>
 
             <div className="ps-community-picker-layout">
-              <div className="ps-community-picker-collection">
+              <div
+                className="ps-community-picker-collection"
+                tabIndex={0}
+                aria-label="Opciones de estilo y color"
+                onPointerMove={handlePickerScrollbarPointerMove}
+                onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
+              >
                 {appearancePicker !== "nameStyle" && <div className="ps-community-picker-collection-heading">
                   <strong>
                     {appearancePicker === "avatarFrame" ? "Marcos de avatar"
@@ -1738,27 +1754,48 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         )}
 
                         {draftDisplayNameColorMode === "single" && (
-                          <div className="ps-community-name-color-grid">
-                            <label className={"ps-community-name-custom-color" + (draftDisplayNameColor === "custom-gradient" ? " is-selected" : "")}
-                              title="Elegir color personalizado" aria-label="Elegir color personalizado">
-                              <Pipette size={17}/>
-                              <input type="color" value={draftDisplayNameGradientStart}
-                                onChange={(event) => {
-                                  const value = event.target.value.toUpperCase();
-                                  setDraftDisplayNameGradientStart(value);
-                                  setDraftDisplayNameGradientEnd(value);
-                                  setDraftDisplayNameColor("custom-gradient");
-                                }}/>
-                            </label>
-                            {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient" && item.id !== "default").map((item) => (
-                              <button key={item.id} type="button" title={item.label} aria-label={item.label}
-                                className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
-                                onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
-                                style={{ "--name-color-swatch": item.value } as CSSProperties}/>
-                            ))}
-                            <button type="button" title="Color automático" aria-label="Color automático"
-                              className={"ps-community-name-color-option color-default" + (draftDisplayNameColor === "default" ? " is-selected" : "")}
-                              onClick={() => setDraftDisplayNameColor("default")} aria-pressed={draftDisplayNameColor === "default"}/>
+                          <div className="ps-community-name-color-picker">
+                            <div className="ps-community-name-color-grid" role="group" aria-label="Colores predefinidos">
+                              {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient" && item.id !== "default").map((item) => (
+                                <button key={item.id} type="button" title={item.label} aria-label={item.label}
+                                  className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                                  onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
+                                  style={{ "--name-color-swatch": item.value } as CSSProperties}>
+                                  {draftDisplayNameColor === item.id && <Check size={15} aria-hidden="true"/>}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="ps-community-name-color-actions">
+                              <label
+                                className={"ps-community-name-custom-color" + (draftDisplayNameColor === "custom-gradient" ? " is-selected" : "")}
+                                title="Elegir un color personalizado"
+                                aria-label="Elegir un color personalizado"
+                                style={{ "--name-color-swatch": draftDisplayNameGradientStart } as CSSProperties}
+                              >
+                                <span className="ps-community-name-custom-color-mark"><Pipette size={15}/></span>
+                                <span className="ps-community-name-custom-color-copy">
+                                  <strong>Personalizar</strong>
+                                  <small>{draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart.toUpperCase() : "Elegir color"}</small>
+                                </span>
+                                <input type="color" value={draftDisplayNameGradientStart}
+                                  onChange={(event) => {
+                                    const value = event.target.value.toUpperCase();
+                                    setDraftDisplayNameGradientStart(value);
+                                    setDraftDisplayNameGradientEnd(value);
+                                    setDraftDisplayNameColor("custom-gradient");
+                                  }}/>
+                              </label>
+                              <button type="button"
+                                className={"ps-community-name-color-clear" + (draftDisplayNameColor === "default" ? " is-selected" : "")}
+                                title="Quitar color personalizado y usar el color base del efecto"
+                                aria-label="Quitar color"
+                                aria-pressed={draftDisplayNameColor === "default"}
+                                onClick={() => setDraftDisplayNameColor("default")}
+                              >
+                                <Trash2 size={14} aria-hidden="true"/>
+                                <span>Quitar color</span>
+                              </button>
+                            </div>
                           </div>
                         )}
                       </section>
@@ -1792,7 +1829,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 )}
               </div>
 
-              <aside className="ps-community-picker-preview">
+              <aside
+                className="ps-community-picker-preview"
+                tabIndex={0}
+                aria-label="Vistas previas del nombre"
+                onPointerMove={handlePickerScrollbarPointerMove}
+                onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
+              >
                 {appearancePicker !== "nameStyle" && <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>}
                 {appearancePicker === "avatarFrame" && (
                   <div className="ps-community-picker-frame-stage">

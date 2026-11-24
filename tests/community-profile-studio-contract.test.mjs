@@ -856,7 +856,7 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.match(studio, /const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample/);
   assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
   assert.match(studio, /ps-name-motion-demo/);
-  assert.match(studio, /tag="span"/);
+  assert.match(studio, /tag = "span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
   for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle-blur", "shuffle-flip", "shuffle", "inkline", "halo-signal"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));

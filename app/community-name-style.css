@@ -5564,3 +5564,110 @@ html:has(.ps-community-picker-overlay) * {
   width:100% !important;
   height:100% !important;
 }
+
+
+/* Signal Break live editor preview: keep the name as inline text in the member row.
+   The previous generic strong-name rule used overflow:hidden and the legacy plate
+   sizing could make this short name look like a centred badge. */
+.ps-community-picker-modal.is-name-style-modal
+.ps-community-name-member-copy {
+  display:flex !important;
+  flex:1 1 auto !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  text-align:left !important;
+}
+.ps-community-picker-modal.is-name-style-modal
+.ps-community-name-member-copy > .ps-glitch-name.community-member-nameplate.ps-community-name-preview-live {
+  position:relative !important;
+  display:inline-block !important;
+  flex:0 0 auto !important;
+  align-self:flex-start !important;
+  justify-self:start !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  text-align:left !important;
+  text-overflow:clip !important;
+  white-space:nowrap !important;
+  line-height:1.25 !important;
+  box-sizing:border-box !important;
+  transform:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal
+.ps-community-name-member-copy > .ps-glitch-name.community-member-nameplate.ps-community-name-preview-live > .ps-glitch-text {
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  text-align:left !important;
+  overflow:visible !important;
+}
+.ps-community-picker-modal.is-name-style-modal
+.ps-community-name-member-copy > .ps-glitch-name.community-member-nameplate.ps-community-name-preview-live > .ps-glitch-slice {
+  position:absolute !important;
+  inset:0 auto auto 0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+}
+
+/* Chromaflow must override the Signal Break red/cyan slice colours.
+   Paint one moving full-spectrum band on the base glyph and both clipped slices. */
+.ps-community-picker-modal.is-name-style-modal
+.ps-glitch-name.ps-community-name-render.effect-chromaflow > .ps-glitch-text,
+.ps-community-picker-modal.is-name-style-modal
+.ps-glitch-name.ps-community-name-render.effect-chromaflow > .ps-glitch-slice--a,
+.ps-community-picker-modal.is-name-style-modal
+.ps-glitch-name.ps-community-name-render.effect-chromaflow > .ps-glitch-slice--b {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(
+    90deg,
+    #ffb52e 0%,
+    #f5e84a 11%,
+    #43df9a 25%,
+    #35c9dc 39%,
+    #4d8cff 53%,
+    #a66cff 66%,
+    #f05bc8 79%,
+    #ff665e 90%,
+    #ffb52e 100%
+  ) !important;
+  background-size:var(--ps-chroma-background-size,260%) 100% !important;
+  background-position:var(--ps-chromaflow-shift,0%) 50% !important;
+  background-repeat:repeat-x !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:none !important;
+  -webkit-text-stroke:0 transparent !important;
+  filter:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal
+.ps-glitch-name.ps-community-name-render.effect-chromaflow {
+  animation:ps-chromaflow-shift 4.8s linear infinite !important;
+  background:transparent !important;
+  background-image:none !important;
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-picker-modal.is-name-style-modal
+  .ps-glitch-name.ps-community-name-render.effect-chromaflow {
+    animation:ps-chromaflow-shift 4.8s linear infinite !important;
+  }
+}

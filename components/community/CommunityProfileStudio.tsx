@@ -1768,6 +1768,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </button>
                         ))}
                       </div>
+                      <p className="ps-community-name-selected-description" aria-live="polite">
+                        {DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.description}
+                      </p>
                     </section>
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Acabado del nombre</div>

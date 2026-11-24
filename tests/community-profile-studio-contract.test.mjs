@@ -849,7 +849,10 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.ok(glitchName.includes("requestAnimationFrame(frame)"));
   assert.match(glitchName, /makeEvent\(performance\.now\(\), stepLength\(settings\.speed\)\)/);
   assert.match(glitchName, /root\.classList\.toggle\("is-glitching", Boolean\(live\)\)/);
-  assert.match(glitchName, /0\.035 \+ power \* 0\.085/);
+  assert.match(glitchName, /0\.12 \+ power \* 0\.12/);
+  assert.match(glitchName, /computedFontSize \/ 32, 0\.48, 1/);
+  assert.match(page, /animation=\{member\.display_name_animation \?\? "decrypt"\}[\s\S]*?previewMode/);
+  assert.match(page, /offset=\{5\.5\}[\s\S]*?intensity=\{0\.28\}/);
   assert.match(nameStyleCss, /\.ps-glitch-name\.is-glitching > \.ps-glitch-text/);
   assert.doesNotMatch(nameStyleCss, /@media\(prefers-reduced-motion:reduce\)\s*\{\s*\.ps-glitch-slice,/);
   assert.match(nameStyleCss, /\.ps-glitch-name:not\(\.ps-community-name-preview-live\) \.ps-glitch-slice/);

@@ -5738,3 +5738,46 @@ html:has(.ps-community-picker-overlay) * {
     background-position:50% 50% !important;
   }
 }
+
+
+/* Clear font selection labels without changing the existing card system. */
+.ps-community-name-font-option {
+  height:66px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+}
+.ps-community-name-font-option > span {
+  display:block !important;
+  flex:0 0 auto !important;
+  line-height:1 !important;
+}
+.ps-community-name-font-option > .ps-community-name-font-label {
+  display:block !important;
+  max-width:100% !important;
+  padding:0 4px !important;
+  overflow:hidden !important;
+  color:#aeb4c1 !important;
+  font-family:Inter,system-ui,sans-serif !important;
+  font-size:9px !important;
+  font-weight:650 !important;
+  line-height:1.1 !important;
+  letter-spacing:.025em !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+.ps-community-name-font-option.is-selected > .ps-community-name-font-label {
+  color:#dce1ff !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render.effect-chromaflow.ps-name-plain:not(.ps-community-name-preview-live),
+  .ps-community-name-animation-option .ps-name-preview-face.effect-chromaflow,
+  .ps-gradient-flow-name > .ps-gradient-flow-face,
+  .ps-community-name-render.effect-chromaflow .ps-inkline-fill linearGradient animateTransform,
+  .ps-community-name-render.effect-chromaflow .ps-inkline-fill animateTransform {
+    animation:none !important;
+    background-position:50% 50% !important;
+  }
+}

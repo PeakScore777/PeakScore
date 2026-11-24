@@ -6134,3 +6134,48 @@ html:has(.ps-community-picker-overlay) * {
     transform:none !important;
   }
 }
+
+
+/* Name-style studio: the member preview is text, never a badge/plate. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-members-view .ps-community-name-member-copy > .community-member-nameplate {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  filter:none !important;
+  overflow:visible !important;
+  line-height:1.25 !important;
+}
+
+/* Solid finishes in the profile preview must use the selected swatch as an
+   actual text fill; older profile-only rules forced pale/transparent fills. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-neon,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-pop,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-glitch {
+  color:var(--name-solid-color,var(--status-theme-text,#202126)) !important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126)) !important;
+  background-image:none !important;
+  background-color:transparent !important;
+  background-clip:border-box !important;
+  -webkit-background-clip:border-box !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-plain {
+  text-shadow:0 1px 0 rgb(255 255 255 / 13%),0 2px 8px rgb(0 0 0 / 16%) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-neon {
+  text-shadow:0 0 1px #fff,0 0 5px var(--name-solid-color,#A88AF2),0 0 14px var(--name-solid-color,#A88AF2),0 0 22px color-mix(in srgb,var(--name-solid-color,#A88AF2) 35%,transparent) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.color-default.effect-plain {
+  color:var(--status-theme-text,#202126) !important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126) !important;
+}

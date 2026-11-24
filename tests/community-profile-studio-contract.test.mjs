@@ -1131,8 +1131,8 @@ test("animation gallery runs one real preview and keeps the other cards CSS-only
 
 test("only the profile runs the selected entrance animation; member and chat names stay static but styled", () => {
   assert.match(page, /function CommunityStaticName/);
-  assert.match(page, /<CommunityStaticName[\s\\S]*?message\.author\.full_name/);
-  assert.match(page, /<CommunityStaticName[\s\\S]*?member\.full_name/);
+  assert.match(page, /<CommunityStaticName[\s\S]*?message\.author\.full_name/);
+  assert.match(page, /<CommunityStaticName[\s\S]*?member\.full_name/);
   assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
   assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
   const chatSurface = page.slice(page.indexOf("community-chat-author-link"), page.indexOf("community-member-sidebar-header"));
@@ -1209,21 +1209,18 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(nameStyleCss, /\.ps-name-shuffle\[data-shuffle-active="false"\] \.ps-name-shuffle__sizer/);
 });
 
-test("explicit animation previews stay alive on touch layouts and the three live views render clean name text", () => {
-  assert.match(studio, /ps-community-name-preview-live/);
-  assert.match(studio, /tag="strong" value=\{displayName \|\| "Tu nombre"\}/);
-  assert.match(studio, /forceMotion=\{previewMode\}/);
-  assert.match(decryptedName, /forceMotion\?: boolean/);
-  assert.match(decryptedName, /!forceMotion &&/);
-  assert.match(fuzzyText, /respectReducedMotion && \(window\.matchMedia/);
-  assert.match(mistfallName, /respectReducedMotion && \(window\.matchMedia/);
-  assert.doesNotMatch(nameStyleCss, /@media \(prefers-reduced-motion: reduce\), \(hover:none\), \(max-width:720px\)/);
-  assert.match(nameStyleCss, /@media \(max-width:780px\)[\s\S]*?\.ps-community-picker-preview \{[\s\S]*?display:flex !important/);
-  assert.match(nameStyleCss, /\.ps-community-name-member-copy > \.ps-community-name-preview-live/);
-  assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
-  assert.doesNotMatch(page, /<strong className=\{"community-member-nameplate is-plate-/);
+test("profile preview keeps full animation while members and chat preview the saved style statically", () => {
+  assert.match(studio, /ps-community-name-preview-profile-view[\\s\\S]*?<DisplayNameMotionPreview/);
+  const memberPreview = studio.slice(studio.indexOf("ps-community-name-preview-members-view"), studio.indexOf("ps-community-name-preview-chat-view"));
+  const chatPreview = studio.slice(studio.indexOf("ps-community-name-preview-chat-view"), studio.indexOf("ps-community-picker-selection"));
+  assert.doesNotMatch(memberPreview, /DisplayNameMotionPreview/);
+  assert.doesNotMatch(chatPreview, /DisplayNameMotionPreview/);
+  assert.match(memberPreview, /ps-community-name-static community-member-nameplate/);
+  assert.match(chatPreview, /ps-community-name-static community-chat-author/);
+  assert.match(fuzzyText, /respectReducedMotion && \\(window\\.matchMedia/);
+  assert.match(mistfallName, /respectReducedMotion && \\(window\\.matchMedia/);
+  assert.match(nameStyleCss, /@media \\(max-width:780px\\)[\\s\\S]*?\\.ps-community-picker-preview \\{[\\s\\S]*?display:flex !important/);
 });
-
 
 
 test("every font card uses the same Aa specimen so typefaces can be compared fairly", () => {
@@ -1246,8 +1243,8 @@ test("member and chat swatches use the same canonical color values as the editor
   assert.match(page, /displayNameSolidColor\(message\.author\.display_name_color/);
   assert.match(page, /displayNameSolidColor\(member\.display_name_color/);
   assert.match(page, /displayNameSolidColor\(hoverCommunityProfile\.displayNameColor/);
-  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\s\\S]*?color:var\(--name-solid-color,#A88AF2\) !important/);
-  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gummy,[\s\\S]*?background-image:var\(--name-prism-gradient/);
+  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\s\S]*?color:var\(--name-solid-color,#A88AF2\) !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gummy,[\s\S]*?background-image:var\(--name-prism-gradient/);
 });
 
 test("display-name colour controls follow the selected effect instead of exposing irrelevant swatches", () => {

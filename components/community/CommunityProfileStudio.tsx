@@ -1770,7 +1770,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige un efecto</div>
+                      <div className="ps-community-name-style-heading">Acabado del nombre</div>
                       <div className="ps-community-name-effect-grid">
                         {DISPLAY_NAME_EFFECTS.map((item) => (
                           <button key={item.id} type="button"

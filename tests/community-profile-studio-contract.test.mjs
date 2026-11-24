@@ -721,6 +721,23 @@ test("reset stays silent and editor scrolling remains native without visible scr
   assert.match(css, /\.ps-community-editor-preview-column::-webkit-scrollbar/);
 });
 
+
+test("name-style picker stays open while scrolling and supports laptop trackpads", () => {
+  const pickerStart = studio.indexOf('<div className="ps-community-picker-overlay">');
+  const pickerEnd = studio.indexOf("</section>", pickerStart);
+  assert.ok(pickerStart >= 0 && pickerEnd > pickerStart);
+  assert.doesNotMatch(studio.slice(pickerStart, pickerEnd), /onPointerDown/);
+  assert.doesNotMatch(studio, /if \(appearancePicker && !appearanceModalRef\.current\?\.contains\(target\)\)/);
+  assert.match(studio, /const previousOverscrollBehavior = root\.style\.overscrollBehavior/);
+  assert.match(studio, /root\.style\.overflow = "hidden"/);
+  assert.match(nameStyleCss, /\.ps-community-picker-overlay\s*\{[^}]*position:fixed !important/s);
+  assert.match(nameStyleCss, /overscroll-behavior:none !important/);
+  assert.match(nameStyleCss, /\.ps-community-picker-collection,[\s\S]*?overflow-y:auto !important/);
+  assert.match(nameStyleCss, /touch-action:pan-y !important/);
+  assert.match(nameStyleCss, /scrollbar-width:thin !important/);
+  assert.match(nameStyleCss, /grid-template-rows:auto minmax\(0,1fr\) auto !important/);
+});
+
 test("display-name style picker uses one live profile surface, synchronized member/chat names and expanded real fonts/effects", () => {
   assert.match(studio, /ps-community-status-profile-preview ps-community-name-style-profile-preview/);
   assert.match(studio, /--status-theme-secondary/);

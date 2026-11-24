@@ -36,6 +36,7 @@ interface FuzzyTextProps {
   colorSplit?: number;
   className?: string;
   performanceMode?: "preview" | "full";
+  respectReducedMotion?: boolean;
 }
 
 interface Tuning {
@@ -105,7 +106,8 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   introDuration = 1400,
   colorSplit = 0,
   className = '',
-  performanceMode = 'full'
+  performanceMode = 'full',
+  respectReducedMotion = true
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glitchRef = useRef(false);
@@ -156,7 +158,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   ]);
 
   useEffect(() => {
-    if (!glitchMode || (performanceMode !== 'preview' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)) return;
+    if (!glitchMode || (respectReducedMotion && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)) return;
     let startTimer: ReturnType<typeof setTimeout>;
     let endTimer: ReturnType<typeof setTimeout>;
     const schedule = () => {
@@ -174,7 +176,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       clearTimeout(endTimer);
       glitchRef.current = false;
     };
-  }, [glitchMode, glitchInterval, glitchDuration]);
+  }, [glitchMode, glitchInterval, glitchDuration, respectReducedMotion]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -192,7 +194,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     if (!canvas || !ctx || !sourceCtx || !scratchCtx || channels.some(channel => !channel.ctx)) return;
     const layers = channels as { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D }[];
 
-    const reduceMotion = performanceMode !== 'preview' && (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+    const reduceMotion = respectReducedMotion && (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
     const usesInk = followsText(color) && !gradientKey;
     const splitPad = splitOn ? Math.ceil(fuzzRange * 0.5) + 4 : 0;
     const padX = fuzzRange + 20 + (direction === 'vertical' ? 0 : splitPad);

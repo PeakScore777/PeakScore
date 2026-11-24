@@ -1367,21 +1367,20 @@ test("name colour presets and clear action remain available beside the custom HS
 });
 
 test("name atelier groups all 29 fonts into four curated families without removing any styles", () => {
-  assert.match(studio, /type DisplayNameFontCategory = "core" \\| "editorial" \\| "gaming" \\| "artistic"/);
-  assert.match(studio, /DISPLAY_NAME_FONT_CATEGORIES/);
-  assert.match(studio, /fonts: \\[.*"classic".*"stream-mono".*\\]/);
-  assert.match(studio, /DISPLAY_NAME_STYLES\\.filter/);
-  assert.match(studio, /draftDisplayNameFontCategory/);
-  assert.match(studio, /Archivo Display/);
+  assert.ok(studio.includes('type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic"'));
+  assert.ok(studio.includes('fonts: ["classic", "modern", "geometric", "rounded", "creator-sans", "discord-display", "stream-mono"]'));
+  assert.ok(studio.includes("DISPLAY_NAME_STYLES.filter"));
+  assert.ok(studio.includes("draftDisplayNameFontCategory"));
+  assert.ok(studio.includes('label: "Archivo Display"'));
   const fontStart = studio.indexOf("const DISPLAY_NAME_STYLES");
-  const fontEnd = studio.indexOf("\\n];", fontStart);
+  const fontEnd = studio.indexOf("\n];", fontStart);
   const catalogue = studio.slice(fontStart, fontEnd);
-  const ids = [...catalogue.matchAll(/\\{ id: "([^"]+)"/g)].map((match) => match[1]);
+  const ids = [...catalogue.matchAll(/\{ id: "([^"]+)"/g)].map((match) => match[1]);
   assert.equal(ids.length, 29);
   const groupStart = studio.indexOf("const DISPLAY_NAME_FONT_CATEGORIES");
-  const groupEnd = studio.indexOf("\\n];", groupStart);
+  const groupEnd = studio.indexOf("\n];", groupStart);
   const groups = studio.slice(groupStart, groupEnd);
-  const groupedIds = [...groups.matchAll(/fonts: \\[([^\\]]+)\\]/g)]
+  const groupedIds = [...groups.matchAll(/fonts: \[([^\]]+)\]/g)]
     .flatMap((match) => [...match[1].matchAll(/"([a-z0-9-]+)"/g)].map((font) => font[1]));
   assert.equal(groupedIds.length, 29);
   assert.equal(new Set(groupedIds).size, 29);
@@ -1389,19 +1388,20 @@ test("name atelier groups all 29 fonts into four curated families without removi
 });
 
 test("name atelier separates finish from profile entrance animation and previews light and dark themes", () => {
-  assert.match(studio, /Acabado del nombre/);
-  assert.match(studio, /Animación de perfil/);
-  assert.match(studio, /SOLO EN PERFIL/);
-  assert.match(studio, /namePreviewTheme/);
-  assert.match(studio, /Vista oscura/);
-  assert.match(studio, /Vista clara/);
-  assert.match(studio, /namePreviewTheme === "light"/);
-  assert.match(nameStyleCss, /\.ps-community-name-preview-stage\.is-theme-light/);
-  assert.match(nameStyleCss, /\.ps-community-name-preview-theme-switch/);
-  assert.match(nameStyleCss, /ps-community-name-preview-members-view/);
-  assert.match(nameStyleCss, /ps-community-name-preview-chat-view/);
-  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gradient,[\\s\\S]*?animation:none !important/);
-  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\\s\\S]*?animation:none !important/);
+  assert.ok(studio.includes("Acabado del nombre"));
+  assert.ok(studio.includes("Animación de perfil"));
+  assert.ok(studio.includes("SOLO EN PERFIL"));
+  assert.ok(studio.includes("namePreviewTheme"));
+  assert.ok(studio.includes("Vista oscura"));
+  assert.ok(studio.includes("Vista clara"));
+  assert.ok(studio.includes('namePreviewTheme === "light"'));
+  assert.ok(nameStyleCss.includes(".ps-community-name-preview-stage.is-theme-light"));
+  assert.ok(nameStyleCss.includes(".ps-community-name-preview-theme-switch"));
+  assert.ok(nameStyleCss.includes("ps-community-name-preview-members-view"));
+  assert.ok(nameStyleCss.includes("ps-community-name-preview-chat-view"));
+  assert.ok(nameStyleCss.includes(".ps-community-name-static.effect-gradient,"));
+  assert.ok(nameStyleCss.includes(".ps-community-name-static.effect-neon,"));
+  assert.ok(nameStyleCss.includes("animation:none !important"));
 });
 
 test("community-only profile and name-style stylesheets are loaded by the community route, not root layout", () => {

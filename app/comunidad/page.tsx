@@ -280,7 +280,9 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
     return <MistfallDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "gradient-flow") {
-    return <Tag id={id} className={"ps-community-name-render " + renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>{value}</Tag>;
+    return <Tag id={id} className={"ps-community-name-render " + renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>
+      <span className="ps-gradient-flow-face">{value}</span>
+    </Tag>;
   }
   if (animation === "depth-lift") {
     return <DepthLiftDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;

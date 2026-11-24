@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText";
 import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
@@ -505,48 +505,22 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           glitchInterval={fuzzySettings.glitchInterval}
           glitchDuration={fuzzySettings.glitchDuration}
           performanceMode={previewMode ? "preview" : "full"}
-          className="ps-fuzzy-text-canvas"
-        >
-          {value}
-        </FuzzyText>
-      </Tag>
-    );
-  }
-  if (animation === "signal-break") {
-    if (previewMode && className.includes("community-member-nameplate")) {
-      return <ReactBitsGlitchText
-        className={renderedClassName}
-        style={safeStyle}
-        speed={1}
-        intensity={0.5}
-        burstDuration={0.6}
-        offset={10}
-        skew={0}
-        flicker={false}
-        fontWeight={900}
-        enableShadows
-        shadowColors={["#ff0000", "#00ffff"]}
-      >{value}</ReactBitsGlitchText>;
-    }
-    return <SignalBreakDisplayName
-      text={value}
-      tag={tag}
+          className="ps-fuzzy-text-can  if (animation === "signal-break") {
+    return <ReactBitsGlitchText
       className={renderedClassName}
       style={safeStyle}
       mode="slices"
-      speed={0.8}
+      trigger="always"
+      speed={1}
+      intensity={0.5}
+      burstDuration={0.6}
+      offset={10}
+      skew={0}
+      flicker={false}
       fontWeight={900}
       enableShadows
-      offset={2}
-      shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.38}
-      skew={0.08}
-      flicker={false}
-      trigger="always"
-      burstDuration={0.3}
-      frameRate={24}
-      previewMode={previewMode}
-    />;
+      shadowColors={["#ff0000", "#00ffff"]}
+    >{value}</ReactBitsGlitchText>;
   }
     if (animation === "none") return <Tag className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>

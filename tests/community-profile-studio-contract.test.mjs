@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -43,6 +43,10 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010300_community_display_name_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261124150100_community_name_platform_fonts_and_chromaflow.sql", import.meta.url), "utf8"),
+  readFile(new URL("../public/licenses/fonts/Bungee-OFL.txt", import.meta.url), "utf8"),
+  readFile(new URL("../public/licenses/fonts/Teko-OFL.txt", import.meta.url), "utf8"),
+  readFile(new URL("../public/licenses/fonts/Oxanium-OFL.txt", import.meta.url), "utf8"),
+  readFile(new URL("../public/licenses/fonts/Cinzel-OFL.txt", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -922,12 +926,48 @@ test("platform-inspired name fonts use open alternatives consistently across the
   assert.match(layout, /--font-name-discord-display/);
   assert.match(layout, /--font-name-creator-sans/);
   assert.match(layout, /--font-name-stream-mono/);
+  assert.match(layout, /Bungee, Cinzel, Oxanium/);
+  assert.match(layout, /Teko/);
+  assert.match(layout, /--font-name-street-block/);
+  assert.match(layout, /--font-name-action-condensed/);
+  assert.match(layout, /--font-name-cyber-racer/);
+  assert.match(layout, /--font-name-epic-rpg/);
   assert.match(nameStyleCss, /is-name-style-discord-display/);
   assert.match(nameStyleCss, /is-name-style-creator-sans/);
   assert.match(nameStyleCss, /is-name-style-stream-mono/);
-  assert.match(route, /"discord-display", "creator-sans", "stream-mono"/);
+  assert.match(nameStyleCss, /is-name-style-street-block/);
+  assert.match(nameStyleCss, /is-name-style-action-condensed/);
+  assert.match(nameStyleCss, /is-name-style-cyber-racer/);
+  assert.match(nameStyleCss, /is-name-style-epic-rpg/);
+  assert.match(studio, /id: "street-block", label: "Street Block"/);
+  assert.match(studio, /id: "action-condensed", label: "Action Condensed"/);
+  assert.match(studio, /id: "cyber-racer", label: "Cyber Racer"/);
+  assert.match(studio, /id: "epic-rpg", label: "Epic RPG"/);
+  assert.match(page, /"street-block", "action-condensed", "cyber-racer", "epic-rpg"/);
+  assert.match(route, /"discord-display", "creator-sans", "stream-mono", "street-block", "action-condensed", "cyber-racer", "epic-rpg"/);
   assert.match(platformFontMigration, /'discord-display'/);
+  assert.match(platformFontMigration, /'street-block'/);
+  assert.match(platformFontMigration, /'action-condensed'/);
+  assert.match(platformFontMigration, /'cyber-racer'/);
+  assert.match(platformFontMigration, /'epic-rpg'/);
   assert.match(platformFontMigration, /'chromaflow'/);
+});
+
+
+test("game-inspired display-name fonts ship their exact OFL copyright and license notices", () => {
+  for (const license of [streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense]) {
+    assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/);
+    assert.match(license, /PERMISSION & CONDITIONS/);
+    assert.match(license, /must be bundled/);
+  }
+  assert.match(streetBlockLicense, /Bungee Project Authors/);
+  assert.match(actionCondensedLicense, /Teko Project Authors/);
+  assert.match(cyberRacerLicense, /Oxanium Project Authors/);
+  assert.match(epicRpgLicense, /Cinzel Project Authors/);
+});
+test("Pricedown is not bundled as a live webfont", () => {
+  assert.doesNotMatch(layout, /Pricedown/i);
+  assert.doesNotMatch(nameStyleCss, /Pricedown/i);
 });
 
 test("display-name animation storage exists before later catalogue migrations", () => {

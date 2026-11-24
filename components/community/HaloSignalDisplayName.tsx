@@ -34,7 +34,7 @@ export default function HaloSignalDisplayName({
 }: Props) {
   const Tag = tag;
   const rootRef = useRef<HTMLElement | null>(null);
-  const forceMotion = previewMode && className.split(/\\s+/).includes("ps-community-name-preview-live");
+  const forceMotion = previewMode && className.split(/\s+/).includes("ps-community-name-preview-live");
   useEffect(() => {
     const node = rootRef.current;
     if (forceMotion) {

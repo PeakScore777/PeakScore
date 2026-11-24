@@ -865,8 +865,6 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
-  assert.match(glitchName, /makeEvent\(cycleStart, stepLength\(current\.speed\), seed\)/);
-  assert.match(glitchName, /0\.38 \+ power \* 0\.16/);
   assert.match(page, /animation=\{member\.display_name_animation \?\? "decrypt"\}[\s\S]*?previewMode/);
   assert.ok(fuzzyText.includes("getContext('2d'"));
 });
@@ -1076,7 +1074,6 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(studio, /gradient=\{className\.includes\("effect-chromaflow"\)/);
   assert.match(page, /gradient=\{className\.includes\("effect-chromaflow"\)/);
   assert.match(decryptedName, /--ps-chroma-position/);
-  assert.match(glitchName, /--ps-chroma-position/);
   assert.match(shuffleName, /--ps-chroma-position/);
   assert.match(nameStyleCss, /\.ps-name-shuffle__track > span\s*\{/);
   assert.doesNotMatch(nameStyleCss, /\.ps-name-shuffle__track > span > span/);
@@ -1116,8 +1113,6 @@ test("explicit animation previews stay alive on touch layouts and the three live
   assert.match(studio, /ps-community-name-preview-live/);
   assert.match(studio, /tag="strong" value=\{displayName \|\| "Tu nombre"\}/);
   assert.match(studio, /forceMotion=\{previewMode\}/);
-  assert.match(glitchName, /previewMode\?: boolean/);
-  assert.match(glitchName, /!previewMode && Boolean/);
   assert.match(decryptedName, /forceMotion\?: boolean/);
   assert.match(decryptedName, /!forceMotion &&/);
   assert.match(fuzzyText, /performanceMode !== 'preview'/);

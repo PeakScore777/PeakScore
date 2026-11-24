@@ -28,12 +28,12 @@ export default function MistfallDisplayName({
   text, className = "", style, tag = "strong", previewMode = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [formed, setFormed] = useState(false);
+  const [formed, setFormed] = useState(true);
   const Tag = tag;
   const chromaflow = className.split(/\s+/).includes("effect-chromaflow");
 
   useEffect(() => {
-    setFormed(false);
+    setFormed(true);
     const canvas = canvasRef.current;
     const host = canvas?.parentElement;
     const ctx = canvas?.getContext("2d", { alpha: true, desynchronized: true });
@@ -44,6 +44,8 @@ export default function MistfallDisplayName({
 
     let raf = 0, resizeRaf = 0, lastFrame = 0, startedAt = 0;
     let width = 1, height = 1, dpr = 1, particles: Particle[] = [];
+    let particleFill: string | CanvasGradient = "#f8f6ff";
+    let particleShadow = "transparent";
     let disposed = false, started = false, finished = false, visible = false, pausedAt = 0;
     const duration = previewMode ? 2.05 : 2.45;
     const fps = previewMode ? 12 : 24;
@@ -66,6 +68,29 @@ export default function MistfallDisplayName({
       if (!pctx) return false;
       const computed = getComputedStyle(host);
       const fontSize = parseFloat(computed.fontSize) || 16;
+      const effect = className.split(/\s+/).find((name) => name.startsWith("effect-"))?.slice(7) ?? "plain";
+      const solidColor = computed.getPropertyValue("--name-solid-color").trim() || computed.color || "#f8f6ff";
+      const makeGradient = (stops: Array<[number, string]>, vertical = false) => {
+        const gradient = ctx.createLinearGradient(0, 0, vertical ? 0 : Math.max(1, width), vertical ? Math.max(1, height) : 0);
+        stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+        return gradient;
+      };
+      particleShadow = effect === "neon" ? solidColor : "transparent";
+      if (effect === "gradient") {
+        const start = computed.getPropertyValue("--name-gradient-start").trim() || "#65d8c2";
+        const end = computed.getPropertyValue("--name-gradient-end").trim() || "#9c83f5";
+        particleFill = makeGradient([[0, start], [0.55, end], [1, "#ffffff"]]);
+      } else if (effect === "prism" || effect === "chromaflow") {
+        particleFill = makeGradient(CHROMAFLOW_STOPS);
+      } else if (effect === "gummy") {
+        particleFill = makeGradient([[0, "#f6a8cf"], [0.2, "#ffe2b8"], [0.4, "#b7f1e0"], [0.65, "#a9c8ff"], [0.82, "#d5a6ff"], [1, "#f6a8cf"]]);
+      } else if (effect === "toon") {
+        particleFill = makeGradient([[0, "#ffffff"], [0.24, "#e9edf5"], [0.48, "#aab5c9"], [0.54, "#ffffff"], [0.78, "#8290a9"], [1, "#f8f9fc"]], true);
+      } else if (effect === "neon") {
+        particleFill = "#f4eaff";
+      } else {
+        particleFill = solidColor;
+      }
       pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       pctx.font = computed.font || `${computed.fontWeight} ${fontSize}px ${computed.fontFamily}`;
       pctx.textAlign = "center"; pctx.textBaseline = "middle"; pctx.fillStyle = "#fff";
@@ -127,10 +152,14 @@ export default function MistfallDisplayName({
         CHROMAFLOW_STOPS.forEach(([offset, color]) => spectrum.addColorStop(offset, color));
         ctx.fillStyle = spectrum;
       } else {
-        ctx.fillStyle = "#f8f6ff";
+        ctx.fillStyle = particleFill;
       }
+      ctx.shadowColor = particleShadow;
+      ctx.shadowBlur = particleShadow === "transparent" ? 0 : (previewMode ? 3 : 5);
       ctx.globalAlpha = 0.96;
       ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
       if (progress < 0.82) {
         ctx.globalCompositeOperation = "lighter";
         ctx.globalAlpha = (1 - progress / 0.82) * 0.13;
@@ -139,7 +168,6 @@ export default function MistfallDisplayName({
         ctx.globalCompositeOperation = "source-over";
       }
       ctx.globalAlpha = 1;
-      if (progress >= 0.78) setFormed(true);
       if (progress >= 1) { finish(); return; }
       raf = requestAnimationFrame(draw);
     };
@@ -148,6 +176,7 @@ export default function MistfallDisplayName({
       if (disposed || !visible || finished) return;
       if (!started) {
         started = true;
+        setFormed(false);
         startedAt = performance.now();
         lastFrame = 0;
       } else if (pausedAt) {

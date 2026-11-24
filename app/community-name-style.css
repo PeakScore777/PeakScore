@@ -3007,8 +3007,6 @@
   text-shadow:var(--ps-glitch-b-shadow,none);
   clip-path:inset(var(--ps-glitch-b-top,0%) 0 var(--ps-glitch-b-bottom,100%) 0);
   transform:translate3d(var(--ps-glitch-b-x,0px),var(--ps-glitch-b-y,0px),0) skewX(var(--ps-glitch-skew,0deg));
-  -webkit-mask-image:linear-gradient(#000 var(--ps-glitch-a-top,0%),transparent var(--ps-glitch-a-top,0%),transparent calc(100% - var(--ps-glitch-a-bottom,100%)),#000 calc(100% - var(--ps-glitch-a-bottom,100%)));
-  mask-image:linear-gradient(#000 var(--ps-glitch-a-top,0%),transparent var(--ps-glitch-a-top,0%),transparent calc(100% - var(--ps-glitch-a-bottom,100%)),#000 calc(100% - var(--ps-glitch-a-bottom,100%)));
 }
 .ps-glitch-name--rgb > .ps-glitch-text {
   -webkit-mask-image:none;

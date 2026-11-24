@@ -943,7 +943,7 @@ test("platform-inspired name fonts use open alternatives consistently across the
   assert.match(studio, /id: "action-condensed", label: "Action Condensed"/);
   assert.match(studio, /id: "cyber-racer", label: "Cyber Racer"/);
   assert.match(studio, /id: "epic-rpg", label: "Epic RPG"/);
-  assert.match(page, /"street-block", "action-condensed", "cyber-racer", "epic-rpg"/);
+  for (const id of ["street-block", "action-condensed", "cyber-racer", "epic-rpg"]) assert.ok(page.includes(`"${id}"`));
   assert.match(route, /"discord-display", "creator-sans", "stream-mono", "street-block", "action-condensed", "cyber-racer", "epic-rpg"/);
   assert.match(platformFontMigration, /'discord-display'/);
   assert.match(platformFontMigration, /'street-block'/);

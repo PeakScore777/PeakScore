@@ -818,7 +818,7 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(studio, /if \(animation === "mistfall"\)/);
   assert.match(nameStyleCss, /\.ps-mistfall-canvas/);
   assert.match(nameStyleCss, /\.ps-domino-flow__tile/);
-  assert.match(studio, /animateOn=\{isGalleryDemo \? "mount" : "view"\}/);
+  assert.match(studio, /animateOn=\{isGalleryDemo \|\| previewMode \? "mount" : "view"\}/);
   assert.match(studio, /loop=\{isGalleryDemo\}/);
   assert.match(page, /animateOn="view"/);
   assert.match(page, /revealDirection="random"/);
@@ -861,7 +861,7 @@ test("motion gallery previews use the exact renderer for each selected animation
   for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle-blur", "shuffle-flip", "shuffle", "inkline", "halo-signal"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:', 'id: "inkline", label:', 'id: "halo-signal", label:'].filter((entry) => catalogue.includes(entry)).length, 7);
+  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:', 'id: "inkline", label:', 'id: "halo-signal", label:'].filter((entry) => catalogue.includes(entry)).length, 8);
   assert.ok(studio.includes("<DecryptedDisplayName"));
   assert.ok(studio.includes("<SignalBreakDisplayName"));
   assert.match(nameStyleCss, /Signal Break editor alignment: the glitch name is a text run/);

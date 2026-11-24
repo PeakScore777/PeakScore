@@ -413,7 +413,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     return <DominoFlowDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "mistfall") {
-    return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode} respectReducedMotion={!previewMode}/>;
   }
   if (animation === "gradient-flow") {
     return <Tag className={renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>
@@ -528,6 +528,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           glitchInterval={fuzzySettings.glitchInterval}
           glitchDuration={fuzzySettings.glitchDuration}
           performanceMode={previewMode ? "preview" : "full"}
+          respectReducedMotion={!previewMode}
           className="ps-fuzzy-text-canvas"
         >
           {value}

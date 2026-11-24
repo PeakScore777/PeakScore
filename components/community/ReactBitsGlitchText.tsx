@@ -6,6 +6,7 @@ import "./ReactBitsGlitchText.css";
 type Props = {
   children: string;
   className?: string;
+  style?: CSSProperties;
   speed?: number;
   intensity?: number;
   burstDuration?: number;
@@ -42,7 +43,7 @@ const makeEvent=(now:number,ms:number):EventState=>{
 };
 
 export default function ReactBitsGlitchText({
-  children,className="",speed=1,intensity=0.5,burstDuration=0.6,offset=10,
+  children,className="",style,speed=1,intensity=0.5,burstDuration=0.6,offset=10,
   skew=0,flicker=false,fontWeight=900,enableShadows=true,
   shadowColors=["#ff0000","#00ffff"]
 }:Props){
@@ -108,12 +109,13 @@ export default function ReactBitsGlitchText({
     return ()=>{cancelAnimationFrame(raf);observer?.disconnect();document.removeEventListener("visibilitychange",onVisibility);rest();};
   },[]);
 
-  const style={
-    fontWeight,
+  const rootStyle={
+    ...style,
+    fontWeight: fontWeight ?? style?.fontWeight,
     "--glitch-color-a":enableShadows?shadowColors[0]:"currentColor",
     "--glitch-color-b":enableShadows?shadowColors[1]:"currentColor"
   } as CSSProperties;
-  return <div ref={rootRef} className={`ps-reactbits-glitch glitch glitch--slices ${className}`} style={style}>
+  return <div ref={rootRef} className={`ps-reactbits-glitch glitch glitch--slices ${className}`} style={rootStyle}>
     <span className="glitch__text">{children}</span>
     <span className="glitch__slice glitch__slice--b" aria-hidden="true">{children}</span>
     <span className="glitch__slice glitch__slice--a" aria-hidden="true">{children}</span>

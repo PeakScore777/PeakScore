@@ -1132,7 +1132,7 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(mistfallName, /maxParticles = previewMode \? 120 : 520/);
   assert.match(mistfallName, /fps = previewMode \? 12 : 24/);
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
-  assert.match(page, /frameRate=\{previewMode \? 14 : 20\}/);
+  assert.match(page, /frameRate=\{24\}/);
 });
 
 

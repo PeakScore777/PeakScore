@@ -884,7 +884,7 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.ok(glitchName.includes("bHeight: 8 + random() * 8"));
   assert.match(page, /animation=\{member\.display_name_animation \?\? "decrypt"\}[\s\S]*?previewMode/);
   assert.match(page, /offset=\{2\}[\s\S]*?intensity=\{0\.38\}/);
-  assert.match(studio, /offset=\{10\}[\s\S]*?intensity=\{0\.5\}/);
+  assert.match(studio, /intensity=\{0\.5\}[\s\S]*?offset=\{10\}/);
   assert.doesNotMatch(nameStyleCss, /\.ps-glitch-name\.is-glitching > \.ps-glitch-text\s*\{[^}]*mask-image/s);
   assert.match(nameStyleCss, /\.ps-glitch-name--slices \.ps-glitch-slice--a\s*\{\s*color:var\(--ps-glitch-color-a/);
   assert.match(nameStyleCss, /\.ps-glitch-name--slices \.ps-glitch-slice--b\s*\{\s*color:var\(--ps-glitch-color-b/);

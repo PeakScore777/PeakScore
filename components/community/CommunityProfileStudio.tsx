@@ -516,6 +516,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     if (previewMode && className.includes("ps-community-name-render")) {
       return <ReactBitsGlitchText
         className={renderedClassName}
+        style={safeStyle}
         speed={1}
         intensity={0.5}
         burstDuration={0.6}

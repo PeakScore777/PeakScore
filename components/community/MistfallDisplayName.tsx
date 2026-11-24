@@ -30,7 +30,10 @@ export default function MistfallDisplayName({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [formed, setFormed] = useState(true);
   const Tag = tag;
-  const chromaflow = className.split(/\s+/).includes("effect-chromaflow");
+  const effectName = className.split(/\s+/).find((name) => name.startsWith("effect-"))?.slice(7) ?? "plain";
+  const chromaflow = effectName === "chromaflow";
+  const styleTokens = style as (CSSProperties & Record<string, string | undefined>) | undefined;
+  const styleKey = [styleTokens?.["--name-solid-color"], styleTokens?.["--name-gradient-start"], styleTokens?.["--name-gradient-end"], styleTokens?.["--name-prism-gradient"]].join("|");
 
   useEffect(() => {
     setFormed(true);
@@ -68,7 +71,7 @@ export default function MistfallDisplayName({
       if (!pctx) return false;
       const computed = getComputedStyle(host);
       const fontSize = parseFloat(computed.fontSize) || 16;
-      const effect = className.split(/\s+/).find((name) => name.startsWith("effect-"))?.slice(7) ?? "plain";
+      const effect = effectName;
       const solidColor = computed.getPropertyValue("--name-solid-color").trim() || computed.color || "#f8f6ff";
       const makeGradient = (stops: Array<[number, string]>, vertical = false) => {
         const gradient = ctx.createLinearGradient(0, 0, vertical ? 0 : Math.max(1, width), vertical ? Math.max(1, height) : 0);
@@ -92,7 +95,10 @@ export default function MistfallDisplayName({
         particleFill = solidColor;
       }
       pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      pctx.font = computed.font || `${computed.fontWeight} ${fontSize}px ${computed.fontFamily}`;
+      // Canvas rejects CSS font shorthands containing computed line-height (e.g. "700 16px / 24px Inter").
+      // Build a Canvas-valid font explicitly; otherwise it silently falls back to 10px sans-serif,
+      // producing the tiny stray particle dashes seen above the actual name.
+      pctx.font = `${computed.fontStyle} ${computed.fontWeight} ${fontSize}px ${computed.fontFamily}`;
       pctx.textAlign = "center"; pctx.textBaseline = "middle"; pctx.fillStyle = "#fff";
       if ("letterSpacing" in pctx) (pctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = computed.letterSpacing;
       pctx.fillText(text, width / 2, height / 2);
@@ -226,7 +232,7 @@ export default function MistfallDisplayName({
       resizeObserver.disconnect();
       intersectionObserver?.disconnect();
     };
-  }, [text, previewMode, chromaflow]);
+  }, [text, previewMode, effectName, chromaflow, styleKey]);
 
   return (
     <Tag className={className + " ps-mistfall-name" + (formed ? " is-formed" : "")} style={style} aria-label={text}>

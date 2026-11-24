@@ -1131,16 +1131,16 @@ test("animation gallery runs one real preview and keeps the other cards CSS-only
 
 test("only the profile runs the selected entrance animation; member and chat names stay static but styled", () => {
   assert.match(page, /function CommunityStaticName/);
-  assert.match(page, /<CommunityStaticName[\\s\\S]*?message\\.author\\.full_name/);
-  assert.match(page, /<CommunityStaticName[\\s\\S]*?member\\.full_name/);
-  assert.match(page, /<CommunityStaticName key=\\{hoverCommunityProfile\\.userId\\}/);
-  assert.match(page, /<CommunityAnimatedName key=\\{selectedCommunityProfile\\.userId\\}/);
+  assert.match(page, /<CommunityStaticName[\s\\S]*?message\.author\.full_name/);
+  assert.match(page, /<CommunityStaticName[\s\\S]*?member\.full_name/);
+  assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
+  assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
   const chatSurface = page.slice(page.indexOf("community-chat-author-link"), page.indexOf("community-member-sidebar-header"));
   const memberSurface = page.slice(page.indexOf("community-member-sidebar-scroll"), page.indexOf("community-member-sidebar-footer"));
   assert.doesNotMatch(chatSurface, /<CommunityAnimatedName/);
   assert.doesNotMatch(memberSurface, /<CommunityAnimatedName/);
   assert.match(page, /ps-community-name-static/);
-  assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\\{displayName \\|\\| "Tu nombre"\\} animation=\\{draftDisplayNameAnimation\\}/);
+  assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
   assert.match(studio, /ps-community-name-static community-member-nameplate/);
   assert.match(studio, /ps-community-name-static community-chat-author/);
 });
@@ -1228,7 +1228,7 @@ test("explicit animation previews stay alive on touch layouts and the three live
 
 test("every font card uses the same Aa specimen so typefaces can be compared fairly", () => {
   const catalogueStart = studio.indexOf("const DISPLAY_NAME_STYLES");
-  const catalogueEnd = studio.indexOf("\\n];", catalogueStart);
+  const catalogueEnd = studio.indexOf("\n];", catalogueStart);
   assert.ok(catalogueStart >= 0 && catalogueEnd > catalogueStart);
   const catalogue = studio.slice(catalogueStart, catalogueEnd);
   const samples = [...catalogue.matchAll(/sample: "([^"]+)"/g)].map((match) => match[1]);
@@ -1243,11 +1243,11 @@ test("member and chat swatches use the same canonical color values as the editor
   assert.match(nameColorHelper, /blue: "#63A9F5"/);
   assert.match(nameColorHelper, /purple: "#A88AF2"/);
   assert.match(nameColorHelper, /displayNameSolidColor/);
-  assert.match(page, /displayNameSolidColor\\(message\\.author\\.display_name_color/);
-  assert.match(page, /displayNameSolidColor\\(member\\.display_name_color/);
-  assert.match(page, /displayNameSolidColor\\(hoverCommunityProfile\\.displayNameColor/);
-  assert.match(nameStyleCss, /\\.ps-community-name-static\\.effect-neon,[\\s\\S]*?color:var\\(--name-solid-color,#A88AF2\\) !important/);
-  assert.match(nameStyleCss, /\\.ps-community-name-static\\.effect-gummy,[\\s\\S]*?background-image:var\\(--name-prism-gradient/);
+  assert.match(page, /displayNameSolidColor\(message\.author\.display_name_color/);
+  assert.match(page, /displayNameSolidColor\(member\.display_name_color/);
+  assert.match(page, /displayNameSolidColor\(hoverCommunityProfile\.displayNameColor/);
+  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\s\\S]*?color:var\(--name-solid-color,#A88AF2\) !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gummy,[\s\\S]*?background-image:var\(--name-prism-gradient/);
 });
 
 test("display-name colour controls follow the selected effect instead of exposing irrelevant swatches", () => {

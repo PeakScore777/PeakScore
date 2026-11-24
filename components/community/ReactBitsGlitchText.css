@@ -12,15 +12,9 @@
     #000 calc(100% - var(--glitch-b-bottom, 100%))
   );
   position:relative;
-  display:inline-block;
-  width:max-content;
-  max-width:100%;
-  min-width:0;
-  margin:0;
-  vertical-align:baseline;
-  font-size:inherit;
+  margin:0 auto;
+  font-size:clamp(2rem, 10vw, 8rem);
   font-weight:900;
-  line-height:inherit;
   white-space:nowrap;
   user-select:none;
   cursor:inherit;
@@ -121,30 +115,15 @@
   border:0;
 }
 
-/* The same React Bits renderer fits each PeakScore name surface without changing
-   the slice masks, movement, shadows or timing. */
-.ps-community-picker-modal.is-name-style-modal .ps-reactbits-glitch {
-  display:inline-block !important;
-  width:max-content !important;
-  max-width:100% !important;
-  min-width:0 !important;
-  margin:0 !important;
-  padding:0 !important;
-  border:0 !important;
-  border-radius:0 !important;
-  outline:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-  white-space:nowrap !important;
-}
-
+/* Context sizing only. The effect layers above remain the untouched React Bits
+   masks, slices, transforms, shadows and timing. */
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option > .ps-reactbits-glitch {
-  display:inline-block !important;
-  width:max-content !important;
+  display:block !important;
+  width:100% !important;
   max-width:100% !important;
   margin:0 auto !important;
   font-size:clamp(13px, 1.05vw, 17px) !important;
+  font-weight:900 !important;
   line-height:1.2 !important;
   text-align:center !important;
 }
@@ -163,7 +142,7 @@
 
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > .ps-reactbits-glitch {
   display:block !important;
-  width:max-content !important;
+  width:100% !important;
   max-width:100% !important;
   font-size:clamp(22px, 2vw, 27px) !important;
   font-weight:900 !important;

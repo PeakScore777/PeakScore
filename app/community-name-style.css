@@ -5457,3 +5457,56 @@
     touch-action:pan-y !important;
   }
 }
+
+
+/* Discord-like outer and inner scrollbar while the community appearance editor is open.
+   Keep a narrow, quiet thumb and remove native up/down arrow buttons from Chromium. */
+html:has(.ps-community-picker-overlay),
+body:has(.ps-community-picker-overlay) {
+  scrollbar-width:thin !important;
+  scrollbar-color:#454954 transparent !important;
+}
+html:has(.ps-community-picker-overlay)::-webkit-scrollbar,
+body:has(.ps-community-picker-overlay)::-webkit-scrollbar {
+  width:6px !important;
+  height:6px !important;
+  background:transparent !important;
+}
+html:has(.ps-community-picker-overlay)::-webkit-scrollbar-thumb,
+body:has(.ps-community-picker-overlay)::-webkit-scrollbar-thumb {
+  min-height:34px !important;
+  border:1px solid transparent !important;
+  border-radius:999px !important;
+  background-color:#454954 !important;
+  background-clip:padding-box !important;
+}
+html:has(.ps-community-picker-overlay)::-webkit-scrollbar-thumb:hover,
+body:has(.ps-community-picker-overlay)::-webkit-scrollbar-thumb:hover {
+  background-color:#626875 !important;
+}
+html:has(.ps-community-picker-overlay)::-webkit-scrollbar-track,
+body:has(.ps-community-picker-overlay)::-webkit-scrollbar-track,
+html:has(.ps-community-picker-overlay)::-webkit-scrollbar-corner,
+body:has(.ps-community-picker-overlay)::-webkit-scrollbar-corner {
+  background:transparent !important;
+}
+html:has(.ps-community-picker-overlay)::-webkit-scrollbar-button,
+body:has(.ps-community-picker-overlay)::-webkit-scrollbar-button,
+html:has(.ps-community-picker-overlay) *::-webkit-scrollbar-button,
+body:has(.ps-community-picker-overlay) *::-webkit-scrollbar-button {
+  display:none !important;
+  width:0 !important;
+  height:0 !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  background:none !important;
+}
+html:has(.ps-community-picker-overlay) *::-webkit-scrollbar,
+body:has(.ps-community-picker-overlay) *::-webkit-scrollbar {
+  width:6px !important;
+  height:6px !important;
+}
+html:has(.ps-community-picker-overlay) * {
+  scrollbar-width:thin !important;
+  scrollbar-color:#454954 transparent !important;
+}

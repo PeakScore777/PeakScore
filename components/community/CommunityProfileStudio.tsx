@@ -518,12 +518,12 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       className={renderedClassName}
       style={safeStyle}
       mode="slices"
-      speed={1.05}
+      speed={0.9}
       fontWeight={900}
       enableShadows
-      offset={4}
+      offset={5.5}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.14}
+      intensity={0.24}
       skew={0.18}
       flicker={false}
       trigger="always"

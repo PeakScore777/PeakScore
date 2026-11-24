@@ -4558,15 +4558,15 @@
 .name-preview-shuffle-blur { animation-name:ps-preview-blur-lite; }
 .name-preview-shuffle-flip { animation-name:ps-preview-flip-lite; }
 .name-preview-shuffle { animation-name:ps-preview-slide-lite; }
-@keyframes ps-preview-decrypt-lite { 0%,12%{opacity:.45;filter:blur(2px);letter-spacing:.12em} 40%,100%{opacity:1;filter:none;letter-spacing:inherit} }
-@keyframes ps-preview-signal-lite { 0%,8%,16%,100%{transform:none;filter:none} 10%{transform:translateX(-2px) skewX(-5deg);filter:drop-shadow(2px 0 #ff5368) drop-shadow(-2px 0 #43d9ee)} 13%{transform:translateX(2px) skewX(4deg)} }
-@keyframes ps-preview-noise-lite { 0%,15%,100%{opacity:1;filter:none} 5%{opacity:.55;filter:blur(1.5px)} 9%{opacity:.8;filter:contrast(1.7)} }
+@keyframes ps-preview-decrypt-lite { 0%,12%{opacity:.45;transform:translateY(2px) scale(.99);letter-spacing:.12em} 40%,100%{opacity:1;transform:none;letter-spacing:inherit} }
+@keyframes ps-preview-signal-lite { 0%,8%,16%,100%{transform:none;opacity:1} 10%{transform:translateX(-2px) skewX(-5deg);opacity:.72} 13%{transform:translateX(2px) skewX(4deg);opacity:.9} }
+@keyframes ps-preview-noise-lite { 0%,15%,100%{opacity:1;transform:none} 5%{opacity:.55;transform:translateX(-1px)} 9%{opacity:.8;transform:translateX(1px)} }
 @keyframes ps-preview-inkline-lite { 0%,8%{clip-path:inset(0 100% 0 0)} 52%,100%{clip-path:inset(0 0 0 0)} }
-@keyframes ps-preview-halo-lite { 0%,100%{filter:none;text-shadow:none} 45%,65%{filter:brightness(1.25);text-shadow:0 0 7px currentColor,0 0 15px currentColor} }
+@keyframes ps-preview-halo-lite { 0%,100%{opacity:.82;transform:none} 45%,65%{opacity:1;transform:translateY(-1px) scale(1.015)} }
 @keyframes ps-preview-domino-lite { 0%,12%{transform:translateY(-5px) rotate(-3deg);opacity:.5} 42%,100%{transform:translateY(0) rotate(0);opacity:1} }
-@keyframes ps-preview-mist-lite { 0%,15%{opacity:.25;filter:blur(4px);transform:translateY(3px)} 55%,100%{opacity:1;filter:blur(0);transform:none} }
+@keyframes ps-preview-mist-lite { 0%,15%{opacity:.25;transform:translateY(3px) scale(.99)} 55%,100%{opacity:1;transform:none} }
 @keyframes ps-preview-depth-lite { 0%,100%{transform:translateY(0);text-shadow:0 1px 0 #111} 48%,65%{transform:translateY(-2px);text-shadow:0 2px 0 #171421,0 4px 0 #171421,0 6px 7px #0008} }
-@keyframes ps-preview-blur-lite { 0%,12%{opacity:.25;filter:blur(5px);transform:translateY(5px)} 52%,100%{opacity:1;filter:none;transform:none} }
+@keyframes ps-preview-blur-lite { 0%,12%{opacity:.25;transform:translateY(5px) scale(.98)} 52%,100%{opacity:1;transform:none} }
 @keyframes ps-preview-flip-lite { 0%,14%{opacity:.25;transform:perspective(160px) rotateX(70deg)} 55%,100%{opacity:1;transform:perspective(160px) rotateX(0)} }
 @keyframes ps-preview-slide-lite { 0%,15%{opacity:.3;transform:translateX(-12px)} 55%,100%{opacity:1;transform:translateX(0)} }
 

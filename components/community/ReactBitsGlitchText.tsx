@@ -43,20 +43,19 @@ const makeEvent=(now:number,ms:number):EventState=>{
 };
 
 export default function ReactBitsGlitchText({
-  children,className="",style,speed=1,intensity=0.5,burstDuration=0.6,offset=10,
+  children,className="",style,speed=1,intensity=0.5,offset=10,
   skew=0,flicker=false,fontWeight=900,enableShadows=true,
   shadowColors=["#ff0000","#00ffff"]
 }:Props){
   const rootRef=useRef<HTMLDivElement>(null);
-  const settingsRef=useRef({speed,intensity,burstDuration,offset,skew,flicker,enableShadows,shadowColors});
-  settingsRef.current={speed,intensity,burstDuration,offset,skew,flicker,enableShadows,shadowColors};
+  const settingsRef=useRef({speed,intensity,offset,skew,flicker,enableShadows,shadowColors});
+  settingsRef.current={speed,intensity,offset,skew,flicker,enableShadows,shadowColors};
 
   useEffect(()=>{
     const root=rootRef.current;if(!root)return;
     const reduce=Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
     const written:Record<string,string>={};
     let raf=0,last=0,clock=0,visible=true,nextStep=0,event:EventState|null=null,alpha=1;
-    let jitter=[1,1,0,0];
     const write=(name:string,value:string)=>{if(written[name]===value)return;written[name]=value;root.style.setProperty(name,value);};
     const rest=()=>{
       write("--glitch-a-top","0%");write("--glitch-a-bottom","100%");
@@ -76,7 +75,6 @@ export default function ReactBitsGlitchText({
       const power=clamp(s.intensity,0,1);
       if(now>=nextStep){
         if(!event&&Math.random()<power*power*0.35)event=makeEvent(now,ms);
-        jitter=[0.6+Math.random()*0.8,0.6+Math.random()*0.8,Math.random()*2-1,Math.random()*2-1];
         alpha=s.flicker&&Math.random()<0.04+0.16*power?0.45+Math.random()*0.35:1;
         nextStep=now+ms*(0.7+Math.random()*0.6);
       }

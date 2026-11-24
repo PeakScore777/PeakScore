@@ -8,6 +8,7 @@ type Props = {
   style?: CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
   previewMode?: boolean;
+  respectReducedMotion?: boolean;
 };
 
 type Particle = {
@@ -25,7 +26,7 @@ const CHROMAFLOW_STOPS: Array<[number, string]> = [
 
 /** Mistfall: one-shot particle convergence that resolves into a stable, readable name. */
 export default function MistfallDisplayName({
-  text, className = "", style, tag = "strong", previewMode = false,
+  text, className = "", style, tag = "strong", previewMode = false, respectReducedMotion = true,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [formed, setFormed] = useState(true);
@@ -42,7 +43,7 @@ export default function MistfallDisplayName({
     const ctx = canvas?.getContext("2d", { alpha: true, desynchronized: true });
     if (!canvas || !host || !ctx) return;
 
-    const reduced = !previewMode && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
+    const reduced = respectReducedMotion && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     if (reduced) { setFormed(true); return; }
 
     let raf = 0, resizeRaf = 0, lastFrame = 0, startedAt = 0;
@@ -232,7 +233,7 @@ export default function MistfallDisplayName({
       resizeObserver.disconnect();
       intersectionObserver?.disconnect();
     };
-  }, [text, previewMode, effectName, chromaflow, styleKey]);
+  }, [text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey]);
 
   return (
     <Tag className={className + " ps-mistfall-name" + (formed ? " is-formed" : "")} style={style} aria-label={text}>

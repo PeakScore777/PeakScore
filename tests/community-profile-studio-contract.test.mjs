@@ -958,7 +958,7 @@ test("game-inspired display-name fonts ship their exact OFL copyright and licens
   for (const license of [streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense]) {
     assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/);
     assert.match(license, /PERMISSION & CONDITIONS/);
-    assert.match(license, /must be bundled/);
+    assert.match(license, /may be bundled/);
   }
   assert.match(streetBlockLicense, /Bungee Project Authors/);
   assert.match(actionCondensedLicense, /Teko Project Authors/);

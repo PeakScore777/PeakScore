@@ -398,17 +398,17 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       className={renderedClassName}
       style={safeStyle}
       mode="slices"
-      speed={0.72}
+      speed={0.8}
       fontWeight={900}
       enableShadows
-      offset={6.5}
+      offset={3.2}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.42}
-      skew={0.18}
+      intensity={0.25}
+      skew={0.12}
       flicker={false}
       trigger="always"
-      burstDuration={0.34}
-      frameRate={previewMode ? 14 : 20}
+      burstDuration={0.18}
+      frameRate={24}
       previewMode={previewMode}
     />;
   }

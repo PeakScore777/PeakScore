@@ -883,7 +883,7 @@ test("display-name animation catalogue includes Hacking Decode, Noise Reveal and
   const expected = ["decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift","gradient-flow"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal(["id: \"decrypt\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:", "id: \"depth-lift\", label:"].filter((entry) => catalogue.includes(entry)).length, 11);
+  assert.equal(["id: \"decrypt\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:", "id: \"depth-lift\", label:", "id: \"gradient-flow\", label:"].filter((entry) => catalogue.includes(entry)).length, 11);
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));

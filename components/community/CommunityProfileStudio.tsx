@@ -415,7 +415,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "gradient-flow") {
-    return <Tag className={renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>{value}</Tag>;
+    return <Tag className={renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>
+      <span className="ps-gradient-flow-face">{value}</span>
+    </Tag>;
   }
   if (animation === "depth-lift") {
     return <DepthLiftDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag}/>;
@@ -1586,7 +1588,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             className={"ps-community-name-font-option is-name-style-" + item.id + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
                             title={item.label} aria-label={item.label}
                             onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
-                            <span>{displayName || item.sample}</span>
+                            <span>{item.sample}</span>
                           </button>
                         ))}
                       </div>
@@ -1649,7 +1651,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                                   className={previewClass + " ps-name-preview-motion name-preview-" + item.id}
                                   style={previewStyle}
                                 >
-                                  {displayName || "OMEGA"}
+                                  <span className="ps-name-preview-face">{displayName || "OMEGA"}</span>
                                 </span>
                               )}
                               <strong>{item.label}</strong>

@@ -256,7 +256,7 @@ function CommunityStaticName({ value, className, style, tag = "span" }: {
   const chromaScale = Math.max(2.6, characters.length);
   const safeStyle = {
     ...style,
-    fontSize: (fitScale * tagScale).toFixed(3) + "em",
+    ...(tag === "span" ? {} : { fontSize: (fitScale * tagScale).toFixed(3) + "em" }),
     "--ps-chroma-char-count": Math.max(1, characters.length),
     "--ps-chroma-background-size": chromaScale * 100 + "%",
     "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",

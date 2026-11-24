@@ -407,6 +407,7 @@ export default function ReactBitsGlitchText({
     };
   }, [safeMode, activeTrigger, characterCount]);
 
+  const safeClassName = className.split(/\\s+/).filter((token) => token && token !== "ps-community-name-preview-live").join(" ");
   const rootStyle: GlitchStyle = {
     ...style,
     color: color ?? style?.color,
@@ -421,11 +422,11 @@ export default function ReactBitsGlitchText({
   return (
     <div
       ref={rootRef}
-      className={`ps-reactbits-glitch glitch glitch--${safeMode} ${className}`}
+      className={`ps-reactbits-glitch glitch glitch--${safeMode} ${safeClassName}`}
       style={rootStyle}
     >
       <span
-        className="glitch__text ps-glitch-text"
+        className="glitch__text"
         aria-hidden={characters ? "true" : undefined}
       >
         {characters
@@ -433,22 +434,22 @@ export default function ReactBitsGlitchText({
               <span
                 key={index}
                 ref={(element) => { charRefs.current[index] = element; }}
-                className="glitch__char ps-glitch-char"
+                className="glitch__char"
               >
                 {character}
               </span>
             ))
           : children}
       </span>
-      {characters && <span className="glitch__sr ps-glitch-sr">{children}</span>}
+      {characters && <span className="glitch__sr">{children}</span>}
       <span
-        className="glitch__slice glitch__slice--b ps-glitch-slice ps-glitch-slice--b"
+        className="glitch__slice glitch__slice--b"
         aria-hidden="true"
       >
         {children}
       </span>
       <span
-        className="glitch__slice glitch__slice--a ps-glitch-slice ps-glitch-slice--a"
+        className="glitch__slice glitch__slice--a"
         aria-hidden="true"
       >
         {children}

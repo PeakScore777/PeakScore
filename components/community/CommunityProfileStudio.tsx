@@ -402,9 +402,9 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
         </span>
       </button>
       {open && (
-        <div className="ps-community-name-custom-picker" role="dialog" aria-label="Elegir color personalizado">
+        <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker ps-community-name-custom-picker" role="dialog" aria-label="Elegir color personalizado">
           <div
-            className="ps-community-name-custom-picker-plane"
+            className="ps-community-color-picker-plane"
             style={{ backgroundColor: "hsl(" + hue + " 100% 50%)" }}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
@@ -416,19 +416,18 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
               requestAnimationFrame(() => apply());
             }}
           >
-            <span className="ps-community-name-custom-picker-cursor" style={{
+            <span className="ps-community-color-picker-cursor" style={{
               left: (hexToHsv(draft).s * 100) + "%",
               top: ((1 - hexToHsv(draft).v) * 100) + "%",
             }}/>
           </div>
-          <div className="ps-community-name-custom-picker-controls">
-            <span className="ps-community-name-custom-picker-current" style={{ backgroundColor: draft }}/>
-            <input aria-label="Tono" type="range" min="0" max="360" value={hue}
+          <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de colores">
+            <input className="ps-community-color-picker-hue" aria-label="Tono" type="range" min="0" max="360" value={hue}
               onChange={(event) => updateFromHue(Number(event.target.value))}
               onPointerUp={() => apply()}
               onKeyUp={() => apply()}/>
-          </div>
-          <label className="ps-community-name-custom-picker-hex">
+          </label>
+          <label className="ps-community-color-picker-hex">
             <span>#</span>
             <input value={hexDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text"
               onChange={(event) => {
@@ -438,18 +437,23 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
               }}
               onBlur={() => { if (/^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); else setHexDraft(draftRef.current.slice(1)); }}
               onKeyDown={(event) => { if (event.key === "Enter" && /^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); }}/>
+            <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(draftRef.current)}>
+              <Copy size={14}/>
+            </button>
           </label>
-          {recent.length > 0 && (
-            <div className="ps-community-name-custom-picker-recent" aria-label="Colores recientes">
-              {recent.map((color) => <button key={color} type="button" style={{ backgroundColor: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>)}
-            </div>
-          )}
-          <div className="ps-community-name-custom-picker-actions">
-            <button type="button" onClick={() => { setLocalColor(value); setOpen(false); }}>Cancelar</button>
-            <button type="button" onClick={() => apply()}>Aplicar</button>
+          <div className="ps-community-color-picker-recent" aria-label="Colores recientes">
+            {recent.length > 0 ? recent.map((color) => (
+              <button key={color} type="button" style={{ background: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>
+            )) : ["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"].map((color) => (
+              <button key={color} type="button" style={{ background: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>
+            ))}
+          </div>
+          <div className="ps-community-color-picker-actions">
+            <button type="button" onClick={() => { setLocalColor(value); setOpen(false); }}>Restablecer</button>
+            <button type="button" onClick={() => apply()}>Listo</button>
           </div>
         </div>
-      )}
+      )} )}
     </div>
   );
 }
@@ -2309,26 +2313,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-color:#5865f2 !important; background:rgb(30 31 34 / 92%) !important;
   outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important;
 
-/* Isolated custom name-color selector: profile-theme visual language, local drag state. */
+/* The custom name-color popover reuses the exact profile-theme picker styles. */
 .ps-community-name-custom-picker-root{position:relative!important;display:flex!important;flex:1 1 auto!important;min-width:0!important}
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-width:0!important}
-.ps-community-name-custom-picker{position:absolute!important;z-index:80!important;left:0!important;bottom:calc(100% + 9px)!important;display:grid!important;gap:10px!important;width:min(292px,calc(100vw - 48px))!important;padding:12px!important;border:1px solid #454955!important;border-radius:11px!important;background:#24262d!important;box-shadow:0 14px 36px #0007,inset 0 1px 0 #ffffff0d!important}
-.ps-community-name-custom-picker-plane{position:relative!important;width:100%!important;height:156px!important;overflow:hidden!important;border-radius:7px!important;background-image:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,transparent)!important;touch-action:none!important;cursor:crosshair!important;contain:layout paint!important}
-.ps-community-name-custom-picker-cursor{position:absolute!important;width:15px!important;height:15px!important;border:2px solid #fff!important;border-radius:50%!important;box-shadow:0 1px 4px #000b,0 0 0 1px #0008!important;transform:translate(-50%,-50%)!important;pointer-events:none!important}
-.ps-community-name-custom-picker-controls{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important}
-.ps-community-name-custom-picker-current{flex:0 0 30px!important;width:30px!important;height:30px!important;border:2px solid #424650!important;border-radius:50%!important;box-shadow:0 0 0 1px #111!important}
-.ps-community-name-custom-picker-controls input[type="range"]{flex:1 1 auto!important;min-width:0!important;height:12px!important;margin:0!important;appearance:none!important;-webkit-appearance:none!important;border:1px solid #111!important;border-radius:99px!important;background:linear-gradient(90deg,#f00 0%,#ff0 16.6%,#0f0 33.3%,#0ff 50%,#00f 66.6%,#f0f 83.3%,#f00 100%)!important;cursor:pointer!important}
-.ps-community-name-custom-picker-controls input[type="range"]::-webkit-slider-thumb{width:17px!important;height:17px!important;appearance:none!important;-webkit-appearance:none!important;border:2px solid #fff!important;border-radius:50%!important;background:#30333c!important;box-shadow:0 1px 4px #0009!important}
-.ps-community-name-custom-picker-controls input[type="range"]::-moz-range-thumb{width:13px!important;height:13px!important;border:2px solid #fff!important;border-radius:50%!important;background:#30333c!important;box-shadow:0 1px 4px #0009!important}
-.ps-community-name-custom-picker-hex{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;height:36px!important;padding:0 10px!important;border:1px solid #454955!important;border-radius:7px!important;background:#1d1f25!important;color:#b8bfcc!important;font-size:12px!important;font-weight:750!important}
-.ps-community-name-custom-picker-hex input{width:100%!important;min-width:0!important;padding:0!important;border:0!important;outline:0!important;background:transparent!important;color:#f1f3f8!important;font:600 12px ui-monospace,monospace!important;letter-spacing:.06em!important}
-.ps-community-name-custom-picker-recent{display:flex!important;flex-wrap:wrap!important;gap:7px!important}
-.ps-community-name-custom-picker-recent button{width:21px!important;height:21px!important;padding:0!important;border:2px solid #292c34!important;border-radius:50%!important;box-shadow:0 0 0 1px #555b68!important;cursor:pointer!important}
-.ps-community-name-custom-picker-actions{display:flex!important;justify-content:flex-end!important;gap:8px!important}
-.ps-community-name-custom-picker-actions button{min-height:32px!important;padding:0 12px!important;border:1px solid #454955!important;border-radius:7px!important;background:#2b2e37!important;color:#dce1ec!important;font-size:11px!important;font-weight:700!important;cursor:pointer!important}
-.ps-community-name-custom-picker-actions button:last-child{border-color:#6574ed!important;background:#5865f2!important;color:#fff!important}
-@media(prefers-reduced-motion:reduce){.ps-community-name-custom-picker,.ps-community-name-custom-picker *{transition:none!important;animation:none!important}}
-}`}</style>
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker{position:absolute!important;z-index:80!important;left:0!important;bottom:calc(100% + 9px)!important;width:min(292px,calc(100vw - 48px))!important}
+`}</style>
     </div>
     </div>,
     document.body,

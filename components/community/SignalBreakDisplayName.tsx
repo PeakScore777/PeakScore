@@ -81,21 +81,39 @@ function fitBand(top: number, bottom: number): [number, number] {
   return safeTop + safeBottom >= 100 ? [0, 100] : [safeTop, safeBottom];
 }
 
-function makeEvent(now: number, stepMs: number): GlitchEvent {
-  const sign = () => (Math.random() < 0.5 ? -1 : 1);
+const SIGNAL_BREAK_CYCLE_MS = 720;
+const SIGNAL_BREAK_BURST_MS = 180;
+
+function hashSignalName(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function makeEvent(now: number, stepMs: number, seed?: number): GlitchEvent {
+  let state = seed === undefined ? 0 : seed >>> 0;
+  const random = seed === undefined
+    ? Math.random
+    : () => {
+        state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+        return state / 4294967296;
+      };
+  const sign = () => (random() < 0.5 ? -1 : 1);
 
   return {
-    // Small community names need a longer visible slice window than demo-sized headings.
-    until: now + Math.max(stepMs * (1 + Math.floor(Math.random() * 3)), 170 + Math.random() * 110),
-    aTop: Math.random() * 80,
-    aHeight: 5 + Math.random() * 22,
-    bTop: Math.random() * 85,
-    bHeight: 3 + Math.random() * 14,
-    ax: sign() * (1.3 + Math.random() * 1.5),
-    bx: sign() * (1.1 + Math.random() * 1.2),
-    ay: (Math.random() - 0.5) * 0.5,
-    by: (Math.random() - 0.5) * 0.5,
-    skew: sign() * (0.4 + Math.random() * 0.6),
+    until: now + Math.max(stepMs * (1 + Math.floor(random() * 3)), SIGNAL_BREAK_BURST_MS),
+    aTop: random() * 80,
+    aHeight: 5 + random() * 22,
+    bTop: random() * 85,
+    bHeight: 3 + random() * 14,
+    ax: sign() * (1.3 + random() * 1.5),
+    bx: sign() * (1.1 + random() * 1.2),
+    ay: (random() - 0.5) * 0.5,
+    by: (random() - 0.5) * 0.5,
+    skew: sign() * (0.4 + random() * 0.6),
     fresh: true
   };
 }
@@ -175,7 +193,9 @@ export default function SignalBreakDisplayName({
 
     // React Bits' 10px offset is designed for large demo typography.
     // Scale it down for profile names so small glyphs do not fly apart.
-    const offsetScale = clamp(computedFontSize / 26, 0.65, 1);
+    const offsetScale = clamp(computedFontSize / 34, 0.32, 0.85);
+    const syncSeed = hashSignalName(text);
+    const phaseOffset = syncSeed % SIGNAL_BREAK_CYCLE_MS;
 
     let raf = 0;
     let last = 0;
@@ -186,7 +206,8 @@ export default function SignalBreakDisplayName({
     let burstStart = 0;
     let burstEnd = 0;
     let nextStep = 0;
-    let event: GlitchEvent | null = makeEvent(performance.now(), stepLength(settings.speed));
+    let activeCycle = -1;
+    let event: GlitchEvent | null = null;
     let alpha = 1;
 
     const write = (name: string, value: string) => {
@@ -213,6 +234,7 @@ export default function SignalBreakDisplayName({
       cells.forEach((cell) => cell.removeAttribute("data-glyph"));
       swaps.clear();
       event = null;
+      activeCycle = -1;
     };
 
     const isActive = (now: number) =>
@@ -240,7 +262,7 @@ export default function SignalBreakDisplayName({
     const step = (now: number, current: Settings, power: number) => {
       const stepMs = stepLength(current.speed);
       if (event && now >= event.until) event = null;
-      if (!event && Math.random() < 0.38 + power * 0.16) {
+      if (activeTrigger !== "always" && !event && Math.random() < 0.38 + power * 0.16) {
         event = makeEvent(now, stepMs);
       }
 
@@ -291,6 +313,17 @@ export default function SignalBreakDisplayName({
       }
       lastRender = now;
       const current = settingsRef.current;
+      if (activeTrigger === "always") {
+        const synchronizedNow = now + phaseOffset;
+        const cycleIndex = Math.floor(synchronizedNow / SIGNAL_BREAK_CYCLE_MS);
+        if (cycleIndex !== activeCycle) {
+          activeCycle = cycleIndex;
+          const cycleStart = cycleIndex * SIGNAL_BREAK_CYCLE_MS - phaseOffset;
+          const seed = (syncSeed ^ Math.imul(cycleIndex + 1, 0x45d9f3b)) >>> 0;
+          event = makeEvent(cycleStart, stepLength(current.speed), seed);
+          event.until = cycleStart + SIGNAL_BREAK_BURST_MS;
+        }
+      }
       const delta = last ? Math.min(0.1, (now - last) / 1000) : 0;
       last = now;
       clock += delta;
@@ -444,7 +477,7 @@ export default function SignalBreakDisplayName({
       root.removeEventListener("click", onClick);
       rest();
     };
-  }, [safeMode, activeTrigger, characterCount, frameRate, previewMode]);
+  }, [safeMode, activeTrigger, characterCount, frameRate, previewMode, text, phaseOffset]);
 
   const visualClasses = className
     .split(/\s+/)

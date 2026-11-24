@@ -11,6 +11,8 @@ import {
   PanelRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
+import "../community-profile-status-preview.css";
+import "../community-name-style.css";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";

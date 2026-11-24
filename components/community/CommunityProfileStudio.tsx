@@ -513,7 +513,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     );
   }
   if (animation === "signal-break") {
-    if (previewMode && className.includes("ps-community-name-render")) {
+    if (previewMode && className.includes("community-member-nameplate")) {
       return <ReactBitsGlitchText
         className={renderedClassName}
         style={safeStyle}

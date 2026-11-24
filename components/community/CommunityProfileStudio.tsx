@@ -1591,6 +1591,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             title={item.label} aria-label={item.label}
                             onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
                             <span>{item.sample}</span>
+                            <small className="ps-community-name-font-label">{item.label}</small>
                           </button>
                         ))}
                       </div>

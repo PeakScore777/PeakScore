@@ -1365,3 +1365,46 @@ test("name colour presets and clear action remain available beside the custom HS
   assert.match(nameStyleCss, /\.ps-community-name-color-actions/);
   assert.match(nameStyleCss, /\.ps-community-name-color-option\.is-selected/);
 });
+
+test("name atelier groups all 29 fonts into four curated families without removing any styles", () => {
+  assert.match(studio, /type DisplayNameFontCategory = "core" \\| "editorial" \\| "gaming" \\| "artistic"/);
+  assert.match(studio, /DISPLAY_NAME_FONT_CATEGORIES/);
+  assert.match(studio, /fonts: \\[.*"classic".*"stream-mono".*\\]/);
+  assert.match(studio, /DISPLAY_NAME_STYLES\\.filter/);
+  assert.match(studio, /draftDisplayNameFontCategory/);
+  assert.match(studio, /Archivo Display/);
+  const fontStart = studio.indexOf("const DISPLAY_NAME_STYLES");
+  const fontEnd = studio.indexOf("\\n];", fontStart);
+  const catalogue = studio.slice(fontStart, fontEnd);
+  const ids = [...catalogue.matchAll(/\\{ id: "([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 29);
+  const groupStart = studio.indexOf("const DISPLAY_NAME_FONT_CATEGORIES");
+  const groupEnd = studio.indexOf("\\n];", groupStart);
+  const groups = studio.slice(groupStart, groupEnd);
+  const groupedIds = [...groups.matchAll(/"([a-z0-9-]+)"/g)].map((match) => match[1]).filter((id) => ids.includes(id));
+  assert.equal(groupedIds.length, 29);
+  assert.equal(new Set(groupedIds).size, 29);
+});
+
+test("name atelier separates finish from profile entrance animation and previews light and dark themes", () => {
+  assert.match(studio, /Acabado del nombre/);
+  assert.match(studio, /Animación de perfil/);
+  assert.match(studio, /SOLO EN PERFIL/);
+  assert.match(studio, /namePreviewTheme/);
+  assert.match(studio, /Vista oscura/);
+  assert.match(studio, /Vista clara/);
+  assert.match(studio, /namePreviewTheme === "light"/);
+  assert.match(nameStyleCss, /\.ps-community-name-preview-stage\.is-theme-light/);
+  assert.match(nameStyleCss, /\.ps-community-name-preview-theme-switch/);
+  assert.match(nameStyleCss, /ps-community-name-preview-members-view/);
+  assert.match(nameStyleCss, /ps-community-name-preview-chat-view/);
+});
+
+test("community-only profile and name-style stylesheets are loaded by the community route, not root layout", () => {
+  assert.match(page, /import "\.\.\/community-name-style\.css"/);
+  assert.match(page, /import "\.\.\/community-profile-status-preview\.css"/);
+  assert.doesNotMatch(layout, /community-name-style\.css/);
+  assert.doesNotMatch(layout, /community-profile-status-preview\.css/);
+  assert.match(layout, /--font-name-stream-mono/);
+  assert.match(layout, /--font-name-epic-rpg/);
+});

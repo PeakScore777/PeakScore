@@ -6179,3 +6179,253 @@ html:has(.ps-community-picker-overlay) * {
   color:var(--status-theme-text,#202126) !important;
   -webkit-text-fill-color:var(--status-theme-text,#202126) !important;
 }
+
+
+/* -------------------------------------------------------------------------
+   PeakScore Name Atelier — curated typography, clear hierarchy and previews
+   ------------------------------------------------------------------------- */
+.ps-community-name-font-categories {
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:6px !important;
+  margin:0 0 11px !important;
+  padding:3px !important;
+  border:1px solid #353945 !important;
+  border-radius:10px !important;
+  background:#1d1f25 !important;
+}
+.ps-community-name-font-category {
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  min-height:30px !important;
+  padding:0 10px !important;
+  border:1px solid transparent !important;
+  border-radius:7px !important;
+  background:transparent !important;
+  color:#aab2c1 !important;
+  font-size:10px !important;
+  font-weight:720 !important;
+  cursor:pointer !important;
+  transition:background-color 120ms ease,color 120ms ease,border-color 120ms ease !important;
+}
+.ps-community-name-font-category small {
+  display:inline-grid !important;
+  place-items:center !important;
+  min-width:17px !important;
+  height:17px !important;
+  padding:0 4px !important;
+  border-radius:5px !important;
+  background:#30343e !important;
+  color:#9ca6b8 !important;
+  font-size:9px !important;
+  font-weight:800 !important;
+}
+.ps-community-name-font-category:hover {
+  color:#eff2f9 !important;
+  background:#292d36 !important;
+}
+.ps-community-name-font-category.is-selected {
+  border-color:#5969cf !important;
+  background:linear-gradient(180deg,#34394e,#2d3245) !important;
+  color:#f1f3ff !important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 5%) !important;
+}
+.ps-community-name-font-category.is-selected small {
+  background:#5865f2 !important;
+  color:#fff !important;
+}
+.ps-community-name-selected-description {
+  margin:9px 0 0 !important;
+  padding:9px 11px !important;
+  border-left:2px solid #6677eb !important;
+  border-radius:0 7px 7px 0 !important;
+  background:linear-gradient(90deg,rgb(99 115 225 / 10%),rgb(99 115 225 / 2%)) !important;
+  color:#aeb7c7 !important;
+  font-size:10px !important;
+  line-height:1.5 !important;
+}
+.ps-community-name-section-help {
+  margin:-2px 0 10px !important;
+  color:#929bac !important;
+  font-size:10px !important;
+  line-height:1.5 !important;
+}
+
+/* Preview toolbar and theme mode switch. */
+.ps-community-name-preview-toolbar {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  min-width:0 !important;
+  margin:0 0 14px !important;
+  padding:0 0 11px !important;
+  border-bottom:1px solid #353944 !important;
+}
+.ps-community-name-preview-toolbar > div:first-child {
+  display:grid !important;
+  gap:3px !important;
+  min-width:0 !important;
+}
+.ps-community-name-preview-toolbar > div:first-child strong {
+  color:#f0f2f8 !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  letter-spacing:-.01em !important;
+}
+.ps-community-name-preview-toolbar > div:first-child span {
+  color:#929bad !important;
+  font-size:9px !important;
+}
+.ps-community-name-preview-theme-switch {
+  display:inline-flex !important;
+  flex:0 0 auto !important;
+  gap:3px !important;
+  padding:3px !important;
+  border:1px solid #393e49 !important;
+  border-radius:9px !important;
+  background:#202229 !important;
+}
+.ps-community-name-preview-theme-switch button {
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:5px !important;
+  min-height:28px !important;
+  padding:0 9px !important;
+  border:1px solid transparent !important;
+  border-radius:6px !important;
+  background:transparent !important;
+  color:#aab2c1 !important;
+  font-size:9px !important;
+  font-weight:750 !important;
+  cursor:pointer !important;
+  transition:background-color 120ms ease,color 120ms ease,border-color 120ms ease !important;
+}
+.ps-community-name-preview-theme-switch button:hover {
+  color:#f1f3f8 !important;
+}
+.ps-community-name-preview-theme-switch button.is-selected {
+  border-color:#454b59 !important;
+  background:#343945 !important;
+  color:#fff !important;
+  box-shadow:0 1px 2px rgb(0 0 0 / 18%) !important;
+}
+.ps-community-name-preview-stage {
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  padding:14px !important;
+  border:1px solid #363a45 !important;
+  border-radius:13px !important;
+  background:linear-gradient(180deg,#1c1e24 0%,#17191e 100%) !important;
+  color:#f2f3f5 !important;
+  transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease !important;
+}
+.ps-community-name-preview-stage .ps-community-name-context-label {
+  margin-bottom:2px !important;
+}
+.ps-community-name-preview-stage .ps-community-name-preview-profile-view,
+.ps-community-name-preview-stage .ps-community-name-preview-members-view,
+.ps-community-name-preview-stage .ps-community-name-preview-chat-view {
+  min-width:0 !important;
+}
+
+/* Light mode changes the preview canvas, not the user's saved profile palette. */
+.ps-community-name-preview-stage.is-theme-light {
+  border-color:#d8dce5 !important;
+  background:linear-gradient(180deg,#f7f8fb 0%,#edf0f5 100%) !important;
+  color:#242833 !important;
+  box-shadow:0 5px 18px rgb(20 27 43 / 7%),inset 0 1px 0 #fff !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-preview-toolbar {
+  border-color:#dce0e8 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-preview-toolbar > div:first-child strong {
+  color:#282d39 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-preview-toolbar > div:first-child span {
+  color:#778092 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-preview-theme-switch {
+  border-color:#d5dae4 !important;
+  background:#e9ecf2 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-preview-theme-switch button {
+  color:#626c7d !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-preview-theme-switch button.is-selected {
+  border-color:#fff !important;
+  background:#fff !important;
+  color:#272d39 !important;
+  box-shadow:0 1px 4px rgb(28 36 54 / 12%) !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-context-label {
+  color:#778092 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-community-shell {
+  border-color:#d9dee7 !important;
+  background:#fff !important;
+  box-shadow:0 2px 9px rgb(31 42 62 / 5%) !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-community-channel {
+  border-color:#e1e5ec !important;
+  color:#343b49 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-channel-hash {
+  color:#7e8797 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-members-title {
+  color:#7c8594 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-member-row {
+  border:1px solid #edf0f4 !important;
+  background:#f3f5f8 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-member-presence {
+  color:#747e8e !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-chat-message {
+  border-color:#dce1e9 !important;
+  background:#fff !important;
+  box-shadow:0 2px 8px rgb(31 42 62 / 5%) !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-chat-meta time {
+  color:#838b99 !important;
+}
+.ps-community-name-preview-stage.is-theme-light .ps-community-name-chat-content p {
+  color:#444c5a !important;
+}
+
+/* Keep profile card colors selected by the member. Theme mode only swaps the
+   surrounding UI; it must not silently rewrite their custom profile theme. */
+.ps-community-name-preview-stage .ps-community-name-style-profile-preview {
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.ps-community-name-preview-stage .ps-community-name-style-profile-preview > .ps-community-name-style-profile-copy {
+  min-width:0 !important;
+}
+
+/* Category cards stay compact and responsive without layout animation. */
+@media (max-width:780px) {
+  .ps-community-name-font-categories {
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    scrollbar-width:none !important;
+  }
+  .ps-community-name-font-categories::-webkit-scrollbar { display:none !important; }
+  .ps-community-name-preview-toolbar {
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-font-category,
+  .ps-community-name-preview-theme-switch button,
+  .ps-community-name-preview-stage {
+    transition:none !important;
+  }
+}

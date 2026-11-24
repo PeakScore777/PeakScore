@@ -934,6 +934,8 @@ test("Gradient Flow is a lightweight animated text fill and is accepted by the p
   assert.match(nameStyleCss, /\.ps-gradient-flow-name[\s\S]*?animation:ps-gradient-flow-text 5\.2s ease-in-out infinite/);
   assert.match(nameStyleCss, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?\.ps-gradient-flow-name \{ animation:none/);
   assert.match(gradientFlowMigration, /'gradient-flow'/);
+  assert.match(gradientFlowMigration, /set display_name_animation = 'decrypt'/);
+  assert.match(gradientFlowMigration, /where display_name_animation in \('signal-break', 'glitch'\)/);
 });
 
 test("three Shuffle presets match the reference with distinct looping effects and no hover", () => {

@@ -849,10 +849,12 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.ok(glitchName.includes("requestAnimationFrame(frame)"));
   assert.match(glitchName, /makeEvent\(performance\.now\(\), stepLength\(settings\.speed\)\)/);
   assert.match(glitchName, /root\.classList\.toggle\("is-glitching", Boolean\(live\)\)/);
-  assert.match(glitchName, /0\.12 \+ power \* 0\.12/);
-  assert.match(glitchName, /computedFontSize \/ 32, 0\.48, 1/);
+  assert.match(glitchName, /0\.38 \+ power \* 0\.16/);
+  assert.match(glitchName, /computedFontSize \/ 26, 0\.65, 1/);
+  assert.match(glitchName, /Math\.max\(stepMs \* \(1 \+ Math\.floor\(Math\.random\(\) \* 3\)\), 170 \+ Math\.random\(\) \* 110\)/);
   assert.match(page, /animation=\{member\.display_name_animation \?\? "decrypt"\}[\s\S]*?previewMode/);
-  assert.match(page, /offset=\{5\.5\}[\s\S]*?intensity=\{0\.28\}/);
+  assert.match(page, /offset=\{6\.5\}[\s\S]*?intensity=\{0\.42\}/);
+  assert.match(studio, /offset=\{6\.5\}[\s\S]*?intensity=\{0\.42\}/);
   assert.match(nameStyleCss, /\.ps-glitch-name\.is-glitching > \.ps-glitch-text/);
   assert.doesNotMatch(nameStyleCss, /@media\(prefers-reduced-motion:reduce\)\s*\{\s*\.ps-glitch-slice,/);
   assert.match(nameStyleCss, /\.ps-glitch-name:not\(\.ps-community-name-preview-live\) \.ps-glitch-slice/);

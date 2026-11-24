@@ -1381,9 +1381,11 @@ test("name atelier groups all 29 fonts into four curated families without removi
   const groupStart = studio.indexOf("const DISPLAY_NAME_FONT_CATEGORIES");
   const groupEnd = studio.indexOf("\\n];", groupStart);
   const groups = studio.slice(groupStart, groupEnd);
-  const groupedIds = [...groups.matchAll(/"([a-z0-9-]+)"/g)].map((match) => match[1]).filter((id) => ids.includes(id));
+  const groupedIds = [...groups.matchAll(/fonts: \\[([^\\]]+)\\]/g)]
+    .flatMap((match) => [...match[1].matchAll(/"([a-z0-9-]+)"/g)].map((font) => font[1]));
   assert.equal(groupedIds.length, 29);
   assert.equal(new Set(groupedIds).size, 29);
+  assert.deepEqual([...ids].sort(), [...groupedIds].sort());
 });
 
 test("name atelier separates finish from profile entrance animation and previews light and dark themes", () => {
@@ -1398,6 +1400,8 @@ test("name atelier separates finish from profile entrance animation and previews
   assert.match(nameStyleCss, /\.ps-community-name-preview-theme-switch/);
   assert.match(nameStyleCss, /ps-community-name-preview-members-view/);
   assert.match(nameStyleCss, /ps-community-name-preview-chat-view/);
+  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gradient,[\\s\\S]*?animation:none !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\\s\\S]*?animation:none !important/);
 });
 
 test("community-only profile and name-style stylesheets are loaded by the community route, not root layout", () => {

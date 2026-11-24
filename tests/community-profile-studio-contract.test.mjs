@@ -1225,6 +1225,8 @@ test("display-name colour controls follow the selected effect instead of exposin
   assert.match(studio, /if \(colorMode === "automatic" \|\| colorMode === "spectrum"\)[\s\S]*?setDraftDisplayNameColor\("default"\)/);
   assert.match(nameColorHelper, /AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set\(\["toon", "gummy", "prism", "chromaflow"\]\)/);
   assert.match(nameColorHelper, /return "default"/);
+  assert.match(fuzzySettings, /effect === "prism" \|\| effect === "gummy"/);
+  assert.match(fuzzySettings, /return \{ color: "#FFFFFF", gradient: prismStops \}/);
   assert.match(page, /displayNameColorForEffect\(message\.author\.display_name_effect/);
   assert.match(page, /displayNameColorForEffect\(member\.display_name_effect/);
 });

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Inter, Kalam, Press_Start_2P, Silkscreen } from "next/font/google";
 import {
-  Audiowide, Bebas_Neue, Black_Ops_One, Bodoni_Moda, Bungee_Shade,
+  Archivo, Audiowide, Bebas_Neue, Black_Ops_One, Bodoni_Moda, Bungee_Shade, DM_Sans,
   Cherry_Bomb_One, Chicle, Creepster, Dancing_Script, DM_Serif_Display,
-  MuseoModerno, New_Rocker, Orbitron, Permanent_Marker, Pixelify_Sans,
+  IBM_Plex_Mono, MuseoModerno, New_Rocker, Orbitron, Permanent_Marker, Pixelify_Sans,
   Playpen_Sans, Righteous, Space_Grotesk, UnifrakturMaguntia, Zilla_Slab,
 } from "next/font/google";
 
@@ -55,6 +55,11 @@ const nameFont_signature = Dancing_Script({ weight: "400", subsets: ["latin"], d
 const nameFont_techno = Audiowide({ weight: "400", subsets: ["latin"], display: "swap", variable: "--font-name-techno", preload: false });
 const nameFont_rounded = Righteous({ weight: "400", subsets: ["latin"], display: "swap", variable: "--font-name-rounded", preload: false });
 const nameFont_stencil = Black_Ops_One({ weight: "400", subsets: ["latin"], display: "swap", variable: "--font-name-stencil", preload: false });
+
+const nameFont_discordDisplay = Archivo({ weight: ["400", "500", "600", "700", "800", "900"], subsets: ["latin"], display: "swap", variable: "--font-name-discord-display", preload: false });
+const nameFont_creatorSans = DM_Sans({ weight: ["400", "500", "600", "700", "800"], subsets: ["latin"], display: "swap", variable: "--font-name-creator-sans", preload: false });
+const nameFont_streamMono = IBM_Plex_Mono({ weight: ["400", "500", "600", "700"], subsets: ["latin"], display: "swap", variable: "--font-name-stream-mono", preload: false });
+
 
 const handwritingFont = Kalam({
   weight: ["400", "700"],
@@ -110,7 +115,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body className={`${pixelFont.variable} ${silkscreenFont.variable} ${handwritingFont.variable} ${nameFont_classic.variable} ${nameFont_tempo.variable} ${nameFont_sakura.variable} ${nameFont_jellybean.variable} ${nameFont_modern.variable} ${nameFont_medieval.variable} ${nameFont_pixel.variable} ${nameFont_vampyre.variable} ${nameFont_monkey.variable} ${nameFont_mainframe.variable} ${nameFont_headbang.variable} ${nameFont_display.variable} ${nameFont_editorial.variable} ${nameFont_elegant.variable} ${nameFont_geometric.variable} ${nameFont_retro.variable} ${nameFont_handwritten.variable} ${nameFont_signature.variable} ${nameFont_techno.variable} ${nameFont_rounded.variable} ${nameFont_stencil.variable}`}>
+      <body className={`${pixelFont.variable} ${silkscreenFont.variable} ${handwritingFont.variable} ${nameFont_classic.variable} ${nameFont_tempo.variable} ${nameFont_sakura.variable} ${nameFont_jellybean.variable} ${nameFont_modern.variable} ${nameFont_medieval.variable} ${nameFont_pixel.variable} ${nameFont_vampyre.variable} ${nameFont_monkey.variable} ${nameFont_mainframe.variable} ${nameFont_headbang.variable} ${nameFont_display.variable} ${nameFont_editorial.variable} ${nameFont_elegant.variable} ${nameFont_geometric.variable} ${nameFont_retro.variable} ${nameFont_handwritten.variable} ${nameFont_signature.variable} ${nameFont_techno.variable} ${nameFont_rounded.variable} ${nameFont_stencil.variable} ${nameFont_discordDisplay.variable} ${nameFont_creatorSans.variable} ${nameFont_streamMono.variable}`}>
         <GlobalNavbar initialProfile={initialProfile} />
         {children}
         <GlobalOrbyClassroomLauncher

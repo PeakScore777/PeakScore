@@ -5774,9 +5774,9 @@ html:has(.ps-community-picker-overlay) * {
 @media (prefers-reduced-motion:reduce) {
   .ps-community-name-render.effect-chromaflow.ps-name-plain:not(.ps-community-name-preview-live),
   .ps-community-name-animation-option .ps-name-preview-face.effect-chromaflow,
-  .ps-gradient-flow-name > .ps-gradient-flow-face,
-  .ps-community-name-render.effect-chromaflow .ps-inkline-fill linearGradient animateTransform,
-  .ps-community-name-render.effect-chromaflow .ps-inkline-fill animateTransform {
+  .ps-gradient-flow-name:not(.ps-community-name-preview-live) > .ps-gradient-flow-face,
+  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow .ps-inkline-fill linearGradient animateTransform,
+  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow .ps-inkline-fill animateTransform {
     animation:none !important;
     background-position:50% 50% !important;
   }
@@ -5784,6 +5784,34 @@ html:has(.ps-community-picker-overlay) * {
 
 
 /* Gummy keeps its glossy finish but uses the spectrum palette selected by the member. */
+.ps-community-name-render.effect-gummy .ps-decrypted-cell.is-revealed,
+.ps-community-name-render.effect-gummy .ps-decrypted-glyph,
+.ps-community-name-render.effect-gummy .ps-name-shuffle__track > span,
+.ps-community-name-render.effect-gummy .ps-glitch-char,
+.ps-community-name-render.effect-gummy .ps-glitch-slice,
+.ps-community-name-render.effect-gummy .ps-halo-signal__glyph,
+.ps-community-name-render.effect-gummy .ps-domino-flow__glyph,
+.ps-community-name-render.effect-gummy .ps-name-animation-char,
+.ps-community-name-render.effect-gummy .ps-depth-lift__face {
+  background-image:var(--name-prism-gradient,linear-gradient(110deg,#f6a8cf,#ffe2b8,#fff,#b7f1e0,#a9c8ff,#d5a6ff)) !important;
+  background-size:240% 100% !important;
+}
+
+
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render:not(.ps-community-name-preview-live) .ps-halo-signal__text,
+  .ps-community-name-render:not(.ps-community-name-preview-live) .ps-halo-signal__glyph,
+  .ps-community-name-render:not(.ps-community-name-preview-live) .ps-domino-flow__word,
+  .ps-community-name-render:not(.ps-community-name-preview-live) .ps-domino-flow__tile,
+  .ps-community-name-render:not(.ps-community-name-preview-live) .ps-domino-flow__glyph {
+    animation:none !important;
+  }
+  .ps-community-name-render:not(.ps-community-name-preview-live).effect-chromaflow .ps-inkline-fill animateTransform {
+    display:none !important;
+  }
+}
+
+/* User-selected gummy palette is shared by CSS glyphs and canvas-based Fuzzy Text. */
 .ps-community-name-render.effect-gummy .ps-decrypted-cell.is-revealed,
 .ps-community-name-render.effect-gummy .ps-decrypted-glyph,
 .ps-community-name-render.effect-gummy .ps-name-shuffle__track > span,

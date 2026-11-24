@@ -407,7 +407,7 @@ export default function ReactBitsGlitchText({
     };
   }, [safeMode, activeTrigger, characterCount]);
 
-  const safeClassName = className.split(/\\s+/).filter((token) => token && token !== "ps-community-name-preview-live").join(" ");
+  const safeClassName = className.split(/\s+/).filter((token) => token && token !== "ps-community-name-preview-live").join(" ");
   const rootStyle: GlitchStyle = {
     ...style,
     color: color ?? style?.color,

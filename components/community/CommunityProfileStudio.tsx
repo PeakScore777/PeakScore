@@ -14,12 +14,13 @@ import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTe
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Pencil, Pipette,
-  LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
+  Camera, Check, Copy, ImagePlus, Moon, Pencil, Pipette,
+  LoaderCircle, Plus, PlusCircle, Save, Smile, Sun, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
+type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
@@ -149,14 +150,23 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "techno", label: "Techno", sample: "Aa", description: "Futurista de formas circulares" },
   { id: "rounded", label: "Rounded", sample: "Aa", description: "Display redondeada y sólida" },
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
-  { id: "discord-display", label: "Discord Display", sample: "Aa", description: "Archivo · alternativa abierta al estilo Ginto Nord" },
+  { id: "discord-display", label: "Archivo Display", sample: "Aa", description: "Sans contemporánea de alto impacto, basada en Archivo" },
   { id: "creator-sans", label: "Creator Sans", sample: "Aa", description: "DM Sans · alternativa geométrica al estilo Roobert" },
   { id: "stream-mono", label: "Stream Mono", sample: "Aa", description: "IBM Plex Mono · precisión para perfiles gamer y tech" },
   { id: "street-block", label: "Street Block", sample: "Aa", description: "Bungee · rótulo urbano contundente para una estética open-world, sin copiar logotipos de videojuegos" },
   { id: "action-condensed", label: "Action Condensed", sample: "Aa", description: "Teko · display condensada de alto impacto para una estética de acción y carreras" },
   { id: "cyber-racer", label: "Cyber Racer", sample: "Aa", description: "Oxanium · geometría angular inspirada en HUD, ciencia ficción y videojuegos futuristas" },
   { id: "epic-rpg", label: "Epic RPG", sample: "Aa", description: "Cinzel · inscripción épica para nombres de fantasía, aventura y RPG" },
+
 ];
+
+const DISPLAY_NAME_FONT_CATEGORIES: { id: DisplayNameFontCategory; label: string; fonts: DisplayNameStyle[] }[] = [
+  { id: "core", label: "Esenciales", fonts: ["classic", "modern", "geometric", "rounded", "creator-sans", "discord-display", "stream-mono"] },
+  { id: "editorial", label: "Editoriales", fonts: ["tempo", "editorial", "elegant", "journal", "signature", "handwritten", "monkey-bars"] },
+  { id: "gaming", label: "Gaming", fonts: ["8bit", "mainframe", "headbang", "retro", "techno", "display", "stencil", "street-block", "action-condensed", "cyber-racer", "epic-rpg"] },
+  { id: "artistic", label: "Artísticas", fonts: ["sakura", "jellybean", "medieval", "vampyre"] },
+];
+
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
   { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },
   { id: "gradient", label: "Aurora", description: "Luz cromática que atraviesa el nombre en un ciclo continuo" },
@@ -741,6 +751,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [draftDisplayNameStyle, setDraftDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
+  const [draftDisplayNameFontCategory, setDraftDisplayNameFontCategory] = useState<DisplayNameFontCategory>(
+    DISPLAY_NAME_FONT_CATEGORIES.find((category) => category.fonts.includes(safeDisplayNameStyle(initialProfile.displayNameStyle)))?.id ?? "core"
+  );
+  const [namePreviewTheme, setNamePreviewTheme] = useState<"dark" | "light">("dark");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | null>(null);
   const [deleting, setDeleting] = useState<"avatar" | null>(null);
@@ -1730,12 +1744,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 {appearancePicker === "nameStyle" && (
                   <div className="ps-community-name-style-controls">
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige una fuente</div>
+                      <div className="ps-community-name-style-heading">Tipografías <span>{DISPLAY_NAME_STYLES.length} ESTILOS</span></div>
+                      <div className="ps-community-name-font-categories" role="group" aria-label="Familias tipográficas">
+                        {DISPLAY_NAME_FONT_CATEGORIES.map((category) => (
+                          <button key={category.id} type="button"
+                            className={"ps-community-name-font-category" + (draftDisplayNameFontCategory === category.id ? " is-selected" : "")}
+                            onClick={() => setDraftDisplayNameFontCategory(category.id)}
+                            aria-pressed={draftDisplayNameFontCategory === category.id}>
+                            <span>{category.label}</span>
+                            <small>{category.fonts.length}</small>
+                          </button>
+                        ))}
+                      </div>
                       <div className="ps-community-name-font-grid">
-                        {DISPLAY_NAME_STYLES.map((item) => (
+                        {DISPLAY_NAME_STYLES.filter((item) => DISPLAY_NAME_FONT_CATEGORIES.find((category) => category.id === draftDisplayNameFontCategory)?.fonts.includes(item.id)).map((item) => (
                           <button key={item.id} type="button"
                             className={"ps-community-name-font-option is-name-style-" + item.id + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
-                            title={item.label} aria-label={item.label}
+                            title={item.label + " · " + item.description}
+                            aria-label={item.label + ". " + item.description}
                             onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
                             <span>{item.sample}</span>
                             <small className="ps-community-name-font-label">{item.label}</small>
@@ -1773,9 +1799,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </button>
                         ))}
                       </div>
+                      <p className="ps-community-name-selected-description" aria-live="polite">
+                        {DISPLAY_NAME_EFFECTS.find((item) => item.id === draftDisplayNameEffect)?.description}
+                      </p>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Animación continua <span>SIEMPRE ACTIVA</span></div>
+                      <div className="ps-community-name-style-heading">Animación de perfil <span>SOLO EN PERFIL</span></div>
+                      <p className="ps-community-name-section-help">Elige cómo aparece tu nombre al abrir el perfil. En chat y miembros se conserva la tipografía y el acabado sin reproducir esta entrada.</p>
                       <div className="ps-community-name-effect-grid ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => {
                           const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor);
@@ -1815,6 +1845,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           );
                         })}
                       </div>
+                      <p className="ps-community-name-selected-description" aria-live="polite">
+                        {DISPLAY_NAME_ANIMATIONS.find((item) => item.id === draftDisplayNameAnimation)?.description}
+                      </p>
                     </section>
                     {draftDisplayNameColorMode !== "automatic" && (
                       <section className="ps-community-name-style-group">
@@ -2009,7 +2042,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-name-preview-stage">
+                  <div className={"ps-community-name-preview-stage is-theme-" + namePreviewTheme}>
+                    <div className="ps-community-name-preview-toolbar">
+                      <div>
+                        <strong>Vista previa</strong>
+                        <span>Así se verá tu nombre en PeakScore</span>
+                      </div>
+                      <div className="ps-community-name-preview-theme-switch" role="group" aria-label="Tema de la vista previa">
+                        <button type="button" className={namePreviewTheme === "dark" ? "is-selected" : ""}
+                          aria-pressed={namePreviewTheme === "dark"} onClick={() => setNamePreviewTheme("dark")} title="Vista oscura">
+                          <Moon size={14}/> Oscuro
+                        </button>
+                        <button type="button" className={namePreviewTheme === "light" ? "is-selected" : ""}
+                          aria-pressed={namePreviewTheme === "light"} onClick={() => setNamePreviewTheme("light")} title="Vista clara">
+                          <Sun size={14}/> Claro
+                        </button>
+                      </div>
+                    </div>
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
                       <article className="ps-community-status-profile-preview ps-community-name-style-profile-preview"

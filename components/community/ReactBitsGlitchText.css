@@ -20,6 +20,12 @@
   cursor:pointer;
 }
 
+/* Keep selected PeakScore typography, but let React Bits own all text layers. */
+.ps-reactbits-glitch.ps-community-name-render {
+  color:var(--name-solid-color,currentColor) !important;
+  text-shadow:none !important;
+}
+
 .ps-reactbits-glitch .glitch__text {
   display:block;
   opacity:var(--glitch-alpha, 1);
@@ -117,8 +123,8 @@
 /* Context sizing only. The effect layers above remain the untouched React Bits
    masks, slices, transforms, shadows and timing. */
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option > .ps-reactbits-glitch {
-  display:block !important;
-  width:100% !important;
+  display:inline-block !important;
+  width:max-content !important;
   max-width:100% !important;
   margin:0 auto !important;
   font-size:clamp(13px, 1.05vw, 17px) !important;
@@ -140,8 +146,8 @@
 }
 
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > .ps-reactbits-glitch {
-  display:block !important;
-  width:100% !important;
+  display:inline-block !important;
+  width:max-content !important;
   max-width:100% !important;
   font-size:clamp(22px, 2vw, 27px) !important;
   font-weight:900 !important;

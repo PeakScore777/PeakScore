@@ -5510,3 +5510,28 @@ html:has(.ps-community-picker-overlay) * {
   scrollbar-width:thin !important;
   scrollbar-color:#454954 transparent !important;
 }
+
+
+/* Signal Break in compact member rows: the plain-name finish belongs on the base
+   glyph only. Never let its inherited text-shadow paint a dark duplicate behind
+   the complete three-layer glitch renderer. The slice shadows remain RGB-specific. */
+.ps-glitch-name.community-member-nameplate.effect-plain {
+  color:var(--name-solid-color,#f1f3f8) !important;
+  text-shadow:none !important;
+  filter:none !important;
+}
+.ps-glitch-name.community-member-nameplate.effect-plain > .ps-glitch-text {
+  color:inherit !important;
+  text-shadow:none !important;
+  filter:none !important;
+}
+.ps-glitch-name.community-member-nameplate.effect-plain > .ps-glitch-slice--a {
+  color:var(--ps-glitch-color-a,currentColor) !important;
+  text-shadow:var(--ps-glitch-a-shadow,none) !important;
+  filter:none !important;
+}
+.ps-glitch-name.community-member-nameplate.effect-plain > .ps-glitch-slice--b {
+  color:var(--ps-glitch-color-b,currentColor) !important;
+  text-shadow:var(--ps-glitch-b-shadow,none) !important;
+  filter:none !important;
+}

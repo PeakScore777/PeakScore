@@ -338,7 +338,6 @@ function DisplayNameCustomColorPicker({ value, onApply }: DisplayNameCustomColor
   const [hexDraft, setHexDraft] = useState(value.slice(1));
   const [recent, setRecent] = useState<string[]>([]);
   const draftRef = useRef(value);
-  const planeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -404,7 +403,6 @@ function DisplayNameCustomColorPicker({ value, onApply }: DisplayNameCustomColor
       {open && (
         <div className="ps-community-name-custom-picker" role="dialog" aria-label="Elegir color personalizado">
           <div
-            ref={planeRef}
             className="ps-community-name-custom-picker-plane"
             style={{ backgroundColor: "hsl(" + hue + " 100% 50%)" }}
             onPointerDown={(event) => {

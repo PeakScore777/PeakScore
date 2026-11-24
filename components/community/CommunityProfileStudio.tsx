@@ -2022,7 +2022,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           "--name-gradient-start": draftDisplayNameGradientStart,
                           "--name-gradient-end": draftDisplayNameGradientEnd,
                           "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
-                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor",
+                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? readableThemeText(cardColor),
                         } as CSSProperties}>
                         <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
                           {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}

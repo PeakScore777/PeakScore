@@ -882,7 +882,7 @@ test("Signal Break is retired from selectable display-name animations and legacy
   assert.doesNotMatch(studio, /signal-break|SignalBreakDisplayName/);
   assert.doesNotMatch(page, /signal-break|SignalBreakDisplayName/);
   assert.doesNotMatch(route, /signal-break/);
-  assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS\.has\(appearance\?\.display_name_animation \?\? ""\) \? appearance\?\.display_name_animation : "decrypt"/);
+  assert.match(route, /displayNameAnimation: appearanceReady && DISPLAY_NAME_ANIMATIONS\.has\(appearance\?\.display_name_animation \?\? ""\) \? appearance\?\.display_name_animation : "decrypt"/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS\.has\(data\.display_name_animation \?\? ""\) \? data\.display_name_animation : "decrypt"/);
 });
 test("display-name animation catalogue includes Hacking Decode, Noise Reveal and three Shuffle styles", () => {

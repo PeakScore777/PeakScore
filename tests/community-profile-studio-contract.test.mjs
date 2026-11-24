@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -39,6 +39,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/HaloSignalDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/DominoFlowDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/InklineDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261124150000_community_display_name_gradient_flow.sql", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -878,17 +879,17 @@ test("Signal Break is retired from selectable display-name animations and legacy
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS\.has\(data\.display_name_animation \?\? ""\) \? data\.display_name_animation : "decrypt"/);
 });
 test("display-name animation catalogue includes Hacking Decode, Noise Reveal and three Shuffle styles", () => {
-  const expected = ["decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"];
+  const expected = ["decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift","gradient-flow"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal(["id: \"decrypt\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:", "id: \"depth-lift\", label:"].filter((entry) => catalogue.includes(entry)).length, 10);
+  assert.equal(["id: \"decrypt\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:", "id: \"depth-lift\", label:"].filter((entry) => catalogue.includes(entry)).length, 11);
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!animationWhitelist.includes('"' + removed + '"'));
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /"decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"/);
+  assert.match(route, /"decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift","gradient-flow"/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
@@ -910,6 +911,17 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
 
 
 
+
+test("Gradient Flow is a lightweight animated text fill and is accepted by the profile API and database", () => {
+  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
+  assert.match(catalogue, /id: "gradient-flow", label: "Gradient Flow"/);
+  assert.match(studio, /animation === "gradient-flow"/);
+  assert.match(page, /animation === "gradient-flow"/);
+  assert.match(route, /"depth-lift","gradient-flow"/);
+  assert.match(nameStyleCss, /\.ps-gradient-flow-name[\s\S]*?animation:ps-gradient-flow-text 5\.2s ease-in-out infinite/);
+  assert.match(nameStyleCss, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?\.ps-gradient-flow-name \{ animation:none/);
+  assert.match(gradientFlowMigration, /'gradient-flow'/);
+});
 
 test("three Shuffle presets match the reference with distinct looping effects and no hover", () => {
   assert.ok(studio.includes('import ShuffleDisplayName from "@/components/community/ShuffleDisplayName"'));
@@ -1064,6 +1076,8 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(mistfallName, /new IntersectionObserver/);
   assert.match(mistfallName, /maxParticles = previewMode \? 120 : 520/);
   assert.match(mistfallName, /fps = previewMode \? 12 : 24/);
+  assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);
+  assert.match(mistfallName, /\[text, previewMode, effectName, chromaflow, styleKey\]/);
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
   assert.match(page, /frameRate=\{24\}/);
 });

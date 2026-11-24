@@ -5526,3 +5526,45 @@ html:has(.ps-community-picker-overlay) * {
   scrollbar-width:thin !important;
   scrollbar-color:#454954 transparent !important;
 }
+
+
+/* Platform-inspired open font alternatives. These are licensed substitutes,
+   not copied proprietary brand fonts. Apply consistently to picker/profile/member/chat. */
+.ps-community-name-font-option.is-name-style-discord-display span,
+.ps-community-name-render.is-name-style-discord-display,
+.ps-community-editor-preview-name-static.is-name-style-discord-display,
+.community-member-nameplate.is-name-style-discord-display,
+.ps-community-profile-name.is-name-style-discord-display,
+.community-chat-author.is-name-style-discord-display,
+.ps-community-member-popout__identity h3.is-name-style-discord-display,
+.ps-community-status-profile-copy > strong.is-name-style-discord-display {
+  font-family:var(--font-name-discord-display),Arial,sans-serif !important;
+  font-weight:900 !important;
+  letter-spacing:-.055em !important;
+}
+.ps-community-name-font-option.is-name-style-creator-sans span,
+.ps-community-name-render.is-name-style-creator-sans,
+.ps-community-editor-preview-name-static.is-name-style-creator-sans,
+.community-member-nameplate.is-name-style-creator-sans,
+.ps-community-profile-name.is-name-style-creator-sans,
+.community-chat-author.is-name-style-creator-sans,
+.ps-community-member-popout__identity h3.is-name-style-creator-sans,
+.ps-community-status-profile-copy > strong.is-name-style-creator-sans {
+  font-family:var(--font-name-creator-sans),Inter,system-ui,sans-serif !important;
+  font-weight:700 !important;
+  letter-spacing:-.035em !important;
+}
+.ps-community-name-font-option.is-name-style-stream-mono span,
+.ps-community-name-render.is-name-style-stream-mono,
+.ps-community-editor-preview-name-static.is-name-style-stream-mono,
+.community-member-nameplate.is-name-style-stream-mono,
+.ps-community-profile-name.is-name-style-stream-mono,
+.community-chat-author.is-name-style-stream-mono,
+.ps-community-member-popout__identity h3.is-name-style-stream-mono,
+.ps-community-status-profile-copy > strong.is-name-style-stream-mono {
+  font-family:var(--font-name-stream-mono),ui-monospace,monospace !important;
+  font-weight:600 !important;
+  letter-spacing:-.045em !important;
+  font-variant-ligatures:none !important;
+}
+

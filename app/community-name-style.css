@@ -4324,6 +4324,31 @@
 
 
 
+
+/* Gradient Flow — light, CSS-only animated spectrum based on the supplied reference video.
+   It runs on the text glyphs, not a badge or background container. */
+@keyframes ps-gradient-flow-text {
+  0% { background-position:0% 50%; }
+  50% { background-position:100% 50%; }
+  100% { background-position:0% 50%; }
+}
+.ps-gradient-flow-name {
+  display:inline-block !important;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(100deg,#e84de8 0%,#a34dff 24%,#527cff 48%,#31b9d2 68%,#48d8a2 84%,#e84de8 100%) !important;
+  background-size:300% 100% !important;
+  background-position:0% 50% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:none !important;
+  filter:none !important;
+  animation:ps-gradient-flow-text 5.2s ease-in-out infinite !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-gradient-flow-name { animation:none !important; background-position:50% 50% !important; }
+}
+
 /* Depth Lift — restrained extruded lettering, expanded only on hover/focus. */
 .ps-depth-lift {
   display:inline-block;

@@ -1227,6 +1227,7 @@ test("display-name colour controls follow the selected effect instead of exposin
   assert.match(nameColorHelper, /return "default"/);
   assert.match(fuzzySettings, /effect === "prism" \|\| effect === "gummy"/);
   assert.match(fuzzySettings, /return \{ color: "#FFFFFF", gradient: prismStops \}/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-gummy \.ps-decrypted-glyph[\s\S]*?background-image:var\(--name-prism-gradient/);
   assert.match(page, /displayNameColorForEffect\(message\.author\.display_name_effect/);
   assert.match(page, /displayNameColorForEffect\(member\.display_name_effect/);
 });
@@ -1247,4 +1248,6 @@ test("Halo Signal and Domino Flow use one shared viewport observer and pause off
   assert.match(dominoFlowName, /observeNameMotionVisibility/);
   assert.match(nameStyleCss, /data-motion-visible="false"/);
   assert.match(nameStyleCss, /animation-play-state:paused !important/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce[\s\S]*?\.ps-community-name-render:not\(\.ps-community-name-preview-live\) \.ps-halo-signal__glyph/);
+  assert.match(nameStyleCss, /\.ps-inkline-fill animateTransform \{\s*display:none !important/);
 });

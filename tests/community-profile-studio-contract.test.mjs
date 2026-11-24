@@ -844,6 +844,9 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(nameStyleCss, /\.ps-fuzzy-text-canvas/);
   assert.match(nameStyleCss, /\.ps-halo-signal__glyph/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
+  assert.match(fuzzyText, /respectReducedMotion = true/);
+  assert.match(mistfallName, /respectReducedMotion = true/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow\.ps-name-plain:not\(\.ps-community-name-preview-live\)/);
 });
 
 
@@ -1119,6 +1122,8 @@ test("animation gallery runs one real preview and keeps the other cards CSS-only
   assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
   assert.match(studio, /ps-name-preview-motion name-preview-/);
   assert.match(studio, /ps-name-preview-face/);
+  assert.match(studio, /<small className="ps-community-name-font-label">\{item\.label\}<\\/small>/);
+  assert.match(nameStyleCss, /\.ps-community-name-font-option > \.ps-community-name-font-label/);
   assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\.setInterval/);
   assert.match(nameStyleCss, /ps-community-name-animation-option > \.ps-community-name-animation-sample/);
   assert.match(nameStyleCss, /name-preview-gradient-flow/);
@@ -1198,8 +1203,8 @@ test("explicit animation previews stay alive on touch layouts and the three live
   assert.match(studio, /forceMotion=\{previewMode\}/);
   assert.match(decryptedName, /forceMotion\?: boolean/);
   assert.match(decryptedName, /!forceMotion &&/);
-  assert.match(fuzzyText, /performanceMode !== 'preview'/);
-  assert.match(mistfallName, /!previewMode &&/);
+  assert.match(fuzzyText, /respectReducedMotion && \(window\.matchMedia/);
+  assert.match(mistfallName, /respectReducedMotion && \(window\.matchMedia/);
   assert.doesNotMatch(nameStyleCss, /@media \(prefers-reduced-motion: reduce\), \(hover:none\), \(max-width:720px\)/);
   assert.match(nameStyleCss, /@media \(max-width:780px\)[\s\S]*?\.ps-community-picker-preview \{[\s\S]*?display:flex !important/);
   assert.match(nameStyleCss, /\.ps-community-name-member-copy > \.ps-community-name-preview-live/);

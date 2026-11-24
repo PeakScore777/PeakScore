@@ -1307,17 +1307,27 @@ test("desktop name-style scrollbars stay invisible until the pointer reaches the
   assert.match(nameStyleCss, /overscroll-behavior-y:contain/);
 });
 
-test("name colour picker has distinct swatches, a custom colour card, and a reset action", () => {
+test("name colour picker uses an isolated HSV control and applies only after interaction completes", () => {
+  assert.match(studio, /function DisplayNameCustomColorPicker/);
+  assert.match(studio, /className="ps-community-name-custom-picker-plane"/);
+  assert.match(studio, /className="ps-community-name-custom-picker-controls"/);
+  assert.match(studio, /className="ps-community-name-custom-picker-hex"/);
+  assert.match(studio, /draftRef\.current = normalized/);
+  assert.match(studio, /onPointerMove=\{\(event\) => \{ if \(event\.buttons === 1\) updateFromPlane\(event\); \}\}/);
+  assert.match(studio, /onPointerUp=\{\(event\) => \{[\s\S]*?requestAnimationFrame\(\(\) => apply\(\)\)/);
+  assert.match(studio, /onApply\(normalized\)/);
+  assert.doesNotMatch(studio, /input type="color" aria-label="Elegir color personalizado"/);
+  assert.match(studio, /ps-community-name-custom-picker-plane\{[\s\S]*?touch-action:none/);
+  assert.match(studio, /ps-community-name-custom-picker\{[\s\S]*?background:#24262d/);
+});
+
+test("name colour presets and clear action remain available beside the custom HSV picker", () => {
   assert.match(studio, /ps-community-name-color-picker/);
   assert.match(studio, /role="group" aria-label="Colores predefinidos"/);
-  assert.match(studio, /ps-community-name-custom-color-copy/);
-  assert.match(studio, /aria-label="Elegir color personalizado"/);
+  assert.match(studio, /ps-community-name-color-option/);
   assert.match(studio, /ps-community-name-color-clear/);
   assert.match(studio, /aria-label="Quitar color"/);
   assert.match(studio, /onClick=\{\(\) => setDraftDisplayNameColor\("default"\)\}/);
-  assert.match(studio, /ps-community-name-color-clear-mark/);
-  assert.match(nameStyleCss, /\\.ps-community-name-color-actions/);
-  assert.match(nameStyleCss, /\\.ps-community-name-color-clear-mark::after/);
-  assert.match(nameStyleCss, /\\.ps-community-name-custom-color-copy/);
-  assert.match(nameStyleCss, /\\.ps-community-name-color-option\\.is-selected/);
+  assert.match(nameStyleCss, /\.ps-community-name-color-actions/);
+  assert.match(nameStyleCss, /\.ps-community-name-color-option\.is-selected/);
 });

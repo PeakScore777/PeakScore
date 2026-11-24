@@ -1845,9 +1845,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
-                          <span className="ps-community-name-member-copy">
+                          <div className="ps-community-name-member-copy">
                             <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
-                          </span>
+                          </div>
                           <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>
                       </div>

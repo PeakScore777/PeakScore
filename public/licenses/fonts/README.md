@@ -2,12 +2,12 @@
 
 The community name-style editor includes four additional typefaces supplied by the Google Fonts open-source collection.
 
-| PeakScore preset | Typeface | Upstream source | License |
+| PeakScore preset | Catalog ID | Typeface | Upstream source | License |
 | --- | --- | --- | --- |
-| Street Block | Bungee | https://github.com/djrrb/Bungee | SIL Open Font License 1.1 |
-| Action Condensed | Teko | https://github.com/googlefonts/teko | SIL Open Font License 1.1 |
-| Cyber Racer | Oxanium | https://github.com/sevmeyer/oxanium | SIL Open Font License 1.1 |
-| Epic RPG | Cinzel | https://github.com/NDISCOVER/Cinzel | SIL Open Font License 1.1 |
+| Street Block | `street-block` | Bungee | https://github.com/djrrb/Bungee | SIL Open Font License 1.1 |
+| Action Condensed | `action-condensed` | Teko | https://github.com/googlefonts/teko | SIL Open Font License 1.1 |
+| Cyber Racer | `cyber-racer` | Oxanium | https://github.com/sevmeyer/oxanium | SIL Open Font License 1.1 |
+| Epic RPG | `epic-rpg` | Cinzel | https://github.com/NDISCOVER/Cinzel | SIL Open Font License 1.1 |
 
 The corresponding copyright notices and full license texts are stored next to this file.
 

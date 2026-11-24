@@ -1259,3 +1259,35 @@ test("Halo Signal and Domino Flow use one shared viewport observer and pause off
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce[\s\S]*?\.ps-community-name-render:not\(\.ps-community-name-preview-live\) \.ps-halo-signal__glyph/);
   assert.match(nameStyleCss, /\.ps-community-name-render:not\(\.ps-community-name-preview-live\)\.ps-inkline-name animateTransform \{\s*display:none !important/);
 });
+
+
+test("desktop name-style scrollbars stay invisible until the pointer reaches the edge", () => {
+  assert.match(studio, /handlePickerScrollbarPointerMove/);
+  assert.match(studio, /nearScrollbarEdge/);
+  assert.match(studio, /bounds\.right - event\.clientX <= 18/);
+  assert.match(studio, /onPointerMove=\{handlePickerScrollbarPointerMove\}/);
+  assert.match(studio, /onPointerLeave=\{\(event\) => \{ event\.currentTarget\.dataset\.scrollbarVisible = "false"; \}\}/);
+  assert.match(studio, /aria-label="Opciones de estilo y color"/);
+  assert.match(studio, /aria-label="Vistas previas del nombre"/);
+  assert.match(nameStyleCss, /scrollbar-color:transparent transparent !important/);
+  assert.match(nameStyleCss, /data-scrollbar-visible="true"/);
+  assert.match(nameStyleCss, /:has\(:focus-visible\)/);
+  assert.match(nameStyleCss, /::-webkit-scrollbar-thumb[\s\S]*?background:transparent !important/);
+  assert.match(nameStyleCss, /overflow-y:auto/);
+  assert.match(nameStyleCss, /overscroll-behavior-y:contain/);
+});
+
+test("name colour picker has distinct swatches, a custom colour card, and a reset action", () => {
+  assert.match(studio, /ps-community-name-color-picker/);
+  assert.match(studio, /role="group" aria-label="Colores predefinidos"/);
+  assert.match(studio, /ps-community-name-custom-color-copy/);
+  assert.match(studio, /aria-label="Elegir color personalizado"/);
+  assert.match(studio, /ps-community-name-color-clear/);
+  assert.match(studio, /aria-label="Quitar color"/);
+  assert.match(studio, /onClick=\{\(\) => setDraftDisplayNameColor\("default"\)\}/);
+  assert.match(studio, /ps-community-name-color-clear-mark/);
+  assert.match(nameStyleCss, /\\.ps-community-name-color-actions/);
+  assert.match(nameStyleCss, /\\.ps-community-name-color-clear-mark::after/);
+  assert.match(nameStyleCss, /\\.ps-community-name-custom-color-copy/);
+  assert.match(nameStyleCss, /\\.ps-community-name-color-option\\.is-selected/);
+});

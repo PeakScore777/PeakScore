@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -40,6 +40,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/DominoFlowDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/InklineDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261124150000_community_display_name_gradient_flow.sql", import.meta.url), "utf8"),
+  readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -911,6 +912,18 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
 
 
 
+
+test("platform-inspired name fonts use open alternatives consistently across the community UI", () => {
+  assert.match(layout, /Archivo, Audiowide/);
+  assert.match(layout, /DM_Sans/);
+  assert.match(layout, /IBM_Plex_Mono/);
+  assert.match(layout, /--font-name-discord-display/);
+  assert.match(layout, /--font-name-creator-sans/);
+  assert.match(layout, /--font-name-stream-mono/);
+  assert.match(nameStyleCss, /is-name-style-discord-display/);
+  assert.match(nameStyleCss, /is-name-style-creator-sans/);
+  assert.match(nameStyleCss, /is-name-style-stream-mono/);
+});
 
 test("Gradient Flow is a lightweight animated text fill and is accepted by the profile API and database", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));

@@ -13,7 +13,6 @@ import {
 import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
 import InklineDisplayName from "@/components/community/InklineDisplayName";
@@ -33,7 +32,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
-type CommunityDisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
+type CommunityDisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -390,27 +389,6 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
         </FuzzyText>
       </Tag>
     );
-  }
-  if (animation === "signal-break") {
-    return <SignalBreakDisplayName
-      text={value}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-      mode="slices"
-      speed={0.8}
-      fontWeight={900}
-      enableShadows
-      offset={2}
-      shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.38}
-      skew={0.08}
-      flicker={false}
-      trigger="always"
-      burstDuration={0.3}
-      frameRate={24}
-      previewMode={previewMode}
-    />;
   }
     if (animation === "none") return <Tag id={id} className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag id={id} className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>

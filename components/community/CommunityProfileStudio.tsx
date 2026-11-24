@@ -166,6 +166,18 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
   { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
   { id: "chromaflow", label: "Chromaflow", description: "Degradado espectral multicolor que fluye continuamente de izquierda a derecha" },
 ];
+
+type DisplayNameColorMode = "single" | "gradient" | "spectrum" | "automatic";
+const DISPLAY_NAME_EFFECT_COLOR_MODE: Record<DisplayNameEffect, DisplayNameColorMode> = {
+  plain: "single",
+  gradient: "gradient",
+  neon: "single",
+  toon: "automatic",
+  pop: "single",
+  gummy: "spectrum",
+  prism: "spectrum",
+  chromaflow: "automatic",
+};
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
   { id: "fuzzy-text", label: "Noise Reveal", description: "Ruido orgánico animado que revela el nombre con una textura digital controlada", hint: "Ruido digital en movimiento" },
@@ -567,6 +579,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
+  const draftDisplayNameColorMode = DISPLAY_NAME_EFFECT_COLOR_MODE[draftDisplayNameEffect];
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -1622,105 +1635,123 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               onClick={() => setDraftDisplayNameAnimation(item.id)}
                               aria-pressed={draftDisplayNameAnimation === item.id}
                               title={item.description}>
-                              <DisplayNameMotionPreview
-                                value={displayName || "OMEGA"}
-                                animation={item.id}
-                                fuzzySettings={draftDisplayNameFuzzySettings}
-                                className={previewClass}
-                                style={previewStyle}
-                              />
+                              {draftDisplayNameAnimation === item.id ? (
+                                <DisplayNameMotionPreview
+                                  value={displayName || "OMEGA"}
+                                  animation={item.id}
+                                  fuzzySettings={draftDisplayNameFuzzySettings}
+                                  className={previewClass}
+                                  style={previewStyle}
+                                />
+                              ) : (
+                                <span
+                                  aria-hidden="true"
+                                  className={previewClass + " ps-name-preview-motion name-preview-" + item.id}
+                                  style={previewStyle}
+                                >
+                                  {displayName || "OMEGA"}
+                                </span>
+                              )}
                               <strong>{item.label}</strong>
                             </button>
                           );
                         })}
                       </div>
                     </section>
-                    <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige un color</div>
+                    {draftDisplayNameColorMode !== "automatic" && (
+                      <section className="ps-community-name-style-group">
+                        <div className="ps-community-name-style-heading">
+                          {draftDisplayNameColorMode === "gradient"
+                            ? "Colores del degradado"
+                            : draftDisplayNameColorMode === "spectrum"
+                              ? "Paleta del espectro"
+                              : "Color del nombre"}
+                        </div>
 
-                      {draftDisplayNameEffect === "gradient" && (
-                        <>
-                          <div className="ps-community-name-preset-grid" aria-label="Degradados predefinidos">
-                            {DISPLAY_NAME_GRADIENT_PRESETS.map((preset) => (
-                              <button key={preset.id} type="button"
-                                className={"ps-community-name-preset-swatch" + (draftDisplayNameGradientStart === preset.start && draftDisplayNameGradientEnd === preset.end ? " is-selected" : "")}
-                                style={{ background: "linear-gradient(105deg," + preset.start + "," + preset.end + ")" }}
-                                title={preset.label} aria-label={preset.label}
-                                onClick={() => {
-                                  setDraftDisplayNameGradientStart(preset.start);
-                                  setDraftDisplayNameGradientEnd(preset.end);
+                        {draftDisplayNameColorMode === "gradient" && (
+                          <>
+                            <div className="ps-community-name-preset-grid" aria-label="Degradados predefinidos">
+                              {DISPLAY_NAME_GRADIENT_PRESETS.map((preset) => (
+                                <button key={preset.id} type="button"
+                                  className={"ps-community-name-preset-swatch" + (draftDisplayNameGradientStart === preset.start && draftDisplayNameGradientEnd === preset.end ? " is-selected" : "")}
+                                  style={{ background: "linear-gradient(105deg," + preset.start + "," + preset.end + ")" }}
+                                  title={preset.label} aria-label={preset.label}
+                                  onClick={() => {
+                                    setDraftDisplayNameGradientStart(preset.start);
+                                    setDraftDisplayNameGradientEnd(preset.end);
+                                    setDraftDisplayNameColor("custom-gradient");
+                                  }}/>
+                              ))}
+                            </div>
+                            <div className="ps-community-name-gradient-editor">
+                              <label>
+                                <span>Color inicial</span>
+                                <span className="ps-community-name-gradient-color">
+                                  <input type="color" value={draftDisplayNameGradientStart} onChange={(event) => { setDraftDisplayNameGradientStart(event.target.value.toUpperCase()); setDraftDisplayNameColor("custom-gradient"); }}/>
+                                  <code>{draftDisplayNameGradientStart.toUpperCase()}</code>
+                                </span>
+                              </label>
+                              <span className="ps-community-name-gradient-connector" aria-hidden="true"/>
+                              <label>
+                                <span>Color final</span>
+                                <span className="ps-community-name-gradient-color">
+                                  <input type="color" value={draftDisplayNameGradientEnd} onChange={(event) => { setDraftDisplayNameGradientEnd(event.target.value.toUpperCase()); setDraftDisplayNameColor("custom-gradient"); }}/>
+                                  <code>{draftDisplayNameGradientEnd.toUpperCase()}</code>
+                                </span>
+                              </label>
+                            </div>
+                          </>
+                        )}
+
+                        {draftDisplayNameColorMode === "spectrum" && (
+                          <>
+                            <div className="ps-community-name-spectrum-presets" aria-label="Paletas multicolor">
+                              {DISPLAY_NAME_SPECTRUM_PRESETS.map((preset) => (
+                                <button key={preset.id} type="button"
+                                  className={"ps-community-name-spectrum-swatch" + (JSON.stringify(draftDisplayNamePrismColors) === JSON.stringify(preset.colors) ? " is-selected" : "")}
+                                  style={{ background: "linear-gradient(90deg," + preset.colors.join(",") + ")" }}
+                                  title={preset.label} aria-label={preset.label}
+                                  onClick={() => setDraftDisplayNamePrismColors(preset.colors.slice())}/>
+                              ))}
+                            </div>
+                            <div className="ps-community-name-prism-editor" aria-label="Personaliza los cinco colores">
+                              {draftDisplayNamePrismColors.map((color, index) => (
+                                <label key={index} title={"Color " + (index + 1)}>
+                                  <span>{index + 1}</span>
+                                  <input type="color" aria-label={"Color " + (index + 1)} value={color}
+                                    onChange={(event) => setDraftDisplayNamePrismColors((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value.toUpperCase() : item))}/>
+                                </label>
+                              ))}
+                            </div>
+                          </>
+                        )}
+
+                        {draftDisplayNameColorMode === "single" && (
+                          <div className="ps-community-name-color-grid">
+                            <label className={"ps-community-name-custom-color" + (draftDisplayNameColor === "custom-gradient" ? " is-selected" : "")}
+                              title="Elegir color personalizado" aria-label="Elegir color personalizado">
+                              <Pipette size={17}/>
+                              <input type="color" value={draftDisplayNameGradientStart}
+                                onChange={(event) => {
+                                  const value = event.target.value.toUpperCase();
+                                  setDraftDisplayNameGradientStart(value);
+                                  setDraftDisplayNameGradientEnd(value);
                                   setDraftDisplayNameColor("custom-gradient");
                                 }}/>
-                            ))}
-                          </div>
-                          <div className="ps-community-name-gradient-editor">
-                            <label>
-                              <span>Color inicial</span>
-                              <span className="ps-community-name-gradient-color">
-                                <input type="color" value={draftDisplayNameGradientStart} onChange={(event) => { setDraftDisplayNameGradientStart(event.target.value.toUpperCase()); setDraftDisplayNameColor("custom-gradient"); }}/>
-                                <code>{draftDisplayNameGradientStart.toUpperCase()}</code>
-                              </span>
                             </label>
-                            <span className="ps-community-name-gradient-connector" aria-hidden="true"/>
-                            <label>
-                              <span>Color final</span>
-                              <span className="ps-community-name-gradient-color">
-                                <input type="color" value={draftDisplayNameGradientEnd} onChange={(event) => { setDraftDisplayNameGradientEnd(event.target.value.toUpperCase()); setDraftDisplayNameColor("custom-gradient"); }}/>
-                                <code>{draftDisplayNameGradientEnd.toUpperCase()}</code>
-                              </span>
-                            </label>
-                          </div>
-                        </>
-                      )}
-
-                      {(draftDisplayNameEffect === "prism" || draftDisplayNameEffect === "gummy") && (
-                        <>
-                          <div className="ps-community-name-spectrum-presets" aria-label="Paletas multicolor">
-                            {DISPLAY_NAME_SPECTRUM_PRESETS.map((preset) => (
-                              <button key={preset.id} type="button"
-                                className={"ps-community-name-spectrum-swatch" + (JSON.stringify(draftDisplayNamePrismColors) === JSON.stringify(preset.colors) ? " is-selected" : "")}
-                                style={{ background: "linear-gradient(90deg," + preset.colors.join(",") + ")" }}
-                                title={preset.label} aria-label={preset.label}
-                                onClick={() => setDraftDisplayNamePrismColors(preset.colors.slice())}/>
+                            {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient" && item.id !== "default").map((item) => (
+                              <button key={item.id} type="button" title={item.label} aria-label={item.label}
+                                className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                                onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
+                                style={{ "--name-color-swatch": item.value } as CSSProperties}/>
                             ))}
+                            <button type="button" title="Color automático" aria-label="Color automático"
+                              className={"ps-community-name-color-option color-default" + (draftDisplayNameColor === "default" ? " is-selected" : "")}
+                              onClick={() => setDraftDisplayNameColor("default")} aria-pressed={draftDisplayNameColor === "default"}/>
                           </div>
-                          <div className="ps-community-name-prism-editor" aria-label="Personaliza los cinco colores">
-                            {draftDisplayNamePrismColors.map((color, index) => (
-                              <label key={index} title={"Color " + (index + 1)}>
-                                <span>{index + 1}</span>
-                                <input type="color" aria-label={"Color " + (index + 1)} value={color}
-                                  onChange={(event) => setDraftDisplayNamePrismColors((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value.toUpperCase() : item))}/>
-                              </label>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      {draftDisplayNameEffect !== "gradient" && draftDisplayNameEffect !== "prism" && draftDisplayNameEffect !== "gummy" && (
-                        <div className="ps-community-name-color-grid">
-                          <label className={"ps-community-name-custom-color" + (draftDisplayNameColor === "custom-gradient" ? " is-selected" : "")}
-                            title="Elegir color personalizado" aria-label="Elegir color personalizado">
-                            <Pipette size={17}/>
-                            <input type="color" value={draftDisplayNameGradientStart}
-                              onChange={(event) => {
-                                const value = event.target.value.toUpperCase();
-                                setDraftDisplayNameGradientStart(value);
-                                setDraftDisplayNameGradientEnd(value);
-                                setDraftDisplayNameColor("custom-gradient");
-                              }}/>
-                          </label>
-                          {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient" && item.id !== "default").map((item) => (
-                            <button key={item.id} type="button" title={item.label} aria-label={item.label}
-                              className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
-                              onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
-                              style={{ "--name-color-swatch": item.value } as CSSProperties}/>
-                          ))}
-                          <button type="button" title="Color automático" aria-label="Color automático"
-                            className={"ps-community-name-color-option color-default" + (draftDisplayNameColor === "default" ? " is-selected" : "")}
-                            onClick={() => setDraftDisplayNameColor("default")} aria-pressed={draftDisplayNameColor === "default"}/>
-                        </div>
-                      )}
-                    </section>
+                        )}
+                      </section>
+                    )}
                   </div>
                 )}
 

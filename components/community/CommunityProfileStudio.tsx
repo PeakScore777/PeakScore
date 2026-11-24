@@ -521,9 +521,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       speed={0.9}
       fontWeight={900}
       enableShadows
-      offset={5.5}
+      offset={6.5}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.24}
+      intensity={0.42}
       skew={0.18}
       flicker={false}
       trigger="always"

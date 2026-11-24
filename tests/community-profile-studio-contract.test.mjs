@@ -1045,7 +1045,7 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   ];
   assert.ok(studio.includes('trigger="always"'));
   assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
-  assert.match(studio, /fps=\{previewMode \? 14 : fuzzySettings\.fps\}/);
+  assert.match(studio, /fps=\{previewMode \? 10 : fuzzySettings\.fps\}/);
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
   for (const prop of expectedProps) {
     assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);

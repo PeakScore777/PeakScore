@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
-type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono";
+type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
@@ -151,6 +151,10 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "discord-display", label: "Discord Display", sample: "Aa", description: "Archivo · alternativa abierta al estilo Ginto Nord" },
   { id: "creator-sans", label: "Creator Sans", sample: "Aa", description: "DM Sans · alternativa geométrica al estilo Roobert" },
   { id: "stream-mono", label: "Stream Mono", sample: "Aa", description: "IBM Plex Mono · precisión para perfiles gamer y tech" },
+  { id: "street-block", label: "Street Block", sample: "CITY", description: "Bungee · rótulo urbano contundente para una estética open-world, sin copiar logotipos de videojuegos" },
+  { id: "action-condensed", label: "Action Condensed", sample: "CHASE", description: "Teko · display condensada de alto impacto para una estética de acción y carreras" },
+  { id: "cyber-racer", label: "Cyber Racer", sample: "NEXUS", description: "Oxanium · geometría angular inspirada en HUD, ciencia ficción y videojuegos futuristas" },
+  { id: "epic-rpg", label: "Epic RPG", sample: "LEGACY", description: "Cinzel · inscripción épica para nombres de fantasía, aventura y RPG" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
   { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },

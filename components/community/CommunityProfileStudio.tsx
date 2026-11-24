@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
-type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
+type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
-type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
+type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -148,6 +148,9 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "techno", label: "Techno", sample: "Aa", description: "Futurista de formas circulares" },
   { id: "rounded", label: "Rounded", sample: "Aa", description: "Display redondeada y sólida" },
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
+  { id: "discord-display", label: "Discord Display", sample: "Aa", description: "Grotesca ancha inspirada en Ginto · alternativa abierta" },
+  { id: "creator-sans", label: "Creator Sans", sample: "Aa", description: "Sans moderna y expresiva para perfiles sociales" },
+  { id: "stream-mono", label: "Stream Mono", sample: "Aa", description: "Monoespaciada precisa para perfiles gamer y tech" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
   { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },
@@ -167,6 +170,7 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "domino-flow", label: "Domino Flow", description: "Las letras caen en cadena como fichas de dominó y se reconstruyen en su posición", hint: "Caída escalonada · reconstrucción" },
   { id: "mistfall", label: "Mistfall", description: "El nombre se descompone en partículas luminosas y vuelve a condensarse", hint: "Dispersión de partículas · condensación" },
   { id: "depth-lift", label: "Depth Lift", description: "Volumen 3D con sombra profunda que se extiende al pasar el cursor", hint: "Profundidad 3D · hover" },
+  { id: "gradient-flow", label: "Gradient Flow", description: "Degradado rosa, violeta y azul que recorre el nombre en un bucle continuo", hint: "Degradado fluido · bucle continuo" },
   { id: "shuffle-blur", label: "Blur Cascade", description: "Caracteres que ascienden entre dígitos y símbolos con desenfoque progresivo", hint: "Blur · vertical · 1,5 s" },
   { id: "shuffle-flip", label: "Flip Roll", description: "Caracteres alfabéticos que giran en cascada hacia abajo", hint: "Flip · vertical · 1,1 s" },
   { id: "shuffle", label: "Classic Slide", description: "Deslizamiento horizontal alternado, limpio y preciso", hint: "Slide · derecha · 0,35 s" },
@@ -393,6 +397,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   }
   if (animation === "mistfall") {
     return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+  }
+  if (animation === "gradient-flow") {
+    return <Tag className={renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>{value}</Tag>;
   }
   if (animation === "depth-lift") {
     return <DepthLiftDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag}/>;

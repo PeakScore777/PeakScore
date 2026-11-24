@@ -1777,7 +1777,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                                   <strong>Personalizar</strong>
                                   <small>{draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart.toUpperCase() : "Elegir color"}</small>
                                 </span>
-                                <input type="color" value={draftDisplayNameGradientStart}
+                                <input type="color" aria-label="Elegir color personalizado" value={draftDisplayNameGradientStart}
                                   onChange={(event) => {
                                     const value = event.target.value.toUpperCase();
                                     setDraftDisplayNameGradientStart(value);
@@ -1792,7 +1792,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                                 aria-pressed={draftDisplayNameColor === "default"}
                                 onClick={() => setDraftDisplayNameColor("default")}
                               >
-                                <Trash2 size={14} aria-hidden="true"/>
+                                <span className="ps-community-name-color-clear-mark" aria-hidden="true"/>
                                 <span>Quitar color</span>
                               </button>
                             </div>

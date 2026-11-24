@@ -32,8 +32,18 @@ export default function InklineDisplayName({
   const clipId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const Tag = tag;
-  const chromaflow = className.split(/\s+/).includes("effect-chromaflow");
+  const effectTokens = className.split(/\s+/);
+  const chromaflow = effectTokens.includes("effect-chromaflow");
+  const gummy = effectTokens.includes("effect-gummy");
   const chromaflowGradientId = `ps-inkline-${clipId}-chromaflow`;
+  const gummyGradientId = `ps-inkline-${clipId}-gummy`;
+  const styleTokens = style as (CSSProperties & Record<string, unknown>) | undefined;
+  const gummyPalette = typeof styleTokens?.["--name-prism-gradient"] === "string"
+    ? (styleTokens["--name-prism-gradient"] as string).match(/#[0-9a-f]{6}/gi) ?? []
+    : [];
+  const gummyStops = gummyPalette.length >= 2
+    ? gummyPalette
+    : ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"];
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -79,6 +89,14 @@ export default function InklineDisplayName({
                 <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.5 0;0.5 0;-0.5 0" dur="4.8s" repeatCount="indefinite"/>
               </linearGradient>
             )}
+            {gummy && (
+              <linearGradient id={gummyGradientId} x1="-35%" y1="0%" x2="135%" y2="0%">
+                {gummyStops.map((stop, index) => (
+                  <stop key={stop + index} offset={(index / Math.max(1, gummyStops.length - 1) * 100) + "%"} stopColor={stop}/>
+                ))}
+                <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.35 0;0.35 0;-0.35 0" dur="7.2s" repeatCount="indefinite"/>
+              </linearGradient>
+            )}
             <clipPath id={`ps-inkline-${clipId}`} clipPathUnits="objectBoundingBox">
               <rect className="ps-inkline-wipe" x="0" y="0" width="1" height="1" />
             </clipPath>
@@ -86,7 +104,7 @@ export default function InklineDisplayName({
           <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
-          <text x="0" y="0" fill={chromaflow ? `url(#${chromaflowGradientId})` : fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
+          <text x="0" y="0" fill={chromaflow ? `url(#${chromaflowGradientId})` : gummy ? `url(#${gummyGradientId})` : fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
         </svg>

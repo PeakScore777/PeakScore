@@ -1648,10 +1648,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               ) : (
                                 <span
                                   aria-hidden="true"
-                                  className={previewClass + " ps-name-preview-motion name-preview-" + item.id}
-                                  style={previewStyle}
+                                  className={"ps-name-preview-motion name-preview-" + item.id}
                                 >
-                                  <span className="ps-name-preview-face">{displayName || "OMEGA"}</span>
+                                  <span className={previewClass + " ps-name-preview-face"} style={previewStyle}>
+                                    {displayName || "OMEGA"}
+                                  </span>
                                 </span>
                               )}
                               <strong>{item.label}</strong>

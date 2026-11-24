@@ -401,13 +401,13 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       speed={0.8}
       fontWeight={900}
       enableShadows
-      offset={1.4}
+      offset={2}
       shadowColors={["#ff5368", "#43d9ee"]}
-      intensity={0.24}
+      intensity={0.38}
       skew={0.08}
       flicker={false}
       trigger="always"
-      burstDuration={0.18}
+      burstDuration={0.3}
       frameRate={24}
       previewMode={previewMode}
     />;

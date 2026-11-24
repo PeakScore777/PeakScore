@@ -85,7 +85,8 @@ function makeEvent(now: number, stepMs: number): GlitchEvent {
   const sign = () => (Math.random() < 0.5 ? -1 : 1);
 
   return {
-    until: now + stepMs * (1 + Math.floor(Math.random() * 3)),
+    // Small community names need a longer visible slice window than demo-sized headings.
+    until: now + Math.max(stepMs * (1 + Math.floor(Math.random() * 3)), 170 + Math.random() * 110),
     aTop: Math.random() * 80,
     aHeight: 5 + Math.random() * 22,
     bTop: Math.random() * 85,
@@ -174,7 +175,7 @@ export default function SignalBreakDisplayName({
 
     // React Bits' 10px offset is designed for large demo typography.
     // Scale it down for profile names so small glyphs do not fly apart.
-    const offsetScale = clamp(computedFontSize / 32, 0.48, 1);
+    const offsetScale = clamp(computedFontSize / 26, 0.65, 1);
 
     let raf = 0;
     let last = 0;
@@ -239,7 +240,7 @@ export default function SignalBreakDisplayName({
     const step = (now: number, current: Settings, power: number) => {
       const stepMs = stepLength(current.speed);
       if (event && now >= event.until) event = null;
-      if (!event && Math.random() < 0.12 + power * 0.12) {
+      if (!event && Math.random() < 0.38 + power * 0.16) {
         event = makeEvent(now, stepMs);
       }
 

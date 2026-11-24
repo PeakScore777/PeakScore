@@ -254,7 +254,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   previewMode?: boolean;
 }) {
   const Tag = tag;
-  const renderedClassName = [className, previewMode ? "ps-community-name-preview-live" : ""].filter(Boolean).join(" ");
+  const renderedClassName = className;
   const characters = communityNameCharacters(value);
   const chromaScale = Math.max(2.6, characters.length);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
@@ -300,7 +300,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       ease="expo.out"
       stagger={0.06}
       threshold={0.1}
-      respectReducedMotion={!previewMode}
+      respectReducedMotion
       tag={tag}
       className={renderedClassName}
       style={safeStyle}
@@ -317,7 +317,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       ease="power2.out"
       stagger={0.07}
       threshold={0.1}
-      respectReducedMotion={!previewMode}
+      respectReducedMotion
       tag={tag}
       className={renderedClassName}
       style={safeStyle}
@@ -334,7 +334,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       ease="power3.out"
       stagger={0.05}
       threshold={0.1}
-      respectReducedMotion={!previewMode}
+      respectReducedMotion
       tag={tag}
       className={renderedClassName}
       style={safeStyle}
@@ -355,7 +355,6 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       characters="0123456789ABCDEF"
       scrambleColor="#2bb673"
       animateOn="view"
-      forceMotion={previewMode}
       loop={false}
     />;
   }

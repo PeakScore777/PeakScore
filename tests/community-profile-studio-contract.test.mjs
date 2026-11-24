@@ -735,6 +735,10 @@ test("name-style picker stays open while scrolling and supports laptop trackpads
   assert.match(nameStyleCss, /\.ps-community-picker-collection,[\s\S]*?overflow-y:auto !important/);
   assert.match(nameStyleCss, /touch-action:pan-y !important/);
   assert.match(nameStyleCss, /scrollbar-width:thin !important/);
+  assert.match(nameStyleCss, /html:has\(\.ps-community-picker-overlay\)::-webkit-scrollbar\s*\{\s*width:6px !important/);
+  assert.match(nameStyleCss, /::-webkit-scrollbar-button[\s\S]*?display:none !important/);
+  assert.match(nameStyleCss, /border-radius:999px !important/);
+  assert.match(nameStyleCss, /background-color:#454954 !important/);
   assert.match(nameStyleCss, /grid-template-rows:auto minmax\(0,1fr\) auto !important/);
 });
 

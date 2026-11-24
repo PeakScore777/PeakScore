@@ -6075,3 +6075,62 @@ html:has(.ps-community-picker-overlay) * {
     transition:none !important;
   }
 }
+
+
+/* The member list and chat render the selected typography/effect as a name,
+   not as the profile's entrance-animation component. */
+.ps-community-name-static {
+  display:inline-block !important;
+  max-width:100% !important;
+  vertical-align:baseline !important;
+}
+
+/* Neon honours the chosen swatch in all three surfaces. The previous
+   fixed-lavender fill made a selected pink, jade or blue look unchanged. */
+.ps-community-name-render.effect-neon,
+.ps-community-name-static.effect-neon,
+.community-member-nameplate.effect-neon,
+.community-chat-author.effect-neon,
+.ps-community-profile-name.effect-neon,
+.ps-community-member-popout__identity h3.effect-neon,
+.ps-community-status-profile-copy > strong.effect-neon {
+  color:var(--name-solid-color,#A88AF2) !important;
+  -webkit-text-fill-color:var(--name-solid-color,#A88AF2) !important;
+  text-shadow:
+    0 0 1px #fff,
+    0 0 5px var(--name-solid-color,#A88AF2),
+    0 0 14px var(--name-solid-color,#A88AF2),
+    0 0 25px color-mix(in srgb,var(--name-solid-color,#A88AF2) 35%,transparent) !important;
+}
+
+/* Gloss uses the member's saved five-stop strip instead of a hardcoded pastel. */
+.ps-community-name-render.effect-gummy,
+.ps-community-name-static.effect-gummy,
+.community-member-nameplate.effect-gummy,
+.community-chat-author.effect-gummy,
+.ps-community-profile-name.effect-gummy,
+.ps-community-member-popout__identity h3.effect-gummy,
+.ps-community-status-profile-copy > strong.effect-gummy {
+  color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF)) !important;
+  background-size:240% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 55%),0 2px 2px rgb(70 39 74 / 25%) !important;
+}
+
+/* Keep effect animations independent from the profile entrance animation.
+   Static member/chat names may retain animated finishes (Gradient, Neon,
+   Gloss, Prism, Chromaflow) without mounting Decrypt/Fuzzy/Shuffle/Inkline. */
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-static.effect-gradient,
+  .ps-community-name-static.effect-neon,
+  .ps-community-name-static.effect-toon,
+  .ps-community-name-static.effect-pop,
+  .ps-community-name-static.effect-gummy,
+  .ps-community-name-static.effect-prism,
+  .ps-community-name-static.effect-chromaflow {
+    animation:none !important;
+    transform:none !important;
+  }
+}

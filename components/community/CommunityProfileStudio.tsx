@@ -328,10 +328,11 @@ function hsvToHex(h: number, s: number, v: number) {
 
 type DisplayNameCustomColorPickerProps = {
   value: string;
+  selected: boolean;
   onApply: (color: string) => void;
 };
 
-function DisplayNameCustomColorPicker({ value, onApply }: DisplayNameCustomColorPickerProps) {
+function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameCustomColorPickerProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const [hue, setHue] = useState(hexToHsv(value).h);
@@ -381,7 +382,7 @@ function DisplayNameCustomColorPicker({ value, onApply }: DisplayNameCustomColor
   return (
     <div className="ps-community-name-custom-picker-root">
       <button type="button"
-        className={"ps-community-name-custom-color" + (open ? " is-selected" : "")}
+        className={"ps-community-name-custom-color" + (selected || open ? " is-selected" : "")}
         title="Elegir un color personalizado"
         aria-label="Elegir un color personalizado"
         aria-expanded={open}
@@ -1895,6 +1896,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <div className="ps-community-name-color-actions">
                               <DisplayNameCustomColorPicker
                                 value={draftDisplayNameGradientStart}
+                                selected={draftDisplayNameColor === "custom-gradient"}
                                 onApply={(value) => {
                                   setDraftDisplayNameGradientStart(value);
                                   setDraftDisplayNameGradientEnd(value);

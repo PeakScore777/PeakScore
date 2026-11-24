@@ -3,7 +3,6 @@
 import Image from "next/image";
 import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import ReactBitsGlitchText from "@/components/community/ReactBitsGlitchText";
 import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
 import InklineDisplayName from "@/components/community/InklineDisplayName";
@@ -505,7 +504,14 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           glitchInterval={fuzzySettings.glitchInterval}
           glitchDuration={fuzzySettings.glitchDuration}
           performanceMode={previewMode ? "preview" : "full"}
-          className="ps-fuzzy-text-can  if (animation === "signal-break") {
+          className="ps-fuzzy-text-canvas"
+        >
+          {value}
+        </FuzzyText>
+      </Tag>
+    );
+  }
+  if (animation === "signal-break") {
     return <ReactBitsGlitchText
       className={renderedClassName}
       style={safeStyle}

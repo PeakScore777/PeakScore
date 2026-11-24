@@ -5774,7 +5774,10 @@ html:has(.ps-community-picker-overlay) * {
 @media (prefers-reduced-motion:reduce) {
   .ps-community-name-render.effect-chromaflow.ps-name-plain:not(.ps-community-name-preview-live),
   .ps-community-name-animation-option .ps-name-preview-face.effect-chromaflow,
-  .ps-gradient-flow-name:not(.ps-community-name-preview-live) > .ps-gradient-flow-face,
+  .ps-gradient-flow-name:not(.ps-community-name-preview-live) > .ps-gradient-flow-face {
+    animation:none !important;
+    background-position:50% 50% !important;
+  }
   .ps-community-name-render:not(.ps-community-name-preview-live).ps-inkline-name animateTransform {
     display:none !important;
   }

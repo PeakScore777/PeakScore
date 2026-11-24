@@ -3303,9 +3303,6 @@
 .ps-community-name-animation-stage[data-animation="decrypt"]::before {
   background:repeating-linear-gradient(90deg,transparent 0 8px,rgb(54 211 153 / 8%) 8px 9px,transparent 9px 16px),radial-gradient(ellipse at 50% 100%,rgb(38 190 135 / 12%),transparent 70%);
 }
-.ps-community-name-animation-stage[data-animation="signal-break"]::before {
-  background:linear-gradient(180deg,transparent 42%,rgb(239 76 96 / 16%) 43% 45%,transparent 46% 53%,rgb(72 174 255 / 14%) 54% 56%,transparent 57%),linear-gradient(90deg,transparent,rgb(255 255 255 / 3%),transparent);
-}
 .ps-community-name-animation-stage[data-animation="fuzzy-text"]::before {
   background:repeating-linear-gradient(0deg,rgb(255 255 255 / 3%) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,transparent 0 11px,rgb(154 167 255 / 5%) 11px 12px);
 }
@@ -3673,11 +3670,6 @@
   background:
     repeating-linear-gradient(90deg,transparent 0 9px,rgb(67 213 155 / 8%) 9px 10px,transparent 10px 18px),
     radial-gradient(ellipse at 50% 100%,rgb(38 190 135 / 13%),transparent 70%) !important;
-}
-.ps-community-name-animation-stage[data-animation="signal-break"]::before {
-  background:
-    linear-gradient(180deg,transparent 40%,rgb(239 76 96 / 17%) 41% 44%,transparent 45% 54%,rgb(72 174 255 / 15%) 55% 58%,transparent 59%),
-    linear-gradient(90deg,transparent,rgb(255 255 255 / 3%),transparent) !important;
 }
 .ps-community-name-animation-stage[data-animation="fuzzy-text"]::before {
   background:
@@ -4532,7 +4524,6 @@
   will-change:transform,opacity,filter;
 }
 .name-preview-decrypt { animation-name:ps-preview-decrypt-lite; }
-.name-preview-signal-break { animation-name:ps-preview-signal-lite; }
 .name-preview-fuzzy-text { animation-name:ps-preview-noise-lite; }
 .name-preview-inkline { animation-name:ps-preview-inkline-lite; }
 .name-preview-halo-signal { animation-name:ps-preview-halo-lite; }

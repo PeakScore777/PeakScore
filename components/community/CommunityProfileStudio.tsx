@@ -326,6 +326,135 @@ function hsvToHex(h: number, s: number, v: number) {
   return "#" + rgb.map((channel) => Math.round((channel + m) * 255).toString(16).padStart(2, "0")).join("").toUpperCase();
 }
 
+type DisplayNameCustomColorPickerProps = {
+  value: string;
+  onApply: (color: string) => void;
+};
+
+function DisplayNameCustomColorPicker({ value, onApply }: DisplayNameCustomColorPickerProps) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [hue, setHue] = useState(hexToHsv(value).h);
+  const [hexDraft, setHexDraft] = useState(value.slice(1));
+  const [recent, setRecent] = useState<string[]>([]);
+  const draftRef = useRef(value);
+  const planeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) {
+      draftRef.current = value;
+      setDraft(value);
+      setHue(hexToHsv(value).h);
+      setHexDraft(value.slice(1));
+    }
+  }, [value, open]);
+
+  function setLocalColor(color: string) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return;
+    const normalized = color.toUpperCase();
+    draftRef.current = normalized;
+    setDraft(normalized);
+    setHexDraft(normalized.slice(1));
+  }
+
+  function apply(color = draftRef.current) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return;
+    const normalized = color.toUpperCase();
+    onApply(normalized);
+    setRecent((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
+    setOpen(false);
+  }
+
+  function updateFromPlane(event: ReactPointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const saturation = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const brightness = 1 - Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    setLocalColor(hsvToHex(hue, saturation, brightness));
+  }
+
+  function updateFromHue(nextHue: number) {
+    setHue(nextHue);
+    const hsv = hexToHsv(draftRef.current);
+    setLocalColor(hsvToHex(nextHue, hsv.s, hsv.v));
+  }
+
+  return (
+    <div className="ps-community-name-custom-picker-root">
+      <button type="button"
+        className={"ps-community-name-custom-color" + (open ? " is-selected" : "")}
+        title="Elegir un color personalizado"
+        aria-label="Elegir un color personalizado"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => {
+          if (open) { setOpen(false); return; }
+          setLocalColor(value);
+          setHue(hexToHsv(value).h);
+          setOpen(true);
+        }}
+        style={{ "--name-color-swatch": value } as CSSProperties}
+      >
+        <span className="ps-community-name-custom-color-mark"><Pipette size={15}/></span>
+        <span className="ps-community-name-custom-color-copy">
+          <strong>Personalizar</strong>
+          <small>{value.toUpperCase()}</small>
+        </span>
+      </button>
+      {open && (
+        <div className="ps-community-name-custom-picker" role="dialog" aria-label="Elegir color personalizado">
+          <div
+            ref={planeRef}
+            className="ps-community-name-custom-picker-plane"
+            style={{ backgroundColor: "hsl(" + hue + " 100% 50%)" }}
+            onPointerDown={(event) => {
+              event.currentTarget.setPointerCapture(event.pointerId);
+              updateFromPlane(event);
+            }}
+            onPointerMove={(event) => { if (event.buttons === 1) updateFromPlane(event); }}
+            onPointerUp={(event) => {
+              updateFromPlane(event);
+              requestAnimationFrame(() => apply());
+            }}
+          >
+            <span className="ps-community-name-custom-picker-cursor" style={{
+              left: (hexToHsv(draft).s * 100) + "%",
+              top: ((1 - hexToHsv(draft).v) * 100) + "%",
+            }}/>
+          </div>
+          <div className="ps-community-name-custom-picker-controls">
+            <span className="ps-community-name-custom-picker-current" style={{ backgroundColor: draft }}/>
+            <input aria-label="Tono" type="range" min="0" max="360" value={hue}
+              onChange={(event) => updateFromHue(Number(event.target.value))}
+              onPointerUp={() => apply()}
+              onKeyUp={() => apply()}/>
+          </div>
+          <label className="ps-community-name-custom-picker-hex">
+            <span>#</span>
+            <input value={hexDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text"
+              onChange={(event) => {
+                const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase();
+                setHexDraft(next);
+                if (next.length === 6) setLocalColor("#" + next);
+              }}
+              onBlur={() => { if (/^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); else setHexDraft(draftRef.current.slice(1)); }}
+              onKeyDown={(event) => { if (event.key === "Enter" && /^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); }}/>
+          </label>
+          {recent.length > 0 && (
+            <div className="ps-community-name-custom-picker-recent" aria-label="Colores recientes">
+              {recent.map((color) => <button key={color} type="button" style={{ backgroundColor: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>)}
+            </div>
+          )}
+          <div className="ps-community-name-custom-picker-actions">
+            <button type="button" onClick={() => { setLocalColor(value); setOpen(false); }}>Cancelar</button>
+            <button type="button" onClick={() => apply()}>Aplicar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function initials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : (parts[0] ?? "P").slice(0, 2)).toUpperCase();
@@ -1766,25 +1895,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               ))}
                             </div>
                             <div className="ps-community-name-color-actions">
-                              <label
-                                className={"ps-community-name-custom-color" + (draftDisplayNameColor === "custom-gradient" ? " is-selected" : "")}
-                                title="Elegir un color personalizado"
-                                aria-label="Elegir un color personalizado"
-                                style={{ "--name-color-swatch": draftDisplayNameGradientStart } as CSSProperties}
-                              >
-                                <span className="ps-community-name-custom-color-mark"><Pipette size={15}/></span>
-                                <span className="ps-community-name-custom-color-copy">
-                                  <strong>Personalizar</strong>
-                                  <small>{draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart.toUpperCase() : "Elegir color"}</small>
-                                </span>
-                                <input type="color" aria-label="Elegir color personalizado" value={draftDisplayNameGradientStart}
-                                  onChange={(event) => {
-                                    const value = event.target.value.toUpperCase();
-                                    setDraftDisplayNameGradientStart(value);
-                                    setDraftDisplayNameGradientEnd(value);
-                                    setDraftDisplayNameColor("custom-gradient");
-                                  }}/>
-                              </label>
+                              <DisplayNameCustomColorPicker
+                                value={draftDisplayNameGradientStart}
+                                onApply={(value) => {
+                                  setDraftDisplayNameGradientStart(value);
+                                  setDraftDisplayNameGradientEnd(value);
+                                  setDraftDisplayNameColor("custom-gradient");
+                                }}
+                              />
                               <button type="button"
                                 className={"ps-community-name-color-clear" + (draftDisplayNameColor === "default" ? " is-selected" : "")}
                                 title="Quitar color personalizado y usar el color base del efecto"

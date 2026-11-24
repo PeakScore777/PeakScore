@@ -30,7 +30,7 @@ type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
-type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
+type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type CommunityDisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";

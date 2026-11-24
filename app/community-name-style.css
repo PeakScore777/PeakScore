@@ -5781,3 +5781,18 @@ html:has(.ps-community-picker-overlay) * {
     background-position:50% 50% !important;
   }
 }
+
+
+/* Gummy keeps its glossy finish but uses the spectrum palette selected by the member. */
+.ps-community-name-render.effect-gummy .ps-decrypted-cell.is-revealed,
+.ps-community-name-render.effect-gummy .ps-decrypted-glyph,
+.ps-community-name-render.effect-gummy .ps-name-shuffle__track > span,
+.ps-community-name-render.effect-gummy .ps-glitch-char,
+.ps-community-name-render.effect-gummy .ps-glitch-slice,
+.ps-community-name-render.effect-gummy .ps-halo-signal__glyph,
+.ps-community-name-render.effect-gummy .ps-domino-flow__glyph,
+.ps-community-name-render.effect-gummy .ps-name-animation-char,
+.ps-community-name-render.effect-gummy .ps-depth-lift__face {
+  background-image:var(--name-prism-gradient,linear-gradient(110deg,#f6a8cf,#ffe2b8,#fff,#b7f1e0,#a9c8ff,#d5a6ff)) !important;
+  background-size:240% 100% !important;
+}

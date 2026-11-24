@@ -853,7 +853,8 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 
 test("motion gallery previews use the exact renderer for each selected animation", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}[\s\S]*?ps-community-name-animation-sample/);
+  assert.match(studio, /const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample/);
+  assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag="span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
@@ -863,6 +864,12 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:', 'id: "inkline", label:', 'id: "halo-signal", label:'].filter((entry) => catalogue.includes(entry)).length, 7);
   assert.ok(studio.includes("<DecryptedDisplayName"));
   assert.ok(studio.includes("<SignalBreakDisplayName"));
+  assert.match(nameStyleCss, /Signal Break editor alignment: the glitch name is a text run/);
+  assert.match(nameStyleCss, /ps-community-name-style-profile-copy > \.ps-glitch-name/);
+  assert.match(nameStyleCss, /ps-community-name-member-copy > \.ps-glitch-name/);
+  assert.match(nameStyleCss, /ps-community-name-chat-meta > \.ps-glitch-name/);
+  assert.match(nameStyleCss, /@keyframes ps-signal-break-chroma-run/);
+  assert.match(nameStyleCss, /background-position:var\(--ps-signal-break-chroma-offset,0%\) 50% !important/);
   assert.ok(studio.includes("<FuzzyText"));
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));

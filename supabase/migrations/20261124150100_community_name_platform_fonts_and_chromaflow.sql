@@ -30,7 +30,11 @@ alter table public.community_member_profiles
     'stencil',
     'discord-display',
     'creator-sans',
-    'stream-mono'
+    'stream-mono',
+    'street-block',
+    'action-condensed',
+    'cyber-racer',
+    'epic-rpg'
   )),
   add constraint community_member_profiles_display_name_effect_check
   check (display_name_effect in (

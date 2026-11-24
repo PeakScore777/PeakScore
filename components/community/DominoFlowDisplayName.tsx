@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties, type Ref } from "react";
+import { observeNameMotionVisibility } from "./name-motion-visibility";
 
 type Props = {
   text: string;
@@ -19,6 +20,16 @@ export default function DominoFlowDisplayName({
   previewMode = false,
 }: Props) {
   const Tag = tag;
+  const rootRef = useRef<HTMLElement | null>(null);
+  const forceMotion = previewMode && className.split(/\\s+/).includes("ps-community-name-preview-live");
+  useEffect(() => {
+    const node = rootRef.current;
+    if (forceMotion) {
+      if (node) node.dataset.motionVisible = "true";
+      return;
+    }
+    return observeNameMotionVisibility(node);
+  }, [forceMotion]);
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const chromaScale = Math.max(2.6, chars.length);
   const rootStyle = {
@@ -31,7 +42,7 @@ export default function DominoFlowDisplayName({
   } as CSSProperties;
 
   return (
-    <Tag className={className + " ps-domino-flow"} style={rootStyle} aria-label={text}>
+    <Tag ref={rootRef as Ref<HTMLElement>} className={className + " ps-domino-flow"} style={rootStyle} aria-label={text} data-motion-visible={forceMotion ? "true" : "false"}>
       <span className="ps-domino-flow__word" aria-hidden="true">
         {chars.map((char, index) => (
           <span

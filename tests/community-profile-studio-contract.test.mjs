@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense, nameColorHelper, nameMotionVisibility] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -47,6 +47,8 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../public/licenses/fonts/Teko-OFL.txt", import.meta.url), "utf8"),
   readFile(new URL("../public/licenses/fonts/Oxanium-OFL.txt", import.meta.url), "utf8"),
   readFile(new URL("../public/licenses/fonts/Cinzel-OFL.txt", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/display-name-color.ts", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/name-motion-visibility.ts", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -1200,4 +1202,38 @@ test("explicit animation previews stay alive on touch layouts and the three live
   assert.match(nameStyleCss, /\.ps-community-name-member-copy > \.ps-community-name-preview-live/);
   assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
   assert.doesNotMatch(page, /<strong className=\{"community-member-nameplate is-plate-/);
+});
+
+
+test("display-name colour controls follow the selected effect instead of exposing irrelevant swatches", () => {
+  assert.match(studio, /plain: "single"/);
+  assert.match(studio, /gradient: "gradient"/);
+  assert.match(studio, /gummy: "spectrum"/);
+  assert.match(studio, /prism: "spectrum"/);
+  assert.match(studio, /toon: "automatic"/);
+  assert.match(studio, /chromaflow: "automatic"/);
+  assert.match(studio, /draftDisplayNameColorMode !== "automatic"/);
+  assert.match(studio, /if \(colorMode === "automatic" \|\| colorMode === "spectrum"\)[\\s\\S]*?setDraftDisplayNameColor\("default"\)/);
+  assert.match(nameColorHelper, /AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set\(\["toon", "gummy", "prism", "chromaflow"\]\)/);
+  assert.match(nameColorHelper, /return "default"/);
+  assert.match(page, /displayNameColorForEffect\(message\.author\.display_name_effect/);
+  assert.match(page, /displayNameColorForEffect\(member\.display_name_effect/);
+});
+
+test("Chromaflow animates an inner paint layer without replacing each renderer's own motion", () => {
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \\.ps-decrypted-content,[\\s\\S]*?\\.ps-name-shuffle__content/);
+  assert.match(nameStyleCss, /\\.ps-community-name-render\\.effect-chromaflow \\.ps-halo-signal__text/);
+  assert.match(nameStyleCss, /\\.ps-community-name-render\\.effect-chromaflow \\.ps-domino-flow__word/);
+  assert.match(nameStyleCss, /\\.ps-community-name-render\\.effect-chromaflow:not\\(\\.ps-name-plain\\):not\\(\\.ps-gradient-flow-name\\):not\\(\\.ps-name-preview-face\\)[\\s\\S]*?animation:none !important/);
+  assert.match(nameStyleCss, /\\.ps-gradient-flow-name\\.effect-chromaflow > \\.ps-gradient-flow-face[\\s\\S]*?ps-gradient-flow-text 5\\.2s ease-in-out infinite,ps-chromaflow-word-hue 8s linear infinite/);
+});
+
+test("Halo Signal and Domino Flow use one shared viewport observer and pause off-screen cycles", () => {
+  assert.match(nameMotionVisibility, /let sharedNameMotionObserver: IntersectionObserver \\| null/);
+  assert.match(nameMotionVisibility, /new IntersectionObserver/);
+  assert.match(nameMotionVisibility, /target\\.dataset\\.motionVisible = entry\\.isIntersecting/);
+  assert.match(haloSignalName, /observeNameMotionVisibility/);
+  assert.match(dominoFlowName, /observeNameMotionVisibility/);
+  assert.match(nameStyleCss, /data-motion-visible="false"/);
+  assert.match(nameStyleCss, /animation-play-state:paused !important/);
 });

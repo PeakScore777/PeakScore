@@ -174,7 +174,7 @@ export default function SignalBreakDisplayName({
 
     // React Bits' 10px offset is designed for large demo typography.
     // Scale it down for profile names so small glyphs do not fly apart.
-    const offsetScale = clamp(computedFontSize / 36, 0.34, 1);
+    const offsetScale = clamp(computedFontSize / 32, 0.48, 1);
 
     let raf = 0;
     let last = 0;
@@ -239,7 +239,7 @@ export default function SignalBreakDisplayName({
     const step = (now: number, current: Settings, power: number) => {
       const stepMs = stepLength(current.speed);
       if (event && now >= event.until) event = null;
-      if (!event && Math.random() < 0.035 + power * 0.085) {
+      if (!event && Math.random() < 0.12 + power * 0.12) {
         event = makeEvent(now, stepMs);
       }
 

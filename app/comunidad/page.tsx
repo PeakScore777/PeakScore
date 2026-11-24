@@ -253,9 +253,13 @@ function CommunityStaticName({ value, className, style, tag = "span" }: {
   const characters = communityNameCharacters(value);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
+  const chromaScale = Math.max(2.6, characters.length);
   const safeStyle = {
     ...style,
     fontSize: (fitScale * tagScale).toFixed(3) + "em",
+    "--ps-chroma-char-count": Math.max(1, characters.length),
+    "--ps-chroma-background-size": chromaScale * 100 + "%",
+    "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
     maxWidth: "100%",
   } as React.CSSProperties;
   return <Tag className={className + " ps-community-name-static"} style={safeStyle}>{value}</Tag>;

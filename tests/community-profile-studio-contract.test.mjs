@@ -682,7 +682,7 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(route, /display_name_gradient_start: displayNameGradientStart/);
   assert.match(route, /display_name_gradient_end: displayNameGradientEnd/);
   assert.match(page, /display_name_gradient_start/);
-  assert.match(page, /community-chat-author-link is-name-style-/);
+  assert.match(page, /ps-community-profile-name is-name-style-/);
   assert.match(page, /display_name_gradient_end/);
   assert.doesNotMatch(studio, /namePreviewLight|setNamePreviewLight/);
   assert.match(studio, /ps-community-name-gradient-editor/);
@@ -794,7 +794,7 @@ test("display-name studio offers a premium seven-finish catalogue and accessible
   for (const label of ["Tinta","Aurora","Neón","Cromo","Rebote","Gloss","Prisma"]) assert.ok(studio.includes('label: "' + label + '"'));
   for (const animation of ["ps-atelier-aurora","ps-atelier-neon-breathe","ps-atelier-chrome","ps-atelier-bounce","ps-atelier-gloss","ps-atelier-prism","ps-atelier-card-light"]) assert.ok(nameStyleCss.includes(animation));
   assert.match(nameStyleCss, /prefers-reduced-motion/);
-  assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism", "chromaflow"/);
+  assert.match(route, /DISPLAY_NAME_EFFECTS = new Set\(\["plain", "gradient", "gradient-flow", "neon", "toon", "pop", "gummy", "prism", "chromaflow"\]\)/);
   assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
   assert.match(discordVideoEffectsRepeatMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
 });
@@ -834,7 +834,7 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(page, /revealDirection="random"/);
   assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
-  assert.match(page, /CommunityAnimatedName key=\{hoverCommunityProfile\.userId\} tag="h3"/);
+  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
@@ -1207,7 +1207,7 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(inklineName, /observeNameMotionVisibility/);
   assert.match(inklineName, /data-motion-visible=\{forceMotion \? "true" : "false"\}/);
   assert.match(inklineName, /--name-prism-gradient/);
-  assert.match(inklineName, /gummy \? `url\(#\$\{gummyGradientId\}\)`/);
+  assert.match(inklineName, /gummy \? "url\(#" \+ gummyGradientId \+ "\)"/);
   assert.match(inklineName, /<linearGradient/);
   assert.match(mistfallName, /CHROMAFLOW_STOPS/);
   assert.match(mistfallName, /createLinearGradient/);
@@ -1408,12 +1408,12 @@ test("name atelier separates finish from profile entrance animation and previews
   assert.ok(studio.includes("Acabado del nombre"));
   assert.ok(studio.includes("Animación de perfil"));
   assert.ok(studio.includes("SOLO EN PERFIL"));
-  assert.ok(studio.includes("namePreviewTheme"));
-  assert.ok(studio.includes("Vista oscura"));
-  assert.ok(studio.includes("Vista clara"));
-  assert.ok(studio.includes('namePreviewTheme === "light"'));
-  assert.ok(nameStyleCss.includes(".ps-community-name-preview-stage.is-theme-light"));
-  assert.ok(nameStyleCss.includes(".ps-community-name-preview-theme-switch"));
+  assert.ok(studio.includes("ps-community-name-preview-profile-view"));
+  assert.ok(studio.includes("PERFIL"));
+  assert.ok(studio.includes("MIEMBROS DE LA COMUNIDAD"));
+  assert.ok(studio.includes("ps-community-name-preview-chat-view"));
+  assert.ok(nameStyleCss.includes(".ps-community-name-preview-stage {"));
+  assert.ok(nameStyleCss.includes(".ps-community-name-style-profile-preview"));
   assert.ok(nameStyleCss.includes("ps-community-name-preview-members-view"));
   assert.ok(nameStyleCss.includes("ps-community-name-preview-chat-view"));
   assert.ok(nameStyleCss.includes(".ps-community-name-static.effect-gradient,"));

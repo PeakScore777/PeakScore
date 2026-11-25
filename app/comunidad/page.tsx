@@ -23,6 +23,7 @@ import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName"
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { displayNameColorForEffect, displayNameInklineStrokeColor, displayNameSolidColor } from "@/components/community/display-name-color";
 
 type Channel = {

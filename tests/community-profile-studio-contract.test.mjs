@@ -1439,7 +1439,7 @@ test("Name Atelier previews keep independent effects, live noise typography and 
   assert.ok(studio.includes("loopIntro={false}"));
   assert.ok(studio.includes("loopDelay={1100}"));
   assert.ok(fuzzySettings.includes("colorSplit: 0"));
-  assert.ok(fuzzySettings.includes("baseIntensity: 0.2"));
+  assert.ok(fuzzySettings.includes("baseIntensity: 0.5"));
   assert.ok(fuzzyText.includes("getComputedStyle(canvas.parentElement || canvas)"));
   assert.ok(fuzzyText.includes("loopIntro && introState.done"));
   assert.ok(fuzzyText.includes("introState.nextStart = now + Math.max(500, loopDelay)"));

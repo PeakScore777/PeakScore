@@ -126,6 +126,20 @@ $function$;
 revoke all on function private.has_community_permission(text) from public, anon, authenticated, service_role;
 grant execute on function private.has_community_permission(text) to authenticated;
 
+create or replace function public.can_attach_community_files()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select private.has_community_permission('attach_files')
+    and not private.is_community_timed_out();
+$function$;
+
+revoke all on function public.can_attach_community_files() from public, anon, authenticated;
+grant execute on function public.can_attach_community_files() to authenticated;
+
 -- Client can continue reading the role catalogue but only founder RPCs can write it.
 revoke insert, update, delete on public.community_role_catalog from anon, authenticated;
 grant select on public.community_role_catalog to authenticated;

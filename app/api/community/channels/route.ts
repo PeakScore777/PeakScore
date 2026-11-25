@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     !slug || !SLUG_PATTERN.test(slug)
     || !name || name.length < 2 || name.length > 60
     || description === null || description.length > 240
-    || !category || (spaceId ? category.trim().length < 2 || category.trim().length > 40 : !CATEGORIES.has(category))
+    || !category || category.trim().length < 2 || category.trim().length > 40
     || position === null || position < 0 || position > 1000
     || !channelType || !["text", "announcement"].includes(channelType)
     || !iconKey || !ICON_PATTERN.test(iconKey)

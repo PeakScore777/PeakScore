@@ -3264,13 +3264,12 @@ export default function CommunityPage() {
                     <i className={"ps-community-editor-presence-dot " + (onlineMemberIds.includes(selectedCommunityProfile.userId) ? "is-online" : "is-offline")} role="img" aria-label={onlineMemberIds.includes(selectedCommunityProfile.userId) ? "En línea" : "Desconectado"}/>
                   </span>
                 </div>
-                {selectedCommunityProfile.statusText && (
-                  <div className="ps-community-profile-live-status-wrap">
-                    <div className="ps-community-note-bubble has-status" aria-label="Estado personalizado">
-                      <span className="ps-community-note-bubble-text">{selectedCommunityProfile.statusText}</span>
-                    </div>
+                <div className="ps-community-profile-live-status-wrap">
+                  <div className={"ps-community-note-bubble" + (selectedCommunityProfile.statusText ? " has-status" : " is-empty")} aria-label="Estado personalizado">
+                    {!selectedCommunityProfile.statusText && <Plus size={13} aria-hidden="true"/>}
+                    <span className="ps-community-note-bubble-text">{selectedCommunityProfile.statusText || "Añadir estado"}</span>
                   </div>
-                )}
+                </div>
               </div>
               <button type="button" className="ps-community-profile-close" ref={communityProfileCloseRef}
                 onClick={() => {
@@ -3283,61 +3282,37 @@ export default function CommunityPage() {
                 }} aria-label="Cerrar perfil"><X size={19}/></button>
 
               <div className="ps-community-profile-live-body">
-                <div className="ps-community-profile-live-actions">
-                  {!selectedCommunityProfile.isOwnProfile && (
-                    <button type="button" onClick={() => {
-                      insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
-                      communityProfileRequestRef.current += 1;
-                      setSelectedCommunityProfile(null);
-                      setCommunityProfileLoading(false);
-                      setCommunityProfileError("");
-                      setCopiedCommunityProfileId(null);
-                    }}><AtSign size={15}/> Mencionar</button>
-                  )}
-                  <button type="button" className="ps-community-profile-live-copy" disabled={!selectedCommunityProfile.memberNumber}
-                    onClick={() => {
-                      if (!selectedCommunityProfile.memberNumber) return;
-                      void navigator.clipboard.writeText(String(selectedCommunityProfile.memberNumber).padStart(4, "0"))
-                        .then(() => setCopiedCommunityProfileId(selectedCommunityProfile.userId))
-                        .catch(() => setCopiedCommunityProfileId(null));
-                    }} aria-label="Copiar identificador" title="Copiar identificador">
-                    {copiedCommunityProfileId === selectedCommunityProfile.userId ? <Check size={15}/> : <Copy size={15}/>}
-                  </button>
-                </div>
-
-                  <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title"
-                    value={selectedCommunityProfile.displayName || "Miembro"}
-                    animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"}
-                    className={"ps-community-name-render ps-community-editor-preview-name-static is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(selectedCommunityProfile.displayNameEffect, selectedCommunityProfile.displayNameColor)}
-                    style={{
-                      "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF",
-                      "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF",
-                      "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",
-                      "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart),
-                    } as CSSProperties}/>
+                <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title"
+                  value={selectedCommunityProfile.displayName || "Miembro"}
+                  animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"}
+                  className={"ps-community-name-render ps-community-editor-preview-name-static is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(selectedCommunityProfile.displayNameEffect, selectedCommunityProfile.displayNameColor)}
+                  style={{
+                    "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF",
+                    "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF",
+                    "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",
+                    "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart),
+                  } as CSSProperties}/>
                 <div className="ps-community-editor-preview-identity-line">
                   <span className="ps-community-editor-preview-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
-                  {selectedCommunityProfile.pronouns && <span className="ps-community-editor-preview-pronouns">{selectedCommunityProfile.pronouns}</span>}
+                  <span className="ps-community-editor-preview-pronouns">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
                 </div>
 
-                {selectedCommunityProfile.roles.length > 0 && (
-                  <div className="ps-community-editor-preview-role-row">
-                    {selectedCommunityProfile.roles.slice(0, 3).map((role) => (
-                      <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : (selectedCommunityProfile.accentColor ?? "#3987FF") } as CSSProperties}>{role.label}</span>
-                    ))}
-                  </div>
-                )}
+                <div className="ps-community-editor-preview-role-row">
+                  {selectedCommunityProfile.roles.slice(0, 3).map((role) => (
+                    <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : (selectedCommunityProfile.accentColor ?? "#3987FF") } as CSSProperties}>{role.label}</span>
+                  ))}
+                </div>
 
                 <section className="ps-community-editor-preview-about">
                   <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{selectedCommunityProfile.about.length}/256</small></div>
                   <p className="ps-community-editor-bio-display">{selectedCommunityProfile.about || "Cuéntanos un poco sobre ti…"}</p>
                 </section>
 
-                <section className="ps-community-editor-preview-meta">
+                <section className="ps-community-profile-live-member-since">
                   <span>MIEMBRO DESDE</span>
                   <strong>{selectedCommunityProfile.joinedAt ? new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Fecha no disponible"}</strong>
                   {selectedCommunityProfile.isOwnProfile && (
-                    <button type="button" className="ps-community-profile-editor-button" onClick={() => setCommunityProfileStudioOpen(true)}>
+                    <button type="button" onClick={() => setCommunityProfileStudioOpen(true)}>
                       <Pencil size={15}/> Abrir editor de perfil
                     </button>
                   )}

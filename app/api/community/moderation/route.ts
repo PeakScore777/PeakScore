@@ -35,14 +35,35 @@ export async function POST(request: Request) {
   const reason = typeof payload.reason === "string" ? payload.reason.trim().slice(0, 500) : "";
   const duration = payload.duration_minutes;
   if (reason.length < 3) return fail("Indica el motivo de la medida para dejar constancia.", 400);
-  if (!UUID_PATTERN.test(targetUserId) || (action !== "kick" && action !== "timeout")) {
+  if (!UUID_PATTERN.test(targetUserId) || (action !== "kick" && action !== "timeout" && action !== "restore")) {
     return fail("El usuario o la acción no son válidos.", 400);
   }
   if (action === "timeout" && (!Number.isInteger(duration) || Number(duration) < 1 || Number(duration) > 40_320)) {
     return fail("El silencio debe durar entre 1 minuto y 28 días.", 400);
   }
-  if (action === "kick" && duration !== undefined && duration !== null) {
-    return fail("La expulsión no admite una duración.", 400);
+  if (action !== "timeout" && duration !== undefined && duration !== null) {
+    return fail("Esta acción no admite una duración.", 400);
+  }
+
+  if (action === "restore") {
+    const { data, error } = await supabase.rpc("restore_community_member", {
+      p_target_user_id: targetUserId,
+      p_reason: reason,
+    });
+    if (error || data !== true) {
+      const denied = error?.code === "42501";
+      const invalid = error?.code === "22023";
+      return fail(
+        denied ? "Solo el founder puede restaurar el acceso global." :
+          invalid ? "El motivo o el usuario no son válidos." :
+            "No se pudo restaurar el acceso.",
+        denied ? 403 : invalid ? 400 : 503,
+      );
+    }
+    return NextResponse.json(
+      { success: true, action, target_user_id: targetUserId },
+      { status: 200, headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   const { data, error } = await supabase.rpc("moderate_community_member", {

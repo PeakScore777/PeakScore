@@ -1176,6 +1176,15 @@ export default function CommunityPage() {
       setCommunitySpaces(accessibleSpaces);
       setActiveSpace(resolvedSpace);
 
+      if (resolvedSpace.space_type === "preicfes" && resolvedSpace.visibility === "public") {
+        const { error: joinError } = await supabase.rpc("join_community_space", {
+          p_space_id: resolvedSpace.id,
+        });
+        if (joinError) {
+          console.warn("[PeakScore Community] Could not register public PreICFES membership.", { code: joinError.code });
+        }
+      }
+
       const [
         { data: currentProfile },
         { data: channelData },

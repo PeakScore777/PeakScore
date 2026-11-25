@@ -23,6 +23,8 @@ testCase("unread channel markers restore per-user reads and count messages from 
   assert.match(readMigration, /enable row level security/i);
   assert.match(readMigration, /user_id = \(select auth\.uid\(\)\)/);
   assert.match(readMigration, /community_channels channel/);
+  assert.match(readMigration, /get_community_unread_counts/);
+  assert.match(page, /get_community_unread_counts/);
 });
 
 testCase("community appearance supports black, gray, white, custom color and a Chroma toggle", () => {

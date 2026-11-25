@@ -8416,14 +8416,14 @@ html:has(.ps-community-picker-overlay) * {
 }
 @keyframes ps-inkline-stroketext-loop {
   0%,4% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); opacity:1; }
-  43%,55% { stroke-dashoffset:0; opacity:1; }
-  75% { stroke-dashoffset:0; opacity:1; }
-  88%,100% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); opacity:0; }
+  35%,73% { stroke-dashoffset:0; opacity:1; }
+  84% { stroke-dashoffset:0; opacity:0; }
+  90%,100% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); opacity:0; }
 }
 @keyframes ps-inkline-stroketext-fill {
-  0%,39% { clip-path:inset(0 100% 0 0); }
-  58%,76% { clip-path:inset(0 0 0 0); }
-  91%,100% { clip-path:inset(0 100% 0 0); }
+  0%,37% { clip-path:inset(0 100% 0 0); }
+  53%,74% { clip-path:inset(0 0 0 0); }
+  90%,100% { clip-path:inset(0 100% 0 0); }
 }
 .ps-community-name-render.ps-inkline-name:not(:has(.ps-inkline-svg[style*="visibility: visible"])) > .ps-inkline-layout {
   opacity:1 !important;

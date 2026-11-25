@@ -65,6 +65,11 @@ testCase("a PreICFES collaborator can use private staff channels only in assigne
   assert.match(migration, /community_space_guard_reactions/);
   assert.match(migration, /community_space_guard_comments/);
   assert.match(migration, /private\.can_access_community_space\(channel\.space_id\)/);
+  assert.match(migration, /create or replace function public\.join_community_space\(p_space_id uuid\)/);
+  assert.match(migration, /space\.visibility = 'public'/);
+  assert.match(migration, /create or replace function private\.is_space_timed_out\(p_space_id uuid\)/);
+  assert.match(migration, /restriction\.restriction_type = 'kick'[\s\S]*?restriction\.revoked_at is null/);
+  assert.match(migration, /p_permission in \('send_messages','attach_files','add_reactions'\)[\s\S]*?private\.is_space_timed_out\(p_space_id\)/);
 });
 
 testCase("attachments are checked against their target channel space before Storage upload", () => {
@@ -83,7 +88,14 @@ testCase("founder console exposes isolated PreICFES settings, members, scoped ro
   assert.match(studio, /Canales/);
   assert.match(studio, /Colaborador PreICFES/);
   assert.match(studio, /moderate_community_space_member|\/api\/community\/spaces\/moderation/);
+  assert.match(studio, /Silenciar/);
+  assert.match(studio, /Expulsar/);
+  assert.match(studio, /Restaurar/);
   assert.match(studio, /manage_community_space|\/api\/community\/spaces/);
+  assert.match(mainPage, /community_spaces/);
+  assert.match(mainPage, /join_community_space/);
+  assert.match(mainPage, /activeSpaceOnlineUsers/);
+  assert.match(mainPage, /window\.location\.href = "\/comunidad\?space="/);
 });
 
 testCase("global chat queries explicitly remain inside the PeakScore global community", () => {

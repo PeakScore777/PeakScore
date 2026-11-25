@@ -1,0 +1,448 @@
+.root {
+  --community-discord-bg: #171c24;
+  --community-discord-rail: #080d14;
+  --community-discord-sidebar: #0e1520;
+  --community-discord-header: #111923;
+  --community-discord-hover: #1a2933;
+  --community-discord-border: #243341;
+  --community-discord-text: #e7edf4;
+  --ps-cyan: #01c8ef;
+  --ps-lime: #7fe05c;
+  color-scheme: dark;
+  background: var(--community-discord-bg);
+  color: var(--community-discord-text);
+}
+
+/* Server rail: PeakScore lime mark, not Discord's blue brand treatment. */
+.root :global(.community-server-rail) {
+  background: var(--community-discord-rail);
+  border-right: 1px solid #1b2834;
+}
+
+.root :global(.community-server-home) {
+  background: var(--ps-lime);
+  color: #09130a;
+  box-shadow: 0 3px 0 #315c2b, 0 8px 18px rgb(0 0 0 / 24%);
+}
+
+.root :global(.community-server-mark) {
+  width: 31px;
+  height: 31px;
+  border: 0;
+  border-radius: 8px;
+  color: #0a160c;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.root :global(.community-server-icon) {
+  background: #121b27;
+  color: #91a1b2;
+  border: 1px solid #1d2a37;
+}
+
+.root :global(.community-server-icon:hover),
+.root :global(.community-server-icon-active) {
+  border: 1px solid rgb(1 200 239 / 42%);
+  border-radius: 14px;
+  background: #122b36;
+  color: var(--ps-cyan);
+  box-shadow: inset 0 0 0 1px rgb(1 200 239 / 7%);
+}
+
+.root :global(.community-server-divider) {
+  background: #273746;
+}
+
+/* Channel rail: compact editorial labels, readable channel names. */
+.root :global(.community-sidebar) {
+  background: var(--community-discord-sidebar);
+  border-right: 1px solid #1e2b38;
+}
+
+.root :global(.community-server-header) {
+  min-height: 68px;
+  border-bottom-color: #202d3a;
+  background: #101824;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 22%);
+}
+
+.root :global(.community-server-eyebrow) {
+  color: #8197aa;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 7px;
+  letter-spacing: .12em;
+}
+
+.root :global(.community-server-name) {
+  color: #f0f5f8;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+
+.root :global(.community-channel-list) {
+  padding-top: 18px;
+}
+
+.root :global(.community-nav-section) {
+  margin-bottom: 21px;
+}
+
+.root :global(.community-nav-heading) {
+  color: #8092a4;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: .09em;
+}
+
+.root :global(.community-nav-count) {
+  border: 1px solid #263847;
+  border-radius: 4px;
+  background: #121e2a;
+  padding: 2px 5px;
+  color: #8298aa;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+.root :global(.community-nav-item) {
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #aebdca;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 12px;
+  font-weight: 550;
+  transition: background-color .14s ease, border-color .14s ease, color .14s ease;
+}
+
+.root :global(.community-nav-item svg) {
+  color: #8495a5;
+  transition: color .14s ease;
+}
+
+.root :global(.community-nav-item:hover) {
+  border-color: #253a49;
+  background: #15232e;
+  color: #f0f6f8;
+}
+
+.root :global(.community-nav-item:hover svg) {
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-nav-active) {
+  border-color: #244655;
+  background: #142a35;
+  box-shadow: inset 3px 0 var(--ps-cyan);
+  color: #f5fbfd;
+  font-weight: 700;
+}
+
+.root :global(.community-nav-active svg) {
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-live-nav-pill) {
+  border: 1px solid rgb(127 224 92 / 40%);
+  background: rgb(127 224 92 / 11%);
+  color: var(--ps-lime);
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+}
+
+.root :global(.community-user-panel) {
+  min-height: 72px;
+  border-top-color: #263341;
+  background: #0b121c;
+}
+
+.root :global(.community-user-panel:hover) {
+  background: #111d29;
+}
+
+.root :global(.community-user-avatar) {
+  border: 1px solid #2b4856;
+  background: #122b36;
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-user-role) {
+  color: var(--ps-lime);
+}
+
+/* Chat canvas: carbon surface, precise cyan focus, lime primary action. */
+.root :global(.community-chat-column) {
+  background: var(--community-discord-bg);
+}
+
+.root :global(.community-chat-header) {
+  min-height: 66px;
+  border-bottom-color: #25313e;
+  background: var(--community-discord-header);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+}
+
+.root :global(.community-chat-title h1) {
+  color: #f1f5f8;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.root :global(.community-chat-hash) {
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-chat-header-actions) {
+  gap: 12px;
+}
+
+.root :global(.community-chat-tool),
+.root :global(.community-mobile-menu) {
+  border: 1px solid transparent;
+  color: #9aabba;
+}
+
+.root :global(.community-chat-tool:hover),
+.root :global(.community-chat-tool-active),
+.root :global(.community-mobile-menu:hover) {
+  border-color: #2a4857;
+  background: #172a35;
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-chat-header-divider) {
+  background: #2b3947;
+}
+
+.root :global(.community-chat-member-count),
+.root :global(.community-chat-online) {
+  color: #9eafbd;
+  font-size: 11px;
+}
+
+.root :global(.community-chat-online i) {
+  background: var(--ps-lime);
+  box-shadow: 0 0 7px rgb(127 224 92 / 28%);
+}
+
+.root :global(.community-search-input) {
+  border: 1px solid #2a3d4c;
+  background: #0d1520;
+}
+
+.root :global(.community-search-input:focus) {
+  border-color: var(--ps-cyan);
+  box-shadow: 0 0 0 2px rgb(1 200 239 / 12%);
+}
+
+.root :global(.community-chat-scroll) {
+  scrollbar-color: #314653 transparent;
+  background: #171c24;
+}
+
+.root :global(.community-date-divider) {
+  color: #7f96a8;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+  letter-spacing: .065em;
+}
+
+.root :global(.community-date-divider::before),
+.root :global(.community-date-divider::after) {
+  background: linear-gradient(90deg, transparent, #2c3c49 30%, #2c3c49 70%, transparent);
+}
+
+.root :global(.community-chat-message-body) {
+  color: #dce5ec;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.root :global(.community-chat-author) {
+  color: #f0f5f8;
+}
+
+.root :global(.community-chat-composer-wrap) {
+  border-top-color: #263644;
+  background: #101722;
+}
+
+.root :global(.community-chat-composer) {
+  min-height: 54px;
+  border-color: #2b414f;
+  border-radius: 9px;
+  background: #141f2a;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 2%), 0 7px 20px rgb(0 0 0 / 13%);
+}
+
+.root :global(.community-chat-composer:focus-within) {
+  border-color: rgb(1 200 239 / 78%);
+  box-shadow: 0 0 0 2px rgb(1 200 239 / 10%), 0 0 16px rgb(1 200 239 / 6%);
+}
+
+.root :global(.community-chat-add) {
+  border-color: #315061;
+  background: #172b37;
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-chat-send) {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #5eaa45;
+  border-radius: 7px;
+  background: var(--ps-lime);
+  color: #0b160c;
+  box-shadow: 0 2px 0 #3c762e;
+  transition: transform .14s ease, background-color .14s ease, box-shadow .14s ease;
+}
+
+.root :global(.community-chat-send:hover:not(:disabled)) {
+  border-color: #93ef6d;
+  background: #91ed6b;
+  color: #081108;
+  box-shadow: 0 3px 0 #3c762e, 0 5px 12px rgb(127 224 92 / 13%);
+  transform: translateY(-1px);
+}
+
+.root :global(.community-chat-send:disabled) {
+  border-color: #34454b;
+  background: #26343a;
+  color: #718087;
+  box-shadow: none;
+  opacity: .72;
+}
+
+.root :global(.community-chat-hint) {
+  color: #6e8799;
+  font-size: 6px;
+}
+
+/* Member rail: clearer identity hierarchy without oversized role badges. */
+.root :global(.community-member-sidebar) {
+  border-left-color: #22313f;
+  background: #0e1621;
+}
+
+.root :global(.community-member-sidebar-header) {
+  min-height: 66px;
+  border-bottom-color: #243443;
+  background: #111b27;
+}
+
+.root :global(.community-member-sidebar-header span),
+.root :global(.community-member-group h2) {
+  color: #8095a8;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+  letter-spacing: .07em;
+}
+
+.root :global(.community-member-sidebar-header strong) {
+  border-color: #2a4655;
+  background: #142a35;
+  color: #b7d8e2;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+}
+
+.root :global(.community-member-sidebar-scroll) {
+  scrollbar-color: #2b4553 transparent;
+}
+
+.root :global(.community-member-group) {
+  margin-bottom: 20px;
+}
+
+.root :global(.community-member-group h2 i) {
+  background: var(--ps-lime);
+  box-shadow: 0 0 8px rgb(127 224 92 / 24%);
+}
+
+.root :global(.community-member-row) {
+  min-height: 44px;
+  border-radius: 6px;
+}
+
+.root :global(.community-member-row:hover) {
+  border-color: rgb(1 200 239 / 24%);
+  background: #152631;
+}
+
+.root :global(.community-member-avatar) {
+  border-color: #304b5a;
+  background: #142a36;
+  color: var(--ps-cyan);
+}
+
+.root :global(.community-member-avatar i) {
+  border-color: #0e1621;
+  background: var(--ps-lime);
+}
+
+.root :global(.community-member-copy strong) {
+  color: #dce7ed;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.root :global(.community-member-copy small) {
+  color: #7f94a4;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 10px;
+}
+
+.root :global(.community-member-sidebar-footer) {
+  border-top-color: #243443;
+  background: #0b121b;
+  color: #8298a8;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+/* Crisp focus states and consistent reduced-motion behavior. */
+.root :global(.community-page button:focus-visible),
+.root :global(.community-page a:focus-visible),
+.root :global(.community-page input:focus-visible),
+.root :global(.community-page textarea:focus-visible) {
+  outline: 2px solid var(--ps-cyan);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .root :global(.community-server-header) {
+    min-height: 62px;
+  }
+
+  .root :global(.community-chat-header) {
+    min-height: 58px;
+  }
+
+  .root :global(.community-chat-title h1) {
+    font-size: 7px;
+  }
+
+  .root :global(.community-member-sidebar) {
+    background: #0e1621;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root :global(.community-page *),
+  .root :global(.community-page *::before),
+  .root :global(.community-page *::after) {
+    animation-duration: .01ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

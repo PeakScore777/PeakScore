@@ -462,6 +462,7 @@ export default function CommunityPage() {
   const [founderStudioOpen, setFounderStudioOpen] = useState(false);
   const [founderStudioTab, setFounderStudioTab] = useState<"branding" | "channels">("branding");
   const [founderStudioAction, setFounderStudioAction] = useState<"create-channel" | "create-category" | null>(null);
+  const [founderStudioChannelId, setFounderStudioChannelId] = useState<string | null>(null);
   const [communityServerMenuOpen, setCommunityServerMenuOpen] = useState(false);
   const communityServerMenuRef = useRef<HTMLDivElement | null>(null);
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
@@ -511,9 +512,11 @@ export default function CommunityPage() {
   const openFounderStudio = useCallback((
     tab: "branding" | "channels",
     action: "create-channel" | "create-category" | null = null,
+    channelId: string | null = null,
   ) => {
     setFounderStudioTab(tab);
     setFounderStudioAction(action);
+    setFounderStudioChannelId(channelId);
     setCommunityServerMenuOpen(false);
     setFounderStudioOpen(true);
   }, []);
@@ -2438,7 +2441,7 @@ export default function CommunityPage() {
                       {isFounder && (
                         <button type="button" className="community-channel-settings-button"
                           aria-label={"Ajustes del canal " + channel.name} title={"Ajustes del canal " + channel.name}
-                          onClick={() => openFounderStudio("channels")}>
+                          onClick={() => openFounderStudio("channels", null, channel.id)}>
                           <Settings2 size={14}/>
                         </button>
                       )}
@@ -3031,6 +3034,7 @@ export default function CommunityPage() {
             key={founderStudioTab + ":" + (founderStudioAction ?? "")}
             initialTab={founderStudioTab}
             initialAction={founderStudioAction}
+            initialChannelId={founderStudioChannelId}
             onAssetUpdated={(assetType, path, url) => setActiveSpace((current) => current ? ({
               ...current,
               icon_path: assetType === "icon" ? path : current.icon_path,

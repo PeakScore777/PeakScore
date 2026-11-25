@@ -6625,7 +6625,6 @@ html:has(.ps-community-picker-overlay) * {
   justify-content:center;
   min-width:0;
   transform:none;
-  animation:none !important;
   will-change:auto !important;
 }
 .ps-name-preview-motion .ps-name-preview-face {

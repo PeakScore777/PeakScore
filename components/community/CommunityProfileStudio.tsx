@@ -2049,7 +2049,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div className="ps-community-name-preview-stage">
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
-                      <article className="ps-community-status-profile-preview ps-community-name-style-profile-preview"
+                      <article className="ps-community-name-style-profile-preview"
                         aria-live="polite"
                         style={{
                           "--status-theme": cardColor,
@@ -2065,7 +2065,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}
                           <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
-                        <div className="ps-community-status-profile-copy ps-community-name-style-profile-copy">
+                        <div className="ps-community-name-style-profile-copy">
                           <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                         </div>
                       </article>

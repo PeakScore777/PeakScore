@@ -38,6 +38,13 @@ drop policy if exists community_channel_reads_update_own on public.community_cha
 create policy community_channel_reads_update_own
   on public.community_channel_reads for update to authenticated
   using (user_id = (select auth.uid()))
-  with check (user_id = (select auth.uid()));
+  with check (
+    user_id = (select auth.uid())
+    and exists (
+      select 1 from public.community_channels channel
+      where channel.id = channel_id
+        and channel.is_archived = false
+    )
+  );
 
 commit;

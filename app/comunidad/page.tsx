@@ -3288,6 +3288,7 @@ export default function CommunityPage() {
                   <span className={"ps-community-note-bubble" + (selectedCommunityProfile.statusText ? " has-status" : " is-empty")} aria-label="Estado personalizado">
                     {!selectedCommunityProfile.statusText && <Plus size={13} aria-hidden="true"/>}
                     <span className="ps-community-note-bubble-text">{selectedCommunityProfile.statusText || "Añadir estado"}</span>
+                    <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                   </span>
                 </div>
 
@@ -3305,7 +3306,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-editor-preview-identity-line">
                   <span className="ps-community-editor-preview-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
-                  <span className="ps-community-editor-preview-pronouns" aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
+                  <span className={"ps-community-editor-preview-pronouns ps-community-profile-readonly-pronouns" + (!selectedCommunityProfile.pronouns ? " is-empty" : "")} aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
                 </div>
 
                 <div className="ps-community-editor-preview-role-row">

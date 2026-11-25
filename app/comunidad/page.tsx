@@ -466,6 +466,7 @@ export default function CommunityPage() {
   const hoverProfileCloseTimerRef = useRef<number | null>(null);
   const memberPopoutRef = useRef<HTMLDivElement | null>(null);
   const profileFromUrlRef = useRef<string | null>(null);
+  const openCommunityProfileRef = useRef<(memberId: string) => Promise<void>>(async () => {});
   const communityProfileRequestRef = useRef(0);
   const communityProfileCloseRef = useRef<HTMLButtonElement | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
@@ -719,18 +720,20 @@ export default function CommunityPage() {
     }
   }
 
+  openCommunityProfileRef.current = openCommunityProfile;
+
   function communityMemberProfileUrl(memberId: string) {
     const url = new URL(window.location.href);
     url.searchParams.set("member", memberId);
     return url.toString();
   }
 
-  function clearCommunityMemberProfileUrl() {
+  const clearCommunityMemberProfileUrl = useCallback(() => {
     const url = new URL(window.location.href);
     url.searchParams.delete("member");
     window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
     profileFromUrlRef.current = null;
-  }
+  }, []);
 
   async function shareCommunityMemberProfile(memberId: string, displayName: string) {
     const url = communityMemberProfileUrl(memberId);
@@ -758,7 +761,7 @@ export default function CommunityPage() {
     const memberId = new URLSearchParams(window.location.search).get("member");
     if (!memberId || profileFromUrlRef.current === memberId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(memberId)) return;
     profileFromUrlRef.current = memberId;
-    void openCommunityProfile(memberId);
+    void openCommunityProfileRef.current(memberId);
   }, [userId, activeSpace?.id]);
 
   useEffect(() => {
@@ -812,7 +815,7 @@ export default function CommunityPage() {
     }
     window.addEventListener("keydown", handleProfileKeyDown);
     return () => window.removeEventListener("keydown", handleProfileKeyDown);
-  }, [selectedCommunityProfile, communityProfileLoading, communityProfileError]);
+  }, [selectedCommunityProfile, communityProfileLoading, communityProfileError, clearCommunityMemberProfileUrl]);
 
   useEffect(() => {
     const openProfileUserId = selectedCommunityProfile?.userId;

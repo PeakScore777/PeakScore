@@ -1580,6 +1580,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </section>
                 </div>
               </article>
+              <div className="ps-community-editor-community-context-preview" aria-label="Vista previa en la comunidad">
+                <div className="ps-community-editor-community-context-heading">MIEMBROS DE LA COMUNIDAD</div>
+                <section className="ps-community-editor-community-members">
+                  <div className="ps-community-editor-community-channel"><span>#</span> general</div>
+                  <div className="ps-community-editor-community-members-label">MIEMBROS — 1</div>
+                  <div className="ps-community-editor-community-member">
+                    <span className="ps-community-editor-community-member-avatar">{initials(displayName || "MI")}</span>
+                    <strong>{displayName || "Tu nombre"}</strong>
+                    <small>{isOnline ? "En línea" : "Desconectado"}</small>
+                  </div>
+                </section>
+                <div className="ps-community-editor-community-chat-heading">CHAT</div>
+                <section className="ps-community-editor-community-chat">
+                  <span className="ps-community-editor-community-chat-avatar">{initials(displayName || "MI")}</span>
+                  <div><strong>{displayName || "Tu nombre"}</strong><small> ahora</small><p>Así se verá tu nombre al participar en la conversación.</p></div>
+                </section>
+              </div>
             </div>
           </section>
         </div>

@@ -3179,3 +3179,30 @@
   }
   .root :global(.community-verified-tooltip-copy strong) { font-size: 13px; }
 }
+
+
+/* Channel welcome: Discord-inspired hash marker, adapted to PeakScore's neutral palette. */
+.root :global(.community-chat-welcome-icon) {
+  display: flex;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #202226 !important;
+  box-shadow: none !important;
+  color: #c4c8ce !important;
+}
+.root :global(.community-chat-welcome-icon svg) {
+  width: 31px;
+  height: 31px;
+  stroke-width: 2.5;
+  color: #c4c8ce !important;
+}
+.root :global(.community-chat-welcome-icon::before),
+.root :global(.community-chat-welcome-icon::after) {
+  display: none !important;
+}

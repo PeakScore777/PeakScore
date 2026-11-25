@@ -437,8 +437,8 @@ export default function CommunityLivePage() {
                 <div className="community-live-empty">
                   <div className="community-live-empty-icon"><MonitorPlay size={24}/></div>
                   <h3>{filter === "live" ? "No hay transmisiones activas" : "Todavía no hay sesiones programadas"}</h3>
-                  <p>{isProfessor ? "Programa tu primera clase para que los estudiantes puedan encontrarla aquí." : "Cuando los profesores publiquen sus clases y eventos, aparecerán en esta agenda."}</p>
-                  {isProfessor && <button type="button" onClick={() => setScheduling(true)} className="community-green-button"><Plus size={14}/> Programar sesión</button>}
+                  <p>{canSchedule ? "Programa tu primera clase para que los estudiantes puedan encontrarla aquí." : "Cuando los profesores publiquen sus clases y eventos, aparecerán en esta agenda."}</p>
+                  {canSchedule && <button type="button" onClick={() => setScheduling(true)} className="community-green-button"><Plus size={14}/> Programar sesión</button>}
                 </div>
               ) : (
                 <div className="community-live-session-list">

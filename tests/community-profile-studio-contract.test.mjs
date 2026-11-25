@@ -127,24 +127,27 @@ test("the studio uses the requested left appearance rail and center editable pro
   assert.doesNotMatch(studio, /Tu identidad social es independiente/);
 });
 
-test("editor exposes avatar upload and the banner color picker in the left appearance rail", () => {
+test("editor exposes image and GIF upload controls plus independent profile theme colors", () => {
   assert.match(studio, /ps-community-editor-theme-picker-anchor/);
   assert.match(studio, /Tema de perfil/);
   assert.match(studio, /Editar primer color del tema/);
-  assert.match(studio, /handleAvatarFileSelection/);
-  assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
-  assert.doesNotMatch(studio, /uploadAsset\("banner"/);
+  assert.match(studio, /ps-community-avatar-picker-modal/);
+  assert.match(studio, /Subir imagen/);
+  assert.match(studio, /Subir GIF/);
+  assert.match(studio, /bannerImageInput/);
+  assert.match(studio, /bannerGifInput/);
+  assert.match(studio, /uploadAsset\("banner"/);
   assert.match(css, /\.ps-community-editor-sidebar-color-picker/);
   assert.match(css, /\.ps-community-editor-preview-banner/);
 });
 
-test("profile status and cosmetics use clean Discord-like affordances with accessible motion states", () => {
+test("profile status and image controls use clean Discord-like affordances", () => {
   assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-note-bubble-emoji|ps-community-status-emoji-group/);
   assert.match(studio, /ps-community-note-bubble-edit/);
   assert.match(studio, /Borrar estado después de/);
   assert.match(studio, /maxLength=\{128\}/);
-  assert.match(studio, /ps-community-editor-decoration-tile-preview/);
-  assert.match(studio, /ps-community-picker-avatar-small/);
+  assert.match(studio, /ps-community-avatar-picker-options/);
+  assert.match(studio, /ps-community-editor-banner-upload-actions/);
   assert.match(css, /height: min\(800px, calc\(100dvh - 48px\)\)/);
   assert.match(css, /min-height: 382px !important/);
   assert.match(css, /\.ps-community-note-bubble:hover/);
@@ -161,7 +164,7 @@ test("desktop editor is a centered two-column modal with a profile settings rail
   assert.match(latest, /\.ps-community-editor-preview-column/);
 });
 
-test("profile fields and cosmetics update in the center while the left rail controls appearance", () => {
+test("profile fields update in the center while font, plate and theme settings stay in the left rail", () => {
   assert.match(studio, /ps-community-editor-preview-card/);
   assert.match(studio, /ps-community-editor-preview-name-static/);
   assert.doesNotMatch(studio, /aria-label="Nombre público"/);
@@ -169,9 +172,9 @@ test("profile fields and cosmetics update in the center while the left rail cont
   assert.match(studio, /ps-community-note-bubble/);
   assert.match(studio, /ps-community-editor-preview-about/);
   assert.match(studio, /ps-community-editor-settings-sidebar/);
-  assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
-  assert.match(studio, /openAppearancePicker\("profileEffect"\)/);
   assert.match(studio, /openAppearancePicker\("plate"\)/);
+  assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
+  assert.doesNotMatch(studio, /Marcos y efectos de perfil|Acabado del nombre|Animación de perfil/);
   assert.doesNotMatch(studio, /setControlsOpen|data-active-section|data-section="banner"/);
   assert.match(css, /\.ps-community-editor-settings-sidebar/);
 });
@@ -448,19 +451,9 @@ test("status text uses a comic thought bubble with a dotted tail, not a generic 
   assert.match(latest, /ps-community-editor-preview-avatar-row > \.ps-community-note-bubble::after[\s\S]*?border-radius: 50%/);
 });
 
-test("profile frame and effect tiles show the real profile and animate on hover", () => {
-  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-frame/);
-  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-effect/);
-  assert.match(studio, /ps-community-editor-cosmetic-preview-avatar/);
-  assert.match(studio, /ps-community-picker-mini-profile is-profile-frame-/);
-  assert.match(studio, /ps-community-picker-mini-profile is-effect/);
-  assert.match(studio, /function updateProfileHoverPreview/);
-  assert.ok(studio.includes('updateProfileHoverPreview(event.currentTarget, "frame", item.id, true)'));
-  assert.ok(studio.includes('updateProfileHoverPreview(event.currentTarget, "effect", item.id, true)'));
-  assert.ok(studio.includes("is-hover-preview"));
-  assert.match(css, /\.ps-community-editor-cosmetic-tile:hover \.ps-community-editor-cosmetic-live-preview\.is-frame::after/);
-  assert.match(css, /\.ps-community-editor-cosmetic-tile:hover \.ps-community-editor-cosmetic-preview-art/);
-  assert.match(css, /\.ps-community-picker-item:hover \.ps-community-picker-mini-art/);
+test("founder branch hides profile frame/effect tiles but preserves their old CSS data compatibility", () => {
+  assert.doesNotMatch(studio, /ps-community-editor-cosmetic-live-preview is-frame|ps-community-editor-cosmetic-live-preview is-effect/);
+  assert.doesNotMatch(studio, /Marcos y efectos de perfil/);
   assert.match(css, /ps-community-profile-frame-glint/);
   assert.match(css, /ps-community-profile-effect-reveal/);
   assert.match(css, /prefers-reduced-motion: reduce/);
@@ -785,11 +778,13 @@ test("name finishes remain implemented and persisted, but their controls are abs
   assert.match(studio, /is-name-style-\\" \+ displayNameStyle \+ \\" effect-\\" \+ displayNameEffect/);
 });;
 
-test("effect samples inherit the custom gradient and prism colors selected in the editor", () => {
-  assert.match(studio, /ps-community-name-effect-sample is-name-style-" \+ draftDisplayNameStyle \+ " effect-/);
-  assert.match(studio, /"--name-gradient-start": draftDisplayNameGradientStart/);
-  assert.match(studio, /"--name-prism-gradient": "linear-gradient\(90deg," \+ draftDisplayNamePrismColors/);
-  assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
+test("legacy name effects retain their paint layers while founder-intro exposes typography only", () => {
+  assert.match(nameStyleCss, /effect-gummy/);
+  assert.match(nameStyleCss, /effect-toon/);
+  assert.match(nameStyleCss, /effect-prism/);
+  assert.match(route, /display_name_gradient_start: displayNameGradientStart/);
+  assert.match(route, /display_name_prism_colors: displayNamePrismColors/);
+  assert.doesNotMatch(studio, /Acabado del nombre|Animación de perfil|Color del nombre/);
 });
 
 test("display-name studio offers a premium seven-finish catalogue and accessible motion", () => {
@@ -815,42 +810,20 @@ test("default display-name typeface is self-hosted and applied consistently", ()
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
 
-test("display-name animation picker exposes the supported catalogue and keeps adaptive typography", () => {
-  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  for (const preset of ["decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"]) {
-    assert.ok(catalogue.includes('id: "' + preset + '"'));
-  }
-  assert.doesNotMatch(catalogue, /id: "(?:fuzzy-text|gradient-flow)"/);
-  assert.match(studio, /IntlWithSegmenter\.Segmenter/);
-  assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
-  assert.match(studio, /tag === "h2"/);
-  assert.match(studio, /Animación de perfil/);
-  assert.match(studio, /data-animation=\{item\.id\}/);
-  assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
-  assert.match(studio, /animation=\{item\.id\}/);
-  assert.match(studio, /if \(animation === "domino-flow"\)/);
-  assert.match(studio, /if \(animation === "mistfall"\)/);
-  assert.match(nameStyleCss, /\.ps-mistfall-canvas/);
-  assert.match(nameStyleCss, /\.ps-domino-flow__tile/);
-  assert.match(studio, /animateOn=\{isGalleryDemo \|\| previewMode \? "mount" : "view"\}/);
-  assert.match(studio, /loop=\{isGalleryDemo\}/);
-  assert.match(page, /animateOn="view"/);
-  assert.match(page, /revealDirection="random"/);
-  assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
-  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
+test("saved profile motion renderer exposes supported animations without an editor animation picker in founder-intro", () => {
+  assert.match(page, /function CommunityAnimatedName/);
+  assert.match(page, /if \(animation === "domino-flow"\)/);
+  assert.match(page, /if \(animation === "mistfall"\)/);
+  assert.match(page, /if \(animation === "depth-lift"\)/);
+  assert.match(page, /if \(animation === "inkline"\)/);
+  assert.match(page, /if \(animation === "halo-signal"\)/);
+  assert.match(page, /if \(animation === "decrypt"\)/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
-  assert.match(entranceMotionMigration, /display_name_animation in/);
-  assert.doesNotMatch(studio, /animation === "fuzzy-text"/);
-  assert.match(studio, /if \(animation === "shuffle"\)/);
-  assert.match(studio, /if \(animation === "inkline"\)/);
-  assert.match(studio, /if \(animation === "halo-signal"\)/);
-  assert.match(nameStyleCss, /\.ps-fuzzy-text-canvas/);
-  assert.match(nameStyleCss, /\.ps-halo-signal__glyph/);
+  assert.doesNotMatch(studio, /Animación de perfil|data-animation=\{item.id\}/);
+  assert.match(nameStyleCss, /\.ps-mistfall-canvas/);
+  assert.match(nameStyleCss, /\.ps-domino-flow__tile/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(fuzzyText, /respectReducedMotion = true/);
-  assert.match(mistfallName, /respectReducedMotion = true/);
-  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow\.ps-name-plain:not\(\.ps-community-name-preview-live\)/);
 });
 
 test("name entrance gallery renders as a uniform three-column card grid with separated labels and timings", () => {
@@ -864,23 +837,17 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 });
 
 
-test("motion gallery previews use the exact renderer for each selectable animation", () => {
-  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(studio, /const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample/);
-  assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
-  assert.match(studio, /ps-name-motion-demo/);
-  assert.match(studio, /tag = "span"/);
-  assert.doesNotMatch(catalogue, /id: "(?:fuzzy-text|gradient-flow)"/);
-  for (const preset of ["decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"]) {
-    assert.ok(catalogue.includes('id: "' + preset + '"'));
-  }
-  assert.ok(studio.includes("<DecryptedDisplayName"));
-  assert.doesNotMatch(studio, /<FuzzyText\s/);
-  assert.ok(studio.includes("<InklineDisplayName"));
-  assert.ok(studio.includes("<HaloSignalDisplayName"));
-  assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
-  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}[\s\S]*?animation=\{selectedCommunityProfile\.displayNameAnimation \?\? "decrypt"\}/);
-  assert.doesNotMatch(studio, /<FuzzyText\s|resolveFuzzyTextAppearance/);
+test("motion gallery controls are hidden on founder-intro while existing selected animations still render", () => {
+  assert.doesNotMatch(studio, /ps-community-name-animation-grid|DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.match(page, /function CommunityAnimatedName/);
+  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
+  assert.match(page, /if \(animation === "shuffle-blur"\)/);
+  assert.match(page, /if \(animation === "shuffle-flip"\)/);
+  assert.match(page, /if \(animation === "inkline"\)/);
+  assert.match(page, /if \(animation === "halo-signal"\)/);
+  assert.match(page, /if \(animation === "mistfall"\)/);
+  assert.match(nameStyleCss, /\.ps-halo-signal__glyph/);
+  assert.match(nameStyleCss, /\.ps-mistfall-canvas/);
 });
 
 test("Signal Break is retired from selectable display-name animations and legacy profiles fall back safely", () => {
@@ -1328,15 +1295,12 @@ test("profile preview solid text uses the selected color and member preview has 
   assert.ok(nameStyleCss.includes(".ps-community-name-style-profile-copy > strong.effect-neon"));
 });
 
-test("name colour presets and clear action remain available beside the shared HSV picker", () => {
-  assert.match(studio, /ps-community-name-color-picker/);
-  assert.match(studio, /role="group" aria-label="Colores predefinidos"/);
-  assert.match(studio, /ps-community-name-color-option/);
-  assert.match(studio, /ps-community-name-color-clear/);
-  assert.match(studio, /aria-label="Quitar color"/);
-  assert.match(studio, /onClick=\{\(\) => setDraftDisplayNameColor\("default"\)\}/);
+test("founder-intro keeps profile theme color controls and removes name-finish color controls", () => {
   assert.match(studio, /ps-community-color-picker-plane/);
   assert.match(studio, /ps-community-color-picker-actions/);
+  assert.match(studio, /openThemeColorPicker\("top"\)/);
+  assert.match(studio, /openThemeColorPicker\("bottom"\)/);
+  assert.doesNotMatch(studio, /Colores del degradado|Paleta del espectro|Color del nombre/);
 });
 
 test("name colour presets and clear action remain available beside the custom HSV picker", () => {
@@ -1431,20 +1395,13 @@ test("Name Atelier previews keep independent finishes, profile motion and the bo
 });
 
 
-test("all name finishes paint glyph layers without replacing animation transforms or timelines", () => {
+test("name finish CSS remains compatible with animated glyph renderers without exposing finish controls", () => {
   assert.match(page, /import "\.\.\/community-name-effects\.css"/);
   assert.match(nameEffectsCss, /effect-gradient \.ps-name-animation-char::after/);
   assert.match(nameEffectsCss, /effect-toon \.ps-domino-flow__glyph/);
   assert.match(nameEffectsCss, /effect-gummy \.ps-halo-signal__glyph::after/);
   assert.match(nameEffectsCss, /effect-prism \.ps-name-shuffle__track > span::after/);
   assert.match(nameEffectsCss, /effect-chromaflow \.ps-decrypted-cell\.is-revealed::after/);
-  assert.match(nameEffectsCss, /effect-gradient-flow \.ps-depth-lift__face/);
-  assert.match(nameEffectsCss, /effect-neon \.ps-domino-flow__glyph/);
-  assert.match(nameEffectsCss, /effect-pop \.ps-name-animation-char::after/);
-  assert.match(nameEffectsCss, /effect-gradient \.ps-mistfall-layout/);
   assert.match(nameEffectsCss, /\.ps-inkline-name \.ps-inkline-fill/);
-  assert.match(nameEffectsCss, /renderer and effect classes live on the same node/i);
-  assert.match(studio, /ps-community-name-static community-member-nameplate/);
-  assert.match(studio, /ps-community-name-static community-chat-author/);
-  assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
+  assert.doesNotMatch(studio, /Acabado del nombre|Animación de perfil/);
 });

@@ -8623,6 +8623,15 @@ html:has(.ps-community-picker-overlay) * {
 .community-chat-author:is(.effect-gradient,.effect-toon,.effect-gummy,.effect-prism) {
   background-color:transparent !important;
 }
-.ps-community-name-render.effect-gradient .ps-inkline-fill,
-.community-member-nameplate.effect-gradient .ps-inkline-fill,
-.community-chat-author.effect-gradient .ps-inkline-fill { fill:url(#ps-inkline-gradient) !important; }
+
+
+/* The two spectrum finishes also colour the animated glyphs instead of their wrapper only. */
+.ps-community-name-render:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;-webkit-text-stroke:0 transparent !important;
+  animation:ps-chromaflow-spectrum 3.6s linear infinite !important;
+}

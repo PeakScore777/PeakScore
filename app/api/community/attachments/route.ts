@@ -65,6 +65,15 @@ export async function POST(request: Request) {
   }
   if (!body && !file) return fail("Escribe un mensaje o adjunta una imagen.", 400);
 
+  const { data: mayAttach, error: permissionError } = await supabase.rpc("can_attach_community_files");
+  if (permissionError) {
+    console.error("[community-attachment] Attachment permission check unavailable.", { code: permissionError.code });
+    return fail("No se pudo verificar el permiso para adjuntar archivos.", 503);
+  }
+  if (mayAttach !== true) {
+    return fail("Tu rol no permite adjuntar archivos en la comunidad.", 403);
+  }
+
   // Rate limits are enforced in PostgreSQL and cannot be bypassed by the browser.
   const { data: withinLimit, error: limitError } = await supabase.rpc(
     "consume_community_attachment_rate_limit",

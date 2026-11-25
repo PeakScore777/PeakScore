@@ -51,7 +51,12 @@ export async function POST(request: Request) {
   const slug = typeof payload.slug === "string" ? payload.slug.trim() : null;
   const name = typeof payload.name === "string" ? payload.name.trim() : null;
   const description = typeof payload.description === "string" ? payload.description : null;
-  const category = typeof payload.category === "string" ? payload.category : null;
+  const rawCategory = typeof payload.category === "string" ? payload.category.trim() : null;
+  const category = rawCategory === null
+    ? null
+    : CATEGORIES.has(rawCategory.toUpperCase())
+      ? rawCategory.toUpperCase()
+      : rawCategory;
   const position = Number.isInteger(payload.position) ? Number(payload.position) : null;
   const channelType = typeof payload.channel_type === "string" ? payload.channel_type : null;
   const iconKey = typeof payload.icon_key === "string" ? payload.icon_key : null;

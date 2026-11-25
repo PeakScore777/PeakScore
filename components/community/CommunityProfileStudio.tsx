@@ -14,8 +14,8 @@ import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTe
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Moon, Pencil, Pipette,
-  LoaderCircle, Plus, PlusCircle, Save, Smile, Sun, Trash2, Type, X,
+  Camera, Check, Copy, ImagePlus, Pencil, Pipette,
+  LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
@@ -754,7 +754,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNameFontCategory, setDraftDisplayNameFontCategory] = useState<DisplayNameFontCategory>(
     DISPLAY_NAME_FONT_CATEGORIES.find((category) => category.fonts.includes(safeDisplayNameStyle(initialProfile.displayNameStyle)))?.id ?? "core"
   );
-  const [namePreviewTheme, setNamePreviewTheme] = useState<"dark" | "light">("dark");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | null>(null);
   const [deleting, setDeleting] = useState<"avatar" | null>(null);
@@ -1768,9 +1767,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </button>
                         ))}
                       </div>
-                      <p className="ps-community-name-selected-description" aria-live="polite">
-                        {DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.description}
-                      </p>
                     </section>
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Acabado del nombre</div>
@@ -1802,13 +1798,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </button>
                         ))}
                       </div>
-                      <p className="ps-community-name-selected-description" aria-live="polite">
-                        {DISPLAY_NAME_EFFECTS.find((item) => item.id === draftDisplayNameEffect)?.description}
-                      </p>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Animación de perfil <span>SOLO EN PERFIL</span></div>
-                      <p className="ps-community-name-section-help">Elige cómo aparece tu nombre al abrir el perfil. En chat y miembros se conserva la tipografía y el acabado sin reproducir esta entrada.</p>
+                      <div className="ps-community-name-style-heading">Animación de perfil</div>
                       <div className="ps-community-name-effect-grid ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => {
                           const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor);
@@ -1848,9 +1840,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           );
                         })}
                       </div>
-                      <p className="ps-community-name-selected-description" aria-live="polite">
-                        {DISPLAY_NAME_ANIMATIONS.find((item) => item.id === draftDisplayNameAnimation)?.description}
-                      </p>
                     </section>
                     {draftDisplayNameColorMode !== "automatic" && (
                       <section className="ps-community-name-style-group">
@@ -2045,23 +2034,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className={"ps-community-name-preview-stage is-theme-" + namePreviewTheme}>
-                    <div className="ps-community-name-preview-toolbar">
-                      <div>
-                        <strong>Vista previa</strong>
-                        <span>Así se verá tu nombre en PeakScore</span>
-                      </div>
-                      <div className="ps-community-name-preview-theme-switch" role="group" aria-label="Tema de la vista previa">
-                        <button type="button" className={namePreviewTheme === "dark" ? "is-selected" : ""}
-                          aria-pressed={namePreviewTheme === "dark"} onClick={() => setNamePreviewTheme("dark")} title="Vista oscura">
-                          <Moon size={14}/> Oscuro
-                        </button>
-                        <button type="button" className={namePreviewTheme === "light" ? "is-selected" : ""}
-                          aria-pressed={namePreviewTheme === "light"} onClick={() => setNamePreviewTheme("light")} title="Vista clara">
-                          <Sun size={14}/> Claro
-                        </button>
-                      </div>
-                    </div>
+                  <div className="ps-community-name-preview-stage">
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
                       <article className="ps-community-status-profile-preview ps-community-name-style-profile-preview"

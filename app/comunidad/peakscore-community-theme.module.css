@@ -3206,3 +3206,86 @@
 .root :global(.community-chat-welcome-icon::after) {
   display: none !important;
 }
+
+
+/* Community banner header: Discord-style cover area with PeakScore identity. */
+.root :global(.community-server-header:has(.community-server-banner-image)) {
+  min-height: 154px !important;
+  height: 154px;
+  align-items: flex-end !important;
+  padding: 0 14px 13px !important;
+  border-bottom-color: rgb(255 255 255 / 7%);
+  background: #11151d;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-banner-image) {
+  object-fit: cover !important;
+  object-position: center 42% !important;
+  transform: none;
+  filter: saturate(1.08) contrast(1.05);
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-banner-shade) {
+  background:
+    linear-gradient(0deg, rgb(7 9 13 / 88%) 0%, rgb(7 9 13 / 48%) 38%, rgb(7 9 13 / 8%) 100%),
+    linear-gradient(90deg, rgb(7 9 13 / 24%), transparent 78%);
+}
+.root :global(.community-server-header:has(.community-server-banner-image) > div.relative.z-20) {
+  align-self: flex-end;
+  width: 100%;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-menu-wrap) {
+  width: fit-content;
+  max-width: 100%;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-menu-trigger),
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-member-heading) {
+  display: inline-flex;
+  min-height: 32px;
+  max-width: 100%;
+  align-items: center;
+  gap: 7px;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-name) {
+  color: #fff;
+  font: 760 16px/1.2 var(--font-geist-sans), Inter, system-ui, sans-serif;
+  letter-spacing: -.035em;
+  text-shadow: 0 2px 9px rgb(0 0 0 / 85%);
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-verified-dot) {
+  width: 21px;
+  height: 21px;
+  flex-basis: 21px;
+  filter: drop-shadow(0 1px 5px rgb(0 0 0 / 55%));
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-chevron-button) {
+  width: 25px;
+  height: 25px;
+  flex-basis: 25px;
+  margin-left: 1px;
+  color: #f1f3f5;
+  filter: drop-shadow(0 1px 5px rgb(0 0 0 / 75%));
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-chevron-button:hover),
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-chevron-button[aria-expanded="true"]) {
+  background: rgb(255 255 255 / 16%);
+  color: #fff;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-menu-trigger:hover) {
+  background: transparent !important;
+}
+@media (max-width: 520px) {
+  .root :global(.community-server-header:has(.community-server-banner-image)) {
+    min-height: 132px !important;
+    height: 132px;
+    padding: 0 12px 11px !important;
+  }
+  .root :global(.community-server-header:has(.community-server-banner-image) .community-server-name) {
+    font-size: 15px;
+  }
+}

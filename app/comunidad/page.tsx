@@ -11,6 +11,8 @@ import {
   PanelRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
+import communityTheme from "./peakscore-community-theme.module.css";
+import CommunityFounderStudio from "@/components/community/CommunityFounderStudio";
 import "../community-profile-status-preview.css";
 import "../community-name-style.css";
 import "../community-name-effects.css";
@@ -405,6 +407,8 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [isFounder, setIsFounder] = useState(false);
+  const [founderStudioOpen, setFounderStudioOpen] = useState(false);
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
   const [hoverCommunityProfile, setHoverCommunityProfile] = useState<CommunityMemberProfile | null>(null);
@@ -1001,6 +1005,7 @@ export default function CommunityPage() {
         { data: channelData },
         { data: roleData },
         { data: roleAssignments },
+        { data: platformProfile },
       ] = await Promise.all([
         supabase.from("community_member_profiles")
           .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
@@ -1010,8 +1015,10 @@ export default function CommunityPage() {
           .select("role_key,label,badge_color,display_as_badge"),
         supabase.from("community_member_roles")
           .select("user_id,role_key").eq("user_id", user.id),
+        supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
       ]);
       if (!alive) return;
+      setIsFounder(platformProfile?.role === "admin");
       const catalog = (roleData ?? []) as CommunityRole[];
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))
@@ -1513,7 +1520,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className="community-page">
+    <main className={"community-page " + communityTheme.root}>
       <div className="community-layout">
         <nav className="community-server-rail" aria-label="Servidores">
           <Link href="/" className="community-server-home" aria-label="Volver a PeakScore">
@@ -1606,6 +1613,16 @@ export default function CommunityPage() {
               {activeChannel?.is_read_only && <ShieldCheck size={14} className="community-channel-readonly"/>}
             </div>
             <div className="community-chat-header-actions">
+              {isFounder && (
+                <button type="button"
+                  onClick={() => setFounderStudioOpen(true)}
+                  className="community-chat-tool inline-flex min-w-8 items-center gap-2 border border-[#405c3a] bg-[#172719] px-2.5 text-[#a7e98e] hover:border-[#7fe05c] hover:bg-[#1e3420] hover:text-white"
+                  title="Abrir control central de founder"
+                  aria-label="Abrir control central de founder">
+                  <ShieldCheck size={16}/>
+                  <span className="hidden xl:inline font-[var(--font-silkscreen)] text-[6px] tracking-wide">CONTROL</span>
+                </button>
+              )}
               {searchOpen && (
                 <input autoFocus value={search} onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar en este canal" className="community-search-input"/>
@@ -1996,6 +2013,10 @@ export default function CommunityPage() {
               <Users size={13}/>{onlineUsers} conectados de {memberCount} miembros
             </div>
           </aside>
+        )}
+
+        {founderStudioOpen && isFounder && (
+          <CommunityFounderStudio onClose={() => setFounderStudioOpen(false)}/>
         )}
 
         {communityProfileStudioOpen && selectedCommunityProfile?.isOwnProfile && (

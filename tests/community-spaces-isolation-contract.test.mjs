@@ -40,7 +40,9 @@ testCase("PreICFES collaborator is scoped and cannot become a global staff role"
   assert.match(migration, /Only an active assigned collaborator can moderate this PreICFES space/);
   assert.match(migration, /Collaborators cannot moderate other staff accounts/);
   assert.match(migration, /The moderation target is not a member of this space/);
-  assert.match(migration, /private\.is_space_collaborator\(channel\.space_id\)/);
+  assert.match(migration, /space\.space_type = 'preicfes'[\s\S]*?role_key in \('colaborador','docente','profesor'\)/);
+  assert.match(migration, /private\.can_view_private_community_channel\(space_id\)/);
+  assert.match(migration, /private\.can_view_private_community_channel\(channel\.space_id\)/);
   assert.doesNotMatch(migration, /grant execute on function public\.manage_community_space_member[\s\S]*?to service_role/i);
 });
 
@@ -58,7 +60,7 @@ testCase("only founder can create spaces, manage membership and administer their
 });
 
 testCase("a PreICFES collaborator can use private staff channels only in assigned spaces", () => {
-  assert.match(migration, /private\.is_space_collaborator\(space_id\)/);
+  assert.match(migration, /create or replace function private\.can_view_private_community_channel\(p_space_id uuid\)/);
   assert.match(migration, /private\.is_space_collaborator\(channel\.space_id\)/);
   assert.match(migration, /community_space_guard_channels/);
   assert.match(migration, /community_space_guard_messages/);
@@ -71,6 +73,7 @@ testCase("a PreICFES collaborator can use private staff channels only in assigne
   assert.match(migration, /restriction\.restriction_type = 'kick'[\s\S]*?restriction\.revoked_at is null/);
   assert.match(migration, /p_permission in \('send_messages','attach_files','add_reactions'\)[\s\S]*?private\.is_space_timed_out\(p_space_id\)/);
   assert.match(migration, /v_space_type = 'global'[\s\S]*?private\.is_community_timed_out\(\)/);
+  assert.match(migration, /space\.space_type <> 'global' or not private\.is_community_kicked\(\)/);
   assert.match(migration, /Only an active assigned collaborator can moderate this PreICFES space/);
 });
 

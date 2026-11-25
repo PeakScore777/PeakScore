@@ -1058,7 +1058,7 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
     'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
     'glitchDuration={fuzzySettings.glitchDuration}'
   ];
-  assert.ok(studio.includes('trigger="always"'));
+  assert.ok(studio.includes("trigger={fuzzySettings.trigger}"));
   assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
   assert.match(studio, /baseIntensity=\{fuzzySettings\.baseIntensity\}/);
   assert.match(studio, /hoverIntensity=\{fuzzySettings\.hoverIntensity\}/);
@@ -1073,7 +1073,7 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.ok(page.includes('baseIntensity={fuzzySettings.baseIntensity}'));
   assert.ok(page.includes('hoverIntensity={fuzzySettings.hoverIntensity}'));
   assert.ok(page.includes('fuzzRange={fuzzySettings.fuzzRange}'));
-  assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
+  assert.match(page, /fps=\{fuzzySettings\.fps\}/);
   for (const prop of expectedProps) {
     assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);
     assert.ok(page.includes(prop), 'Missing FuzzyText setting in community renderer: ' + prop);
@@ -1097,8 +1097,8 @@ test("Noise Reveal is continuous, preset-driven and has no user-facing technical
   assert.match(page, /resolveFuzzyTextAppearance/);
   assert.match(fuzzyText, /const wake = \(\) =>/);
   assert.match(fuzzyText, /interactionActive/);
-  assert.match(fuzzySettings, /trigger: "always"/);
-  assert.match(fuzzySettings, /enableHover: false/);
+  assert.match(fuzzySettings, /trigger: "hover"/);
+  assert.match(fuzzySettings, /enableHover: true/);
   assert.match(fuzzySettings, /intro: true, introDuration: 1400/);
   assert.match(fuzzySettings, /resolveFuzzyTextAppearance/);
   assert.match(studio, /draftDisplayNameFuzzySettings/);
@@ -1439,7 +1439,7 @@ test("Name Atelier previews keep independent effects, live noise typography and 
   assert.ok(studio.includes("loopIntro={false}"));
   assert.ok(studio.includes("loopDelay={1100}"));
   assert.ok(fuzzySettings.includes("colorSplit: 0"));
-  assert.ok(fuzzySettings.includes("baseIntensity: 0.5"));
+  assert.ok(fuzzySettings.includes("baseIntensity: 0.2"));
   assert.ok(fuzzyText.includes("getComputedStyle(canvas.parentElement || canvas)"));
   assert.ok(fuzzyText.includes("loopIntro && introState.done"));
   assert.ok(fuzzyText.includes("introState.nextStart = now + Math.max(500, loopDelay)"));

@@ -57,14 +57,16 @@ export default function InklineDisplayName({
   const selectedPalette = typeof styleTokens?.["--name-prism-gradient"] === "string"
     ? (styleTokens["--name-prism-gradient"] as string).match(/#[0-9a-f]{6}/gi) ?? []
     : [];
-  const gummyStops = gummy
-    ? ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"]
-    : selectedPalette.length >= 2 ? selectedPalette : ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"];
-  const auroraStops = [
-    typeof styleTokens?.["--name-gradient-start"] === "string" ? styleTokens["--name-gradient-start"] as string : "#9D83FF",
-    typeof styleTokens?.["--name-gradient-end"] === "string" ? styleTokens["--name-gradient-end"] as string : "#61B8ED",
-    "#FFFFFF",
-  ];
+  const gummyStops = selectedPalette.length >= 2
+    ? selectedPalette
+    : ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"];
+  const auroraStart = typeof styleTokens?.["--name-gradient-start"] === "string"
+    ? styleTokens["--name-gradient-start"] as string
+    : "#9D83FF";
+  const auroraEnd = typeof styleTokens?.["--name-gradient-end"] === "string"
+    ? styleTokens["--name-gradient-end"] as string
+    : "#61B8ED";
+  const auroraStops = [auroraStart, "#FFFFFF", auroraEnd, auroraStart];
   const forceMotion = effectTokens.includes("ps-community-name-preview-live");
 
   useLayoutEffect(() => {
@@ -259,9 +261,29 @@ export default function InklineDisplayName({
                 <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.35 0;0.35 0;-0.35 0" dur="7.2s" repeatCount="indefinite"/>
               </linearGradient>
             )}
-            {aurora && <linearGradient id={auroraGradientId} x1="0%" y1="0%" x2="100%" y2="0%">{auroraStops.map((stop, index) => <stop key={stop + index} offset={(index / (auroraStops.length - 1) * 100) + "%"} stopColor={stop}/>)}</linearGradient>}
-            {chrome && <linearGradient id={chromeGradientId} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="22%" stopColor="#DDE3EC"/><stop offset="45%" stopColor="#8995A8"/><stop offset="53%" stopColor="#FFFFFF"/><stop offset="76%" stopColor="#9AA6B8"/><stop offset="100%" stopColor="#F8FAFC"/></linearGradient>}
-            {prism && <linearGradient id={prismGradientId} x1="-20%" y1="0%" x2="120%" y2="0%">{gummyStops.map((stop, index) => <stop key={stop + index} offset={(index / Math.max(1, gummyStops.length - 1) * 100) + "%"} stopColor={stop}/>)}</linearGradient>}
+            {aurora && (
+              <linearGradient id={auroraGradientId} x1="-45%" y1="0%" x2="155%" y2="0%">
+                {auroraStops.map((stop, index) => <stop key={stop + index} offset={(index / (auroraStops.length - 1) * 100) + "%"} stopColor={stop}/>)}
+                <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.45 0;0.45 0;-0.45 0" dur="5.2s" repeatCount="indefinite"/>
+              </linearGradient>
+            )}
+            {chrome && (
+              <linearGradient id={chromeGradientId} x1="-55%" y1="0%" x2="155%" y2="0%">
+                <stop offset="0%" stopColor="#778294"/>
+                <stop offset="22%" stopColor="#DDE3EC"/>
+                <stop offset="42%" stopColor="#FFFFFF"/>
+                <stop offset="55%" stopColor="#8793A6"/>
+                <stop offset="72%" stopColor="#FFFFFF"/>
+                <stop offset="100%" stopColor="#788395"/>
+                <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.55 0;0.55 0;-0.55 0" dur="3.8s" repeatCount="indefinite"/>
+              </linearGradient>
+            )}
+            {prism && (
+              <linearGradient id={prismGradientId} x1="-35%" y1="0%" x2="135%" y2="0%">
+                {gummyStops.map((stop, index) => <stop key={stop + index} offset={(index / Math.max(1, gummyStops.length - 1) * 100) + "%"} stopColor={stop}/>)}
+                <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.35 0;0.35 0;-0.35 0" dur="4.6s" repeatCount="indefinite"/>
+              </linearGradient>
+            )}
             <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
               <rect
                 ref={wipeRef}

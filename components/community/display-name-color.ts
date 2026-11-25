@@ -1,4 +1,4 @@
-const AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set(["toon", "gummy", "prism", "chromaflow"]);
+const AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set(["toon", "gummy", "prism", "chromaflow", "gradient-flow"]);
 
 /** Never let a stale solid swatch override an effect that owns its own palette. */
 export function displayNameColorForEffect(effect: string | null | undefined, color: string | null | undefined): string {
@@ -28,4 +28,26 @@ export function displayNameSolidColor(
       : "#B86BFF";
   }
   return DISPLAY_NAME_SOLID_PALETTE[color ?? ""] ?? "currentColor";
+}
+
+
+/** Keep Inkline's contour hue coherent with the selected finish. */
+export function displayNameInklineStrokeColor(
+  effect: string | null | undefined,
+  style?: Record<string, unknown>
+): string {
+  const read = (key: string, fallback: string) =>
+    typeof style?.[key] === "string" ? style[key] as string : fallback;
+  const selectedPalette = read("--name-prism-gradient", "").match(/#[0-9a-f]{6}/gi) ?? [];
+  switch (effect ?? "plain") {
+    case "gradient": return read("--name-gradient-start", "#9D83FF");
+    case "toon": return "#DDE3EC";
+    case "gummy":
+    case "prism": return selectedPalette[0] ?? "#FF9C45";
+    case "chromaflow": return "#A66CFF";
+    case "gradient-flow": return "#A34DFF";
+    case "neon": return "#E8D8FF";
+    case "pop": return read("--name-solid-color", "#55CFA3");
+    default: return read("--name-solid-color", "#A78BFA");
+  }
 }

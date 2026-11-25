@@ -16,14 +16,13 @@ import "../community-name-style.css";
 import "../community-name-effects.css";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
 import InklineDisplayName from "@/components/community/InklineDisplayName";
 import HaloSignalDisplayName from "@/components/community/HaloSignalDisplayName";
 import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName";
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
-import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
+
 import { displayNameColorForEffect, displayNameInklineStrokeColor, displayNameSolidColor } from "@/components/community/display-name-color";
 
 type Channel = {
@@ -35,8 +34,8 @@ type CommunityRole = {
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
-type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
-type CommunityDisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
+type CommunityDisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
+type CommunityDisplayNameAnimation = "decrypt" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -268,10 +267,9 @@ function CommunityStaticName({ value, className, style, tag = "span" }: {
   return <Tag className={className + " ps-community-name-static"} style={safeStyle}>{value}</Tag>;
 }
 
-function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className, style, tag = "strong", id, previewMode = false }: {
+function CommunityAnimatedName({ value, animation, className, style, tag = "strong", id, previewMode = false }: {
   value: string;
   animation: CommunityDisplayNameAnimation;
-  fuzzySettings?: FuzzyTextSettings;
   className: string;
   style?: React.CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
@@ -292,7 +290,6 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
     "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
     maxWidth: "100%",
   } as React.CSSProperties;
-  const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
     const effectName = className.split(/\\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
     const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
@@ -306,11 +303,6 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   }
   if (animation === "mistfall") {
     return <MistfallDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
-  }
-  if (animation === "gradient-flow") {
-    return <Tag id={id} className={"ps-community-name-render " + renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>
-      <span className="ps-gradient-flow-face">{value}</span>
-    </Tag>;
   }
   if (animation === "depth-lift") {
     return <DepthLiftDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
@@ -385,44 +377,6 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       loop={false}
     />;
   }
-  if (animation === "fuzzy-text") {
-    return (
-      <Tag className={renderedClassName + ' ps-fuzzy-text-wrap'} style={safeStyle}>
-        <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
-        <FuzzyText
-          colorSplit={fuzzySettings.colorSplit}
-          trigger={fuzzySettings.trigger}
-          direction={fuzzySettings.direction}
-          fontSize="1em"
-          fontWeight="inherit"
-          fontFamily="inherit"
-          color={fuzzyAppearance.color}
-          gradient={className.includes("effect-chromaflow")
-            ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
-            : fuzzyAppearance.gradient}
-          baseIntensity={fuzzySettings.baseIntensity}
-          hoverIntensity={fuzzySettings.hoverIntensity}
-          fuzzRange={fuzzySettings.fuzzRange}
-          sliceSize={fuzzySettings.sliceSize}
-          fps={fuzzySettings.fps}
-          transitionDuration={fuzzySettings.transitionDuration}
-          intro={fuzzySettings.intro}
-          introDuration={fuzzySettings.introDuration}
-          letterSpacing={fuzzySettings.letterSpacing}
-          enableHover={fuzzySettings.enableHover}
-          clickEffect={fuzzySettings.clickEffect}
-          glitchMode={fuzzySettings.glitchMode}
-          glitchInterval={fuzzySettings.glitchInterval}
-          glitchDuration={fuzzySettings.glitchDuration}
-          className="ps-fuzzy-text-canvas"
-          performanceMode={previewMode ? "preview" : "full"}
-        >
-          {value}
-        </FuzzyText>
-      </Tag>
-    );
-  }
-    if (animation === "none") return <Tag id={id} className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag id={id} className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" data-glyph={character === " " ? "\u00A0" : character} style={{

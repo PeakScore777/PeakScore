@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  Archive, BookOpen, Check, GraduationCap, Hash, Lock, Megaphone,
-  MessageSquare, Plus, Save, ShieldCheck, Trash2, Users,
+  Archive, GraduationCap, Hash, Lock, Megaphone, Plus, Save, Trash2, Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -77,6 +76,7 @@ export default function CommunitySpacesStudio() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState<string | null>(null);
+  const [detailRefresh, setDetailRefresh] = useState(0);
 
   const selectedSpace = spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedChannel = spaceChannels.find((channel) => channel.id === selectedChannelId) ?? null;
@@ -168,7 +168,7 @@ export default function CommunitySpacesStudio() {
     }
     void loadSpaceDetail();
     return () => { active = false; };
-  }, [selectedSpaceId, schemaReady]);
+  }, [selectedSpaceId, schemaReady, detailRefresh]);
 
   useEffect(() => {
     if (creatingSpace) return;
@@ -222,6 +222,7 @@ export default function CommunitySpacesStudio() {
         return false;
       }
       setNotice("Cambios guardados correctamente.");
+      setDetailRefresh((current) => current + 1);
       await loadSpaces();
       return true;
     } catch {
@@ -241,7 +242,7 @@ export default function CommunitySpacesStudio() {
     }, "space-save");
     if (ok) {
       setCreatingSpace(false);
-      if (creatingSpace) setSelectedSpaceId(null);
+      setSelectedTab("settings");
     }
   }
 
@@ -252,8 +253,8 @@ export default function CommunitySpacesStudio() {
       space_id: selectedSpace.id,
     }, "space-archive");
     if (ok) {
-      setSelectedSpaceId(null);
       setCreatingSpace(false);
+      setSelectedTab("settings");
     }
   }
 

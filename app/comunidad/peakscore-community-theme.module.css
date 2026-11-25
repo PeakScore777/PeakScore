@@ -1589,3 +1589,59 @@
 @media (prefers-reduced-motion: reduce) {
   .root :global(.community-server-header::after) { animation: none; opacity: .35; }
 }
+
+
+/* The selected canvas tone carries through the full workspace, not only chat. */
+.root {
+  background: var(--community-canvas-bg, #0b0d11);
+  color: var(--community-canvas-text, #e8ebef);
+}
+.root :global(.community-layout) {
+  background: var(--community-canvas-bg, #0b0d11);
+}
+.root :global(.community-sidebar),
+.root :global(.community-member-sidebar) {
+  background: color-mix(in srgb, var(--community-canvas-bg, #0b0d11) 86%, #141920);
+  color: var(--community-canvas-text, #e8ebef);
+}
+.root :global(.community-server-header),
+.root :global(.community-chat-header),
+.root :global(.community-member-sidebar-header),
+.root :global(.community-user-panel-shell) {
+  background: color-mix(in srgb, var(--community-canvas-bg, #0b0d11) 78%, #171d25);
+}
+.root :global(.community-server-name),
+.root :global(.community-chat-title h1),
+.root :global(.community-member-sidebar-header span),
+.root :global(.community-member-copy strong),
+.root :global(.community-member-copy .community-member-nameplate),
+.root :global(.community-nav-item) {
+  color: var(--community-canvas-text, #e8ebef);
+}
+.root :global(.community-server-eyebrow),
+.root :global(.community-nav-heading),
+.root :global(.community-member-group h2),
+.root :global(.community-member-copy small),
+.root :global(.community-user-presence) {
+  color: var(--community-canvas-muted, #929aa6);
+}
+.root :global(.community-nav-item:hover),
+.root :global(.community-member-row:hover) {
+  background: color-mix(in srgb, var(--community-canvas-text, #e8ebef) 9%, var(--community-canvas-bg, #0b0d11));
+}
+.root :global(.community-nav-active) {
+  background: color-mix(in srgb, #8bea45 13%, var(--community-canvas-bg, #0b0d11));
+}
+.root :global(.community-chat-column) {
+  background: var(--community-canvas-bg, #0b0d11);
+}
+.root :global(.community-chat-composer-wrap) {
+  background: color-mix(in srgb, var(--community-canvas-bg, #0b0d11) 85%, #111720);
+}
+.root :global(.community-chat-composer) {
+  background: color-mix(in srgb, var(--community-canvas-bg, #0b0d11) 72%, #1c222b);
+}
+.root :global(.community-chat-input),
+.root :global(.community-chat-message-body) {
+  color: var(--community-canvas-text, #e8ebef);
+}

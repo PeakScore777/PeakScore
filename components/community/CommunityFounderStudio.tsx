@@ -384,14 +384,19 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     }
   }
 
-  const tabButton = (value: Tab, label: string, count?: number) => (
-    <button type="button" onClick={() => { setTab(value); setError(""); setNotice(""); }}
-      className={"inline-flex items-center gap-2 border-b-2 px-3 py-3 text-[11px] font-semibold transition " +
-        (tab === value ? "border-[#01c8ef] text-white" : "border-transparent text-[#8095a5] hover:text-[#dce7ed]")}>
-      {label}
-      {count !== undefined && <span className="rounded-[4px] bg-[#1b2a36] px-1.5 py-0.5 text-[9px] tabular-nums text-[#9bb3c1]">{count}</span>}
-    </button>
-  );
+  const tabButton = (value: Tab, label: string, count?: number, description?: string) => {
+    const Icon = value === "members" ? UserRound : value === "roles" ? ShieldCheck : value === "channels" ? Hash : GraduationCap;
+    return <button type="button" onClick={() => { setTab(value); setError(""); setNotice(""); }}
+      aria-current={tab === value ? "page" : undefined}
+      className={"group flex w-full items-center gap-3 rounded-[7px] border px-3 py-2.5 text-left transition " +
+        (tab === value ? "border-[#405a42] bg-[#19281c] text-white shadow-[inset_3px_0_0_#7fe05c]" : "border-transparent text-[#9aa9b8] hover:border-[#2b3b49] hover:bg-[#17212c] hover:text-white")}>
+      <span className={"grid h-8 w-8 shrink-0 place-items-center rounded-[6px] border " +
+        (tab === value ? "border-[#53764a] bg-[#223a24] text-[#a7e98e]" : "border-[#2a3b49] bg-[#121c26] text-[#91a4b4] group-hover:text-[#d8e4ec]")}><Icon size={15}/></span>
+      <span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-[11px] font-semibold">{label}
+        {count !== undefined && <span className="rounded-[4px] bg-[#1b2934] px-1.5 py-0.5 text-[9px] tabular-nums text-[#9bb3c1]">{count}</span>}</span>
+        {description && <span className="mt-0.5 block truncate text-[9px] text-[#718494]">{description}</span></span>
+    </button>;
+  };
 
   const fieldClass = "mt-1.5 h-10 w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 text-[11px] text-[#e8eef3] outline-none transition placeholder:text-[#647a89] focus:border-[#01c8ef] focus:ring-2 focus:ring-[#01c8ef]/10";
   const labelClass = "block text-[10px] font-semibold tracking-wide text-[#a4b5c0]";
@@ -400,29 +405,15 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     <div className="fixed inset-0 z-[160] flex items-center justify-center bg-[#05080dcc] p-3 backdrop-blur-[5px]"
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section role="dialog" aria-modal="true" aria-labelledby="ps-founder-title"
-        className="flex max-h-[min(850px,94dvh)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[10px] border border-[#2b3c4a] bg-[#101720] text-[#e8eef3] shadow-[0_28px_100px_rgba(0,0,0,.55)]">
-        <header className="flex min-h-[72px] items-center justify-between border-b border-[#263744] bg-[#0b121b] px-5 sm:px-7">
+        className="flex h-[min(900px,94dvh)] max-h-[94dvh] w-full max-w-[1280px] flex-col overflow-hidden rounded-[10px] border border-[#2b3c4a] bg-[#101720] text-[#e8eef3] shadow-[0_28px_100px_rgba(0,0,0,.55)]">
+        <header className="flex min-h-[76px] items-center justify-between border-b border-[#27333e] bg-[#0e151d] px-5 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[9px] border border-[#547f42] bg-[#7fe05c] text-[#09140b] shadow-[0_3px_0_#315d28]">
-              <ShieldCheck size={19}/>
-            </span>
-            <div className="min-w-0">
-              <p className="font-[var(--font-silkscreen)] text-[7px] tracking-[.12em] text-[#8ca4b5]">PEAKSCORE / CONTROL CENTRAL</p>
-              <h2 id="ps-founder-title" className="mt-1 truncate text-[16px] font-bold text-white">Panel de administración</h2>
-            </div>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[9px] border border-[#547f42] bg-[#7fe05c] text-[#09140b] shadow-[0_3px_0_#315d28]"><ShieldCheck size={19}/></span>
+            <div className="min-w-0"><p className="font-[var(--font-silkscreen)] text-[7px] tracking-[.12em] text-[#8ca4b5]">PEAKSCORE COMMUNITY / CONFIGURACIÓN</p>
+              <h2 id="ps-founder-title" className="mt-1 truncate text-[16px] font-bold text-white">Ajustes del servidor</h2></div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Cerrar panel"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-[6px] border border-[#2a3b48] text-[#a7b7c3] transition hover:border-[#01c8ef] hover:bg-[#142833] hover:text-white">
-            <X size={18}/>
-          </button>
+          <button type="button" onClick={onClose} aria-label="Cerrar ajustes" className="grid h-9 w-9 shrink-0 place-items-center rounded-[7px] border border-[#2a3b48] text-[#a7b7c3] transition hover:border-[#71828f] hover:bg-[#1a2631] hover:text-white"><X size={18}/></button>
         </header>
-
-        <nav className="flex min-h-[48px] items-center gap-1 overflow-x-auto border-b border-[#263744] bg-[#101a24] px-4 sm:px-6">
-          {tabButton("members", "Miembros", members.length)}
-          {tabButton("roles", "Roles", roles.length)}
-          {tabButton("channels", "Canales", channels.length)}
-          {tabButton("spaces", "PreICFES")}
-        </nav>
 
         {(error || notice) && (
           <div className="px-5 pt-3 sm:px-7">
@@ -431,7 +422,24 @@ export default function CommunityFounderStudio({ onClose }: Props) {
           </div>
         )}
 
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <aside className="flex w-[236px] shrink-0 flex-col border-r border-[#273642] bg-[#0d151e] max-md:hidden">
+            <div className="border-b border-[#263541] px-4 py-4"><p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.13em] text-[#7e94a4]">PEAKSCORE COMMUNITY</p>
+              <div className="mt-3 flex items-center gap-2.5"><span className="grid h-9 w-9 place-items-center rounded-[8px] border border-[#3b6240] bg-[#17281b] text-[#9eea86]"><ShieldCheck size={17}/></span>
+                <span className="min-w-0"><span className="block truncate text-[11px] font-bold text-[#e8eff4]">Servidor PeakScore</span><span className="mt-0.5 block text-[9px] text-[#718594]">Panel del founder</span></span></div>
+            </div>
+            <div className="space-y-1.5 p-3"><p className="mb-2 px-2 font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#708696]">GESTIÓN DEL SERVIDOR</p>
+              {tabButton("members", "Miembros", members.length, "Buscar y administrar personas")}
+              {tabButton("roles", "Roles", roles.length, "Jerarquía y permisos")}
+              {tabButton("channels", "Canales", channels.length, "Categorías y acceso")}
+              {tabButton("spaces", "PreICFES", undefined, "Espacios y comunidades")}
+            </div>
+            <div className="mt-auto border-t border-[#263541] px-4 py-3"><div className="flex items-center gap-2 text-[9px] text-[#8b9ca8]"><span className="h-1.5 w-1.5 rounded-full bg-[#7fe05c] shadow-[0_0_8px_#7fe05c66]"/> Solo founder</div>
+              <p className="mt-1.5 text-[8px] leading-4 text-[#617687]">Tus cambios de administración quedan protegidos y auditados.</p></div>
+          </aside>
+          <div className="min-w-0 flex-1 overflow-hidden bg-[#111a23]"><div className="hidden h-11 items-center gap-2 border-b border-[#263744] bg-[#101a24] px-5 max-md:flex">
+              {tabButton("members", "Miembros", members.length)}{tabButton("roles", "Roles", roles.length)}{tabButton("channels", "Canales", channels.length)}{tabButton("spaces", "PreICFES")}
+            </div><div className="h-full min-h-0 overflow-hidden">
           {tab === "members" && (
             <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[320px_minmax(0,1fr)]">
               <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
@@ -739,6 +747,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               <CommunitySpacesStudio/>
             </div>
           )}
+            </div></div>
         </div>
 
         <footer className="flex min-h-[42px] items-center justify-between border-t border-[#263744] bg-[#0c141d] px-5 text-[9px] text-[#728897] sm:px-7">

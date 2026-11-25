@@ -500,7 +500,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
   }
 
   const tabButton = (value: Tab, label: string, count?: number, description?: string) => {
-    const Icon = value === "members" ? UserRound : value === "roles" ? ShieldCheck : value === "channels" ? Hash : GraduationCap;
+    const Icon = value === "branding" ? Palette : value === "members" ? UserRound : value === "roles" ? ShieldCheck : value === "channels" ? Hash : GraduationCap;
     return <button type="button" onClick={() => { setTab(value); setError(""); setNotice(""); }}
       aria-current={tab === value ? "page" : undefined}
       className={"group flex w-full items-center gap-3 rounded-[7px] border px-3 py-2.5 text-left transition " +
@@ -544,6 +544,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                 <span className="min-w-0"><span className="block truncate text-[11px] font-bold text-[#e8eff4]">Servidor PeakScore</span><span className="mt-0.5 block text-[9px] text-[#718594]">Panel del founder</span></span></div>
             </div>
             <div className="space-y-1.5 p-3"><p className="mb-2 px-2 font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#708696]">GESTIÓN DEL SERVIDOR</p>
+              {tabButton("branding", "Identidad", undefined, "Nombre, icono y banner")}
               {tabButton("members", "Miembros", members.length, "Buscar y administrar personas")}
               {tabButton("roles", "Roles", roles.length, "Jerarquía y permisos")}
               {tabButton("channels", "Canales", channels.length, "Categorías y acceso")}
@@ -553,8 +554,87 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               <p className="mt-1.5 text-[8px] leading-4 text-[#617687]">Tus cambios de administración quedan protegidos y auditados.</p></div>
           </aside>
           <div className="min-w-0 flex-1 overflow-hidden bg-[#111a23]"><div className="hidden h-11 items-center gap-2 border-b border-[#263744] bg-[#101a24] px-5 max-md:flex">
-              {tabButton("members", "Miembros", members.length)}{tabButton("roles", "Roles", roles.length)}{tabButton("channels", "Canales", channels.length)}{tabButton("spaces", "PreICFES")}
+              {tabButton("branding", "Identidad")}{tabButton("members", "Miembros", members.length)}{tabButton("roles", "Roles", roles.length)}{tabButton("channels", "Canales", channels.length)}{tabButton("spaces", "PreICFES")}
             </div><div className="h-full min-h-0 overflow-hidden">
+          {tab === "branding" && (
+            <div className="h-full min-h-0 overflow-y-auto p-5 sm:p-7">
+              <form onSubmit={(event) => void saveGlobalBranding(event)} className="mx-auto max-w-[900px] space-y-5">
+                <div>
+                  <p className="text-[10px] font-bold tracking-[.16em] text-[#8ea0ad]">IDENTIDAD DEL SERVIDOR</p>
+                  <h3 className="mt-1 text-[20px] font-bold text-white">PeakScore Community</h3>
+                  <p className="mt-1 max-w-[650px] text-[11px] leading-5 text-[#99a6b4]">Personaliza el nombre, el icono y la portada que aparecen en la navegación y en la cabecera de la comunidad.</p>
+                </div>
+                <section className="grid gap-4 rounded-[12px] border border-[#303b46] bg-[#0d131a] p-4 sm:grid-cols-[180px_minmax(0,1fr)]">
+                  <div className="flex flex-col items-center gap-3 rounded-[9px] border border-[#2c3742] bg-[#090d12] p-4">
+                    <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-[25px] border border-[#3b4651] bg-black shadow-[0_8px_28px_rgba(0,0,0,.35)]">
+                      {globalBranding.icon_url
+                        ? <Image src={globalBranding.icon_url} alt="Icono de la comunidad" width={96} height={96} unoptimized className="h-full w-full object-cover"/>
+                        : <Image src="/peakscore/peakscore-community-mark.svg" alt="PeakScore" width={86} height={86} unoptimized className="h-[86px] w-[86px] object-contain"/>}
+                    </div>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-[7px] border border-[#3b4c5a] bg-[#1a222b] px-3 py-2 text-[10px] font-semibold text-[#e2e7ed] hover:border-[#8bea45]">
+                      <ImagePlus size={14}/>{brandingAssetPending === "icon" ? "Subiendo…" : "Cambiar icono"}
+                      <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={brandingAssetPending !== null}
+                        onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadGlobalBrandingAsset("icon", file); event.currentTarget.value = ""; }}/>
+                    </label>
+                    <p className="text-center text-[9px] leading-4 text-[#788591]">PNG, JPG o WebP · máximo 5 MB</p>
+                  </div>
+                  <div className="min-w-0 space-y-3">
+                    <div className="relative flex h-[150px] items-center overflow-hidden rounded-[9px] border border-[#333d49] bg-[#101720]">
+                      {globalBranding.banner_url
+                        ? <Image src={globalBranding.banner_url} alt="Portada de la comunidad" fill unoptimized className="object-cover"/>
+                        : <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_30%,rgba(0,213,232,.24),transparent_40%),radial-gradient(ellipse_at_90%_80%,rgba(139,234,69,.20),transparent_38%),linear-gradient(110deg,#080b10,#1a2028)]"/>}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/15 to-black/30"/>
+                      <div className="relative z-10 px-5">
+                        <p className="text-[9px] font-bold tracking-[.2em] text-white/65">PEAKSCORE COMMUNITY</p>
+                        <p className="mt-1 text-[21px] font-extrabold tracking-tight text-white">{globalBranding.name || "PeakScore Community"}</p>
+                        <span className="mt-2 inline-flex rounded-full border border-[#8bea45]/40 bg-black/35 px-2.5 py-1 text-[9px] font-bold text-[#bbf39c]">COMUNIDAD OFICIAL</span>
+                      </div>
+                    </div>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-[7px] border border-[#3b4c5a] bg-[#1a222b] px-3 py-2 text-[10px] font-semibold text-[#e2e7ed] hover:border-[#8bea45]">
+                      <ImagePlus size={14}/>{brandingAssetPending === "banner" ? "Subiendo…" : "Cambiar portada"}
+                      <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={brandingAssetPending !== null}
+                        onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadGlobalBrandingAsset("banner", file); event.currentTarget.value = ""; }}/>
+                    </label>
+                    <p className="text-[9px] leading-4 text-[#788591]">Portada panorámica; se optimiza y elimina metadatos al subirla.</p>
+                  </div>
+                </section>
+                <section className="grid gap-4 rounded-[12px] border border-[#303b46] bg-[#0d131a] p-4 sm:grid-cols-2">
+                  <label className={labelClass}>Nombre visible
+                    <input className={fieldClass} value={globalBranding.name} required minLength={2} maxLength={60}
+                      onChange={(event) => setGlobalBranding((current) => ({ ...current, name: event.target.value }))}/>
+                  </label>
+                  <label className={labelClass}>Color de acento
+                    <div className="mt-1.5 flex h-10 items-center gap-3 rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3">
+                      <input type="color" value={globalBranding.accent_color}
+                        onChange={(event) => setGlobalBranding((current) => ({ ...current, accent_color: event.target.value }))}
+                        className="h-7 w-9 cursor-pointer bg-transparent"/>
+                      <span className="text-[10px] font-mono text-[#c6d0d9]">{globalBranding.accent_color.toUpperCase()}</span>
+                    </div>
+                  </label>
+                  <label className={labelClass}>Identificador del icono
+                    <select className={fieldClass} value={globalBranding.icon_key}
+                      onChange={(event) => setGlobalBranding((current) => ({ ...current, icon_key: event.target.value }))}>
+                      <option value="users">Comunidad</option><option value="graduation-cap">Graduación</option>
+                      <option value="book-open">Libro</option><option value="mountain">PeakScore</option>
+                    </select>
+                  </label>
+                  <label className={labelClass}>Descripción
+                    <textarea className="mt-1.5 min-h-[80px] w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 py-2 text-[11px] text-[#e8eef3] outline-none focus:border-[#01c8ef]"
+                      value={globalBranding.description} maxLength={500}
+                      onChange={(event) => setGlobalBranding((current) => ({ ...current, description: event.target.value }))}/>
+                  </label>
+                </section>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#293642] pt-4">
+                  <p className="max-w-[470px] text-[9px] leading-4 text-[#798693]">Los cambios de identidad se aplican al servidor global y se registran en la auditoría del Founder.</p>
+                  <button type="submit" disabled={brandingSaving || brandingAssetPending !== null || globalBranding.name.trim().length < 2}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-[7px] border border-[#5eaa45] bg-[#8bea45] px-4 text-[11px] font-bold text-[#0b160c] shadow-[0_2px_0_#3c762e] hover:bg-[#a4f56b] disabled:opacity-50">
+                    <Save size={14}/>{brandingSaving ? "Guardando…" : "Guardar identidad"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
           {tab === "members" && (
             <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[320px_minmax(0,1fr)]">
               <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">

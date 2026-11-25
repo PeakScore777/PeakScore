@@ -394,7 +394,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         (tab === value ? "border-[#53764a] bg-[#223a24] text-[#a7e98e]" : "border-[#2a3b49] bg-[#121c26] text-[#91a4b4] group-hover:text-[#d8e4ec]")}><Icon size={15}/></span>
       <span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-[11px] font-semibold">{label}
         {count !== undefined && <span className="rounded-[4px] bg-[#1b2934] px-1.5 py-0.5 text-[9px] tabular-nums text-[#9bb3c1]">{count}</span>}</span>
-        {description && <span className="mt-0.5 block truncate text-[9px] text-[#718494]">{description}</span></span>
+        {description && <span className="mt-0.5 block truncate text-[9px] text-[#718494]">{description}</span>}</span>
     </button>;
   };
 

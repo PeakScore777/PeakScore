@@ -198,16 +198,19 @@ export default function CommunityLivePage() {
         await supabase.rpc("join_community_space", { p_space_id: resolvedSpace.id });
       }
 
+      const { data: ownProfile } = await supabase.from("profiles")
+        .select("role").eq("id", user.id).maybeSingle();
+      const isFounder = ownProfile?.role === "admin";
       if (resolvedSpace.space_type === "global") {
         const { data: roles } = await supabase.from("community_member_roles")
           .select("role_key").eq("user_id", user.id);
         if (!active) return;
-        setCanSchedule((roles ?? []).some((role: { role_key: string }) => role.role_key === "profesor"));
+        setCanSchedule(isFounder || (roles ?? []).some((role: { role_key: string }) => role.role_key === "profesor"));
       } else {
         const { data: roles } = await supabase.from("community_space_member_roles")
           .select("role_key").eq("space_id", resolvedSpace.id).eq("user_id", user.id);
         if (!active) return;
-        setCanSchedule((roles ?? []).some((role: { role_key: string }) => ["docente","profesor"].includes(role.role_key)));
+        setCanSchedule(isFounder || (roles ?? []).some((role: { role_key: string }) => ["docente","profesor"].includes(role.role_key)));
       }
 
       await loadSessions(resolvedSpace.id);

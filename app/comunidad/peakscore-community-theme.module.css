@@ -1559,3 +1559,33 @@
   color: #a5b1a4;
   font: 450 10px/1.35 Inter, "DM Sans", sans-serif;
 }
+
+
+/* Server identity: a restrained animated chroma wash behind the uploaded banner. */
+.root :global(.community-server-header::after) {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: .52;
+  background:
+    radial-gradient(ellipse at 14% 35%, rgb(0 213 232 / 18%), transparent 42%),
+    radial-gradient(ellipse at 88% 74%, rgb(139 234 69 / 17%), transparent 44%);
+  background-size: 140% 140%;
+  animation: ps-community-banner-chroma 22s ease-in-out infinite alternate;
+}
+@keyframes ps-community-banner-chroma {
+  0% { background-position: 0% 35%; opacity: .34; }
+  100% { background-position: 100% 65%; opacity: .7; }
+}
+.root :global(.community-server-header .community-server-name) {
+  text-shadow: 0 2px 12px rgb(0 0 0 / 42%);
+}
+.root :global(.community-server-icon img) {
+  display: block;
+  border-radius: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  .root :global(.community-server-header::after) { animation: none; opacity: .35; }
+}

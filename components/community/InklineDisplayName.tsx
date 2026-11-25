@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type Ref } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { observeNameMotionVisibility } from "./name-motion-visibility";
 
 type Props = {
@@ -192,7 +192,7 @@ export default function InklineDisplayName({
 
   return (
     <Tag
-      ref={motionRef as Ref<HTMLElement>}
+      ref={(node) => { motionRef.current = node; }}
       className={(className + " ps-inkline-name").trim()}
       style={sharedStyle}
       aria-label={text}

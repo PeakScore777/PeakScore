@@ -505,6 +505,7 @@ export default function CommunityPage() {
   const [chromaEnabled, setChromaEnabled] = useState(true);
   const [appearanceLoadedKey, setAppearanceLoadedKey] = useState<string | null>(null);
   const [audioPanelMode, setAudioPanelMode] = useState<"input" | "output" | null>(null);
+  const [audioLoadedKey, setAudioLoadedKey] = useState<string | null>(null);
   const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioInputDeviceId, setAudioInputDeviceId] = useState("");
@@ -999,22 +1000,27 @@ export default function CommunityPage() {
 
   useEffect(() => {
     if (!appearanceStorageKey) return;
-    let saved: { mode?: string; customColor?: string; chroma?: boolean } = {};
-    try {
-      saved = JSON.parse(window.localStorage.getItem(appearanceStorageKey) || "{}");
-    } catch {
-      saved = {};
-    }
-    if (saved.mode === "black" || saved.mode === "gray" || saved.mode === "white" || saved.mode === "custom") {
-      setAppearanceMode(saved.mode);
-    } else {
-      setAppearanceMode("black");
-    }
-    if (typeof saved.customColor === "string" && /^#[0-9a-f]{6}$/i.test(saved.customColor)) {
-      setAppearanceCustomColor(saved.customColor);
-    }
-    setChromaEnabled(saved.chroma !== false);
-    setAppearanceLoadedKey(appearanceStorageKey);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      let saved: { mode?: string; customColor?: string; chroma?: boolean } = {};
+      try {
+        saved = JSON.parse(window.localStorage.getItem(appearanceStorageKey) || "{}");
+      } catch {
+        saved = {};
+      }
+      setAppearanceMode(
+        saved.mode === "black" || saved.mode === "gray" || saved.mode === "white" || saved.mode === "custom"
+          ? saved.mode
+          : "black",
+      );
+      if (typeof saved.customColor === "string" && /^#[0-9a-f]{6}$/i.test(saved.customColor)) {
+        setAppearanceCustomColor(saved.customColor);
+      }
+      setChromaEnabled(saved.chroma !== false);
+      setAppearanceLoadedKey(appearanceStorageKey);
+    });
+    return () => { cancelled = true; };
   }, [appearanceStorageKey]);
 
   useEffect(() => {
@@ -1032,21 +1038,24 @@ export default function CommunityPage() {
 
   useEffect(() => {
     if (!audioStorageKey) return;
-    try {
-      const saved = JSON.parse(window.localStorage.getItem(audioStorageKey) || "{}") as {
-        input?: string;
-        output?: string;
-      };
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      let saved: { input?: string; output?: string } = {};
+      try {
+        saved = JSON.parse(window.localStorage.getItem(audioStorageKey) || "{}");
+      } catch {
+        saved = {};
+      }
       setAudioInputDeviceId(typeof saved.input === "string" ? saved.input : "");
       setAudioOutputDeviceId(typeof saved.output === "string" ? saved.output : "");
-    } catch {
-      setAudioInputDeviceId("");
-      setAudioOutputDeviceId("");
-    }
+      setAudioLoadedKey(audioStorageKey);
+    });
+    return () => { cancelled = true; };
   }, [audioStorageKey]);
 
   useEffect(() => {
-    if (!audioStorageKey) return;
+    if (!audioStorageKey || audioLoadedKey !== audioStorageKey) return;
     try {
       window.localStorage.setItem(audioStorageKey, JSON.stringify({
         input: audioInputDeviceId,
@@ -1055,7 +1064,7 @@ export default function CommunityPage() {
     } catch {
       // Audio device choices remain selected for the current page session.
     }
-  }, [audioStorageKey, audioInputDeviceId, audioOutputDeviceId]);
+  }, [audioStorageKey, audioLoadedKey, audioInputDeviceId, audioOutputDeviceId]);
 
   const refreshAudioDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) {
@@ -1108,9 +1117,14 @@ export default function CommunityPage() {
     return () => observer.disconnect();
   }, [audioOutputDeviceId]);
 
+  function openAudioPanel(mode: "input" | "output") {
+    const nextMode = audioPanelMode === mode ? null : mode;
+    setAudioPanelMode(nextMode);
+    if (nextMode) void refreshAudioDevices();
+  }
+
   useEffect(() => {
     if (!audioPanelMode) return;
-    void refreshAudioDevices();
     const mediaDevices = navigator.mediaDevices;
     if (!mediaDevices?.addEventListener) return;
     const handleDeviceChange = () => void refreshAudioDevices();
@@ -1686,7 +1700,7 @@ export default function CommunityPage() {
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [markChannelRead]);
+  }, [markChannelRead, userId, activeSpaceId]);
 
   // Presence is global to the community, not to an individual channel.
   // Keep this socket stable while the user navigates between channels.
@@ -2289,23 +2303,23 @@ export default function CommunityPage() {
             <div className="community-user-audio-controls" aria-label="Controles de audio">
               {canUseMicrophone && (
                 <div className="community-user-control-group community-user-mic-group">
-                  <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
+                  <button type="button" onClick={() => openAudioPanel("input")}
                     className={audioPanelMode === "input" ? "is-active" : ""}
                     aria-label="Configurar micrófono" title="Micrófono">
                     <Mic size={17}/>
                   </button>
-                  <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
+                  <button type="button" onClick={() => openAudioPanel("input")}
                     className="community-user-control-chevron" aria-label="Opciones de micrófono"
                     aria-expanded={audioPanelMode === "input"}><ChevronDown size={13}/></button>
                 </div>
               )}
               <div className="community-user-control-group community-user-output-group">
-                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
+                <button type="button" onClick={() => openAudioPanel("output")}
                   className={audioPanelMode === "output" ? "is-active" : ""}
                   aria-label="Configurar audífonos y salida de audio" title="Audífonos y salida de audio">
                   <Headphones size={18}/>
                 </button>
-                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
+                <button type="button" onClick={() => openAudioPanel("output")}
                   className="community-user-control-chevron" aria-label="Opciones de salida de audio"
                   aria-expanded={audioPanelMode === "output"}><ChevronDown size={13}/></button>
               </div>

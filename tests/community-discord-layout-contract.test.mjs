@@ -151,3 +151,14 @@ testCase("community profile popout uses real controls and contains no platform-p
   assert.match(profileMarkup, /Copiar identificador/);
   assert.doesNotMatch(profileMarkup, /community-profile-tabs/);
 });
+
+
+testCase("member rail is role-grouped, collapsible, and uses a clean Discord-style online heading", () => {
+  assert.match(page, /community-member-online-heading/);
+  assert.match(page, /community-member-group-toggle/);
+  assert.match(page, /aria-expanded=\{!collapsed\}/);
+  assert.match(page, /setCollapsedMemberGroups/);
+  assert.doesNotMatch(page, /MIEMBROS/);
+  assert.doesNotMatch(page, /conectados de \\{memberCount\\} miembros/);
+  assert.doesNotMatch(page, /community-member-sidebar-footer/);
+});

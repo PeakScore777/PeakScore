@@ -62,7 +62,7 @@ testCase("PreICFES collaborator is scoped and cannot become a global staff role"
     migration.indexOf("drop policy if exists community_comments_read_active"),
   );
   assert.equal((commentGuardPolicy.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 2);
-  const mentionRpcs = migration.slice
+  const mentionRpcs = migration.slice(
     migration.indexOf("create or replace function public.search_community_member_profiles("),
     migration.indexOf("commit;"),
   );

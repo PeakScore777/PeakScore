@@ -3033,7 +3033,7 @@ export default function CommunityPage() {
                                   clientY: rect.top + Math.min(rect.height, 28),
                                 });
                               }}>
-                              <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
+                              <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none")}>
                                 {member.avatar_url
                                   ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
                                   : initials(member.full_name)}
@@ -3119,7 +3119,7 @@ export default function CommunityPage() {
             onMouseLeave={scheduleCloseMemberHoverPreview}
           >
             <article
-              className={"ps-community-member-popout__card is-profile-frame-" + (hoverCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (hoverCommunityProfile.profileEffectId ?? "none")}
+              className="ps-community-member-popout__card"
               style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")", "--community-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3"), "--community-theme-body-text": communityThemeText(communityThemeMidpoint(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6")) } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
@@ -3133,7 +3133,7 @@ export default function CommunityPage() {
               </div>
               <div className="ps-community-member-popout__body">
                 <div className="ps-community-member-popout__top">
-                  <div className={"ps-community-member-popout__avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none") + " is-decoration-" + (hoverCommunityProfile.avatarDecorationId ?? "none")}>
+                  <div className={"ps-community-member-popout__avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none")}>
                     {hoverCommunityProfile.avatarUrl
                       ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/>
                       : <span>{initials(hoverCommunityProfile.displayName)}</span>}
@@ -3239,7 +3239,7 @@ export default function CommunityPage() {
               clearCommunityMemberProfileUrl();
             }
           }}>
-            <section className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-profile-frame-" + (selectedCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title"
+            <section className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title"
               style={{
                 "--editor-accent": selectedCommunityProfile.accentColor ?? "#3987FF",
                 "--editor-card": selectedCommunityProfile.cardColor ?? "#B7D7C3",
@@ -3254,7 +3254,7 @@ export default function CommunityPage() {
                 "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart),
               } as CSSProperties}>
               <div className="ps-community-editor-banner-anchor">
-                <div className={"ps-community-editor-preview-banner is-banner-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")}
+                <div className="ps-community-editor-preview-banner"
                   style={selectedCommunityProfile.bannerUrl
                     ? { backgroundImage: "url(" + selectedCommunityProfile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" }
                     : { backgroundColor: "#20242D" }}>
@@ -3277,7 +3277,7 @@ export default function CommunityPage() {
                 <div className="ps-community-editor-preview-avatar-row">
                   <div className="ps-community-editor-preview-avatar-anchor">
                     <span className="ps-community-editor-preview-avatar-trigger" aria-hidden="true">
-                      <span className={"ps-community-editor-preview-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none") + " is-decoration-" + (selectedCommunityProfile.avatarDecorationId ?? "none")}>
+                      <span className={"ps-community-editor-preview-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none")}>
                         {selectedCommunityProfile.avatarUrl
                           ? <Image src={selectedCommunityProfile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
                           : <span>{initials(selectedCommunityProfile.displayName || "PeakScore")}</span>}
@@ -3317,7 +3317,7 @@ export default function CommunityPage() {
 
                 <section className="ps-community-editor-preview-about">
                   <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{selectedCommunityProfile.about.length}/256</small></div>
-                  <p className="ps-community-editor-bio-display">{selectedCommunityProfile.about || "Cuéntanos un poco sobre ti…"}</p>
+                  <div className="ps-community-editor-bio-display ps-community-profile-bio-readonly">{selectedCommunityProfile.about || "Cuéntanos un poco sobre ti…"}</div>
                 </section>
 
                 <section className="ps-community-editor-preview-meta">

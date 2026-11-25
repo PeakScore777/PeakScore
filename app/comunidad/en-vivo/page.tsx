@@ -93,7 +93,7 @@ export default function CommunityLivePage() {
       .order("scheduled_at", { ascending: true })
       .limit(50);
 
-    let sessionData = scopedResult.data;
+    let sessionData: LiveSession[] | null = scopedResult.data as unknown as LiveSession[] | null;
     let queryError = scopedResult.error;
     if (queryError && spaceId === "00000000-0000-4000-8000-000000000001"
       && ["42703","PGRST204","PGRST200"].includes(queryError.code ?? "")) {
@@ -104,7 +104,7 @@ export default function CommunityLivePage() {
         .in("status", ["scheduled", "live"])
         .order("scheduled_at", { ascending: true })
         .limit(50);
-      sessionData = legacyResult.data;
+      sessionData = legacyResult.data as unknown as LiveSession[] | null;
       queryError = legacyResult.error;
     }
 

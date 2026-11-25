@@ -70,7 +70,12 @@ export async function POST(request: Request) {
     return fail("Revisa el nombre, categoría, visibilidad y apariencia del canal.", 400);
   }
 
-  const { data, error } = await supabase.rpc("manage_community_channel", {
+  const spaceId = typeof payload.space_id === "string" ? payload.space_id : null;
+  if (spaceId && !UUID_PATTERN.test(spaceId)) return fail("El espacio no es válido.", 400);
+
+  const rpcName = spaceId ? "manage_community_space_channel" : "manage_community_channel";
+  const rpcArgs = spaceId ? {
+    p_space_id: spaceId,
     p_action: action,
     p_channel_id: channelId,
     p_slug: slug,
@@ -83,7 +88,21 @@ export async function POST(request: Request) {
     p_channel_type: channelType,
     p_icon_key: iconKey,
     p_accent_color: accentColor,
-  });
+  } : {
+    p_action: action,
+    p_channel_id: channelId,
+    p_slug: slug,
+    p_name: name,
+    p_description: description,
+    p_category: category,
+    p_position: position,
+    p_is_private: typeof payload.is_private === "boolean" ? payload.is_private : null,
+    p_is_read_only: typeof payload.is_read_only === "boolean" ? payload.is_read_only : null,
+    p_channel_type: channelType,
+    p_icon_key: iconKey,
+    p_accent_color: accentColor,
+  };
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs);
 
   if (error || typeof data !== "string") {
     const denied = error?.code === "42501";

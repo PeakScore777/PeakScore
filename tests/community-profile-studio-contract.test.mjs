@@ -878,7 +878,7 @@ test("motion gallery previews use the exact renderer for each selectable animati
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}[\s\S]*?animation=\{selectedCommunityProfile\.displayNameAnimation \?\? "decrypt"\}/);
-  assert.ok(fuzzyText.includes("getContext('2d'"));
+  assert.doesNotMatch(studio, /<FuzzyText|resolveFuzzyTextAppearance/);
 });
 
 test("Signal Break is retired from selectable display-name animations and legacy profiles fall back safely", () => {
@@ -988,8 +988,11 @@ test("Gradient Flow is a name finish and not a selectable profile animation", ()
   assert.match(page, /"gradient-flow"/);
   assert.match(route, /const DISPLAY_NAME_EFFECTS = new Set\([^\n]*"gradient-flow"/);
   assert.doesNotMatch(route, /DISPLAY_NAME_ANIMATIONS = new Set\(\[[^\]]*"gradient-flow"/);
-  assert.match(nameStyleCss, /\.ps-gradient-flow-name[\s\S]*?animation:ps-gradient-flow-text 5\.2s ease-in-out infinite/);
-  assert.match(nameStyleCss, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?\.ps-gradient-flow-name \{ animation:none/);
+  assert.match(nameEffectsCss, /\.effect-gradient-flow/);
+  assert.match(nameEffectsCss, /effect-gradient-flow \.ps-depth-lift__face/);
+  assert.match(nameEffectsCss, /effect-gradient-flow \.ps-name-animation-char::after/);
+  assert.doesNotMatch(studio, /ps-gradient-flow-name/);
+  assert.doesNotMatch(page, /ps-gradient-flow-name/);
   assert.match(gradientFlowMigration, /'gradient-flow'/);
   assert.match(gradientFlowMigration, /set display_name_animation = 'decrypt'/);
   assert.match(gradientFlowMigration, /where display_name_animation in \('signal-break', 'glitch'\)/);

@@ -465,6 +465,7 @@ export default function CommunityPage() {
   const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
   const hoverProfileCloseTimerRef = useRef<number | null>(null);
   const memberPopoutRef = useRef<HTMLDivElement | null>(null);
+  const profileFromUrlRef = useRef<string | null>(null);
   const communityProfileRequestRef = useRef(0);
   const communityProfileCloseRef = useRef<HTMLButtonElement | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
@@ -718,6 +719,47 @@ export default function CommunityPage() {
     }
   }
 
+  function communityMemberProfileUrl(memberId: string) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("member", memberId);
+    return url.toString();
+  }
+
+  function clearCommunityMemberProfileUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("member");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    profileFromUrlRef.current = null;
+  }
+
+  async function shareCommunityMemberProfile(memberId: string, displayName: string) {
+    const url = communityMemberProfileUrl(memberId);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Perfil de " + displayName + " · PeakScore",
+          text: "Mira el perfil de " + displayName + " en PeakScore Community.",
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopiedCommunityProfileId(memberId);
+      }
+      setMemberProfileMenuOpen(false);
+    } catch (shareError) {
+      if (shareError instanceof Error && shareError.name !== "AbortError") {
+        setCommunityProfileError("No se pudo compartir el perfil.");
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!userId || !activeSpace?.id) return;
+    const memberId = new URLSearchParams(window.location.search).get("member");
+    if (!memberId || profileFromUrlRef.current === memberId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(memberId)) return;
+    profileFromUrlRef.current = memberId;
+    void openCommunityProfile(memberId);
+  }, [userId, activeSpace?.id]);
 
   useEffect(() => {
     if (!mentionSearchQuery || !activeChannelId || !userId) return;
@@ -765,6 +807,7 @@ export default function CommunityPage() {
         setCommunityProfileLoading(false);
         setCommunityProfileError("");
         setCopiedCommunityProfileId(null);
+        clearCommunityMemberProfileUrl();
       }
     }
     window.addEventListener("keydown", handleProfileKeyDown);
@@ -2917,6 +2960,16 @@ export default function CommunityPage() {
                           }}>
                             <AtSign size={15}/> Mencionar
                           </button>
+                          <button type="button" role="menuitem" onClick={() => void shareCommunityMemberProfile(hoverCommunityProfile.userId, hoverCommunityProfile.displayName)}>
+                            <Share2 size={15}/> Compartir perfil
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => {
+                            void navigator.clipboard.writeText(communityMemberProfileUrl(hoverCommunityProfile.userId))
+                              .then(() => setMemberProfileMenuOpen(false))
+                              .catch(() => setCommunityProfileError("No se pudo copiar el enlace."));
+                          }}>
+                            <Copy size={15}/> Copiar enlace
+                          </button>
                           <button type="button" role="menuitem" onClick={() => {
                             void navigator.clipboard.writeText(hoverCommunityProfile.displayName)
                               .then(() => setMemberProfileMenuOpen(false))
@@ -2977,6 +3030,7 @@ export default function CommunityPage() {
               setCommunityProfileLoading(false);
               setCommunityProfileError("");
               setCopiedCommunityProfileId(null);
+              clearCommunityMemberProfileUrl();
             }
           }}>
             <section className={"ps-community-profile-dialog is-profile-frame-" + (selectedCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
@@ -3004,6 +3058,7 @@ export default function CommunityPage() {
                   setCommunityProfileLoading(false);
                   setCommunityProfileError("");
                   setCopiedCommunityProfileId(null);
+                  clearCommunityMemberProfileUrl();
                 }}
                 aria-label="Cerrar perfil"
               ><X size={19}/></button>

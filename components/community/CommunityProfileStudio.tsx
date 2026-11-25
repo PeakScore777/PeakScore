@@ -488,7 +488,7 @@ function displayNameCharacterDelay(index: number, count: number, animation: Disp
   return Math.round(index * step) + "ms";
 }
 
-function DisplayNameMotionPreview({ value, animation, className = "", style, tag = "span", fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS }: {
+function DisplayNameMotionPreview({ value, animation, className = "", style, tag = "span" }: {
   value: string;
   animation: DisplayNameAnimation;
   className?: string;
@@ -1470,7 +1470,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} fuzzySettings={displayNameFuzzySettings} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                  <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                   <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
                     <textarea

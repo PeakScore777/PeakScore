@@ -13,7 +13,7 @@ import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Pencil, Pipette,
+  Camera, Check, Copy, Pencil, Pipette,
   LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
@@ -2071,7 +2071,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </header>
 
             <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor), "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
-              <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+              <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
               </div>

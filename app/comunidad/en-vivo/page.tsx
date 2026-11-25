@@ -254,7 +254,7 @@ export default function CommunityLivePage() {
     setSaving(true);
     setError("");
     setSuccess("");
-    const { error: insertError } = await supabase
+    const scopedInsert = await supabase
       .from("community_live_sessions")
       .insert({
         space_id: activeSpace.id,
@@ -267,6 +267,23 @@ export default function CommunityLivePage() {
         max_participants: Number(capacity),
         visibility: "community",
       });
+
+    let insertError = scopedInsert.error;
+    if (insertError && activeSpace.space_type === "global"
+      && ["42703","PGRST204","PGRST200"].includes(insertError.code ?? "")) {
+      // Before space_id is deployed, keep the original global scheduling path working.
+      const legacyInsert = await supabase.from("community_live_sessions").insert({
+        host_id: userId,
+        title: cleanTitle,
+        description: cleanDescription,
+        subject,
+        scheduled_at: start.toISOString(),
+        duration_minutes: Number(duration),
+        max_participants: Number(capacity),
+        visibility: "community",
+      });
+      insertError = legacyInsert.error;
+    }
 
     if (insertError) {
       setError(insertError.message.includes("row-level security")

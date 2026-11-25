@@ -3559,3 +3559,17 @@
     pointer-events: auto;
   }
 }
+
+
+/* Keep the selected channel Discord-neutral: no cyan/blue rail or glow. */
+.root :global(.community-channel-link.community-nav-active) {
+  box-shadow: none !important;
+  border-color: transparent !important;
+  background: #404249 !important;
+  color: #f2f3f5 !important;
+}
+.root :global(.community-channel-link.community-nav-active .community-channel-glyph),
+.root :global(.community-channel-link.community-nav-active svg) {
+  color: #b5bac1 !important;
+  filter: none !important;
+}

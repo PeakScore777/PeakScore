@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
     "test:orby": "node --test tests/orby-request-filter.test.mjs",
-    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text && npm run test:archivo-oculto-contract && npm run test:community-role-privacy && npm run test:community-live-security && npm run test:upload-security && npm run test:github-actions-pinning && npm run test:community-message-metrics && npm run test:community-comments-pagination && npm run test:community-discord-layout && npm run test:community-chat-contract && npm run test:community-founder-authority && npm run test:community-profile-banner && npm run test:peakstyle && npm run test:community-profile-studio && npm run test:community-founder-studio && npm run test:community-spaces && npm run test:community-live-spaces && npm run test:community-premium-features",
+    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text && npm run test:archivo-oculto-contract && npm run test:community-role-privacy && npm run test:community-live-security && npm run test:upload-security && npm run test:github-actions-pinning && npm run test:community-message-metrics && npm run test:community-comments-pagination && npm run test:community-discord-layout && npm run test:community-chat-contract && npm run test:community-founder-authority && npm run test:community-profile-banner && npm run test:peakstyle && npm run test:community-profile-studio && npm run test:community-founder-studio && npm run test:community-spaces && npm run test:community-live-spaces && npm run test:community-premium-features && npm run test:community-member-profile-ui",
     "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs",
     "test:archivo-3d-text": "node --test tests/archivo-oculto-no-external-text-fonts.test.mjs",
     "test:monitor-camera-fit": "node --test tests/monitor-camera-fit.test.mjs",
@@ -30,7 +30,8 @@
     "test:community-founder-studio": "node --test tests/community-founder-studio-contract.test.mjs",
     "test:community-spaces": "node --test tests/community-spaces-isolation-contract.test.mjs",
     "test:community-live-spaces": "node --test tests/community-live-space-scope-contract.test.mjs",
-    "test:community-premium-features": "node --test tests/community-premium-features-contract.test.mjs"
+    "test:community-premium-features": "node --test tests/community-premium-features-contract.test.mjs",
+    "test:community-member-profile-ui": "node --test tests/community-member-profile-ui-contract.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

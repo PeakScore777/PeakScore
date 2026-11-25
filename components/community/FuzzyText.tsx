@@ -636,7 +636,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       typographyObserver?.disconnect();
       document.fonts?.removeEventListener?.('loadingdone', handleTypographyChange);
     };
-  }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn, performanceMode, loopIntro, loopDelay]);
+  }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn, performanceMode, loopIntro, loopDelay, respectReducedMotion]);
 
   return (
     <canvas

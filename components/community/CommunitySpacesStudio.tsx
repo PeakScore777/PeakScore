@@ -30,10 +30,12 @@ type SpaceChannel = {
   icon_key: string;
   accent_color: string;
 };
+type SpaceForm = Pick<Space, "slug" | "name" | "description" | "visibility" | "icon_key" | "accent_color">;
+type SpaceChannelForm = Omit<SpaceChannel, "id">;
 type RoleOption = { role_key: string; label: string };
 
 const ROLE_PROTECTED = new Set(["fundador", "administrador", "moderador", "profesor"]);
-const EMPTY_SPACE = {
+const EMPTY_SPACE: SpaceForm = {
   slug: "",
   name: "",
   description: "",
@@ -41,7 +43,7 @@ const EMPTY_SPACE = {
   icon_key: "graduation-cap",
   accent_color: "#E4B65C",
 };
-const EMPTY_CHANNEL = {
+const EMPTY_CHANNEL: SpaceChannelForm = {
   slug: "",
   name: "",
   description: "",
@@ -49,14 +51,14 @@ const EMPTY_CHANNEL = {
   position: 10,
   is_private: false,
   is_read_only: false,
-  channel_type: "text" as const,
+  channel_type: "text",
   icon_key: "hash",
   accent_color: "#01C8EF",
 };
 const FIELD = "mt-1.5 h-10 w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 text-[11px] text-[#e8eef3] outline-none transition placeholder:text-[#647a89] focus:border-[#01c8ef] focus:ring-2 focus:ring-[#01c8ef]/10";
 const LABEL = "block text-[10px] font-semibold tracking-wide text-[#a4b5c0]";
 
-function toSpaceForm(space: Space | null) {
+function toSpaceForm(space: Space | null): SpaceForm {
   return space ? {
     slug: space.slug,
     name: space.name,
@@ -67,7 +69,7 @@ function toSpaceForm(space: Space | null) {
   } : { ...EMPTY_SPACE };
 }
 
-function toSpaceChannelForm(channel: SpaceChannel | null) {
+function toSpaceChannelForm(channel: SpaceChannel | null): SpaceChannelForm {
   return channel ? {
     slug: channel.slug,
     name: channel.name,
@@ -95,8 +97,8 @@ export default function CommunitySpacesStudio() {
   const [loading, setLoading] = useState(true);
   const [creatingSpace, setCreatingSpace] = useState(false);
   const [selectedTab, setSelectedTab] = useState<"settings" | "members" | "channels">("settings");
-  const [spaceForm, setSpaceForm] = useState(EMPTY_SPACE);
-  const [channelForm, setChannelForm] = useState(EMPTY_CHANNEL);
+  const [spaceForm, setSpaceForm] = useState<SpaceForm>({ ...EMPTY_SPACE });
+  const [channelForm, setChannelForm] = useState<SpaceChannelForm>({ ...EMPTY_CHANNEL });
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [creatingChannel, setCreatingChannel] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState("");

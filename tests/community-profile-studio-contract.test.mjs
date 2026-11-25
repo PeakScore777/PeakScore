@@ -1419,3 +1419,30 @@ test("community-only profile and name-style stylesheets are loaded by the commun
   assert.match(layout, /--font-name-stream-mono/);
   assert.match(layout, /--font-name-epic-rpg/);
 });
+
+
+test("Name Atelier previews keep independent effects, live noise typography and the borderless Discord reference layout", () => {
+  const effectGrid = studio.slice(studio.indexOf("DISPLAY_NAME_EFFECTS.map"), studio.indexOf("DISPLAY_NAME_ANIMATIONS.map"));
+  assert.match(effectGrid, /ps-community-name-effect-option/);
+  assert.match(effectGrid, /ps-community-name-effect-sample is-name-style-/);
+  assert.doesNotMatch(effectGrid, /className=\{["']ps-community-name-effect-option effect-/);
+  assert.match(studio, /loopIntro=\{previewMode\}/);
+  assert.match(studio, /loopDelay=\{1100\}/);
+  assert.match(studio, /fuzzySettings\.colorSplit, 0\.12/);
+  assert.match(studio, /fuzzySettings\.baseIntensity, 0\.24/);
+  assert.match(fuzzyText, /getComputedStyle\(canvas\.parentElement \|\| canvas\)/);
+  assert.match(fuzzyText, /loopIntro && introState\.done/);
+  assert.match(fuzzyText, /introState\.nextStart = now \+ Math\.max\(500, loopDelay\)/);
+
+  const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
+  assert.match(finalPreviewCss, /\.ps-community-name-preview-stage\s*\{[^}]*border:0 !important/s);
+  assert.match(finalPreviewCss, /\.ps-community-name-preview-stage\s*\{[^}]*background:transparent !important/s);
+  assert.match(finalPreviewCss, /\.ps-community-name-style-profile-preview\s*\{[^}]*height:185px !important/s);
+  assert.match(finalPreviewCss, /\.ps-community-status-preview-avatar\s*\{[^}]*width:110px !important/s);
+  assert.match(finalPreviewCss, /\.ps-community-name-community-shell\s*\{[^}]*border:1px solid/s);
+  assert.match(finalPreviewCss, /\.ps-community-name-chat-message\s*\{[^}]*border:1px solid/s);
+  assert.match(finalPreviewCss, /\.ps-community-name-animation-option > \.ps-community-name-preview-live/);
+  assert.match(finalPreviewCss, /\.ps-community-name-animation-option \.ps-fuzzy-text-wrap\s*\{[^}]*height:58px !important/s);
+  assert.match(finalPreviewCss, /\.ps-community-name-effect-sample\.effect-gradient-flow/);
+  assert.match(finalPreviewCss, /\.ps-community-name-effect-sample\.effect-chromaflow/);
+});

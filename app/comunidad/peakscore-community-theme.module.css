@@ -482,7 +482,7 @@
 
 .root :global(.community-layout) {
   display: grid;
-  grid-template-columns: 72px 252px minmax(0, 1fr) 0;
+  grid-template-columns: 80px 320px minmax(0, 1fr) 0;
   grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: 100%;
@@ -493,7 +493,7 @@
 }
 
 .root :global(.community-layout:has(.community-member-sidebar)) {
-  grid-template-columns: 72px 252px minmax(300px, 1fr) 256px;
+  grid-template-columns: 80px 320px minmax(300px, 1fr) 256px;
 }
 
 .root :global(.community-server-rail) {
@@ -502,8 +502,8 @@
   flex-direction: column;
   align-items: center;
   gap: 9px;
-  width: 72px;
-  min-width: 72px;
+  width: 80px;
+  min-width: 80px;
   height: 100%;
   padding: 14px 0 12px;
   overflow-y: auto;
@@ -573,7 +573,7 @@
   grid-column: 2;
   display: flex;
   flex-direction: column;
-  width: 252px;
+  width: 320px;
   min-width: 0;
   height: 100%;
   overflow: hidden;
@@ -1165,10 +1165,10 @@
 
 @media (max-width: 1180px) {
   .root :global(.community-layout:has(.community-member-sidebar)) {
-    grid-template-columns: 64px 232px minmax(280px, 1fr) 230px;
+    grid-template-columns: 68px 260px minmax(280px, 1fr) 230px;
   }
-  .root :global(.community-sidebar) { width: 232px; }
-  .root :global(.community-server-rail) { width: 64px; min-width: 64px; }
+  .root :global(.community-sidebar) { width: 260px; }
+  .root :global(.community-server-rail) { width: 68px; min-width: 68px; }
   .root :global(.community-member-sidebar) { width: 230px; }
 }
 

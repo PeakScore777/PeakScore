@@ -6464,3 +6464,132 @@ html:has(.ps-community-picker-overlay) * {
     flex:1 1 0 !important;
   }
 }
+
+
+/* Typography category tabs: remove only the shared rectangular wrapper.
+   The active category keeps its individual blue selection outline. */
+.ps-community-name-font-categories {
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  gap:8px !important;
+  margin:0 0 11px !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.ps-community-name-font-category {
+  min-height:34px !important;
+  padding:0 12px !important;
+  border:1px solid transparent !important;
+  border-radius:8px !important;
+}
+
+/* Restore the compact community-context preview beneath the profile card. */
+.ps-community-editor-community-context-preview {
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+  color:#b5bac1;
+  font-family:var(--font-geist-sans),sans-serif;
+}
+.ps-community-editor-community-context-heading,
+.ps-community-editor-community-chat-heading {
+  color:#949ba7;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.13em;
+}
+.ps-community-editor-community-members {
+  overflow:hidden;
+  border:1px solid #34363d;
+  border-radius:8px;
+  background:#202127;
+  padding:0 6px 6px;
+}
+.ps-community-editor-community-channel {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:29px;
+  padding:0 5px;
+  border-bottom:1px solid #30323a;
+  color:#e3e5e8;
+  font-size:9px;
+  font-weight:650;
+}
+.ps-community-editor-community-channel span {
+  color:#858b98;
+  font-size:14px;
+}
+.ps-community-editor-community-members-label {
+  padding:9px 3px 7px;
+  color:#9298a4;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.ps-community-editor-community-member {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:43px;
+  padding:0 8px;
+  border-radius:6px;
+  background:#292b32;
+}
+.ps-community-editor-community-member-avatar,
+.ps-community-editor-community-chat-avatar {
+  display:grid;
+  flex:0 0 27px;
+  width:27px;
+  height:27px;
+  place-items:center;
+  border-radius:50%;
+  background:#454852;
+  color:#f2f3f5;
+  font-size:8px;
+  font-weight:800;
+}
+.ps-community-editor-community-member strong {
+  overflow:hidden;
+  color:#b78aff;
+  font-size:9px;
+  font-weight:650;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ps-community-editor-community-member small {
+  margin-left:auto;
+  color:#aeb4bf;
+  font-size:8px;
+}
+.ps-community-editor-community-chat {
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  min-height:65px;
+  padding:10px;
+  border:1px solid #34363d;
+  border-radius:8px;
+  background:#202127;
+}
+.ps-community-editor-community-chat-avatar { flex-basis:27px; }
+.ps-community-editor-community-chat > div { min-width:0; }
+.ps-community-editor-community-chat strong {
+  color:#b78aff;
+  font-size:9px;
+  font-weight:650;
+}
+.ps-community-editor-community-chat small {
+  color:#9298a4;
+  font-size:8px;
+}
+.ps-community-editor-community-chat p {
+  margin:5px 0 0;
+  color:#e1e3e7;
+  font-size:9px;
+  line-height:1.45;
+}

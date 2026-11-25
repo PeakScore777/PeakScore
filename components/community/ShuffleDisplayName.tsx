@@ -60,7 +60,6 @@ export default function ShuffleDisplayName({
   useEffect(() => {
     if (forceVisible) {
       visibleRef.current = true;
-      setIsVisible(true);
       return () => { visibleRef.current = false; };
     }
     const node = rootRef.current;
@@ -140,7 +139,7 @@ export default function ShuffleDisplayName({
       aria-label={text}
       data-shuffle-effect={effect}
       data-shuffle-direction={shuffleDirection}
-      data-shuffle-active={isVisible ? "true" : "false"}
+      data-shuffle-active={forceVisible || isVisible ? "true" : "false"}
     >
       <span className="ps-name-shuffle__content" aria-hidden="true">
         {chars.map((character, index) => {

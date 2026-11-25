@@ -412,8 +412,8 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         [assetType === "icon" ? "icon_url" : "banner_url"]: data.assetUrl!,
       }));
       setNotice(assetType === "icon"
-        ? "Icono actualizado. Guarda la identidad para publicar el cambio."
-        : "Banner actualizado. Guarda la identidad para publicar el cambio.");
+        ? "Icono actualizado y publicado en la comunidad."
+        : "Portada actualizada y publicada en la comunidad.");
     } catch {
       setError("No se pudo subir la imagen.");
     } finally {

@@ -422,7 +422,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const tuning = tuningRef.current;
       // Keep the gallery lightweight, while the actual profile renderer follows
       // the reference's 60fps cadence whenever the browser can sustain it.
-      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 45) : tuning.fps;
+      const targetFps = performanceMode === 'preview' ? Math.min(tuning.fps, 60) : tuning.fps;
       const interval = 1000 / Math.max(1, targetFps);
       if (now - lastFrame < interval - 1) {
         // A throttled frame must schedule its successor; returning here without

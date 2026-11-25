@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase/browser";
 import communityTheme from "./peakscore-community-theme.module.css";
 import CommunityFounderStudio from "@/components/community/CommunityFounderStudio";
 import "../community-profile-status-preview.css";
+import "../community-member-profile-ui.css";
 import "../community-name-style.css";
 import "../community-name-effects.css";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
@@ -2773,8 +2774,6 @@ export default function CommunityPage() {
                           const isOnline = onlineMemberIds.includes(member.id);
                           return (
                             <button type="button" key={member.id} className={"community-member-row" + (isOnline ? "" : " community-member-offline")}
-                              onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left + 220, clientY: event.currentTarget.getBoundingClientRect().top + 28 })}
-                              onBlur={scheduleCloseMemberHoverPreview}
                               onClick={(event) => {
                                 const rect = event.currentTarget.getBoundingClientRect();
                                 openMemberHoverPreview(member, {

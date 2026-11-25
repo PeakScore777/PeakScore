@@ -65,7 +65,9 @@ export async function POST(request: Request) {
   }
   if (!body && !file) return fail("Escribe un mensaje o adjunta una imagen.", 400);
 
-  const { data: mayAttach, error: permissionError } = await supabase.rpc("can_attach_community_files");
+  const { data: mayAttach, error: permissionError } = await supabase.rpc("can_attach_community_files", {
+    p_channel_id: channelId,
+  });
   if (permissionError) {
     console.error("[community-attachment] Attachment permission check unavailable.", { code: permissionError.code });
     return fail("No se pudo verificar el permiso para adjuntar archivos.", 503);

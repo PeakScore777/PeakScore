@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, type CSSProperties, type Ref } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { observeNameMotionVisibility } from "./name-motion-visibility";
 
 type Props = {
@@ -42,7 +42,7 @@ export default function DominoFlowDisplayName({
   } as CSSProperties;
 
   return (
-    <Tag ref={rootRef as Ref<HTMLElement>} className={className + " ps-domino-flow"} style={rootStyle} aria-label={text} data-motion-visible={forceMotion ? "true" : "false"}>
+    <Tag ref={(node) => { rootRef.current = node; }} className={className + " ps-domino-flow"} style={rootStyle} aria-label={text} data-motion-visible={forceMotion ? "true" : "false"}>
       <span className="ps-domino-flow__word" aria-hidden="true">
         {chars.map((char, index) => (
           <span

@@ -34,6 +34,7 @@ type CommunitySpace = {
   name: string;
   space_type: "global" | "preicfes";
   visibility: "public" | "private";
+  verification_status?: "unverified" | "pending" | "verified" | "rejected";
   icon_key: string;
   accent_color: string;
   icon_path?: string | null;
@@ -1303,7 +1304,7 @@ export default function CommunityPage() {
       setUserId(user.id);
 
       const spaceResult = await supabase.from("community_spaces")
-        .select("id,slug,name,space_type,visibility,icon_key,accent_color,icon_path,banner_path")
+        .select("id,slug,name,space_type,visibility,verification_status,icon_key,accent_color,icon_path,banner_path")
         .eq("is_enabled", true)
         .order("created_at", { ascending: false });
       const fallbackGlobalSpace: CommunitySpace = {
@@ -1312,6 +1313,7 @@ export default function CommunityPage() {
         name: "PeakScore Community",
         space_type: "global",
         visibility: "public",
+        verification_status: "verified",
         icon_key: "users",
         accent_color: "#7FE05C",
         icon_path: null, banner_path: null, icon_url: null, banner_url: null,
@@ -2003,7 +2005,7 @@ export default function CommunityPage() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#101824]/95 via-[#101824]/75 to-[#101824]/45"/>
             <div className="relative z-10 min-w-0">
               <p className="community-server-eyebrow">COMUNIDAD</p>
-              <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={26} height={26} unoptimized className="h-[26px] w-[26px] shrink-0 rounded-[8px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>{activeSpace?.space_type === "global" && <span className="community-verified-badge" title="Comunidad oficial de PeakScore" aria-label="Comunidad oficial"><ShieldCheck size={13}/><span>OFICIAL</span></span>}</div>
+              <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={26} height={26} unoptimized className="h-[26px] w-[26px] shrink-0 rounded-[8px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>{activeSpace?.verification_status === "verified" && <span className="community-verified-badge" title="Comunidad verificada por PeakScore" aria-label="Comunidad verificada"><ShieldCheck size={13}/><span>VERIFICADA</span></span>}</div>
             </div>
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>

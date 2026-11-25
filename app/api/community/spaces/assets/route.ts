@@ -57,11 +57,24 @@ export async function POST(request: Request) {
   }
 
   const { data: space, error: spaceError } = await supabaseAdmin.from("community_spaces")
-    .select("id,space_type,icon_path,banner_path").eq("id", spaceId).eq("is_enabled", true).maybeSingle();
-  const isGlobalCommunity = space?.space_type === "global"
-    && space.id === "00000000-0000-4000-8000-000000000001";
-  if (spaceError || !space || (space.space_type !== "preicfes" && !isGlobalCommunity)) {
-    return fail("No se encontró una comunidad compatible.", 404);
+    .select("id,slug,space_type,icon_path,banner_path").eq("id", spaceId).eq("is_enabled", true).maybeSingle();
+  if (spaceError) {
+    console.error("[PeakScore Community] Branding space lookup failed.", {
+      code: spaceError.code,
+      spaceId,
+    });
+    return fail("No se pudo consultar la comunidad. Comprueba la conexión del servidor con Supabase.", 503);
+  }
+
+  const isPreIcfesCommunity = space?.space_type === "preicfes";
+  const isGlobalCommunity = space?.space_type === "global" && space.slug === "peakscore";
+  if (!space || (!isPreIcfesCommunity && !isGlobalCommunity)) {
+    console.warn("[PeakScore Community] Unsupported or missing branding space.", {
+      spaceId,
+      spaceType: space?.space_type ?? null,
+      slug: space?.slug ?? null,
+    });
+    return fail("No encontramos una comunidad activa compatible con esa identidad.", 404);
   }
 
   let sanitized: Awaited<ReturnType<typeof sanitizeRasterImage>>;

@@ -534,7 +534,7 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
   if (animation === "inkline") {
     const effectName = className.split(/\\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
     const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
-    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.7} fontWeight={900} className={renderedClassName} style={safeStyle} tag={tag}/>;
+    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.7} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
     return <HaloSignalDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;

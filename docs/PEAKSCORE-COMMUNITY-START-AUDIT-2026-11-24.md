@@ -110,3 +110,30 @@ La autorización debe vivir en funciones SQL/RLS y APIs de servidor. Ocultar bot
 - Archivos y fondos de canal usan rutas privadas o URLs firmadas y límites de tamaño.
 - Nada se borra de Storage para resolver la cuota sin un análisis de referencias.
 
+
+## Actualización de implementación — 24 de noviembre de 2026
+
+La rama `feat/founder-intro` contiene ahora una primera implementación de:
+- Panel de founder con pestañas para miembros, roles, canales y espacios PreICFES.
+- Catálogo de roles con jerarquía, insignia, color, separación de miembros y capacidades limitadas a lectura, escritura, adjuntos y reacciones.
+- Administración de canales globales y por espacio: crear, editar, archivar, categoría, orden, tipo, icono, color, privacidad y solo lectura.
+- Espacios PreICFES con membresía propia y roles contextuales, incluido `colaborador` que no se puede asignar como rol global.
+- Moderación limitada al espacio: timeout, kick y restauración; el timeout conserva lectura pero bloquea escritura, adjuntos y reacciones.
+- Navegación lateral de espacios disponibles, contadores/listados de miembros por espacio y enlaces que conservan el espacio.
+- Sesiones en vivo con `space_id`: global para Profesor PeakScore y PreICFES para docentes asignados.
+- Edición de mensajes y búsqueda/resolución de menciones limitadas al espacio.
+
+Migraciones nuevas (todavía no aplicadas):
+1. `20261124230000_peakscore_community_authority_consolidated.sql`
+2. `20261124230100_community_role_and_channel_control.sql`
+3. `20261124230200_community_spaces_and_preicfes_isolation.sql`
+4. `20261124230300_community_live_sessions_space_scope.sql`
+
+Pruebas contractuales añadidas al script `npm test`:
+- `community-founder-studio`
+- `community-spaces`
+- `community-live-spaces`
+
+**Estado de validación:** el último intento de build disponible llegó a ejecutar la suite existente y falló en una aserción de texto del panel Founder; esa aserción se corrigió. Vercel está limitando nuevos builds y no hay aún un build posterior que confirme lint/TypeScript y las nuevas pruebas. No afirmar compilación correcta hasta obtener un despliegue verificable.
+
+**No se ha cambiado producción:** las tablas, políticas, RPC ni los datos remotos de Supabase permanecen en el estado auditado arriba. Antes de aplicar estas migraciones hay que reconciliar el ledger de versiones y probar en una base aislada.

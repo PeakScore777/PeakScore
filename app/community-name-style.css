@@ -4959,12 +4959,21 @@
    Keep the copy column flexible so a short name never collapses into a vertical strip. */
 .community-member-copy {
   display:flex !important;
-  flex:1 1 0 !important;
+  flex:1 1 auto !important;
   flex-direction:column !important;
   align-items:flex-start !important;
   justify-content:center !important;
   min-width:0 !important;
-  width:0 !important;
+  width:auto !important;
+  max-width:100% !important;
+}
+.community-member-copy > .community-member-nameplate {
+  display:inline-block !important;
+  flex:0 1 auto !important;
+  width:fit-content !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  color:var(--name-solid-color, #f2f3f5);
 }
 .community-member-copy > .community-member-nameplate {
   display:inline-block !important;

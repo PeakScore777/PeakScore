@@ -170,12 +170,12 @@ set search_path = ''
 as $function$
   select auth.uid() is not null
     and p_space_id is not null
-    and not private.is_community_kicked()
     and exists (
       select 1
       from public.community_spaces space
       where space.id = p_space_id
         and space.is_enabled = true
+        and (space.space_type <> 'global' or not private.is_community_kicked())
         and (
           space.visibility = 'public'
           or private.is_community_founder()
@@ -304,14 +304,56 @@ as $function$
     );
 $function$;
 
+create or replace function private.can_view_private_community_channel(p_space_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select auth.uid() is not null
+    and p_space_id is not null
+    and (
+      private.is_community_founder()
+      or exists (
+        select 1
+        from public.community_spaces space
+        where space.id = p_space_id
+          and (
+            (
+              space.space_type = 'global'
+              and exists (
+                select 1
+                from public.community_member_roles assignment
+                where assignment.user_id = auth.uid()
+                  and assignment.role_key in ('profesor','moderador','administrador')
+              )
+            )
+            or (
+              space.space_type = 'preicfes'
+              and exists (
+                select 1
+                from public.community_space_member_roles assignment
+                where assignment.space_id = p_space_id
+                  and assignment.user_id = auth.uid()
+                  and assignment.role_key in ('colaborador','docente','profesor')
+              )
+            )
+          )
+      )
+    );
+$function$;
+
 revoke all on function private.can_access_community_space(uuid) from public,anon,authenticated,service_role;
 revoke all on function private.is_space_timed_out(uuid) from public,anon,authenticated,service_role;
 revoke all on function private.has_space_permission(uuid,text) from public,anon,authenticated,service_role;
 revoke all on function private.is_space_collaborator(uuid) from public,anon,authenticated,service_role;
+revoke all on function private.can_view_private_community_channel(uuid) from public,anon,authenticated,service_role;
 grant execute on function private.can_access_community_space(uuid) to authenticated;
 grant execute on function private.is_space_timed_out(uuid) to authenticated;
 grant execute on function private.has_space_permission(uuid,text) to authenticated;
 grant execute on function private.is_space_collaborator(uuid) to authenticated;
+grant execute on function private.can_view_private_community_channel(uuid) to authenticated;
 
 alter table public.community_spaces enable row level security;
 alter table public.community_space_members enable row level security;
@@ -805,13 +847,7 @@ create policy community_channels_read_active
     and private.has_space_permission(space_id,'view_channels')
     and (
       is_private = false
-      or private.is_community_founder()
-      or private.is_space_collaborator(space_id)
-      or exists (
-        select 1 from public.community_member_roles assignment
-        where assignment.user_id = (select auth.uid())
-          and assignment.role_key in ('profesor','moderador','administrador')
-      )
+      or private.can_view_private_community_channel(space_id)
     )
   );
 
@@ -846,13 +882,7 @@ create policy community_messages_read_active_channel
         and private.has_space_permission(channel.space_id,'view_channels')
         and (
           channel.is_private = false
-          or private.is_community_founder()
-          or private.is_space_collaborator(channel.space_id)
-          or exists (
-            select 1 from public.community_member_roles assignment
-            where assignment.user_id = (select auth.uid())
-              and assignment.role_key in ('profesor','moderador','administrador')
-          )
+          or private.can_view_private_community_channel(channel.space_id)
         )
     )
   );
@@ -873,13 +903,7 @@ create policy community_messages_insert_as_self
 
         and (
           channel.is_private = false
-          or private.is_community_founder()
-          or private.is_space_collaborator(channel.space_id)
-          or exists (
-            select 1 from public.community_member_roles assignment
-            where assignment.user_id = (select auth.uid())
-              and assignment.role_key in ('profesor','moderador','administrador')
-          )
+          or private.can_view_private_community_channel(channel.space_id)
         )
     )
     and (
@@ -1076,14 +1100,7 @@ begin
         and private.has_space_permission(channel.space_id,'send_messages')
         and (
           channel.is_private = false
-          or private.is_community_founder()
-          or private.is_space_collaborator(channel.space_id)
-          or exists (
-            select 1
-            from public.community_member_roles global_role
-            where global_role.user_id = v_user_id
-              and global_role.role_key in ('profesor','moderador','administrador')
-          )
+          or private.can_view_private_community_channel(channel.space_id)
         )
     )
   returning message.edited_at into v_edited_at;

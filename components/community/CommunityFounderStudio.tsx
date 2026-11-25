@@ -109,6 +109,35 @@ function normalizePermissions(value: unknown): RolePermissions {
   };
 }
 
+function toRoleForm(role: Role | null) {
+  return role ? {
+    role_key: role.role_key,
+    label: role.label,
+    description: role.description,
+    badge_color: role.badge_color,
+    display_as_badge: role.display_as_badge,
+    position: role.position,
+    mentionable: role.mentionable,
+    hoist: role.hoist,
+    permissions: { ...role.permissions },
+  } : emptyRole();
+}
+
+function toChannelForm(channel: Channel | null) {
+  return channel ? {
+    slug: channel.slug,
+    name: channel.name,
+    description: channel.description,
+    category: channel.category,
+    position: channel.position,
+    is_private: channel.is_private,
+    is_read_only: channel.is_read_only,
+    channel_type: channel.channel_type,
+    icon_key: channel.icon_key,
+    accent_color: channel.accent_color,
+  } : emptyChannel();
+}
+
 export default function CommunityFounderStudio({ onClose }: Props) {
   const [tab, setTab] = useState<Tab>("members");
   const [members, setMembers] = useState<Member[]>([]);
@@ -201,7 +230,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
       ...member,
       role_keys: assignmentMap.get(member.user_id) ?? [],
     })) as Member[]);
-    setRoles(((roleRows ?? []) as Array<Record<string, unknown>>).map((role) => ({
+    const nextRoles = ((roleRows ?? []) as Array<Record<string, unknown>>).map((role) => ({
       role_key: String(role.role_key),
       label: String(role.label),
       description: String(role.description ?? ""),
@@ -212,14 +241,27 @@ export default function CommunityFounderStudio({ onClose }: Props) {
       hoist: Boolean(role.hoist),
       is_system: Boolean(role.is_system),
       permissions: normalizePermissions(role.permissions),
-    })).sort((a, b) => a.position - b.position || a.label.localeCompare(b.label, "es")));
+    })).sort((a, b) => a.position - b.position || a.label.localeCompare(b.label, "es")) as Role[];
+    const defaultRole = nextRoles.find((role) => role.role_key === "administrador") ?? nextRoles[0] ?? null;
+    setRoles(nextRoles);
+    setSelectedRoleKey((current) => nextRoles.some((role) => role.role_key === current)
+      ? current
+      : defaultRole?.role_key ?? "administrador");
+    setRoleForm((current) => current.role_key ? current : toRoleForm(defaultRole));
     setChannels((channelRows ?? []) as Channel[]);
     setCatalogReady(roleIsReady);
     setChannelsReady(channelsAreReady);
     setLoading(false);
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      await Promise.resolve();
+      if (active) await load();
+    })();
+    return () => { active = false; };
+  }, [load]);
 
   const visibleMembers = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("es");
@@ -233,41 +275,6 @@ export default function CommunityFounderStudio({ onClose }: Props) {
 
   const selectedRole = roles.find((role) => role.role_key === selectedRoleKey) ?? null;
   const selectedChannel = channels.find((channel) => channel.id === selectedChannelId) ?? null;
-
-  useEffect(() => {
-    if (isCreatingRole) return;
-    if (!selectedRole) {
-      setRoleForm(emptyRole());
-      return;
-    }
-    setRoleForm({
-      role_key: selectedRole.role_key,
-      label: selectedRole.label,
-      description: selectedRole.description,
-      badge_color: selectedRole.badge_color,
-      display_as_badge: selectedRole.display_as_badge,
-      position: selectedRole.position,
-      mentionable: selectedRole.mentionable,
-      hoist: selectedRole.hoist,
-      permissions: { ...selectedRole.permissions },
-    });
-  }, [selectedRole, isCreatingRole]);
-
-  useEffect(() => {
-    if (isCreatingChannel) return;
-    setChannelForm(selectedChannel ? {
-      slug: selectedChannel.slug,
-      name: selectedChannel.name,
-      description: selectedChannel.description,
-      category: selectedChannel.category,
-      position: selectedChannel.position,
-      is_private: selectedChannel.is_private,
-      is_read_only: selectedChannel.is_read_only,
-      channel_type: selectedChannel.channel_type,
-      icon_key: selectedChannel.icon_key,
-      accent_color: selectedChannel.accent_color,
-    } : emptyChannel());
-  }, [selectedChannel, isCreatingChannel]);
 
   async function postJson(url: string, payload: Record<string, unknown>, key: string) {
     if (pendingKey) return false;
@@ -340,7 +347,9 @@ export default function CommunityFounderStudio({ onClose }: Props) {
       role_key: selectedRole.role_key,
     }, "role-delete");
     if (ok) {
-      setSelectedRoleKey("administrador");
+      const fallbackRole = roles.find((role) => role.role_key === "administrador") ?? null;
+      setSelectedRoleKey(fallbackRole?.role_key ?? "administrador");
+      setRoleForm(toRoleForm(fallbackRole));
       setIsCreatingRole(false);
     }
   }
@@ -525,7 +534,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   {roles.map((role) => (
                     <button key={role.role_key} type="button"
-                      onClick={() => { setIsCreatingRole(false); setSelectedRoleKey(role.role_key); }}
+                      onClick={() => { setIsCreatingRole(false); setSelectedRoleKey(role.role_key); setRoleForm(toRoleForm(role)); }}
                       className={"mb-1 flex w-full items-center gap-2 rounded-[6px] border px-2.5 py-2 text-left transition " + (!isCreatingRole && selectedRoleKey === role.role_key
                         ? "border-[#2b5665] bg-[#142a35]"
                         : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
@@ -635,7 +644,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                     return <section key={category.value} className="mb-4">
                       <p className="mb-2 px-1 font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#718b9b]">{category.label}</p>
                       {group.map((channel) => (
-                        <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setIsCreatingChannel(false); }}
+                        <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setChannelForm(toChannelForm(channel)); setIsCreatingChannel(false); }}
                           className={"mb-1 flex w-full items-center gap-2 rounded-[5px] border px-2.5 py-2 text-left " + (!isCreatingChannel && selectedChannelId === channel.id
                             ? "border-[#2b5665] bg-[#142a35]" : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
                           {channel.channel_type === "announcement" ? <Megaphone size={14} style={{ color: channel.accent_color }}/> : <Hash size={14} style={{ color: channel.accent_color }}/>}

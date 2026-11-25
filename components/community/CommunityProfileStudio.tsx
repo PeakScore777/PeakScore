@@ -13,7 +13,7 @@ import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, Pencil, Pipette,
+  Camera, Check, Copy, Film, ImagePlus, Pencil, Pipette,
   LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
@@ -684,6 +684,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [statusEmojiCategory, setStatusEmojiCategory] = useState<(typeof STATUS_EMOJI_CATEGORIES)[number]>("Todos");
   const [statusDurationOpen, setStatusDurationOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
   const [avatarCropUrl, setAvatarCropUrl] = useState<string | null>(null);
   const [avatarCropZoom, setAvatarCropZoom] = useState(1);
@@ -700,11 +701,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     DISPLAY_NAME_FONT_CATEGORIES.find((category) => category.fonts.includes(safeDisplayNameStyle(initialProfile.displayNameStyle)))?.id ?? "core"
   );
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState<"avatar" | null>(null);
-  const [deleting, setDeleting] = useState<"avatar" | null>(null);
+  const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
+  const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
+  const avatarGifInput = useRef<HTMLInputElement>(null);
+  const bannerImageInput = useRef<HTMLInputElement>(null);
+  const bannerGifInput = useRef<HTMLInputElement>(null);
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
@@ -746,6 +750,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (avatarPickerOpen) { setAvatarPickerOpen(false); return; }
       if (avatarCropUrl) {
         closeAvatarCrop();
         return;
@@ -950,6 +955,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setAvatarCropX(50);
     setAvatarCropY(50);
     setAvatarCropUrl(URL.createObjectURL(file));
+  }
+
+  function handleBannerFileSelection(file: File | null) {
+    if (!file) return;
+    void uploadAsset("banner", file);
   }
 
   function closeAvatarCrop() {
@@ -1179,13 +1189,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   }
 
-  async function uploadAsset(kind: "avatar", file: File | null) {
-    if (!file || !profile.isOwnProfile || busy || deleting) return;
-    const maxBytes = 5 * 1024 * 1024;
+  async function uploadAsset(kind: "avatar" | "banner", file: File | null) {
+    if (!file || !profile.isOwnProfile || busy || uploading || deleting) return;
+    const maxBytes = kind === "avatar" ? 5 * 1024 * 1024 : 8 * 1024 * 1024;
     const allowedType = ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type);
     if (!allowedType || file.size <= 0 || file.size > maxBytes) {
-      setError("Selecciona una imagen PNG, JPG, WebP o GIF de máximo 5 MB.");
-      if (avatarInput.current) avatarInput.current.value = "";
+      setError(kind === "avatar"
+        ? "Selecciona una imagen PNG, JPG, WebP o GIF de máximo 5 MB."
+        : "Selecciona una imagen o GIF de máximo 8 MB.");
+      clearAssetInputs(kind);
       return;
     }
 
@@ -1201,23 +1213,42 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         credentials: "same-origin",
         body: form,
       });
-      const payload = await response.json().catch(() => null) as { error?: string; avatarUrl?: string } | null;
-      const nextUrl = payload?.avatarUrl;
+      const payload = await response.json().catch(() => null) as {
+        error?: string; avatarUrl?: string; bannerUrl?: string; animated?: boolean;
+      } | null;
+      const nextUrl = kind === "avatar" ? payload?.avatarUrl : payload?.bannerUrl;
       if (!response.ok || !nextUrl) throw new Error(payload?.error ?? "No se pudo actualizar la imagen.");
 
-      setProfile((current) => ({ ...current, avatarUrl: nextUrl }));
-      setSavedSnapshot((current) => ({ ...current, avatarUrl: nextUrl }));
-      setNotice("Avatar actualizado.");
+      setProfile((current) => kind === "avatar"
+        ? { ...current, avatarUrl: nextUrl }
+        : { ...current, bannerUrl: nextUrl });
+      setSavedSnapshot((current) => kind === "avatar"
+        ? { ...current, avatarUrl: nextUrl }
+        : { ...current, bannerUrl: nextUrl });
+      setNotice(kind === "avatar"
+        ? (payload?.animated ? "GIF de avatar actualizado." : "Avatar actualizado.")
+        : (payload?.animated ? "GIF del cartel actualizado." : "Cartel actualizado."));
+      setAvatarPickerOpen(false);
       onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar la imagen.");
     } finally {
       setUploading(null);
-      if (avatarInput.current) avatarInput.current.value = "";
+      clearAssetInputs(kind);
     }
   }
 
-  async function removeAsset(kind: "avatar") {
+  function clearAssetInputs(kind: "avatar" | "banner") {
+    if (kind === "avatar") {
+      if (avatarInput.current) avatarInput.current.value = "";
+      if (avatarGifInput.current) avatarGifInput.current.value = "";
+    } else {
+      if (bannerImageInput.current) bannerImageInput.current.value = "";
+      if (bannerGifInput.current) bannerGifInput.current.value = "";
+    }
+  }
+
+  async function removeAsset(kind: "avatar" | "banner") {
     if (!profile.isOwnProfile || busy || uploading || deleting) return;
     setDeleting(kind);
     setError("");
@@ -1231,9 +1262,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       });
       const payload = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) throw new Error(payload?.error ?? "No se pudo retirar la imagen.");
-      setProfile((current) => ({ ...current, avatarUrl: null }));
-      setSavedSnapshot((current) => ({ ...current, avatarUrl: null }));
-      setNotice("Avatar retirado.");
+      setProfile((current) => kind === "avatar"
+        ? { ...current, avatarUrl: null }
+        : { ...current, bannerUrl: null });
+      setSavedSnapshot((current) => kind === "avatar"
+        ? { ...current, avatarUrl: null }
+        : { ...current, bannerUrl: null });
+      setNotice(kind === "avatar" ? "Avatar retirado." : "Cartel retirado.");
       onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo retirar la imagen.");
@@ -1322,7 +1357,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Avatar</div>
               <div className="ps-community-editor-avatar-tiles is-avatar-only">
-                <button type="button" className="ps-community-editor-avatar-tile" onClick={() => avatarInput.current?.click()} aria-label="Cambiar avatar">
+                <button type="button" className="ps-community-editor-avatar-tile" onClick={() => setAvatarPickerOpen(true)} aria-label="Cambiar avatar">
                   <span className="ps-community-editor-avatar-tile-image">
                     {profile.avatarUrl
                       ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="70px"/>
@@ -1360,11 +1395,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
               <div className="ps-community-editor-settings-section-title">Decorar cartel de perfil</div>
-              <button type="button" className="ps-community-editor-banner-decoration-tile" onClick={() => setNotice("El catálogo de decoraciones del cartel estará disponible próximamente.")}>
-                <span className="ps-community-editor-banner-decoration-art" aria-hidden="true"><i/><i/><i/></span>
-                <span><strong>Personalizar cartel</strong><small>Estilos, marcos y efectos visuales</small></span>
-                <Plus size={16}/>
-              </button>
+              <div className="ps-community-editor-banner-tools">
+                <div className="ps-community-editor-banner-current">
+                  <span className="ps-community-editor-banner-current-preview" style={profile.bannerUrl
+                    ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" }
+                    : { background: "linear-gradient(120deg,#142831,#173f37 58%,#1c272e)" }}/>
+                  <span><strong>{profile.bannerUrl ? "Cartel personalizado" : "Diseño PeakScore"}</strong><small>{profile.bannerUrl ? "Imagen o GIF cargado" : "Fondo original de PeakScore"}</small></span>
+                  {profile.bannerUrl && <button type="button" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || Boolean(uploading)} aria-label="Quitar cartel"><Trash2 size={15}/></button>}
+                </div>
+                <div className="ps-community-editor-banner-upload-actions">
+                  <button type="button" className="ps-community-editor-banner-upload-button" onClick={() => bannerImageInput.current?.click()} disabled={Boolean(uploading) || busy}>
+                    <ImagePlus size={15}/> Subir imagen
+                  </button>
+                  <button type="button" className="ps-community-editor-banner-upload-button" onClick={() => bannerGifInput.current?.click()} disabled={Boolean(uploading) || busy}>
+                    <Film size={15}/> Subir GIF
+                  </button>
+                </div>
+                <small className="ps-community-editor-settings-hint">PNG, JPG, WebP o GIF · máximo 8 MB. Usa imágenes propias o con licencia.</small>
+              </div>
             </section>
 
             <section className="ps-community-editor-settings-section ps-community-editor-name-style-section">
@@ -1376,7 +1424,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <small className="ps-community-editor-settings-hint">Tipografías seleccionadas y acabados animados en tiempo real.</small>
             </section>
 
-            <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+            <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+            <input ref={avatarGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+            <input ref={bannerImageInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+            <input ref={bannerGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+
           </aside>
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
@@ -1405,7 +1457,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </button>
                       {avatarMenuOpen && (
                         <div className="ps-community-editor-avatar-menu ps-community-editor-avatar-menu-preview" role="menu" aria-label="Opciones del avatar">
-                          <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); avatarInput.current?.click(); }}>
+                          <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); setAvatarPickerOpen(true); }}>
                             <Camera size={15}/> Cambiar avatar
                           </button>
                           {profile.avatarUrl && (
@@ -2030,6 +2082,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         </div>
       )}
 
+      {avatarPickerOpen && (
+        <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) setAvatarPickerOpen(false);
+        }}>
+          <section className="ps-community-avatar-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-picker-title">
+            <header>
+              <div><span>PEAKSCORE / IDENTIDAD</span><h2 id="ps-community-avatar-picker-title">Cambiar avatar</h2><p>Elige una imagen fija o un GIF propio.</p></div>
+              <button type="button" onClick={() => setAvatarPickerOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
+            </header>
+            <div className="ps-community-avatar-picker-options">
+              <button type="button" onClick={() => { setAvatarPickerOpen(false); avatarInput.current?.click(); }} disabled={Boolean(uploading)}>
+                <span><ImagePlus size={22}/></span><strong>Subir imagen</strong><small>PNG, JPG o WebP</small>
+              </button>
+              <button type="button" onClick={() => { setAvatarPickerOpen(false); avatarGifInput.current?.click(); }} disabled={Boolean(uploading)}>
+                <span><Film size={22}/></span><strong>Subir GIF</strong><small>Animación propia · máximo 5 MB</small>
+              </button>
+            </div>
+            <footer><span>Tu archivo se valida y optimiza antes de guardarse.</span><button type="button" onClick={() => setAvatarPickerOpen(false)}>Cancelar</button></footer>
+          </section>
+        </div>
+      )}
+
       {avatarCropUrl && (
         <div className="ps-community-avatar-crop-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) closeAvatarCrop();
@@ -2244,6 +2318,59 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-color:#5865f2 !important; background:rgb(30 31 34 / 92%) !important;
   outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important;
 
+
+/* Compact avatar chooser and first-party banner asset controls. */
+.ps-community-avatar-picker-overlay{position:fixed!important;inset:0!important;z-index:10090!important;display:grid!important;place-items:center!important;padding:20px!important;background:rgb(0 0 0 / 72%)!important;backdrop-filter:blur(9px)!important}
+.ps-community-avatar-picker-modal{width:min(430px,calc(100vw - 32px))!important;overflow:hidden!important;border:1px solid #3b3e46!important;border-radius:14px!important;background:#202127!important;color:#f2f3f5!important;box-shadow:0 24px 80px #0009!important}
+.ps-community-avatar-picker-modal>header{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:14px!important;padding:20px 20px 17px!important;border-bottom:1px solid #34363d!important}
+.ps-community-avatar-picker-modal>header span{display:block!important;margin-bottom:6px!important;color:#969daa!important;font:750 8px/1.2 var(--font-silkscreen),monospace!important;letter-spacing:.12em!important}
+.ps-community-avatar-picker-modal>header h2{margin:0!important;color:#f2f3f5!important;font-size:19px!important;font-weight:750!important}
+.ps-community-avatar-picker-modal>header p{margin:5px 0 0!important;color:#aeb4bf!important;font-size:12px!important}
+.ps-community-avatar-picker-modal>header>button{display:grid!important;width:32px!important;height:32px!important;place-items:center!important;border:1px solid #3b3e46!important;border-radius:8px!important;background:#2b2d31!important;color:#c7ccd4!important}
+.ps-community-avatar-picker-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;padding:18px 20px 20px!important}
+.ps-community-avatar-picker-options>button{display:grid!important;min-height:144px!important;align-content:center!important;justify-items:center!important;gap:8px!important;padding:16px 12px!important;border:1px solid #3b3e46!important;border-radius:11px!important;background:linear-gradient(180deg,#2b2d34,#25272d)!important;color:#e5e7eb!important;transition:border-color 120ms ease,background 120ms ease,transform 120ms ease!important}
+.ps-community-avatar-picker-options>button:hover{transform:translateY(-2px)!important;border-color:#7884a0!important;background:#31343c!important}
+.ps-community-avatar-picker-options>button>span{display:grid!important;width:44px!important;height:44px!important;place-items:center!important;border:1px solid #4d5360!important;border-radius:12px!important;background:#1e2026!important;color:#c6d1ff!important}
+.ps-community-avatar-picker-options strong{font-size:13px!important;font-weight:750!important}
+.ps-community-avatar-picker-options small{color:#9ca3af!important;font-size:10px!important}
+.ps-community-avatar-picker-modal>footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:12px 20px!important;border-top:1px solid #34363d!important;color:#9299a5!important;font-size:10px!important}
+.ps-community-avatar-picker-modal>footer button{padding:7px 12px!important;border:1px solid #454954!important;border-radius:7px!important;background:#2b2d31!important;color:#e4e6eb!important}
+.ps-community-editor-banner-tools{display:grid!important;gap:9px!important}
+.ps-community-editor-banner-current{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important;padding:8px!important;border:1px solid #373940!important;border-radius:9px!important;background:#25272d!important}
+.ps-community-editor-banner-current-preview{flex:0 0 72px!important;width:72px!important;height:40px!important;border-radius:6px!important;background:#182a2e!important;background-size:cover!important;background-position:center!important}
+.ps-community-editor-banner-current>span:nth-child(2){display:grid!important;min-width:0!important;gap:3px!important}
+.ps-community-editor-banner-current strong{color:#e4e6eb!important;font-size:11px!important}
+.ps-community-editor-banner-current small{color:#9da4b0!important;font-size:9px!important}
+.ps-community-editor-banner-current>button{margin-left:auto!important;display:grid!important;width:29px!important;height:29px!important;place-items:center!important;border:1px solid #444850!important;border-radius:7px!important;background:#292b31!important;color:#ed777d!important}
+.ps-community-editor-banner-upload-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+.ps-community-editor-banner-upload-button{display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:36px!important;padding:7px!important;border:1px solid #424650!important;border-radius:8px!important;background:#2b2d31!important;color:#e4e6eb!important;font-size:10px!important;font-weight:700!important;transition:background 100ms ease,border-color 100ms ease!important}
+.ps-community-editor-banner-upload-button:hover{background:#363941!important;border-color:#707987!important}
+.ps-community-editor-banner-upload-button:disabled{opacity:.55!important;cursor:wait!important}
+
+/* Thin, hover-only scrollbar on the left settings rail. */
+.ps-community-editor-settings-sidebar{overflow-y:auto!important;overscroll-behavior:contain!important;scrollbar-width:none!important;scrollbar-color:transparent transparent!important}
+.ps-community-editor-settings-sidebar:hover{scrollbar-width:thin!important;scrollbar-color:#59616d transparent!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar{width:5px!important;background:transparent!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb{border-radius:8px!important;background:transparent!important}
+.ps-community-editor-settings-sidebar:hover::-webkit-scrollbar-thumb{background:#59616d!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-track{background:transparent!important}
+
+/* Professional, compact avatar cropper. */
+.ps-community-avatar-crop-modal{width:min(480px,calc(100vw - 28px))!important;padding:0!important;overflow:hidden!important;border:1px solid #3d414a!important;border-radius:15px!important;background:#202127!important;box-shadow:0 24px 80px #0009!important}
+.ps-community-avatar-crop-modal>header{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:17px 19px!important;border-bottom:1px solid #34363d!important}
+.ps-community-avatar-crop-modal>header span{display:block!important;margin-bottom:5px!important;color:#969daa!important;font:750 8px/1.2 var(--font-silkscreen),monospace!important;letter-spacing:.12em!important}
+.ps-community-avatar-crop-modal>header h2{margin:0!important;color:#f2f3f5!important;font-size:18px!important;font-weight:750!important}
+.ps-community-avatar-crop-stage{position:relative!important;width:min(320px,calc(100vw - 78px))!important;height:min(320px,calc(100vw - 78px))!important;margin:20px auto 16px!important;overflow:hidden!important;border:1px solid #454954!important;border-radius:12px!important;background:radial-gradient(circle,#2d3038,#17191f)!important;box-shadow:inset 0 0 0 1px #ffffff08!important}
+.ps-community-avatar-crop-stage>img{width:100%!important;height:100%!important;object-fit:contain!important}
+.ps-community-avatar-crop-stage>span{position:absolute!important;inset:0!important;border:1px solid rgb(255 255 255 / 12%)!important;border-radius:50%!important;box-shadow:0 0 0 999px rgb(0 0 0 / 23%),inset 0 0 0 1px rgb(255 255 255 / 15%)!important;pointer-events:none!important}
+.ps-community-avatar-crop-controls{display:grid!important;gap:12px!important;padding:0 22px 18px!important}
+.ps-community-avatar-crop-controls label{display:grid!important;grid-template-columns:116px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;color:#b8bec8!important;font-size:11px!important}
+.ps-community-avatar-crop-controls input[type=range]{width:100%!important;accent-color:#7b8cff!important}
+.ps-community-avatar-crop-modal>p{margin:0!important;padding:0 22px 15px!important;color:#9299a5!important;font-size:10px!important}
+.ps-community-avatar-crop-modal>footer{display:flex!important;justify-content:flex-end!important;gap:8px!important;padding:13px 18px!important;border-top:1px solid #34363d!important;background:#1c1e23!important}
+.ps-community-avatar-crop-modal>footer button{min-height:34px!important;padding:7px 13px!important;border:1px solid #424650!important;border-radius:8px!important;background:#2b2d31!important;color:#e4e6eb!important;font-size:11px!important;font-weight:700!important}
+.ps-community-avatar-crop-modal>footer button.is-primary{border-color:#6476f1!important;background:#5668df!important;color:white!important}
+@media(max-width:560px){.ps-community-avatar-picker-options{grid-template-columns:1fr!important}.ps-community-avatar-picker-options>button{min-height:100px!important}.ps-community-avatar-crop-controls label{grid-template-columns:92px minmax(0,1fr)!important}}
 /* The custom name-color popover reuses the exact profile-theme picker styles. */
 .ps-community-name-custom-picker-root{position:relative!important;display:flex!important;flex:1 1 auto!important;min-width:0!important}
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-width:0!important}

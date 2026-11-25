@@ -8084,7 +8084,7 @@ html:has(.ps-community-picker-overlay) * {
   display:flex !important;
   flex-direction:column !important;
   align-items:stretch !important;
-  gap:14px !important;
+  gap:17px !important;
   padding:0 0 18px !important;
   overflow-x:hidden !important;
   overflow-y:auto !important;

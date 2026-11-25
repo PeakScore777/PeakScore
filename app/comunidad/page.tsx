@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, BadgeCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
-  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus,
+  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus, Trash2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import communityTheme from "./peakscore-community-theme.module.css";

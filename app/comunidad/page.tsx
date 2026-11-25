@@ -2356,10 +2356,27 @@ export default function CommunityPage() {
                 <div className="community-server-menu-wrap relative min-w-0" ref={communityServerMenuRef}>
                   <div className="community-server-menu-trigger">
                     {activeSpace?.verification_status === "verified" && (
-                      <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                          <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
-                          <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg></span>
+                      <span className="community-verified-dot" tabIndex={0} aria-label="Comunidad verificada" aria-describedby="community-verified-tooltip">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
+    <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+  <span className="community-verified-tooltip" role="tooltip">
+    <span className="community-verified-tooltip-head">
+      <span className="community-verified-tooltip-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/><path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </span>
+      <span className="community-verified-tooltip-copy">
+        <strong>Comunidad verificada</strong>
+        <span>Esta comunidad ha sido verificada por PeakScore.</span>
+      </span>
+    </span>
+    <span className="community-verified-tooltip-divider"/>
+    <span className="community-verified-tooltip-item"><ShieldCheck size={18}/>Autenticidad confirmada</span>
+    <span className="community-verified-tooltip-item"><Star size={18}/>Comunidad oficial</span>
+    <span className="community-verified-tooltip-item"><Users size={18}/>Entorno seguro y confiable</span>
+  </span>
+</span>
                     )}
                     <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
                     <button type="button" className="community-server-chevron-button"
@@ -2395,12 +2412,27 @@ export default function CommunityPage() {
               ) : (
                 <div className="community-server-member-heading">
                   {activeSpace?.verification_status === "verified" && (
-                    <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada">
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
-                        <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
+                    <span className="community-verified-dot" tabIndex={0} aria-label="Comunidad verificada" aria-describedby="community-verified-tooltip">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
+    <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+  <span className="community-verified-tooltip" role="tooltip">
+    <span className="community-verified-tooltip-head">
+      <span className="community-verified-tooltip-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/><path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </span>
+      <span className="community-verified-tooltip-copy">
+        <strong>Comunidad verificada</strong>
+        <span>Esta comunidad ha sido verificada por PeakScore.</span>
+      </span>
+    </span>
+    <span className="community-verified-tooltip-divider"/>
+    <span className="community-verified-tooltip-item"><ShieldCheck size={18}/>Autenticidad confirmada</span>
+    <span className="community-verified-tooltip-item"><Star size={18}/>Comunidad oficial</span>
+    <span className="community-verified-tooltip-item"><Users size={18}/>Entorno seguro y confiable</span>
+  </span>
+</span>
                   )}
                   <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
                 </div>

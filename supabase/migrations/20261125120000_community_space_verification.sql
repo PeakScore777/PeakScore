@@ -116,7 +116,7 @@ begin
     raise exception 'Only the founder can review community verification' using errcode = '42501';
   end if;
 
-  if p_decision not in ('verify','reject','revoke') then
+  if p_decision is null or p_decision not in ('verify','reject','revoke') then
     raise exception 'Invalid verification decision' using errcode = '22023';
   end if;
   if p_note is not null and char_length(btrim(p_note)) > 500 then

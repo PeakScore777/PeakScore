@@ -46,8 +46,23 @@ testCase("PreICFES collaborator is scoped and cannot become a global staff role"
     migration.indexOf("drop policy if exists community_reactions_read"),
     migration.indexOf("-- SECURITY DEFINER message editing must enforce"),
   );
-  assert.equal((privateRelatedPolicies.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 5);
-  const mentionRpcs = migration.slice(
+  assert.equal((privateRelatedPolicies.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 7);
+  const messageGuardPolicy = migration.slice(
+    migration.indexOf("drop policy if exists community_space_guard_messages"),
+    migration.indexOf("drop policy if exists community_messages_read_active_channel"),
+  );
+  assert.equal((messageGuardPolicy.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 2);
+  const reactionGuardPolicy = migration.slice(
+    migration.indexOf("drop policy if exists community_space_guard_reactions"),
+    migration.indexOf("drop policy if exists community_reactions_read"),
+  );
+  assert.equal((reactionGuardPolicy.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 2);
+  const commentGuardPolicy = migration.slice(
+    migration.indexOf("drop policy if exists community_space_guard_comments"),
+    migration.indexOf("drop policy if exists community_comments_read_active"),
+  );
+  assert.equal((commentGuardPolicy.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 2);
+  const mentionRpcs = migration.slice
     migration.indexOf("create or replace function public.search_community_member_profiles("),
     migration.indexOf("commit;"),
   );

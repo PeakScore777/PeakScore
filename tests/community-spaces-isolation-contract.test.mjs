@@ -114,7 +114,7 @@ testCase("founder console exposes isolated PreICFES settings, members, scoped ro
   assert.match(mainPage, /community_spaces/);
   assert.match(mainPage, /join_community_space/);
   assert.match(mainPage, /activeSpaceOnlineUsers/);
-  assert.match(mainPage, /window\.location\.href = "\/comunidad\?space="/);
+  assert.match(mainPage, /router\.push\("\/comunidad\?space="/);
 });
 
 testCase("global chat queries explicitly remain inside the PeakScore global community", () => {

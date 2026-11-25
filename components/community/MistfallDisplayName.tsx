@@ -52,7 +52,7 @@ export default function MistfallDisplayName({
     let particleShadow = "transparent";
     let disposed = false, started = false, finished = false, visible = false, pausedAt = 0;
     const duration = previewMode ? 2.05 : 2.45;
-    const fps = previewMode ? 12 : 24;
+    const fps = previewMode ? 30 : 24;
     const maxParticles = previewMode ? 120 : 520;
     let seed = 0x4d495354;
     const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };

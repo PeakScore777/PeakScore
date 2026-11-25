@@ -87,7 +87,8 @@ testCase("founder control uses a scoped, non-generic dialog and the new communit
   ]);
   assert.match(page, /communityTheme\.root/);
   assert.match(page, /aria-label="Abrir control central de founder"/);
-  assert.match(studio, /Gestión de miembros y roles/);
+  assert.match(studio, /tabButton\("members", "Miembros"/);
+  assert.match(studio, /tabButton\("roles", "Roles"/);
   assert.match(studio, /manage_community_member_role|\/api\/community\/roles/);
   assert.match(studio, /fundador/);
   assert.match(theme, /#171c24/);

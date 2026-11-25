@@ -2468,3 +2468,53 @@
     max-height: calc(100dvh - 82px);
   }
 }
+
+
+/* Channel actions follow Discord's hover-reveal pattern; only the Founder sees them. */
+.root :global(.community-channel-row) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+}
+.root :global(.community-channel-row > .community-channel-link) {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  padding-right: 7px;
+}
+.root :global(.community-channel-settings-button) {
+  display: inline-grid;
+  flex: 0 0 27px;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  margin-right: 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #9299a4;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-2px);
+  transition: opacity .12s ease, transform .12s ease, color .12s ease, background .12s ease;
+}
+.root :global(.community-channel-row:hover .community-channel-settings-button),
+.root :global(.community-channel-row:focus-within .community-channel-settings-button) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+.root :global(.community-channel-settings-button:hover) {
+  background: #353941;
+  color: #fff;
+}
+@media (hover: none) {
+  .root :global(.community-channel-settings-button) {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+}

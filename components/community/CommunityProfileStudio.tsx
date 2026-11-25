@@ -21,7 +21,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
 type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic";
-type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
+type DisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
@@ -170,6 +170,7 @@ const DISPLAY_NAME_FONT_CATEGORIES: { id: DisplayNameFontCategory; label: string
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
   { id: "plain", label: "Tinta", description: "Acabado editorial limpio, con contraste y peso tipográfico" },
   { id: "gradient", label: "Aurora", description: "Luz cromática que atraviesa el nombre en un ciclo continuo" },
+  { id: "gradient-flow", label: "Gradient Flow", description: "Espectro cromático fluido que recorre el nombre continuamente" },
   { id: "neon", label: "Neón", description: "Halo de luz con respiración y núcleo brillante" },
   { id: "toon", label: "Cromo", description: "Letras con volumen, borde pulido y reflejo móvil" },
   { id: "pop", label: "Rebote", description: "Movimiento elástico muy sutil con sombra dimensional" },
@@ -188,6 +189,7 @@ const DISPLAY_NAME_EFFECT_COLOR_MODE: Record<DisplayNameEffect, DisplayNameColor
   gummy: "spectrum",
   prism: "spectrum",
   chromaflow: "automatic",
+  "gradient-flow": "automatic",
 };
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
@@ -197,7 +199,6 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "domino-flow", label: "Domino Flow", description: "Las letras caen en cadena como fichas de dominó y se reconstruyen en su posición", hint: "Caída escalonada · reconstrucción" },
   { id: "mistfall", label: "Mistfall", description: "El nombre se descompone en partículas luminosas y vuelve a condensarse", hint: "Dispersión de partículas · condensación" },
   { id: "depth-lift", label: "Depth Lift", description: "Volumen 3D con sombra profunda que se extiende al pasar el cursor", hint: "Profundidad 3D · hover" },
-  { id: "gradient-flow", label: "Gradient Flow", description: "Degradado rosa, violeta y azul que recorre el nombre en un bucle continuo", hint: "Degradado fluido · bucle continuo" },
   { id: "shuffle-blur", label: "Blur Cascade", description: "Caracteres que ascienden entre dígitos y símbolos con desenfoque progresivo", hint: "Blur · vertical · 1,5 s" },
   { id: "shuffle-flip", label: "Flip Roll", description: "Caracteres alfabéticos que giran en cascada hacia abajo", hint: "Flip · vertical · 1,1 s" },
   { id: "shuffle", label: "Classic Slide", description: "Deslizamiento horizontal alternado, limpio y preciso", hint: "Slide · derecha · 0,35 s" },
@@ -651,14 +652,16 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           fontWeight="inherit"
           fontFamily="inherit"
           color={fuzzyAppearance.color}
-          gradient={className.includes("effect-chromaflow")
-            ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
-            : fuzzyAppearance.gradient}
+          gradient={className.includes("effect-gradient-flow")
+            ? ["#E84DE8", "#A34DFF", "#527CFF", "#31B9D2", "#48D8A2", "#E84DE8"]
+            : className.includes("effect-chromaflow")
+              ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
+              : fuzzyAppearance.gradient}
           baseIntensity={fuzzySettings.baseIntensity}
           hoverIntensity={fuzzySettings.hoverIntensity}
           fuzzRange={fuzzySettings.fuzzRange}
           sliceSize={fuzzySettings.sliceSize}
-          fps={previewMode ? 10 : fuzzySettings.fps}
+          fps={previewMode ? 24 : fuzzySettings.fps}
           transitionDuration={fuzzySettings.transitionDuration}
           intro={fuzzySettings.intro}
           introDuration={fuzzySettings.introDuration}
@@ -710,7 +713,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
-  const [displayNameEffect, setDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
+  const [displayNameEffect, setDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameAnimation === "gradient-flow" ? "gradient-flow" : initialProfile.displayNameEffect));
   const [displayNameAnimation, setDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameColor, setDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
   const [displayNameGradientStart, setDisplayNameGradientStart] = useState(initialProfile.displayNameGradientStart ?? "#B86BFF");
@@ -719,7 +722,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNameGradientEnd, setDraftDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
   const [displayNamePrismColors, setDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
-  const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
+  const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameAnimation === "gradient-flow" ? "gradient-flow" : initialProfile.displayNameEffect));
   const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
@@ -882,7 +885,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || themeColorSecondary !== safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY)
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
     || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
-    || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameEffect)
+    || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameAnimation === "gradient-flow" ? "gradient-flow" : savedSnapshot.displayNameEffect)
     || displayNameAnimation !== safeDisplayNameAnimation(savedSnapshot.displayNameAnimation)
     || JSON.stringify(displayNameFuzzySettings) !== JSON.stringify(normalizeFuzzyTextSettings(savedSnapshot.displayNameFuzzySettings))
     || displayNameColor !== safeDisplayNameColor(savedSnapshot.displayNameColor)
@@ -1121,7 +1124,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setThemeColorSecondary(safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
     setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
-    setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameEffect));
+    setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameAnimation === "gradient-flow" ? "gradient-flow" : savedSnapshot.displayNameEffect));
     setDisplayNameAnimation(safeDisplayNameAnimation(savedSnapshot.displayNameAnimation));
     setDisplayNameFuzzySettings(normalizeFuzzyTextSettings(savedSnapshot.displayNameFuzzySettings));
     setDisplayNameColor(safeDisplayNameColor(savedSnapshot.displayNameColor));
@@ -1191,7 +1194,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         themeColorSecondary: payload.profile.themeColorSecondary ?? themeColorSecondary,
         plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
         displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
-        displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameEffect) : displayNameEffect,
+        displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameAnimation === "gradient-flow" ? "gradient-flow" : payload.profile.displayNameEffect) : displayNameEffect,
         displayNameAnimation: payload.profile.displayNameAnimation ? safeDisplayNameAnimation(payload.profile.displayNameAnimation) : displayNameAnimation,
         displayNameFuzzySettings: normalizeFuzzyTextSettings(payload.profile.displayNameFuzzySettings ?? displayNameFuzzySettings),
         displayNameColor: payload.profile.displayNameColor ? safeDisplayNameColor(payload.profile.displayNameColor) : displayNameColor,
@@ -1206,7 +1209,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       updateCardColor(updated.cardColor ?? cardColor);
       setPlateStyle(safePlate(updated.plateStyle));
       setDisplayNameStyle(safeDisplayNameStyle(updated.displayNameStyle));
-      setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameEffect));
+      setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameAnimation === "gradient-flow" ? "gradient-flow" : updated.displayNameEffect));
       setDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
       setDraftDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
       setDisplayNameFuzzySettings(normalizeFuzzyTextSettings(updated.displayNameFuzzySettings));
@@ -1847,8 +1850,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                                   aria-hidden="true"
                                   className={"ps-name-preview-motion name-preview-" + item.id}
                                 >
-                                  <span className={previewClass + " ps-name-preview-face"} style={previewStyle}>
-                                    {displayName || "OMEGA"}
+                                  <span
+                                    className={previewClass + " ps-name-preview-face"}
+                                    data-preview-text={displayName || "OMEGA"}
+                                    style={previewStyle}
+                                  >
+                                    {displayNameCharacters(displayName || "OMEGA").map((character, index, all) => (
+                                      <span
+                                        className="ps-name-preview-glyph"
+                                        key={index}
+                                        style={{
+                                          "--preview-index": index,
+                                          "--preview-direction": index % 2 === 0 ? -1 : 1,
+                                          "--ps-chroma-position": (all.length <= 1 ? 50 : index / (all.length - 1) * 100) + "%",
+                                        } as CSSProperties}
+                                      >{character === " " ? "\u00a0" : character}</span>
+                                    ))}
                                   </span>
                                 </span>
                               )}

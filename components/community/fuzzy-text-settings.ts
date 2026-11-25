@@ -9,13 +9,14 @@ export type FuzzyTextSettings = {
   glitchMode: boolean; glitchInterval: number; glitchDuration: number; letterSpacing: number;
 };
 
-// Fixed art direction for the name's animated noise reveal. No pointer interaction.
+// Match the React Bits 404 / not-found FuzzyText reference: pure white,
+ // horizontal one-pixel static, strong readable displacement and a single
+ // 1.4s static-to-clear intro. Kept fixed to avoid user-created broken presets.
 export const DEFAULT_FUZZY_TEXT_SETTINGS: FuzzyTextSettings = {
-  // React Bits reference setup: a restrained, continuous horizontal signal.
-  preset: "static", color: "#F1F3F8", colorSplit: 0.08, trigger: "always",
-  direction: "horizontal", baseIntensity: 0.14, hoverIntensity: 0.26,
-  fuzzRange: 16, sliceSize: 1, fps: 60, transitionDuration: 0,
-  intro: false, introDuration: 0, enableHover: false, clickEffect: false,
+  preset: "static", color: "#FFFFFF", colorSplit: 0, trigger: "always",
+  direction: "horizontal", baseIntensity: 0.2, hoverIntensity: 0.5,
+  fuzzRange: 30, sliceSize: 1, fps: 60, transitionDuration: 0,
+  intro: true, introDuration: 1400, enableHover: false, clickEffect: false,
   glitchMode: false, glitchInterval: 2000, glitchDuration: 200, letterSpacing: 0,
 };
 

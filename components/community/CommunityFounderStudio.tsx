@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
-  Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip,
+  Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip, BadgeCheck,
   Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
@@ -561,7 +561,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               <form onSubmit={(event) => void saveGlobalBranding(event)} className="mx-auto max-w-[900px] space-y-5">
                 <div>
                   <p className="text-[10px] font-bold tracking-[.16em] text-[#8ea0ad]">IDENTIDAD DEL SERVIDOR</p>
-                  <h3 className="mt-1 text-[20px] font-bold text-white">PeakScore Community</h3>
+                  <h3 className="mt-1 text-[20px] font-bold text-white">Vista previa del servidor</h3>
                   <p className="mt-1 max-w-[650px] text-[11px] leading-5 text-[#99a6b4]">Personaliza el nombre, el icono y la portada que aparecen en la navegación y en la cabecera de la comunidad.</p>
                 </div>
                 <section className="grid gap-4 rounded-[12px] border border-[#303b46] bg-[#0d131a] p-4 sm:grid-cols-[180px_minmax(0,1fr)]">
@@ -584,10 +584,12 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                         ? <Image src={globalBranding.banner_url} alt="Portada de la comunidad" fill unoptimized className="object-cover"/>
                         : <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_30%,rgba(0,213,232,.24),transparent_40%),radial-gradient(ellipse_at_90%_80%,rgba(139,234,69,.20),transparent_38%),linear-gradient(110deg,#080b10,#1a2028)]"/>}
                       <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/15 to-black/30"/>
-                      <div className="relative z-10 px-5">
-                        <p className="text-[9px] font-bold tracking-[.2em] text-white/65">PEAKSCORE COMMUNITY</p>
-                        <p className="mt-1 text-[21px] font-extrabold tracking-tight text-white">{globalBranding.name || "PeakScore Community"}</p>
-                        <span className="mt-2 inline-flex rounded-full border border-[#8bea45]/40 bg-black/35 px-2.5 py-1 text-[9px] font-bold text-[#bbf39c]">COMUNIDAD OFICIAL</span>
+                      <div className="relative z-10 flex flex-col items-start gap-2 px-5">
+                        <p className="text-[21px] font-extrabold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.7)]">{globalBranding.name || "PeakScore Community"}</p>
+                        <span className="ps-community-preview-verified">
+                          <BadgeCheck size={16} strokeWidth={2.7}/>
+                          <span>Verificada</span>
+                        </span>
                       </div>
                     </div>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-[7px] border border-[#3b4c5a] bg-[#1a222b] px-3 py-2 text-[10px] font-semibold text-[#e2e7ed] hover:border-[#8bea45]">

@@ -277,17 +277,18 @@ export default function InklineDisplayName({
               </tspan>
             ))}
           </text>
-          <text
-            x="0"
-            y="0"
-            fill={gradientFlow ? "url(#" + gradientFlowGradientId + ")" : chromaflow ? "url(#" + chromaflowGradientId + ")" : gummy ? "url(#" + gummyGradientId + ")" : fillColor}
-            stroke="none"
-            className="ps-inkline-fill"
-            clipPath={"url(#" + clipId + ")"}
-            style={{ fontFamily, fontWeight }}
-          >
-            {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
-          </text>
+          <g clipPath={"url(#" + clipId + ")"}>
+            <text
+              x="0"
+              y="0"
+              fill={gradientFlow ? "url(#" + gradientFlowGradientId + ")" : chromaflow ? "url(#" + chromaflowGradientId + ")" : gummy ? "url(#" + gummyGradientId + ")" : fillColor}
+              stroke="none"
+              className="ps-inkline-fill"
+              style={{ fontFamily, fontWeight }}
+            >
+              {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
+            </text>
+          </g>
         </svg>
       </span>
     </Tag>

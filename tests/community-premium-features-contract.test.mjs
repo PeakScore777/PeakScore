@@ -26,7 +26,7 @@ testCase("unread channel markers restore per-user reads and count messages from 
 });
 
 testCase("community appearance supports black, gray, white, custom color and a Chroma toggle", () => {
-  assert.match(page, /appearanceMode === "black"/);
+  assert.match(page, /useState<"black" \| "gray" \| "white" \| "custom">\("black"\)/);
   assert.match(page, /appearanceMode === "gray"/);
   assert.match(page, /appearanceMode === "white"/);
   assert.match(page, /appearanceMode === "custom"/);
@@ -46,7 +46,7 @@ testCase("audio preferences use real browser devices and expose the microphone o
   assert.match(page, /getUserMedia/);
   assert.match(page, /enumerateDevices/);
   assert.match(page, /setSinkId/);
-  assert.match(page, /track\.stop\(\)/);
+  assert.match(page, /mediaTrack\.stop\(\)/);
   assert.match(page, /community-audio-popover/);
 });
 

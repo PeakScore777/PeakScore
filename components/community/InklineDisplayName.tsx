@@ -83,7 +83,8 @@ export default function InklineDisplayName({
   }, [text, fontFamily, fontWeight, strokeWidth]);
 
   const viewBox = box ? `${box.x} ${box.y} ${box.width} ${box.height}` : "0 -100 800 140";
-  const sharedStyle = { ...style, maxWidth: "100%" } as CSSProperties;
+  const dashLength = box ? Math.max(240, Math.ceil((box.width + box.height) * 4)) : 1800;
+  const sharedStyle = { ...style, "--ps-inkline-dash-length": dashLength, maxWidth: "100%" } as CSSProperties;
 
   return (
     <Tag ref={motionRef as Ref<HTMLElement>} className={className + " ps-inkline-name"} style={sharedStyle} aria-label={text} data-motion-visible={forceMotion ? "true" : "false"}>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
-  Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip, BadgeCheck,
+  Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip,
   Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus, FolderPlus, Pencil,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
@@ -653,9 +653,8 @@ export default function CommunityFounderStudio({
                       <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/15 to-black/30"/>
                       <div className="relative z-10 flex flex-col items-start gap-2 px-5">
                         <p className="text-[21px] font-extrabold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.7)]">{globalBranding.name || "PeakScore Community"}</p>
-                        <span className="ps-community-preview-verified">
-                          <BadgeCheck size={16} strokeWidth={2.7}/>
-                          <span>Verificada</span>
+                        <span className="ps-community-preview-verified" title="Comunidad verificada" aria-label="Comunidad verificada">
+                          <Check size={10} strokeWidth={3.2}/>
                         </span>
                       </div>
                     </div>

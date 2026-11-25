@@ -2224,52 +2224,7 @@ export default function CommunityPage() {
             ))}
           </nav>
 
-          <div className="community-user-panel-shell">
-            <button type="button" className="community-user-panel community-user-panel-button"
-              onClick={() => userId && void openCommunityProfile(userId)}
-              aria-label="Abrir mi perfil de comunidad">
-              <span className="community-avatar community-user-avatar">
-                {profile?.avatar_url
-                  ? <Image src={profile.avatar_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover"/>
-                  : initials(profile?.full_name)}
-              </span>
-              <span className="community-user-copy">
-                <span className="community-user-name">{profile?.full_name || "Mi perfil social"}</span>
-                <span className="community-user-presence"><span/>En línea</span>
-              </span>
-            </button>
-
-            <div className="community-user-audio-controls" aria-label="Controles de audio">
-              {canUseMicrophone && (
-                <div className="community-user-control-group community-user-mic-group">
-                  <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
-                    className={audioPanelMode === "input" ? "is-active" : ""}
-                    aria-label="Configurar micrófono" title="Micrófono">
-                    <Mic size={17}/>
-                  </button>
-                  <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
-                    className="community-user-control-chevron" aria-label="Opciones de micrófono"
-                    aria-expanded={audioPanelMode === "input"}><ChevronDown size={13}/></button>
-                </div>
-              )}
-              <div className="community-user-control-group community-user-output-group">
-                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
-                  className={audioPanelMode === "output" ? "is-active" : ""}
-                  aria-label="Configurar audífonos y salida de audio" title="Audífonos y salida de audio">
-                  <Headphones size={18}/>
-                </button>
-                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
-                  className="community-user-control-chevron" aria-label="Opciones de salida de audio"
-                  aria-expanded={audioPanelMode === "output"}><ChevronDown size={13}/></button>
-              </div>
-              <span className="community-user-control-divider" aria-hidden="true"/>
-              <button type="button" className={"community-user-settings" + (appearanceOpen ? " is-active" : "")}
-                onClick={() => { setAudioPanelMode(null); setAppearanceOpen((open) => !open); }}
-                aria-label="Configuración de apariencia" title="Configuración">
-                <Settings size={19}/>
-              </button>
-            </div>
-          </div>
+          
           {audioPanelMode && (
             <div className="community-audio-popover" role="dialog" aria-label="Preferencias de audio">
               <div className="community-audio-popover-header">
@@ -2314,6 +2269,54 @@ export default function CommunityPage() {
             </div>
           )}
         </aside>
+
+        <div className="community-user-panel-shell community-user-panel-dock">
+
+            <button type="button" className="community-user-panel community-user-panel-button"
+              onClick={() => userId && void openCommunityProfile(userId)}
+              aria-label="Abrir mi perfil de comunidad">
+              <span className="community-avatar community-user-avatar">
+                {profile?.avatar_url
+                  ? <Image src={profile.avatar_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover"/>
+                  : initials(profile?.full_name)}
+              </span>
+              <span className="community-user-copy">
+                <span className="community-user-name">{profile?.full_name || "Mi perfil social"}</span>
+                <span className="community-user-presence"><span/>En línea</span>
+              </span>
+            </button>
+
+            <div className="community-user-audio-controls" aria-label="Controles de audio">
+              {canUseMicrophone && (
+                <div className="community-user-control-group community-user-mic-group">
+                  <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
+                    className={audioPanelMode === "input" ? "is-active" : ""}
+                    aria-label="Configurar micrófono" title="Micrófono">
+                    <Mic size={17}/>
+                  </button>
+                  <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
+                    className="community-user-control-chevron" aria-label="Opciones de micrófono"
+                    aria-expanded={audioPanelMode === "input"}><ChevronDown size={13}/></button>
+                </div>
+              )}
+              <div className="community-user-control-group community-user-output-group">
+                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
+                  className={audioPanelMode === "output" ? "is-active" : ""}
+                  aria-label="Configurar audífonos y salida de audio" title="Audífonos y salida de audio">
+                  <Headphones size={18}/>
+                </button>
+                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
+                  className="community-user-control-chevron" aria-label="Opciones de salida de audio"
+                  aria-expanded={audioPanelMode === "output"}><ChevronDown size={13}/></button>
+              </div>
+              <span className="community-user-control-divider" aria-hidden="true"/>
+              <button type="button" className={"community-user-settings" + (appearanceOpen ? " is-active" : "")}
+                onClick={() => { setAudioPanelMode(null); setAppearanceOpen((open) => !open); }}
+                aria-label="Configuración de apariencia" title="Configuración">
+                <Settings size={19}/>
+              </button>
+            </div>
+        </div>
 
         {mobileChannelsOpen && (
           <button type="button" aria-label="Cerrar menú de canales"

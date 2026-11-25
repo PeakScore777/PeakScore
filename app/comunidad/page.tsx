@@ -887,11 +887,19 @@ export default function CommunityPage() {
       .sort((a, b) => a.position - b.position),
   })).filter((group) => group.channels.length), [channels]);
 
-  const refreshStats = useCallback(async () => {
-    const { count: members } = await supabase
+  const refreshStats = useCallback(async (spaceId?: string) => {
+    if (spaceId && spaceId !== GLOBAL_COMMUNITY_SPACE_ID) {
+      const { count, error: countError } = await supabase
+        .from("community_space_members")
+        .select("user_id", { count: "exact", head: true })
+        .eq("space_id", spaceId);
+      if (!countError) setMemberCount(count ?? 0);
+      return;
+    }
+    const { count, error: countError } = await supabase
       .from("community_member_profiles")
       .select("user_id", { count: "exact", head: true });
-    setMemberCount(members ?? 0);
+    if (!countError) setMemberCount(count ?? 0);
   }, []);
 
   const loadMessages = useCallback(async (channelId: string) => {
@@ -1199,7 +1207,7 @@ export default function CommunityPage() {
       } : null);
       const list = (compatibleChannels ?? []) as Channel[];
       setChannels(list);
-      await refreshStats();
+      await refreshStats(resolvedSpace.space_type === "preicfes" ? resolvedSpace.id : undefined);
       if (!alive) return;
       const requested = new URLSearchParams(window.location.search).get("channel");
       const selected = list.find((item) => item.slug === requested)

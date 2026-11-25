@@ -26,7 +26,7 @@ testCase("the compact profile menu opens the full member profile and offers usef
   assert.match(page, /Compartir perfil/);
   assert.match(page, /Copiar enlace/);
   assert.match(page, /communityMemberProfileUrl/);
-  assert.match(page, /searchParams.get\("member"\)/);
+  assert.match(page, /new URLSearchParams\(window\.location\.search\)\.get\("member"\)/);
   assert.match(page, /openCommunityProfileRef\.current\(memberId\)/);
   assert.match(page, /ps-community-member-popout__banner-image/);
   assert.match(page, /ps-community-member-popout__roles/);

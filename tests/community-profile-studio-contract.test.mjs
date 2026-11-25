@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense, nameColorHelper, nameMotionVisibility] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense, nameColorHelper, nameMotionVisibility, nameEffectsCss] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -48,6 +48,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../public/licenses/fonts/Cinzel-OFL.txt", import.meta.url), "utf8"),
   readFile(new URL("../components/community/display-name-color.ts", import.meta.url), "utf8"),
   readFile(new URL("../components/community/name-motion-visibility.ts", import.meta.url), "utf8"),
+  readFile(new URL("../app/community-name-effects.css", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -1247,7 +1248,7 @@ test("display-name colour controls follow the selected effect instead of exposin
   assert.match(studio, /chromaflow: "automatic"/);
   assert.match(studio, /draftDisplayNameColorMode !== "automatic"/);
   assert.match(studio, /if \(colorMode === "automatic" \|\| colorMode === "spectrum"\)[\s\S]*?setDraftDisplayNameColor\("default"\)/);
-  assert.match(nameColorHelper, /AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set\(\["toon", "gummy", "prism", "chromaflow"\]\)/);
+  assert.match(nameColorHelper, /AUTOMATIC_OR_SPECTRUM_EFFECTS = new Set\(\["toon", "gummy", "prism", "chromaflow", "gradient-flow"\]\)/);
   assert.match(nameColorHelper, /return "default"/);
   assert.match(fuzzySettings, /effect === "prism" \|\| effect === "gummy"/);
   assert.match(fuzzySettings, /return \{ color: "#FFFFFF", gradient: prismStops \}/);
@@ -1433,4 +1434,23 @@ test("Name Atelier previews keep independent effects, live noise typography and 
   assert.ok(finalPreviewCss.includes("height:60px !important;"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-effect-sample.effect-gradient-flow"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-effect-sample.effect-chromaflow"));
+});
+
+
+test("all name finishes paint glyph layers without replacing animation transforms or timelines", () => {
+  assert.match(page, /import "\.\.\/community-name-effects\.css"/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-gradient \.ps-name-animation-char::after/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-toon \.ps-domino-flow__glyph/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-gummy \.ps-halo-signal__glyph::after/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-prism \.ps-name-shuffle__track > span::after/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-chromaflow \.ps-decrypted-cell\.is-revealed::after/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-gradient-flow \.ps-depth-lift__face/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-neon \.ps-domino-flow__glyph/);
+  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-pop \.ps-name-animation-char::after/);
+  assert.match(nameEffectsCss, /\.ps-mistfall-name\.effect-gradient \.ps-mistfall-layout/);
+  assert.match(nameEffectsCss, /\.ps-inkline-name \.ps-inkline-fill/);
+  assert.match(nameEffectsCss, /renderer and effect classes live on the same node/i);
+  assert.match(studio, /ps-community-name-static community-member-nameplate/);
+  assert.match(studio, /ps-community-name-static community-chat-author/);
+  assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
 });

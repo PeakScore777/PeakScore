@@ -31,6 +31,7 @@ import { displayNameColorForEffect, displayNameInklineStrokeColor, displayNameSo
 type Channel = {
   id: string; slug: string; name: string; description: string;
   category: string; position: number; is_read_only: boolean; is_private: boolean;
+  channel_type?: "text" | "announcement"; icon_key?: string; accent_color?: string;
 };
 type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
@@ -166,6 +167,16 @@ const CHANNEL_ICONS: Record<string, typeof Hash> = {
   sociales: BookOpen, "ciencias-naturales": GraduationCap, ingles: GraduationCap,
   "sala-de-profesores": Users, "anuncios-de-clases": Megaphone, eventos: Radio,
 };
+
+const CHANNEL_ICON_KEYS: Record<string, typeof Hash> = {
+  hash: Hash,
+  megaphone: Megaphone,
+  "book-open": BookOpen,
+  "graduation-cap": GraduationCap,
+  "message-circle": MessageCircle,
+  radio: Radio,
+};
+
 
 function getVisibleCommunityStatus(statusText?: string | null, expiresAt?: string | null) {
   if (!statusText) return "";
@@ -782,9 +793,9 @@ export default function CommunityPage() {
     };
     const groups = new Map<string, { key: string; label: string; color: string; priority: number; members: CommunityMemberSummary[] }>();
     for (const member of communityMembers) {
-      const role = [...(member.roles ?? [])].sort(
-        (a, b) => (a.position ?? priority[a.role_key] ?? 99) - (b.position ?? priority[b.role_key] ?? 99),
-      )[0];
+      const role = [...(member.roles ?? [])]
+        .filter((candidate) => candidate.hoist ?? (priority[candidate.role_key] ?? 99) <= 3)
+        .sort((a, b) => (a.position ?? priority[a.role_key] ?? 99) - (b.position ?? priority[b.role_key] ?? 99))[0];
       const key = role?.role_key ?? "members";
       const label = role?.label ?? "Miembros";
       const group = groups.get(key) ?? {
@@ -1027,16 +1038,33 @@ export default function CommunityPage() {
         supabase.from("community_member_profiles")
           .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
-          .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
+          .select("id,slug,name,description,category,position,is_read_only,is_private,channel_type,icon_key,accent_color").order("position"),
         supabase.from("community_role_catalog")
-          .select("role_key,label,badge_color,display_as_badge"),
+          .select("role_key,label,badge_color,display_as_badge,position,hoist"),
         supabase.from("community_member_roles")
           .select("user_id,role_key").eq("user_id", user.id),
         supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
       ]);
+      let compatibleChannels = channelData;
+      let compatibleRoles = roleData;
+      if (!channelData) {
+        const legacyChannels = await supabase.from("community_channels")
+          .select("id,slug,name,description,category,position,is_read_only,is_private")
+          .order("position");
+        compatibleChannels = (legacyChannels.data ?? []).map((channel) => ({
+          ...channel, channel_type: "text", icon_key: "hash", accent_color: "#01C8EF",
+        })) as typeof channelData;
+      }
+      if (!roleData) {
+        const legacyRoles = await supabase.from("community_role_catalog")
+          .select("role_key,label,badge_color,display_as_badge");
+        compatibleRoles = (legacyRoles.data ?? []).map((role) => ({
+          ...role, position: null, hoist: null,
+        })) as typeof roleData;
+      }
       if (!alive) return;
       setIsFounder(platformProfile?.role === "admin");
-      const catalog = (roleData ?? []) as CommunityRole[];
+      const catalog = (compatibleRoles ?? []) as CommunityRole[];
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))
         .filter((role): role is CommunityRole => Boolean(role));
@@ -1058,7 +1086,7 @@ export default function CommunityPage() {
         display_name_prism_colors: currentProfile.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
         roles: currentRoles,
       } : null);
-      const list = (channelData ?? []) as Channel[];
+      const list = (compatibleChannels ?? []) as Channel[];
       setChannels(list);
       await refreshStats();
       if (!alive) return;
@@ -1580,13 +1608,13 @@ export default function CommunityPage() {
                   <span className="community-nav-count">{group.channels.length}</span>
                 </div>
                 {group.channels.map((channel) => {
-                  const Icon = CHANNEL_ICONS[channel.slug] ?? Hash;
+                  const Icon = CHANNEL_ICON_KEYS[channel.icon_key ?? ""] ?? CHANNEL_ICONS[channel.slug] ?? Hash;
                   const active = channel.id === activeChannelId;
                   return (
                     <button type="button" key={channel.id} onClick={() => void selectChannel(channel)}
                       aria-current={active ? "page" : undefined}
                       className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
-                      <Icon size={17}/>
+                      <Icon size={17} style={{ color: channel.accent_color ?? undefined }}/>
                       <span className="min-w-0 flex-1 truncate">{channel.name}</span>
                       {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
                       {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}

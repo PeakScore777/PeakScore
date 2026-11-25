@@ -7109,3 +7109,330 @@ html:has(.ps-community-picker-overlay) * {
     transform:translate3d(0,-2px,0) rotateX(4deg) !important;
   }
 }
+
+
+/* Name-style preview: the right column is an open Discord-like canvas, not a
+   bordered card around three more cards. Keep borders only on the real profile,
+   member-list and chat surfaces. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex:1 1 auto !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  height:100% !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  gap:14px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  color:#f2f3f5 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-profile-view,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-members-view,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-chat-view {
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex:0 0 auto !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  gap:7px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-context-label {
+  display:block !important;
+  flex:0 0 auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:#929bad !important;
+  font-size:8px !important;
+  font-weight:850 !important;
+  line-height:1.2 !important;
+  letter-spacing:.13em !important;
+}
+
+/* Profile card proportions from the supplied reference: dark upper band,
+   mint lower band, and a large avatar overlapping their boundary. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
+  position:relative !important;
+  box-sizing:border-box !important;
+  display:block !important;
+  flex:0 0 185px !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:185px !important;
+  min-height:185px !important;
+  max-height:185px !important;
+  margin:0 !important;
+  padding:151px 16px 16px !important;
+  overflow:hidden !important;
+  border:1px solid rgb(255 255 255 / 7%) !important;
+  border-radius:8px !important;
+  background-image:var(--status-banner-image,none),linear-gradient(180deg,#20242d 0%,#20242d 44%,var(--status-theme,#b7d7c3) 44%,var(--status-theme-secondary,#8fb9a6) 100%) !important;
+  background-size:100% 44%,100% 100% !important;
+  background-position:center top,center !important;
+  background-repeat:no-repeat !important;
+  box-shadow:0 3px 10px rgb(0 0 0 / 10%) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+  position:absolute !important;
+  top:44px !important;
+  left:17px !important;
+  width:110px !important;
+  height:110px !important;
+  min-width:110px !important;
+  min-height:110px !important;
+  border:7px solid var(--status-theme,#b7d7c3) !important;
+  border-radius:50% !important;
+  box-sizing:border-box !important;
+  z-index:2 !important;
+  box-shadow:0 3px 10px rgb(0 0 0 / 34%) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar > img {
+  border-radius:50% !important;
+  object-fit:cover !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview .ps-community-editor-presence-dot {
+  right:-4px !important;
+  bottom:1px !important;
+  width:19px !important;
+  height:19px !important;
+  border-width:3px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+  position:absolute !important;
+  left:10px !important;
+  right:12px !important;
+  bottom:36px !important;
+  display:block !important;
+  width:auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  z-index:1 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:var(--status-theme-text,#e0f1e8) !important;
+  font-size:17px !important;
+  font-weight:750 !important;
+  line-height:1.18 !important;
+  letter-spacing:-.015em !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  text-shadow:0 1px 5px rgb(22 48 37 / 22%) !important;
+}
+
+/* Member and chat surfaces keep their own Discord-style outlines; only the
+   outer section/grouping boxes above have been removed. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-community-shell {
+  box-sizing:border-box !important;
+  width:100% !important;
+  border:1px solid #343740 !important;
+  border-radius:10px !important;
+  background:#202127 !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-community-channel {
+  min-height:44px !important;
+  height:44px !important;
+  padding:0 14px !important;
+  border-bottom:1px solid #34363e !important;
+  font-size:13px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-members-title {
+  padding:14px 14px 7px !important;
+  font-size:10px !important;
+  line-height:1.2 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  box-sizing:border-box !important;
+  min-height:46px !important;
+  margin:5px 7px 7px !important;
+  padding:6px 9px !important;
+  gap:9px !important;
+  border-radius:8px !important;
+  background:#2b2d34 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-avatar {
+  width:30px !important;
+  height:30px !important;
+  flex-basis:30px !important;
+  font-size:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-message {
+  box-sizing:border-box !important;
+  display:flex !important;
+  align-items:flex-start !important;
+  width:100% !important;
+  height:72px !important;
+  min-height:72px !important;
+  margin:0 !important;
+  padding:9px 10px !important;
+  gap:9px !important;
+  overflow:hidden !important;
+  border:1px solid #343740 !important;
+  border-radius:9px !important;
+  background:#25272f !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-content {
+  min-width:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta {
+  min-width:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author {
+  color:#a96bd2 !important;
+  -webkit-text-fill-color:#a96bd2 !important;
+  font-size:9px !important;
+  font-weight:650 !important;
+  line-height:1.2 !important;
+  text-decoration:underline !important;
+  text-decoration-color:rgb(169 107 210 / 48%) !important;
+  text-underline-offset:2px !important;
+}
+
+/* Noise Reveal thumbnail: give the real canvas a full-size, centered text slot.
+   The invisible measuring word is positioned rather than allowed to collapse
+   the grid item, and the canvas inherits typography from that text wrapper. */
+.ps-community-name-animation-option .ps-fuzzy-text-wrap {
+  position:relative !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex:0 0 100% !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:58px !important;
+  min-height:58px !important;
+  max-height:58px !important;
+  overflow:visible !important;
+  font-size:17px !important;
+  line-height:1.15 !important;
+  text-align:center !important;
+}
+.ps-community-name-animation-option .ps-fuzzy-text-layout {
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+  white-space:pre !important;
+  font:inherit !important;
+}
+.ps-community-name-animation-option .ps-fuzzy-text-canvas {
+  position:absolute !important;
+  z-index:1 !important;
+  left:50% !important;
+  top:50% !important;
+  max-width:calc(100% - 8px) !important;
+  max-height:100% !important;
+  transform:translate(-50%,-50%) !important;
+  margin:0 !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+}
+
+/* Each effect specimen owns its finish. The tile stays neutral so gradient,
+   gloss, chrome and neon are visible on the text rather than the tile surface. */
+.ps-community-name-effect-option.effect-gradient,
+.ps-community-name-effect-option.effect-gradient-flow,
+.ps-community-name-effect-option.effect-neon,
+.ps-community-name-effect-option.effect-toon,
+.ps-community-name-effect-option.effect-pop,
+.ps-community-name-effect-option.effect-gummy,
+.ps-community-name-effect-option.effect-prism,
+.ps-community-name-effect-option.effect-chromaflow {
+  color:inherit !important;
+  background:linear-gradient(145deg,#2b2e36 0%,#22242b 100%) !important;
+  text-shadow:none !important;
+}
+.ps-community-name-effect-option > .ps-community-name-effect-sample {
+  z-index:1 !important;
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 auto !important;
+  padding:1px 2px !important;
+  overflow:visible !important;
+  font-size:18px !important;
+  font-weight:850 !important;
+  line-height:1.2 !important;
+  white-space:nowrap !important;
+}
+.ps-community-name-effect-sample.effect-gradient-flow {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(100deg,#e84de8 0%,#a34dff 24%,#527cff 48%,#31b9d2 68%,#48d8a2 84%,#e84de8 100%) !important;
+  background-size:300% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  animation:ps-gradient-flow-effect 5.2s ease-in-out infinite !important;
+  text-shadow:none !important;
+  filter:none !important;
+}
+.ps-community-name-effect-sample.effect-chromaflow {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-position:0% 50% !important;
+  background-size:260% 100% !important;
+  animation:ps-chromaflow-spectrum 3.6s linear infinite !important;
+}
+
+/* The selector is an actual renderer showcase, not a static name label. Every
+   tile gets a generous text stage, and the selected outline remains the only
+   blue focus frame; child renderers are never boxed individually. */
+.ps-community-name-animation-option {
+  overflow:hidden !important;
+}
+.ps-community-name-animation-option > .ps-community-name-preview-live {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex:0 1 100% !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:58px !important;
+  min-height:58px !important;
+  max-height:58px !important;
+  margin:0 auto !important;
+  padding:0 2px !important;
+  overflow:visible !important;
+  line-height:1.12 !important;
+  white-space:nowrap !important;
+  animation-play-state:running !important;
+  contain:layout style !important;
+}
+.ps-community-name-animation-option .ps-depth-lift__face {
+  animation:ps-preview-depth-lift 3.6s cubic-bezier(.2,.72,.24,1) infinite !important;
+}

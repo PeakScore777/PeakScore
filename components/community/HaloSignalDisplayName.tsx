@@ -61,6 +61,7 @@ export default function HaloSignalDisplayName({
         {chars.map((char, index) => (
           <span
             className="ps-halo-signal__glyph"
+            data-glyph={char === " " ? "\u00a0" : char}
             key={index}
             style={{
               "--halo-order": order[index],

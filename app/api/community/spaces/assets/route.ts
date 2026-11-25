@@ -47,8 +47,12 @@ export async function POST(request: Request) {
   if (!ALLOWED_MIME_TYPES.has(file.type as SupportedRasterMime)) return fail("Solo se permiten imágenes PNG, JPG o WebP estáticas.", 415);
 
   const { data: space, error: spaceError } = await supabaseAdmin.from("community_spaces")
-    .select("id,icon_path,banner_path").eq("id", spaceId).eq("space_type", "preicfes").eq("is_enabled", true).maybeSingle();
-  if (spaceError || !space) return fail("No se encontró la comunidad PreICFES.", 404);
+    .select("id,space_type,icon_path,banner_path").eq("id", spaceId).eq("is_enabled", true).maybeSingle();
+  const isGlobalCommunity = space?.space_type === "global"
+    && space.id === "00000000-0000-4000-8000-000000000001";
+  if (spaceError || !space || (space.space_type !== "preicfes" && !isGlobalCommunity)) {
+    return fail("No se encontró una comunidad compatible.", 404);
+  }
 
   let sanitized: Awaited<ReturnType<typeof sanitizeRasterImage>>;
   try { sanitized = await sanitizeRasterImage(new Uint8Array(await file.arrayBuffer()), file.type as SupportedRasterMime, MAX_IMAGE_BYTES); }

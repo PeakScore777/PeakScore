@@ -1452,6 +1452,8 @@ test("Name Atelier previews keep independent effects, live noise typography and 
   assert.ok(finalPreviewCss.includes(".ps-community-name-community-shell"));
   assert.ok(finalPreviewCss.includes("border:1px solid #343740 !important;"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-chat-message"));
+  assert.ok(finalPreviewCss.includes("Reference member-name treatment is plain violet text"));
+  assert.ok(finalPreviewCss.includes("border:0 !important;"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-animation-option > .ps-community-name-preview-live"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-animation-option .ps-fuzzy-text-wrap"));
   assert.ok(finalPreviewCss.includes("height:58px !important;"));

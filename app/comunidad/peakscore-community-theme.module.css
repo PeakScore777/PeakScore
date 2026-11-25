@@ -3121,3 +3121,61 @@
 @media (prefers-reduced-motion:reduce) {
   .root :global(.community-verified-dot > svg), .root :global(.community-verified-tooltip) { transition:none; }
 }
+
+
+/* Compact verification popover: quieter proportions, same premium identity. */
+.root :global(.community-verified-tooltip) {
+  top: calc(100% + 10px);
+  left: -7px;
+  width: min(286px, calc(100vw - 32px));
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 48%), inset 0 0 0 1px rgb(255 255 255 / 3%), 0 0 18px rgb(137 82 237 / 12%);
+}
+.root :global(.community-verified-tooltip::before) {
+  left: 12px;
+  width: 10px;
+  height: 10px;
+  top: -6px;
+}
+.root :global(.community-verified-tooltip-head) {
+  gap: 9px;
+}
+.root :global(.community-verified-tooltip-mark) {
+  flex-basis: 36px;
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 0 6px rgb(151 91 255 / 30%));
+}
+.root :global(.community-verified-tooltip-copy) {
+  gap: 3px;
+}
+.root :global(.community-verified-tooltip-copy strong) {
+  font-size: 14px;
+  line-height: 1.25;
+}
+.root :global(.community-verified-tooltip-copy > span) {
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+.root :global(.community-verified-tooltip-divider) {
+  margin: 10px 0 6px;
+}
+.root :global(.community-verified-tooltip-item) {
+  min-height: 28px;
+  gap: 9px;
+  font-size: 11.5px;
+}
+.root :global(.community-verified-tooltip-item svg) {
+  flex-basis: 16px;
+  width: 16px;
+  height: 16px;
+}
+@media (max-width: 520px) {
+  .root :global(.community-verified-tooltip) {
+    left: -7px;
+    width: min(270px, calc(100vw - 28px));
+    padding: 11px;
+  }
+  .root :global(.community-verified-tooltip-copy strong) { font-size: 13px; }
+}

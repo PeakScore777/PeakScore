@@ -8076,3 +8076,388 @@ html:has(.ps-community-picker-overlay) * {
     gap:18px !important;
   }
 }
+
+
+/* Reference-matched Name Atelier preview: compact card and full Discord
+   member/chat rows, with the unused space kept below the conversation. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:14px !important;
+  padding:0 0 18px !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-profile-view,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-members-view,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-chat-view {
+  display:flex !important;
+  flex:0 0 auto !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:7px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-context-label {
+  height:10px !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:#929baa !important;
+  font-size:8px !important;
+  font-weight:850 !important;
+  line-height:10px !important;
+  letter-spacing:.14em !important;
+}
+
+/* Profile card geometry from the latest 455px-wide reference:
+   228px tall, 44% charcoal header, 98px avatar, name below avatar. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
+  position:relative !important;
+  display:block !important;
+  flex:0 0 228px !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:228px !important;
+  min-height:228px !important;
+  max-height:228px !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+  border:1px solid rgb(255 255 255 / 8%) !important;
+  border-radius:9px !important;
+  background-image:var(--status-banner-image,none),linear-gradient(
+    180deg,
+    #20242d 0%,
+    #20242d 44%,
+    var(--status-theme,#b7d7c3) 44%,
+    var(--status-theme-secondary,#8fb9a6) 100%
+  ) !important;
+  background-size:100% 44%,100% 100% !important;
+  background-position:center top,center !important;
+  background-repeat:no-repeat !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+  position:absolute !important;
+  z-index:3 !important;
+  top:38px !important;
+  left:15px !important;
+  display:grid !important;
+  place-items:center !important;
+  width:98px !important;
+  height:98px !important;
+  min-width:98px !important;
+  min-height:98px !important;
+  box-sizing:border-box !important;
+  border:6px solid var(--status-theme,#b7d7c3) !important;
+  border-radius:50% !important;
+  background:#36383f !important;
+  color:#fff !important;
+  box-shadow:0 4px 11px rgb(0 0 0 / 32%) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar > img {
+  width:100% !important;
+  height:100% !important;
+  border-radius:50% !important;
+  object-fit:cover !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview .ps-community-editor-presence-dot {
+  right:-4px !important;
+  bottom:0 !important;
+  width:17px !important;
+  height:17px !important;
+  border:3px solid var(--status-theme,#b7d7c3) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+  position:absolute !important;
+  z-index:4 !important;
+  top:145px !important;
+  left:16px !important;
+  right:14px !important;
+  display:block !important;
+  width:auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  pointer-events:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+  display:block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:var(--status-theme-text,#202126) !important;
+  font-size:27px !important;
+  font-weight:850 !important;
+  line-height:1.12 !important;
+  letter-spacing:-.025em !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  text-decoration:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+}
+
+/* Community preview shell: 42px channel header + member count + 60px row. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-community-shell {
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-height:152px !important;
+  padding:0 0 10px !important;
+  border:1px solid #363943 !important;
+  border-radius:10px !important;
+  background:#202127 !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-community-channel {
+  display:flex !important;
+  align-items:center !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-height:41px !important;
+  height:41px !important;
+  padding:0 12px !important;
+  border-bottom:1px solid #343740 !important;
+  font-size:12px !important;
+  font-weight:700 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-channel-hash {
+  margin-right:6px !important;
+  font-size:20px !important;
+  font-weight:500 !important;
+  line-height:1 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-members-title {
+  box-sizing:border-box !important;
+  height:40px !important;
+  padding:14px 12px 14px !important;
+  color:#929baa !important;
+  font-size:10px !important;
+  font-weight:850 !important;
+  line-height:12px !important;
+  letter-spacing:.06em !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex !important;
+  align-items:center !important;
+  box-sizing:border-box !important;
+  height:60px !important;
+  min-height:60px !important;
+  margin:0 8px !important;
+  padding:7px 9px !important;
+  gap:10px !important;
+  border:0 !important;
+  border-radius:8px !important;
+  background:#2b2d34 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar {
+  width:38px !important;
+  height:38px !important;
+  flex:0 0 38px !important;
+  font-size:11px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex !important;
+  flex:1 1 auto !important;
+  align-items:center !important;
+  min-width:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > strong.community-member-nameplate {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  color:#c08ae7 !important;
+  -webkit-text-fill-color:#c08ae7 !important;
+  font-size:15px !important;
+  font-weight:750 !important;
+  line-height:1.3 !important;
+  text-decoration:none !important;
+  text-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-presence {
+  flex:0 0 auto !important;
+  font-size:10px !important;
+}
+
+/* Chat row matches the compact message card in the reference. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-message {
+  display:flex !important;
+  align-items:flex-start !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-height:69px !important;
+  height:69px !important;
+  margin:0 !important;
+  padding:10px 11px !important;
+  gap:9px !important;
+  overflow:hidden !important;
+  border:1px solid #343740 !important;
+  border-radius:9px !important;
+  background:#25272f !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-avatar {
+  width:38px !important;
+  height:38px !important;
+  flex:0 0 38px !important;
+  font-size:11px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-content {
+  display:block !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta {
+  display:flex !important;
+  align-items:baseline !important;
+  gap:6px !important;
+  min-width:0 !important;
+  line-height:1.25 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:#c08ae7 !important;
+  -webkit-text-fill-color:#c08ae7 !important;
+  font-size:14px !important;
+  font-weight:750 !important;
+  line-height:1.25 !important;
+  text-decoration:none !important;
+  text-decoration-line:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta time {
+  color:#929baa !important;
+  font-size:10px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-content p {
+  margin:4px 0 0 !important;
+  color:#e1e3e7 !important;
+  font-size:12px !important;
+  line-height:1.4 !important;
+}
+
+/* Inkline follows the StrokeText reference: draw the complete outline, sweep
+   the fill in, pause, then reset and redraw. SVG keeps its intrinsic text box. */
+.ps-community-name-render.ps-inkline-name {
+  position:relative !important;
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-width:1ch !important;
+  height:1.2em !important;
+  vertical-align:baseline !important;
+  line-height:1.2 !important;
+  isolation:isolate !important;
+  overflow:visible !important;
+}
+.ps-community-name-render.ps-inkline-name > .ps-inkline-layout {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  height:1.2em !important;
+  visibility:visible !important;
+  opacity:.01 !important;
+  color:inherit !important;
+  font:inherit !important;
+  line-height:inherit !important;
+  letter-spacing:inherit !important;
+  white-space:pre !important;
+}
+.ps-community-name-render.ps-inkline-name > .ps-inkline-measure {
+  position:absolute !important;
+  z-index:2 !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  pointer-events:none !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-svg {
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-outline {
+  stroke-width:1.45px !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  stroke-dasharray:var(--ps-inkline-dash-length,1800) !important;
+  stroke-dashoffset:var(--ps-inkline-dash-length,1800) !important;
+  animation:ps-inkline-stroketext-loop 6.4s cubic-bezier(.42,.02,.2,1) infinite !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-fill {
+  clip-path:inset(0 100% 0 0);
+  animation:ps-inkline-stroketext-fill 6.4s cubic-bezier(.22,.72,.22,1) infinite !important;
+}
+@keyframes ps-inkline-stroketext-loop {
+  0%,4% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); opacity:1; }
+  43%,55% { stroke-dashoffset:0; opacity:1; }
+  75% { stroke-dashoffset:0; opacity:1; }
+  88%,100% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); opacity:0; }
+}
+@keyframes ps-inkline-stroketext-fill {
+  0%,39% { clip-path:inset(0 100% 0 0); }
+  58%,76% { clip-path:inset(0 0 0 0); }
+  91%,100% { clip-path:inset(0 100% 0 0); }
+}
+.ps-community-name-render.ps-inkline-name:not(:has(.ps-inkline-svg[style*="visibility: visible"])) > .ps-inkline-layout {
+  opacity:1 !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline,
+  .ps-community-name-render.ps-inkline-name .ps-inkline-fill {
+    animation:none !important;
+  }
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline { stroke-dashoffset:0 !important; opacity:.35 !important; }
+  .ps-community-name-render.ps-inkline-name .ps-inkline-fill { clip-path:inset(0 0 0 0) !important; }
+}
+
+@media(max-width:780px) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
+    flex-basis:208px !important;
+    height:208px !important;
+    min-height:208px !important;
+    max-height:208px !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+    top:31px !important;
+    left:13px !important;
+    width:88px !important;
+    height:88px !important;
+    min-width:88px !important;
+    min-height:88px !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+    top:130px !important;
+    left:15px !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+    font-size:24px !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage { gap:12px !important; }
+}

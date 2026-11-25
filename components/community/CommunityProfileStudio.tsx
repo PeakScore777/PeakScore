@@ -655,7 +655,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
-  const [displayNameEffect, setDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameAnimation === "gradient-flow" ? "gradient-flow" : initialProfile.displayNameEffect));
+  const [displayNameEffect, setDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [displayNameAnimation, setDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameColor, setDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
   const [displayNameGradientStart, setDisplayNameGradientStart] = useState(initialProfile.displayNameGradientStart ?? "#B86BFF");
@@ -664,7 +664,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNameGradientEnd, setDraftDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
   const [displayNamePrismColors, setDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
-  const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameAnimation === "gradient-flow" ? "gradient-flow" : initialProfile.displayNameEffect));
+  const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
@@ -827,7 +827,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || themeColorSecondary !== safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY)
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
     || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
-    || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameAnimation === "gradient-flow" ? "gradient-flow" : savedSnapshot.displayNameEffect)
+    || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameEffect)
     || displayNameAnimation !== safeDisplayNameAnimation(savedSnapshot.displayNameAnimation)
     || JSON.stringify(displayNameFuzzySettings) !== JSON.stringify(normalizeFuzzyTextSettings(savedSnapshot.displayNameFuzzySettings))
     || displayNameColor !== safeDisplayNameColor(savedSnapshot.displayNameColor)
@@ -1066,7 +1066,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setThemeColorSecondary(safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
     setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
-    setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameAnimation === "gradient-flow" ? "gradient-flow" : savedSnapshot.displayNameEffect));
+    setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameEffect));
     setDisplayNameAnimation(safeDisplayNameAnimation(savedSnapshot.displayNameAnimation));
     setDisplayNameFuzzySettings(normalizeFuzzyTextSettings(savedSnapshot.displayNameFuzzySettings));
     setDisplayNameColor(safeDisplayNameColor(savedSnapshot.displayNameColor));
@@ -1136,7 +1136,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         themeColorSecondary: payload.profile.themeColorSecondary ?? themeColorSecondary,
         plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
         displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
-        displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameAnimation === "gradient-flow" ? "gradient-flow" : payload.profile.displayNameEffect) : displayNameEffect,
+        displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameEffect) : displayNameEffect,
         displayNameAnimation: payload.profile.displayNameAnimation ? safeDisplayNameAnimation(payload.profile.displayNameAnimation) : displayNameAnimation,
         displayNameFuzzySettings: normalizeFuzzyTextSettings(payload.profile.displayNameFuzzySettings ?? displayNameFuzzySettings),
         displayNameColor: payload.profile.displayNameColor ? safeDisplayNameColor(payload.profile.displayNameColor) : displayNameColor,
@@ -1151,7 +1151,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       updateCardColor(updated.cardColor ?? cardColor);
       setPlateStyle(safePlate(updated.plateStyle));
       setDisplayNameStyle(safeDisplayNameStyle(updated.displayNameStyle));
-      setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameAnimation === "gradient-flow" ? "gradient-flow" : updated.displayNameEffect));
+      setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameEffect));
       setDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
       setDraftDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
       setDisplayNameFuzzySettings(normalizeFuzzyTextSettings(updated.displayNameFuzzySettings));

@@ -44,16 +44,27 @@ export default function InklineDisplayName({
   const chromaflow = effectTokens.includes("effect-chromaflow");
   const gradientFlow = effectTokens.includes("effect-gradient-flow");
   const gummy = effectTokens.includes("effect-gummy");
+  const aurora = effectTokens.includes("effect-gradient");
+  const chrome = effectTokens.includes("effect-toon");
+  const prism = effectTokens.includes("effect-prism");
   const chromaflowGradientId = "ps-inkline-" + clipId + "-chromaflow";
   const gradientFlowGradientId = "ps-inkline-" + clipId + "-gradient-flow";
   const gummyGradientId = "ps-inkline-" + clipId + "-gummy";
+  const auroraGradientId = "ps-inkline-" + clipId + "-aurora";
+  const chromeGradientId = "ps-inkline-" + clipId + "-chrome";
+  const prismGradientId = "ps-inkline-" + clipId + "-prism";
   const styleTokens = style as (CSSProperties & Record<string, unknown>) | undefined;
-  const gummyPalette = typeof styleTokens?.["--name-prism-gradient"] === "string"
+  const selectedPalette = typeof styleTokens?.["--name-prism-gradient"] === "string"
     ? (styleTokens["--name-prism-gradient"] as string).match(/#[0-9a-f]{6}/gi) ?? []
     : [];
-  const gummyStops = gummyPalette.length >= 2
-    ? gummyPalette
-    : ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"];
+  const gummyStops = gummy
+    ? ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"]
+    : selectedPalette.length >= 2 ? selectedPalette : ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"];
+  const auroraStops = [
+    typeof styleTokens?.["--name-gradient-start"] === "string" ? styleTokens["--name-gradient-start"] as string : "#9D83FF",
+    typeof styleTokens?.["--name-gradient-end"] === "string" ? styleTokens["--name-gradient-end"] as string : "#61B8ED",
+    "#FFFFFF",
+  ];
   const forceMotion = effectTokens.includes("ps-community-name-preview-live");
 
   useLayoutEffect(() => {
@@ -248,6 +259,9 @@ export default function InklineDisplayName({
                 <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.35 0;0.35 0;-0.35 0" dur="7.2s" repeatCount="indefinite"/>
               </linearGradient>
             )}
+            {aurora && <linearGradient id={auroraGradientId} x1="0%" y1="0%" x2="100%" y2="0%">{auroraStops.map((stop, index) => <stop key={stop + index} offset={(index / (auroraStops.length - 1) * 100) + "%"} stopColor={stop}/>)}</linearGradient>}
+            {chrome && <linearGradient id={chromeGradientId} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="22%" stopColor="#DDE3EC"/><stop offset="45%" stopColor="#8995A8"/><stop offset="53%" stopColor="#FFFFFF"/><stop offset="76%" stopColor="#9AA6B8"/><stop offset="100%" stopColor="#F8FAFC"/></linearGradient>}
+            {prism && <linearGradient id={prismGradientId} x1="-20%" y1="0%" x2="120%" y2="0%">{gummyStops.map((stop, index) => <stop key={stop + index} offset={(index / Math.max(1, gummyStops.length - 1) * 100) + "%"} stopColor={stop}/>)}</linearGradient>}
             <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
               <rect
                 ref={wipeRef}
@@ -287,7 +301,7 @@ export default function InklineDisplayName({
             <text
               x="0"
               y="0"
-              fill={gradientFlow ? "url(#" + gradientFlowGradientId + ")" : chromaflow ? "url(#" + chromaflowGradientId + ")" : gummy ? "url(#" + gummyGradientId + ")" : fillColor}
+              fill={gradientFlow ? "url(#" + gradientFlowGradientId + ")" : chromaflow ? "url(#" + chromaflowGradientId + ")" : gummy ? "url(#" + gummyGradientId + ")" : aurora ? "url(#" + auroraGradientId + ")" : chrome ? "url(#" + chromeGradientId + ")" : prism ? "url(#" + prismGradientId + ")" : fillColor}
               stroke="none"
               className="ps-inkline-fill"
               style={{ fontFamily, fontWeight }}

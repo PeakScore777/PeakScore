@@ -1444,7 +1444,7 @@ test("Name Atelier previews keep independent effects, live noise typography and 
   assert.ok(fuzzyText.includes("loopIntro && introState.done"));
   assert.ok(fuzzyText.includes("introState.nextStart = now + Math.max(500, loopDelay)"));
 
-  const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Reference-matched Name Atelier preview"));
+  const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));
   assert.ok(finalPreviewCss.includes("border:0 !important;"));
   assert.ok(finalPreviewCss.includes("background:transparent !important;"));

@@ -1059,9 +1059,9 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   ];
   assert.ok(studio.includes('trigger="always"'));
   assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
-  assert.match(studio, /baseIntensity=\{previewMode \? Math\.max\(fuzzySettings\.baseIntensity, 0\.22\) : fuzzySettings\.baseIntensity\}/);
-  assert.match(studio, /hoverIntensity=\{previewMode \? Math\.max\(fuzzySettings\.hoverIntensity, 0\.32\) : fuzzySettings\.hoverIntensity\}/);
-  assert.match(studio, /fuzzRange=\{previewMode \? Math\.max\(fuzzySettings\.fuzzRange, 18\) : fuzzySettings\.fuzzRange\}/);
+  assert.match(studio, /baseIntensity=\{previewMode \? Math\.max\(fuzzySettings\.baseIntensity, 0\.24\) : fuzzySettings\.baseIntensity\}/);
+  assert.match(studio, /hoverIntensity=\{previewMode \? Math\.max\(fuzzySettings\.hoverIntensity, 0\.36\) : fuzzySettings\.hoverIntensity\}/);
+  assert.match(studio, /fuzzRange=\{previewMode \? Math\.max\(fuzzySettings\.fuzzRange, 20\) : fuzzySettings\.fuzzRange\}/);
   assert.match(studio, /fps=\{previewMode \? 45 : fuzzySettings\.fps\}/);
   assert.match(studio, /colorSplit=\\{previewMode \\? Math\\.max\\(fuzzySettings\\.colorSplit, 0\\.12\\) : fuzzySettings\\.colorSplit\\}/);
   assert.match(studio, /intro=\\{previewMode \\? true : fuzzySettings\\.intro\\}/);

@@ -873,7 +873,7 @@ test("motion gallery previews use the exact renderer for each selectable animati
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
   assert.ok(studio.includes("<DecryptedDisplayName"));
-  assert.ok(studio.includes("<FuzzyText")); // Guarded renderer retained for stale persisted values.
+  assert.ok(!studio.includes("<FuzzyText"));
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
@@ -1045,47 +1045,29 @@ test("Hacking Decode uses a real sequential hexadecimal decrypt component", () =
 });
 
 
-test("Noise Reveal is excluded from selectable profile animations", () => {
+test("Noise Reveal is fully removed from selectable and live animation renderers", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
-  assert.doesNotMatch(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  assert.ok(!animationWhitelist.includes('"fuzzy-text"'));
-  assert.match(studio, /if \(animation === "fuzzy-text"\)/); // Guarded legacy renderer only.
-  assert.match(page, /if \(animation === "fuzzy-text"\)/);
-  assert.match(studio, /<FuzzyText/);
-  assert.match(page, /<FuzzyText/);
-  assert.ok(studio.includes("trigger={fuzzySettings.trigger}"));
-  assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
-  assert.match(fuzzyText, /getContext\('2d'/);
-  assert.match(fuzzyText, /requestAnimationFrame\(tick\)/);
-  assert.match(fuzzyText, /prefers-reduced-motion/);
+  assert.doesNotMatch(catalogue, /fuzzy-text|Noise Reveal/);
+  assert.doesNotMatch(animationWhitelist, /fuzzy-text/);
+  assert.doesNotMatch(studio, /import FuzzyText|<FuzzyText|animation === "fuzzy-text"|resolveFuzzyTextAppearance/);
+  assert.doesNotMatch(page, /import FuzzyText|<FuzzyText|animation === "fuzzy-text"|resolveFuzzyTextAppearance/);
+  assert.match(studio, /displayNameFuzzySettings/); // Persisted legacy data is retained, but no longer rendered as an animation.
+  assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
+  assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
 });
 
-test("Noise Reveal is continuous, preset-driven and has no user-facing technical controls", () => {
-  assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration|Fuzzy Text/);
-  assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-community-fuzzy-customizer \{ display:none !important; \}/);
-  assert.doesNotMatch(studio, /data-preview-animation=\{item\.id\}/);
-  assert.doesNotMatch(nameStyleCss, /ps-name-decode-preview|ps-name-signal-preview|ps-name-fuzzy-preview/);
-  assert.match(studio, /resolveFuzzyTextAppearance/);
-  assert.match(page, /resolveFuzzyTextAppearance/);
-  assert.match(fuzzyText, /const wake = \(\) =>/);
-  assert.match(fuzzyText, /interactionActive/);
-  assert.match(fuzzySettings, /trigger: "hover"/);
-  assert.match(fuzzySettings, /enableHover: true/);
-  assert.match(fuzzySettings, /intro: true, introDuration: 1400/);
-  assert.match(fuzzySettings, /resolveFuzzyTextAppearance/);
-  assert.match(studio, /draftDisplayNameFuzzySettings/);
+test("retired Noise Reveal settings remain data-only and never create animation UI", () => {
+  assert.doesNotMatch(studio, /Fuzzy Text|Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration/);
+  assert.doesNotMatch(studio, /resolveFuzzyTextAppearance|<FuzzyText/);
+  assert.doesNotMatch(page, /resolveFuzzyTextAppearance|<FuzzyText|fuzzySettings=\{/);
+  assert.doesNotMatch(studio, /ps-community-fuzzy-customizer/);
   assert.match(studio, /displayNameFuzzySettings,/);
-  assert.match(page, /fuzzySettings=\{normalizeFuzzyTextSettings\(selectedCommunityProfile\.displayNameFuzzySettings\)\}/);
-  assert.match(page, /community-member-name-render/);
-  assert.match(page, /community-chat-name-render/);
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
   assert.match(route, /normalizeFuzzyTextSettings\(payload\.displayNameFuzzySettings\)/);
   assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
-  assert.match(fuzzySettingsMigration, /baseIntensity/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
-
 
 test("Chromaflow is a distinct display-name effect with a lightweight animated spectrum", () => {
   assert.match(studio, /id: "chromaflow", label: "Chromaflow"/);

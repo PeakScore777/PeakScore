@@ -2249,12 +2249,31 @@ export default function CommunityPage() {
         </nav>
 
         <aside id="community-channel-drawer" className={"community-sidebar " + (mobileChannelsOpen ? "community-sidebar-open" : "")}>
-          <div className="community-server-header relative overflow-hidden">
-            {activeSpace?.banner_url && <Image src={activeSpace.banner_url} alt="" fill unoptimized className="object-cover opacity-35"/>}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#101824]/95 via-[#101824]/75 to-[#101824]/45"/>
-            <div className="relative z-10 min-w-0">
+          <div className="community-server-header relative isolate flex min-h-[92px] items-center overflow-hidden border-b border-[#28313d] px-4 py-3">
+            {activeSpace?.banner_url && (
+              <Image
+                src={activeSpace.banner_url}
+                alt=""
+                fill
+                unoptimized
+                sizes="360px"
+                className="community-server-banner-image"
+              />
+            )}
+            <div className="community-server-banner-shade pointer-events-none absolute inset-0" aria-hidden="true"/>
+            <div className="relative z-10 min-w-0 flex-1 pr-12">
               <p className="community-server-eyebrow">COMUNIDAD</p>
-              <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={26} height={26} unoptimized className="h-[26px] w-[26px] shrink-0 rounded-[8px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>{activeSpace?.verification_status === "verified" && <span className="community-verified-badge" title="Comunidad verificada por PeakScore" aria-label="Comunidad verificada"><ShieldCheck size={13}/><span>VERIFICADA</span></span>}</div>
+              <div className="flex min-w-0 items-center gap-2.5">
+                {activeSpace?.icon_url && (
+                  <Image src={activeSpace.icon_url} alt="" width={30} height={30} unoptimized className="h-[30px] w-[30px] shrink-0 rounded-[9px] object-cover ring-1 ring-white/20"/>
+                )}
+                <p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>
+                {activeSpace?.verification_status === "verified" && (
+                  <span className="community-verified-badge" title="Comunidad verificada por PeakScore" aria-label="Comunidad verificada">
+                    <ShieldCheck size={13}/><span>VERIFICADA</span>
+                  </span>
+                )}
+              </div>
               {activeSpace?.space_type === "preicfes" && activeSpace.verification_status !== "verified" && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {activeSpace.verification_status === "pending" ? (
@@ -2270,6 +2289,17 @@ export default function CommunityPage() {
                 </div>
               )}
             </div>
+            {isFounder && (
+              <button
+                type="button"
+                className="community-server-branding-edit"
+                onClick={() => setFounderStudioOpen(true)}
+                title="Editar nombre, icono y portada de la comunidad"
+                aria-label="Editar nombre, icono y portada de la comunidad"
+              >
+                <Pencil size={15}/>
+              </button>
+            )}
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>
           </div>

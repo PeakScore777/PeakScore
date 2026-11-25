@@ -13,10 +13,10 @@ export type FuzzyTextSettings = {
  // horizontal one-pixel static, strong readable displacement and a single
  // 1.4s static-to-clear intro. Kept fixed to avoid user-created broken presets.
 export const DEFAULT_FUZZY_TEXT_SETTINGS: FuzzyTextSettings = {
-  preset: "static", color: "#FFFFFF", colorSplit: 0, trigger: "always",
-  direction: "horizontal", baseIntensity: 0.5, hoverIntensity: 0.5,
+  preset: "static", color: "#FFFFFF", colorSplit: 0, trigger: "hover",
+  direction: "horizontal", baseIntensity: 0.2, hoverIntensity: 0.5,
   fuzzRange: 30, sliceSize: 1, fps: 60, transitionDuration: 0,
-  intro: true, introDuration: 1400, enableHover: false, clickEffect: false,
+  intro: true, introDuration: 1400, enableHover: true, clickEffect: false,
   glitchMode: false, glitchInterval: 2000, glitchDuration: 200, letterSpacing: 0,
 };
 

@@ -1824,7 +1824,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Animación de perfil</div>
+                      <div className="ps-community-name-style-heading">Animación de perfil <span className="ps-community-name-profile-only">SOLO EN PERFIL</span></div>
                       <div className="ps-community-name-effect-grid ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => {
                           const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor);

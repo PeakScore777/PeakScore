@@ -487,6 +487,9 @@ export default function CommunityPage() {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
+  const activeSpaceOnlineUsers = activeSpace?.space_type === "preicfes"
+    ? communityMembers.filter((member) => onlineMemberIds.includes(member.id)).length
+    : onlineUsers;
   const messageById = useMemo(
     () => new Map(messages.map((message) => [message.id, message])),
     [messages],
@@ -998,10 +1001,38 @@ export default function CommunityPage() {
     ]);
 
     // Message delivery must not depend on optional schema additions. Role hierarchy
-    // is read from the secure projection; retain legacy badges when newer fields
-    // are not present yet.
+    // is read from a scope-safe projection. Space members see space roles here,
+    // never the global staff roles unless assigned in that space as well.
     let compatiblePublicRoleBadges = (publicRoleBadges ?? []) as PublicRoleBadge[];
-    if (badgeError && authorIds.length) {
+    if (activeSpace?.space_type === "preicfes" && authorIds.length) {
+      const { data: spaceAssignments, error: spaceRolesError } = await supabase
+        .from("community_space_member_roles")
+        .select("user_id,role_key")
+        .eq("space_id", activeSpace.id)
+        .in("user_id", authorIds);
+      if (!spaceRolesError && (spaceAssignments ?? []).length) {
+        const roleKeys = [...new Set((spaceAssignments ?? []).map((assignment) => assignment.role_key))];
+        const { data: catalog } = await supabase.from("community_role_catalog")
+          .select("role_key,label,badge_color,position,mentionable,hoist")
+          .in("role_key", roleKeys);
+        const byKey = new Map((catalog ?? []).map((role) => [role.role_key, role]));
+        compatiblePublicRoleBadges = (spaceAssignments ?? []).flatMap((assignment) => {
+          const role = byKey.get(assignment.role_key);
+          return role ? [{
+            user_id: assignment.user_id,
+            role_key: assignment.role_key,
+            label: role.label,
+            badge_color: role.badge_color,
+            position: role.position ?? null,
+            mentionable: role.mentionable ?? false,
+            hoist: role.hoist ?? false,
+          }] : [];
+        });
+      } else {
+        compatiblePublicRoleBadges = [];
+      }
+    }
+    if (activeSpace?.space_type === "global" && badgeError && authorIds.length) {
       const legacyBadges = await supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
         .in("user_id", authorIds);
@@ -1697,9 +1728,12 @@ export default function CommunityPage() {
             <span className="community-server-mark">P</span>
           </Link>
           <span className="community-server-divider"/>
-          <Link href="/comunidad" className="community-server-icon community-server-icon-active" aria-label="PeakScore Community">
+          <button type="button"
+            className={"community-server-icon " + (activeSpace?.space_type === "global" ? "community-server-icon-active" : "")}
+            onClick={() => { window.location.href = "/comunidad"; }}
+            aria-label="PeakScore Community" aria-current={activeSpace?.space_type === "global" ? "page" : undefined}>
             <Users size={22}/>
-          </Link>
+          </button>
           {communitySpaces.filter((space) => space.space_type === "preicfes").map((space) => (
             <button key={space.id} type="button"
               className={"community-server-icon " + (activeSpace?.id === space.id ? "community-server-icon-active" : "")}
@@ -1815,8 +1849,8 @@ export default function CommunityPage() {
               <span className="community-chat-member-count" title="Miembros registrados">
                 <Users size={17}/>{memberCount.toLocaleString("es-CO")}
               </span>
-              <span className="community-chat-online" title="Personas conectadas">
-                <i/>{onlineUsers} en línea
+              <span className="community-chat-online" title="Personas conectadas en este espacio">
+                <i/>{activeSpaceOnlineUsers} en línea
               </span>
               <button type="button"
                 className={"community-chat-tool community-member-toggle " + (memberListOpen ? "community-chat-tool-active" : "")}

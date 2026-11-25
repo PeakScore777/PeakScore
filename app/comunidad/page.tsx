@@ -495,6 +495,7 @@ export default function CommunityPage() {
   const [onlineMemberIds, setOnlineMemberIds] = useState<string[]>([]);
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberSummary[]>([]);
   const [memberListOpen, setMemberListOpen] = useState(true);
+  const [collapsedMemberGroups, setCollapsedMemberGroups] = useState<Record<string, boolean>>({});
   const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -2743,62 +2744,76 @@ export default function CommunityPage() {
 
         {memberListOpen && (
           <aside className="community-member-sidebar" aria-label="Miembros de PeakScore Community">
-            <div className="community-member-sidebar-header">
-              <span>MIEMBROS</span>
-              <strong>{memberCount}</strong>
-            </div>
             <div className="community-member-sidebar-scroll">
-              {communityMemberGroups.map((group) => (
-                <section key={group.key} className="community-member-group">
-                  <h2 style={{ "--member-role-color": group.color } as CSSProperties}>
-                    <i/>{group.label.toLocaleUpperCase("es")} — {group.members.length}
-                  </h2>
-                  {group.members.map((member) => {
-                    const isOnline = onlineMemberIds.includes(member.id);
-                    return (
-                      <button type="button" key={member.id} className={"community-member-row" + (isOnline ? "" : " community-member-offline")}
-                        onMouseEnter={(event) => openMemberHoverPreview(member, event)}
-                        onMouseLeave={scheduleCloseMemberHoverPreview}
-                        onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
-                        onBlur={scheduleCloseMemberHoverPreview}
-                        onClick={() => void openCommunityProfile(member.id)}>
-                        <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
-                          {member.avatar_url
-                            ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
-                            : initials(member.full_name)}
-                          <i className={isOnline ? "is-online" : "is-offline"}/>
-                        </span>
-                        <span className="community-member-copy">
-                          <CommunityStaticName
-                            tag="span"
-                            value={member.full_name}
-                            className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
-                            style={{
-                              "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
-                              "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
-                              "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                              "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
-                            } as React.CSSProperties}
-                          />
-                          {member.status_text && <small>{member.status_text}</small>}
-                          {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (
-                            <span className="community-member-role-badges" aria-label="Roles">
-                              {member.roles.filter((role) => role.display_as_badge).slice(0, 2).map((role) => (
-                                <span key={role.role_key} style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(role.badge_color) ? role.badge_color : "#929aa6" } as CSSProperties}>
-                                  {role.label}
-                                </span>
-                              ))}
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </section>
-              ))}
-            </div>
-            <div className="community-member-sidebar-footer">
-              <Users size={13}/>{onlineUsers} conectados de {memberCount} miembros
+              <div className="community-member-online-heading" aria-label={"En línea: " + onlineUsers}>
+                <span className="community-member-online-indicator" aria-hidden="true"/>
+                <span>En línea</span>
+                <strong>{onlineUsers}</strong>
+              </div>
+              {communityMemberGroups.map((group) => {
+                const collapsed = Boolean(collapsedMemberGroups[group.key]);
+                return (
+                  <section key={group.key} className="community-member-group">
+                    <button
+                      type="button"
+                      className="community-member-group-toggle"
+                      style={{ "--member-role-color": group.color } as CSSProperties}
+                      onClick={() => setCollapsedMemberGroups((current) => ({ ...current, [group.key]: !current[group.key] }))}
+                      aria-expanded={!collapsed}
+                    >
+                      <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
+                      <i aria-hidden="true"/>
+                      <span className="community-member-group-label">{group.label}</span>
+                      <span className="community-member-group-count">{group.members.length}</span>
+                    </button>
+                    {!collapsed && (
+                      <div className="community-member-group-list">
+                        {group.members.map((member) => {
+                          const isOnline = onlineMemberIds.includes(member.id);
+                          return (
+                            <button type="button" key={member.id} className={"community-member-row" + (isOnline ? "" : " community-member-offline")}
+                              onMouseEnter={(event) => openMemberHoverPreview(member, event)}
+                              onMouseLeave={scheduleCloseMemberHoverPreview}
+                              onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
+                              onBlur={scheduleCloseMemberHoverPreview}
+                              onClick={() => void openCommunityProfile(member.id)}>
+                              <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
+                                {member.avatar_url
+                                  ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                                  : initials(member.full_name)}
+                                <i className={isOnline ? "is-online" : "is-offline"}/>
+                              </span>
+                              <span className="community-member-copy">
+                                <CommunityStaticName
+                                  tag="span"
+                                  value={member.full_name}
+                                  className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
+                                  style={{
+                                    "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
+                                    "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
+                                    "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
+                                    "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
+                                  } as React.CSSProperties}
+                                />
+                                {member.status_text && <small>{member.status_text}</small>}
+                                {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (
+                                  <span className="community-member-role-badges" aria-label="Roles">
+                                    {member.roles.filter((role) => role.display_as_badge).slice(0, 2).map((role) => (
+                                      <span key={role.role_key} style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(role.badge_color) ? role.badge_color : "#929aa6" } as CSSProperties}>
+                                        {role.label}
+                                      </span>
+                                    ))}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
             </div>
           </aside>
         )}

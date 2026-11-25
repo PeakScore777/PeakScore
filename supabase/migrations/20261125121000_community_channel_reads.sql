@@ -47,4 +47,30 @@ create policy community_channel_reads_update_own
     )
   );
 
+create index if not exists community_messages_unread_channel_created_idx
+  on public.community_messages (channel_id, created_at);
+
+create or replace function public.get_community_unread_counts(p_channel_ids uuid[])
+returns table (channel_id uuid, unread_count bigint)
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select
+    message.channel_id,
+    count(*)::bigint as unread_count
+  from public.community_messages message
+  join public.community_channel_reads marker
+    on marker.channel_id = message.channel_id
+   and marker.user_id = auth.uid()
+  where message.channel_id = any(coalesce(p_channel_ids, '{}'::uuid[]))
+    and message.author_id <> auth.uid()
+    and message.created_at > marker.last_read_at
+  group by message.channel_id;
+$function$;
+
+revoke all on function public.get_community_unread_counts(uuid[]) from public, anon;
+grant execute on function public.get_community_unread_counts(uuid[]) to authenticated;
+
 commit;

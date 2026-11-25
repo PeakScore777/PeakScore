@@ -2718,7 +2718,6 @@ export default function CommunityPage() {
                                 <span key={role.role_key} className="community-role-badge"
                                   style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
                               ))}
-                              {message.author?.status_text && <span className="community-chat-level">{message.author.status_text}</span>}
                               <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                               {message.edited_at && <span className="community-chat-edited-label">(editado)</span>}
                             </div>
@@ -2803,9 +2802,6 @@ export default function CommunityPage() {
                             <button type="button" onClick={() => beginReply(message)} className="community-chat-action">
                               <Reply size={15}/><span>Responder{message.reply_count > 0 ? " · " + message.reply_count : ""}</span>
                             </button>
-                            <button type="button" onClick={() => void shareMessage(message)} className="community-chat-action">
-                              <Share2 size={15}/><span>{copiedMessageId === message.id ? "Copiado" : "Compartir"}</span>
-                            </button>
                             <div className="community-message-more-wrap">
                               <button type="button"
                                 onClick={() => setMessageMenuFor((current) => current === message.id ? null : message.id)}
@@ -2818,9 +2814,6 @@ export default function CommunityPage() {
                                 <div className="community-message-context-menu" role="menu" aria-label="Opciones del mensaje">
                                   <button type="button" role="menuitem" onClick={() => { beginReply(message); setMessageMenuFor(null); }}>
                                     <Reply size={16}/>Responder
-                                  </button>
-                                  <button type="button" role="menuitem" onClick={() => { void shareMessage(message); setMessageMenuFor(null); }}>
-                                    <Share2 size={16}/>{copiedMessageId === message.id ? "Enlace copiado" : "Compartir enlace"}
                                   </button>
                                   <button type="button" role="menuitem" onClick={() => {
                                     void navigator.clipboard.writeText(message.body);

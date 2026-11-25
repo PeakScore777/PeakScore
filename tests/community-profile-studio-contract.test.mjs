@@ -1334,9 +1334,10 @@ test("name colour picker reuses the exact profile-theme HSV selector without rer
   assert.doesNotMatch(studio, /\)\} \)\}/);
   assert.match(studio, /className="ps-community-color-picker-actions"[\s\S]*?<button type="button" onClick=\{\(\) => \{ apply\(\); setOpen\(false\); \}\}>Listo<\/button>/);
   assert.match(studio, /className="ps-community-color-picker ps-community-editor-sidebar-color-picker ps-community-name-custom-picker"/);
-  assert.match(studio, /draftRef\.current = normalized/);
+  assert.match(studio, /setDraft\(normalized\)/);
+  assert.doesNotMatch(studio, /draftRef/);
   assert.match(studio, /onPointerMove=\{\(event\) => \{ if \(event\.buttons === 1\) updateFromPlane\(event\); \}\}/);
-  assert.match(studio, /requestAnimationFrame\(\(\) => apply\(\)\)/);
+  assert.match(studio, /const nextColor = updateFromPlane\(event\);[\s\S]*?requestAnimationFrame\(\(\) => apply\(nextColor\)\)/);
   assert.match(studio, /onApply\(normalized\)/);
   assert.doesNotMatch(studio, /input type="color" aria-label="Elegir color personalizado"/);
   assert.match(studio, /ps-community-name-custom-picker\{position:absolute/);
@@ -1344,7 +1345,7 @@ test("name colour picker reuses the exact profile-theme HSV selector without rer
 });
 
 test("custom color picker stays open while adjusting color and closes only with Listo", () => {
-  const applyStart = studio.indexOf("function apply(color = draftRef.current)");
+  const applyStart = studio.indexOf("function apply(color = draft)");
   const applyEnd = studio.indexOf("\n  }", applyStart);
   assert.ok(applyStart >= 0 && applyEnd > applyStart);
   const applyBody = studio.slice(applyStart, applyEnd);

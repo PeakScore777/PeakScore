@@ -69,6 +69,17 @@ testCase("the Founder can set a server-wide background while members can keep lo
   assert.match(migration, /community_spaces_background_color_check/);
 });
 
+
+testCase("empty persisted categories are rendered in the actual community channel navigation", () => {
+  assert.match(page, /community_channel_categories/);
+  assert.match(page, /setCommunityChannelCategories/);
+  assert.match(page, /const groupedChannels = useMemo/);
+  assert.match(page, /communityChannelCategories\.map|baseCategories/);
+  assert.match(page, /channels: channels\.filter/);
+  assert.doesNotMatch(page, /\}\)\)\.filter\(\(group\) => group\.channels\.length\)/);
+  assert.match(page, /groupedChannels\.map/);
+});
+
 testCase("new categories are visible under read-only RLS and can only be mutated by the Founder RPC", () => {
   assert.match(migration, /create table if not exists public\.community_channel_categories/);
   assert.match(migration, /alter table public\.community_channel_categories enable row level security/);

@@ -185,10 +185,15 @@ begin
     raise exception 'Not authorized' using errcode = '42501';
   end if;
 
-  select count(*), min(profile.id)
-    into v_admin_count, v_platform_admin
+  select count(*) into v_admin_count
   from public.profiles profile
   where profile.role = 'admin';
+
+  select profile.id into v_platform_admin
+  from public.profiles profile
+  where profile.role = 'admin'
+  order by profile.id
+  limit 1;
 
   if v_admin_count <> 1 or v_platform_admin is distinct from p_founder_user_id then
     raise exception 'Founder must match the only platform admin' using errcode = '42501';
@@ -250,7 +255,7 @@ begin
      or p_role_key is null or p_role_key = 'fundador' then
     raise exception 'Invalid or protected role assignment' using errcode = '22023';
   end if;
-  if p_action not in ('grant', 'revoke') then
+  if p_action is null or p_action not in ('grant', 'revoke') then
     raise exception 'Invalid role action' using errcode = '22023';
   end if;
   if not exists (select 1 from public.profiles profile where profile.id = p_target_user_id) then
@@ -417,7 +422,7 @@ begin
   if not private.is_community_founder() then
     raise exception 'Only the founder can change community lifecycle' using errcode = '42501';
   end if;
-  if p_action not in ('disable', 'restore') then
+  if p_action is null or p_action not in ('disable', 'restore') then
     raise exception 'Invalid lifecycle action' using errcode = '22023';
   end if;
 
@@ -437,6 +442,125 @@ $function$;
 
 revoke all on function public.set_community_lifecycle(text) from public, anon, authenticated;
 grant execute on function public.set_community_lifecycle(text) to authenticated;
+
+
+-- Founder has explicit access to private staff channels without inheriting
+-- the professor or administrator role.
+drop policy if exists community_founder_read_channels on public.community_channels;
+create policy community_founder_read_channels
+  on public.community_channels
+  for select to authenticated
+  using (private.is_community_founder() and is_archived = false);
+
+drop policy if exists community_founder_read_messages on public.community_messages;
+create policy community_founder_read_messages
+  on public.community_messages
+  for select to authenticated
+  using (
+    private.is_community_founder()
+    and exists (
+      select 1 from public.community_channels channel
+      where channel.id = community_messages.channel_id
+        and channel.is_archived = false
+    )
+  );
+
+drop policy if exists community_founder_insert_messages on public.community_messages;
+create policy community_founder_insert_messages
+  on public.community_messages
+  for insert to authenticated
+  with check (
+    private.is_community_founder()
+    and author_id = (select auth.uid())
+    and exists (
+      select 1 from public.community_channels channel
+      where channel.id = community_messages.channel_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+    )
+    and (
+      reply_to_message_id is null
+      or exists (
+        select 1 from public.community_messages parent
+        where parent.id = community_messages.reply_to_message_id
+          and parent.channel_id = community_messages.channel_id
+      )
+    )
+  );
+
+drop policy if exists community_founder_read_reactions on public.community_reactions;
+create policy community_founder_read_reactions
+  on public.community_reactions
+  for select to authenticated
+  using (
+    private.is_community_founder()
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = community_reactions.message_id
+        and channel.is_archived = false
+    )
+  );
+
+drop policy if exists community_founder_insert_reactions on public.community_reactions;
+create policy community_founder_insert_reactions
+  on public.community_reactions
+  for insert to authenticated
+  with check (
+    private.is_community_founder()
+    and user_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = community_reactions.message_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+    )
+  );
+
+drop policy if exists community_founder_read_comments on public.community_message_comments;
+create policy community_founder_read_comments
+  on public.community_message_comments
+  for select to authenticated
+  using (
+    private.is_community_founder()
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = community_message_comments.message_id
+        and channel.is_archived = false
+    )
+  );
+
+drop policy if exists community_founder_insert_comments on public.community_message_comments;
+create policy community_founder_insert_comments
+  on public.community_message_comments
+  for insert to authenticated
+  with check (
+    private.is_community_founder()
+    and author_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = community_message_comments.message_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+    )
+    and (
+      parent_comment_id is null
+      or exists (
+        select 1
+        from public.community_message_comments parent
+        where parent.id = community_message_comments.parent_comment_id
+          and parent.message_id = community_message_comments.message_id
+          and parent.parent_comment_id is null
+      )
+    )
+  );
 
 -- A kicked account cannot inspect the community. A timed-out account can still
 -- read, but cannot publish, react, or comment until the timeout expires.

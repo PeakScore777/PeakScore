@@ -193,13 +193,11 @@ const DISPLAY_NAME_EFFECT_COLOR_MODE: Record<DisplayNameEffect, DisplayNameColor
 };
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
-  { id: "fuzzy-text", label: "Noise Reveal", description: "Ruido orgánico animado que revela el nombre con una textura digital controlada", hint: "Ruido digital en movimiento" },
   { id: "inkline", label: "Inkline", description: "El contorno dibuja cada letra y después el relleno aparece con un barrido limpio", hint: "Trazo dibujado · relleno progresivo" },
   { id: "halo-signal", label: "Halo Signal", description: "Letras que se encienden en orden variable con brillo violeta y destellos controlados", hint: "Destello violeta · secuencia aleatoria" },
   { id: "domino-flow", label: "Domino Flow", description: "Las letras caen en cadena como fichas de dominó y se reconstruyen en su posición", hint: "Caída escalonada · reconstrucción" },
   { id: "mistfall", label: "Mistfall", description: "El nombre se descompone en partículas luminosas y vuelve a condensarse", hint: "Dispersión de partículas · condensación" },
   { id: "depth-lift", label: "Depth Lift", description: "Volumen 3D con sombra profunda que se extiende al pasar el cursor", hint: "Profundidad 3D · hover" },
-  { id: "gradient-flow", label: "Gradient Flow", description: "Relleno cromático animado que recorre el nombre con un barrido continuo", hint: "Degradado animado · barrido continuo" },
   { id: "shuffle-blur", label: "Blur Cascade", description: "Caracteres que ascienden entre dígitos y símbolos con desenfoque progresivo", hint: "Blur · vertical · 1,5 s" },
   { id: "shuffle-flip", label: "Flip Roll", description: "Caracteres alfabéticos que giran en cascada hacia abajo", hint: "Flip · vertical · 1,1 s" },
   { id: "shuffle", label: "Classic Slide", description: "Deslizamiento horizontal alternado, limpio y preciso", hint: "Slide · derecha · 0,35 s" },
@@ -2076,7 +2074,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <div className="ps-community-name-member-copy">
                             <strong className={"ps-community-name-static community-member-nameplate is-name-style-" + draftDisplayNameStyle} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                           </div>
-                          <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>
                       </div>
                     </section>
@@ -2089,7 +2086,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <div className="ps-community-name-chat-content">
                           <div className="ps-community-name-chat-meta">
                             <strong className={"ps-community-name-static community-chat-author is-name-style-" + draftDisplayNameStyle} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
-                            <time>ahora</time>
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>
                         </div>

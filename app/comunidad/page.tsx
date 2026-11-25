@@ -2247,6 +2247,15 @@ export default function CommunityPage() {
                             } as React.CSSProperties}
                           />
                           {member.status_text && <small>{member.status_text}</small>}
+                          {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (
+                            <span className="community-member-role-badges" aria-label="Roles">
+                              {member.roles.filter((role) => role.display_as_badge).slice(0, 2).map((role) => (
+                                <span key={role.role_key} style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(role.badge_color) ? role.badge_color : "#929aa6" } as CSSProperties}>
+                                  {role.label}
+                                </span>
+                              ))}
+                            </span>
+                          )}
                         </span>
                       </button>
                     );

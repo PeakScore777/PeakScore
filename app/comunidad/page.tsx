@@ -49,6 +49,7 @@ type Channel = {
   category: string; position: number; is_read_only: boolean; is_private: boolean;
   channel_type?: "text" | "announcement"; icon_key?: string; accent_color?: string;
 };
+type CommunityChannelCategory = { id: string; name: string; position: number };
 type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
   position?: number; mentionable?: boolean; hoist?: boolean;
@@ -480,6 +481,7 @@ export default function CommunityPage() {
   const [communityProfileError, setCommunityProfileError] = useState("");
   const [copiedCommunityProfileId, setCopiedCommunityProfileId] = useState<string | null>(null);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [communityChannelCategories, setCommunityChannelCategories] = useState<CommunityChannelCategory[]>([]);
   const [communitySpaces, setCommunitySpaces] = useState<CommunitySpace[]>([]);
   const [activeSpace, setActiveSpace] = useState<CommunitySpace | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
@@ -1029,11 +1031,22 @@ export default function CommunityPage() {
       .sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label, "es"));
   }, [communityMembers, onlineMemberIds]);
 
-  const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
-    category,
-    channels: channels.filter((channel) => channel.category === category)
-      .sort((a, b) => a.position - b.position),
-  })).filter((group) => group.channels.length), [channels]);
+  const groupedChannels = useMemo(() => {
+    const baseCategories: CommunityChannelCategory[] = communityChannelCategories.length
+      ? communityChannelCategories
+      : CATEGORIES.map((name, index) => ({ id: name, name, position: (index + 1) * 10 }));
+    const knownNames = new Set(baseCategories.map((category) => category.name.toLocaleLowerCase("es")));
+    const extraCategories = Array.from(new Set(channels.map((channel) => channel.category)))
+      .filter((name) => !knownNames.has(name.toLocaleLowerCase("es")))
+      .map((name, index) => ({ id: "channel-category:" + name, name, position: 1000 + index }));
+    return [...baseCategories, ...extraCategories]
+      .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name, "es"))
+      .map((category) => ({
+        category: category.name,
+        channels: channels.filter((channel) => channel.category.toLocaleLowerCase("es") === category.name.toLocaleLowerCase("es"))
+          .sort((a, b) => a.position - b.position),
+      }));
+  }, [channels, communityChannelCategories]);
 
   const refreshStats = useCallback(async (spaceId?: string) => {
     if (spaceId && spaceId !== GLOBAL_COMMUNITY_SPACE_ID) {
@@ -1589,6 +1602,7 @@ export default function CommunityPage() {
         { data: roleData },
         { data: roleAssignments },
         { data: platformProfile },
+        { data: categoryData, error: categoryError },
       ] = await Promise.all([
         supabase.from("community_member_profiles")
           .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
@@ -1601,6 +1615,12 @@ export default function CommunityPage() {
         supabase.from("community_member_roles")
           .select("user_id,role_key").eq("user_id", user.id),
         supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+        supabase.from("community_channel_categories")
+          .select("id,name,position")
+          .eq("space_id", resolvedSpace.id)
+          .eq("is_archived", false)
+          .order("position", { ascending: true })
+          .order("name", { ascending: true }),
       ]);
       let compatibleChannels: Channel[] | null = channelData as unknown as Channel[] | null;
       let compatibleRoles: CommunityRole[] | null = roleData as unknown as CommunityRole[] | null;
@@ -1652,6 +1672,20 @@ export default function CommunityPage() {
       } : null);
       const list = (compatibleChannels ?? []) as Channel[];
       setChannels(list);
+      if (!categoryError) {
+        setCommunityChannelCategories((categoryData ?? []).map((category) => ({
+          id: String(category.id),
+          name: String(category.name),
+          position: Number(category.position ?? 100),
+        })));
+      } else {
+        const fallbackCategoryNames = Array.from(new Set(list.map((channel) => channel.category)));
+        setCommunityChannelCategories(fallbackCategoryNames.map((name, index) => ({
+          id: "channel-category:" + name,
+          name,
+          position: (index + 1) * 10,
+        })));
+      }
 
       // Restore cross-device read markers; local storage remains a backward-compatible fallback.
       const readStorageKey = "peakscore:community:read:" + user.id + ":" + resolvedSpace.id;

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
+  Hash, Menu, Search, Send, Users, X, ShieldCheck, BadgeCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
   PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings,
@@ -2270,7 +2270,7 @@ export default function CommunityPage() {
                 <p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>
                 {activeSpace?.verification_status === "verified" && (
                   <span className="community-verified-badge" title="Comunidad verificada por PeakScore" aria-label="Comunidad verificada">
-                    <ShieldCheck size={13}/><span>VERIFICADA</span>
+                    <BadgeCheck size={16} strokeWidth={2.6}/><span>Verificada</span>
                   </span>
                 )}
               </div>

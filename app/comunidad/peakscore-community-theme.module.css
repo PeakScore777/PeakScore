@@ -2176,3 +2176,42 @@
     font-size: 13px;
   }
 }
+
+
+/* Verified community identity: a clean social-style blue check, not a generic green label. */
+.root :global(.community-server-header .community-verified-badge) {
+  gap: 5px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid rgb(88 166 255 / 34%);
+  border-radius: 999px;
+  background: rgb(13 35 62 / 82%);
+  color: #d9ebff;
+  font: 680 10px/1 var(--font-name-classic), Inter, "DM Sans", sans-serif;
+  letter-spacing: 0;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 22%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.root :global(.community-server-header .community-verified-badge svg) {
+  color: #69b1ff;
+  filter: drop-shadow(0 0 5px rgb(59 151 255 / 36%));
+}
+.root :global(.ps-community-preview-verified) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px 4px 6px;
+  border: 1px solid rgb(88 166 255 / 40%);
+  border-radius: 999px;
+  background: rgb(10 31 57 / 78%);
+  color: #d9ebff;
+  font: 680 10px/1 Inter, "DM Sans", sans-serif;
+  letter-spacing: 0;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 28%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.root :global(.ps-community-preview-verified svg) {
+  color: #69b1ff;
+  filter: drop-shadow(0 0 5px rgb(59 151 255 / 36%));
+}

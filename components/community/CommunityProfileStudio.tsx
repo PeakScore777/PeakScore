@@ -591,7 +591,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       shuffleDirection="down"
       duration={3.2}
       animationMode="sequence"
-      shuffleTimes={5}
+      shuffleTimes={previewMode ? 3 : 5}
       ease="power2.out"
       stagger={0.085}
       threshold={0.1}
@@ -657,9 +657,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
             : className.includes("effect-chromaflow")
               ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
               : fuzzyAppearance.gradient}
-          baseIntensity={fuzzySettings.baseIntensity}
-          hoverIntensity={fuzzySettings.hoverIntensity}
-          fuzzRange={fuzzySettings.fuzzRange}
+          baseIntensity={previewMode ? Math.max(fuzzySettings.baseIntensity, 0.22) : fuzzySettings.baseIntensity}
+          hoverIntensity={previewMode ? Math.max(fuzzySettings.hoverIntensity, 0.32) : fuzzySettings.hoverIntensity}
+          fuzzRange={previewMode ? Math.max(fuzzySettings.fuzzRange, 18) : fuzzySettings.fuzzRange}
           sliceSize={fuzzySettings.sliceSize}
           fps={previewMode ? 30 : fuzzySettings.fps}
           transitionDuration={fuzzySettings.transitionDuration}
@@ -2078,7 +2078,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
                           <div className="ps-community-name-member-copy">
-                            <strong className={"ps-community-name-render ps-community-name-static community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            <strong className={"ps-community-name-static community-member-nameplate is-name-style-" + draftDisplayNameStyle} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                           </div>
                           <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>
@@ -2092,7 +2092,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </span>
                         <div className="ps-community-name-chat-content">
                           <div className="ps-community-name-chat-meta">
-                            <strong className={"ps-community-name-render ps-community-name-static community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            <strong className={"ps-community-name-static community-chat-author is-name-style-" + draftDisplayNameStyle} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                             <time>ahora</time>
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>

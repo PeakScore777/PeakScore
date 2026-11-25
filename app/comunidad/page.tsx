@@ -34,6 +34,7 @@ type Channel = {
 };
 type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
+  position?: number; mentionable?: boolean; hoist?: boolean;
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
@@ -690,11 +691,24 @@ export default function CommunityPage() {
         .limit(100);
       if (!active || memberError) return;
       const ids = (data ?? []).map((member) => member.user_id);
-      const { data: roleRows } = ids.length
-        ? await supabase.from("community_public_role_badges")
+      let roleRows: Array<{
+        user_id: string; role_key: string; label: string; badge_color: string;
+        position?: number; mentionable?: boolean; hoist?: boolean;
+      }> = [];
+      if (ids.length) {
+        const extendedRoles = await supabase.from("community_public_role_badges")
+          .select("user_id,role_key,label,badge_color,position,mentionable,hoist")
+          .in("user_id", ids);
+        if (!extendedRoles.error) {
+          roleRows = extendedRoles.data ?? [];
+        } else {
+          // The UI remains compatible while the role-hierarchy migration is pending.
+          const legacyRoles = await supabase.from("community_public_role_badges")
             .select("user_id,role_key,label,badge_color")
-            .in("user_id", ids)
-        : { data: [] };
+            .in("user_id", ids);
+          roleRows = (legacyRoles.data ?? []) as typeof roleRows;
+        }
+      }
       let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings: FuzzyTextSettings | null; display_name_gradient_start: string | null; display_name_gradient_end: string | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
@@ -717,6 +731,9 @@ export default function CommunityPage() {
           label: role.label,
           badge_color: role.badge_color,
           display_as_badge: true,
+          position: role.position,
+          mentionable: role.mentionable,
+          hoist: role.hoist,
         });
         rolesByMember.set(role.user_id, list);
       });
@@ -766,13 +783,13 @@ export default function CommunityPage() {
     const groups = new Map<string, { key: string; label: string; color: string; priority: number; members: CommunityMemberSummary[] }>();
     for (const member of communityMembers) {
       const role = [...(member.roles ?? [])].sort(
-        (a, b) => (priority[a.role_key] ?? 99) - (priority[b.role_key] ?? 99),
+        (a, b) => (a.position ?? priority[a.role_key] ?? 99) - (b.position ?? priority[b.role_key] ?? 99),
       )[0];
       const key = role?.role_key ?? "members";
       const label = role?.label ?? "Miembros";
       const group = groups.get(key) ?? {
         key, label, color: role?.badge_color ?? "#9297a1",
-        priority: priority[key] ?? 99, members: [],
+        priority: role?.position ?? priority[key] ?? 99, members: [],
       };
       group.members.push(member);
       groups.set(key, group);

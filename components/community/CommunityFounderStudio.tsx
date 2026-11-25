@@ -5,7 +5,7 @@ import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
   Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip,
-  Smile, Settings2, ChevronDown, Archive, Save, Users, SlidersHorizontal,
+  Smile, Archive, Save, SlidersHorizontal,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -99,10 +99,10 @@ function normalizePermissions(value: unknown): RolePermissions {
     ? value as Record<string, unknown>
     : {};
   return {
-    view_channels: source.view_channels !== false,
-    send_messages: source.send_messages !== false,
-    attach_files: source.attach_files !== false,
-    add_reactions: source.add_reactions !== false,
+    view_channels: source.view_channels === true,
+    send_messages: source.send_messages === true,
+    attach_files: source.attach_files === true,
+    add_reactions: source.add_reactions === true,
   };
 }
 
@@ -590,7 +590,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                             <input type="checkbox" className="mt-0.5 accent-[#7fe05c]" checked={roleForm.permissions[key]} disabled={!catalogReady || Boolean(selectedRole?.is_system && !isCreatingRole)}
                               onChange={(event) => setRoleForm((current) => ({ ...current, permissions: { ...current.permissions, [key]: event.target.checked } }))}/>
                             <span className="min-w-0">
-                              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[#d8e3e9]"><Icon size={12} className="text-[#8ea7b5}"/>{label}</span>
+                              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[#d8e3e9]"><Icon size={12} className="text-[#8ea7b5]"/>{label}</span>
                               <span className="mt-1 block text-[9px] leading-4 text-[#718796]">{description}</span>
                             </span>
                           </label>
@@ -724,7 +724,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
 
         <footer className="flex min-h-[42px] items-center justify-between border-t border-[#263744] bg-[#0c141d] px-5 text-[9px] text-[#728897] sm:px-7">
           <span>Founder conserva el control global. Las sanciones y cambios quedan auditados.</span>
-          <span className="inline-flex items-center gap-1.5 text-[#8ea7b5]"><Check size={12} className="text-[#7fe05c}"/> PROTECCIÓN ACTIVA</span>
+          <span className="inline-flex items-center gap-1.5 text-[#8ea7b5]"><Check size={12} className="text-[#7fe05c]"/> PROTECCIÓN ACTIVA</span>
         </footer>
       </section>
     </div>

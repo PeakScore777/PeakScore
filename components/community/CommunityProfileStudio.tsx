@@ -350,43 +350,34 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
   const [hue, setHue] = useState(hexToHsv(value).h);
   const [hexDraft, setHexDraft] = useState(value.slice(1));
   const [recent, setRecent] = useState<string[]>([]);
-  const draftRef = useRef(value);
-
-  useEffect(() => {
-    if (!open) {
-      draftRef.current = value;
-      setDraft(value);
-      setHue(hexToHsv(value).h);
-      setHexDraft(value.slice(1));
-    }
-  }, [value, open]);
 
   function setLocalColor(color: string) {
     if (!/^#[0-9a-f]{6}$/i.test(color)) return;
     const normalized = color.toUpperCase();
-    draftRef.current = normalized;
     setDraft(normalized);
     setHexDraft(normalized.slice(1));
   }
 
-  function apply(color = draftRef.current) {
+  function apply(color = draft) {
     if (!/^#[0-9a-f]{6}$/i.test(color)) return;
     const normalized = color.toUpperCase();
     onApply(normalized);
     setRecent((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
   }
 
-  function updateFromPlane(event: ReactPointerEvent<HTMLDivElement>) {
+  function updateFromPlane(event: ReactPointerEvent<HTMLDivElement>): string | null {
     const rect = event.currentTarget.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
+    if (!rect.width || !rect.height) return null;
     const saturation = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
     const brightness = 1 - Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-    setLocalColor(hsvToHex(hue, saturation, brightness));
+    const nextColor = hsvToHex(hue, saturation, brightness);
+    setLocalColor(nextColor);
+    return nextColor;
   }
 
   function updateFromHue(nextHue: number) {
     setHue(nextHue);
-    const hsv = hexToHsv(draftRef.current);
+    const hsv = hexToHsv(draft);
     setLocalColor(hsvToHex(nextHue, hsv.s, hsv.v));
   }
 
@@ -401,6 +392,7 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
         onClick={() => {
           if (open) { setOpen(false); return; }
           setLocalColor(value);
+          setHexDraft(value.slice(1));
           setHue(hexToHsv(value).h);
           setOpen(true);
         }}
@@ -424,7 +416,8 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
             onPointerMove={(event) => { if (event.buttons === 1) updateFromPlane(event); }}
             onPointerUp={(event) => {
               updateFromPlane(event);
-              requestAnimationFrame(() => apply());
+              const nextColor = updateFromPlane(event);
+              if (nextColor) requestAnimationFrame(() => apply(nextColor));
             }}
           >
             <span className="ps-community-color-picker-cursor" style={{
@@ -446,9 +439,9 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
                 setHexDraft(next);
                 if (next.length === 6) setLocalColor("#" + next);
               }}
-              onBlur={() => { if (/^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); else setHexDraft(draftRef.current.slice(1)); }}
+              onBlur={() => { if (/^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); else setHexDraft(draft.slice(1)); }}
               onKeyDown={(event) => { if (event.key === "Enter" && /^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); }}/>
-            <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(draftRef.current)}>
+            <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(draft)}>
               <Copy size={14}/>
             </button>
           </label>

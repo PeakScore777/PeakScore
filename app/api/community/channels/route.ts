@@ -35,6 +35,8 @@ export async function POST(request: Request) {
 
   const action = payload.action;
   const channelId = typeof payload.channel_id === "string" ? payload.channel_id : null;
+  const spaceId = typeof payload.space_id === "string" ? payload.space_id : null;
+  if (spaceId && !UUID_PATTERN.test(spaceId)) return fail("El espacio no es válido.", 400);
   if (!["create", "update", "archive"].includes(String(action))) {
     return fail("La acción del canal no es válida.", 400);
   }
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
     !slug || !SLUG_PATTERN.test(slug)
     || !name || name.length < 2 || name.length > 60
     || description === null || description.length > 240
-    || !category || !CATEGORIES.has(category)
+    || !category || (spaceId ? category.trim().length < 2 || category.trim().length > 40 : !CATEGORIES.has(category))
     || position === null || position < 0 || position > 1000
     || !channelType || !["text", "announcement"].includes(channelType)
     || !iconKey || !ICON_PATTERN.test(iconKey)
@@ -69,9 +71,6 @@ export async function POST(request: Request) {
   )) {
     return fail("Revisa el nombre, categoría, visibilidad y apariencia del canal.", 400);
   }
-
-  const spaceId = typeof payload.space_id === "string" ? payload.space_id : null;
-  if (spaceId && !UUID_PATTERN.test(spaceId)) return fail("El espacio no es válido.", 400);
 
   const channelArgs = {
     p_action: action,

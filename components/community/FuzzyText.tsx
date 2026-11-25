@@ -116,7 +116,6 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glitchRef = useRef(false);
   const introRef = useRef({ start: 0, done: !intro, nextStart: 0 });
-  const revealProgressRef = useRef(intro ? 0 : 1);
   const tuningRef = useRef<Tuning>({
     enableHover,
     baseIntensity,
@@ -220,7 +219,6 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     let intensity = eased;
     let coarse = 1;
     let drawn = -1;
-    let noisePhase = 0;
     let ink = '';
     let blend: GlobalCompositeOperation = 'lighter';
     let dpr = 1;
@@ -338,50 +336,20 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawn = intensity;
 
-      // Reveal the actual glyphs through an organic, irregular leading edge.
-      // Use the canvas clip path itself: no extra offscreen context is needed,
-      // so a browser reaching its 2D-canvas budget still renders the text.
-      ctx.save();
-      const revealProgress = Math.max(0, Math.min(1, revealProgressRef.current));
-      if (tuning.intro && revealProgress < 0.999) {
-        const edge = padX * dpr + revealProgress * source.width;
-        const grain = Math.max(5, source.width * 0.15);
-        const segments = Math.max(10, Math.ceil(canvas.height / Math.max(2, 3 * dpr)));
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        for (let index = 0; index <= segments; index++) {
-          const y = (index / segments) * canvas.height;
-          const wave = Math.sin(index * 1.73 + 0.4) * 0.56
-            + Math.sin(index * 0.61 + 1.2) * 0.28
-            + Math.sin(index * 2.91) * 0.12;
-          const noisyEdge = Math.max(0, Math.min(canvas.width, edge + wave * grain));
-          ctx.lineTo(noisyEdge, y);
-        }
-        ctx.lineTo(0, canvas.height);
-        ctx.closePath();
-        ctx.clip();
-      }
-
+      // Match React Bits FuzzyText: independent random horizontal slices,
+      // with coarser fragments only during the first static-to-clear reveal.
       if (amp >= 0.5) {
-        // Travelling deterministic waves keep the distortion fluid and readable.
-        noisePhase += 0.13;
         if (direction === 'vertical') {
           for (let index = 0; index * step < source.width; index++) {
-            const wave = Math.sin(noisePhase + index * 0.62) * 0.62
-              + Math.sin(noisePhase * 0.57 + index * 1.31) * 0.24;
-            cols[index] = Math.round(wave * amp * 0.62);
+            cols[index] = Math.round((Math.random() - 0.5) * amp);
           }
         } else {
           for (let index = 0; index * step < source.height; index++) {
-            const wave = Math.sin(noisePhase + index * 0.83) * 0.68
-              + Math.sin(noisePhase * 0.71 + index * 1.47) * 0.22;
-            rows[index] = Math.round(wave * amp * 0.72);
+            rows[index] = Math.round((Math.random() - 0.5) * amp);
           }
           if (direction === 'both') {
             for (let index = 0; index * step < canvas.width; index++) {
-              const wave = Math.sin(noisePhase * 0.82 + index * 0.49)
-                + Math.sin(noisePhase * 0.46 + index * 1.12) * 0.28;
-              cols[index] = Math.round(wave * amp * 0.22);
+              cols[index] = Math.round((Math.random() - 0.5) * amp * 0.5);
             }
           }
         }
@@ -390,15 +358,14 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const split = splitOn ? Math.round(tuning.colorSplit * (2 + intensity * fuzzRange * 0.18) * dpr) : 0;
       if (split < 1) {
         fuzz(source, 0, 0, step, amp);
-      } else {
-        const jitter = tuning.colorSplit * amp * 0.2;
-        ctx.globalCompositeOperation = blend;
-        fuzz(layers[0].canvas, -split, jitter, step, amp);
-        fuzz(layers[1].canvas, 0, 0, step, amp);
-        fuzz(layers[2].canvas, split, jitter, step, amp);
-        ctx.globalCompositeOperation = 'source-over';
+        return;
       }
-      ctx.restore();
+      const jitter = tuning.colorSplit * amp * 0.2;
+      ctx.globalCompositeOperation = blend;
+      fuzz(layers[0].canvas, -split, jitter, step, amp);
+      fuzz(layers[1].canvas, 0, 0, step, amp);
+      fuzz(layers[2].canvas, split, jitter, step, amp);
+      ctx.globalCompositeOperation = 'source-over';
     };
 
     const build = () => {
@@ -504,7 +471,6 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const introState = introRef.current;
       if (loopIntro && introState.done && introState.nextStart > 0 && now >= introState.nextStart) {
         introState.done = false;
-        revealProgressRef.current = 0;
         introState.start = now;
         introState.nextStart = 0;
         canvas.style.opacity = "0";
@@ -512,19 +478,16 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       if (!introState.done) {
         if (!tuning.intro || reduceMotion) {
           introState.done = true;
-          revealProgressRef.current = 1;
           canvas.style.opacity = '';
         } else {
           if (!introState.start) introState.start = now;
           const progress = Math.min(1, (now - introState.start) / Math.max(1, tuning.introDuration));
-          revealProgressRef.current = progress;
           const envelope = Math.pow(1 - progress, 2.5);
           level += (INTRO_PEAK - level) * envelope;
           energy = Math.max(energy, envelope);
           canvas.style.opacity = progress < 0.3 ? (1 - Math.pow(1 - progress / 0.3, 2)).toFixed(3) : '';
           if (progress >= 1) {
             introState.done = true;
-            revealProgressRef.current = 1;
             if (loopIntro && !reduceMotion) introState.nextStart = now + Math.max(500, loopDelay);
           }
         }

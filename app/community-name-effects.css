@@ -459,3 +459,13 @@
 .ps-inkline-name.effect-pop .ps-inkline-fill {
   filter:drop-shadow(0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820));
 }
+
+
+/* The SVG face uses an explicit currentColor fill; give these two effects their
+   own ink colour while retaining Inkline's original stroke/fill timeline. */
+.ps-inkline-name.effect-neon .ps-inkline-fill {
+  fill:#F4EAFF !important;
+}
+.ps-inkline-name.effect-pop .ps-inkline-fill {
+  fill:var(--name-solid-color,#55CFA3) !important;
+}

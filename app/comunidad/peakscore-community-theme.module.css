@@ -3573,3 +3573,68 @@
   color: #b5bac1 !important;
   filter: none !important;
 }
+
+
+/* Message menu refinement: compact Discord-like popover, one clean layer. */
+.root :global(.community-chat-message) {
+  isolation: isolate;
+}
+.root :global(.community-chat-message:has(.community-message-context-menu)) {
+  z-index: 80 !important;
+}
+.root :global(.community-message-more-wrap) {
+  position: relative;
+  z-index: 1;
+}
+.root :global(.community-message-more-trigger) {
+  width: 27px !important;
+  min-width: 27px !important;
+  height: 25px !important;
+  border-radius: 6px !important;
+  transition: background .1s ease, color .1s ease, transform .1s ease !important;
+}
+.root :global(.community-message-more-trigger.is-open) {
+  background: #343840 !important;
+  color: #f2f3f5 !important;
+}
+.root :global(.community-message-context-menu) {
+  z-index: 120 !important;
+  width: 194px !important;
+  gap: 1px !important;
+  padding: 5px !important;
+  border: 1px solid #3b3f47 !important;
+  border-radius: 9px !important;
+  background: #202227 !important;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 42%), 0 2px 7px rgb(0 0 0 / 20%) !important;
+  transform: translateY(0) scale(1) !important;
+  animation: community-message-menu-in .11s ease-out both;
+}
+.root :global(.community-message-context-menu > button) {
+  min-height: 31px !important;
+  gap: 9px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+}
+.root :global(.community-message-context-menu > button svg) {
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+}
+.root :global(.community-message-menu-divider) {
+  margin: 3px 4px !important;
+}
+.root :global(.community-chat-message-actions) {
+  z-index: 24;
+}
+.root :global(.community-chat-message:has(.community-message-context-menu) .community-chat-message-actions) {
+  z-index: 121 !important;
+}
+@keyframes community-message-menu-in {
+  from { opacity: 0; transform: translateY(3px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root :global(.community-message-context-menu) { animation: none; }
+}

@@ -272,6 +272,7 @@ export default function DecryptedDisplayName({
           if (revealed) {
             return <span
               className="ps-decrypted-cell is-revealed"
+              data-glyph={character}
               key={index}
               style={{ "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
             >{character}</span>;
@@ -286,6 +287,7 @@ export default function DecryptedDisplayName({
               <span className="ps-decrypted-ghost">{character}</span>
               <span
                 className="ps-decrypted-glyph"
+                data-glyph={glyph}
                 style={{ transform: `translateX(-50%) scaleX(${frame.squeeze[index] ?? 1})` }}
               >
                 {glyph}

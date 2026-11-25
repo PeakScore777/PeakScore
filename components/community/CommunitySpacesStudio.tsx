@@ -77,6 +77,10 @@ export default function CommunitySpacesStudio() {
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState<string | null>(null);
   const [detailRefresh, setDetailRefresh] = useState(0);
+  const [moderationTarget, setModerationTarget] = useState<SpaceMember | null>(null);
+  const [moderationAction, setModerationAction] = useState<"kick" | "timeout" | "restore">("timeout");
+  const [moderationReason, setModerationReason] = useState("");
+  const [moderationDuration, setModerationDuration] = useState(60);
 
   const selectedSpace = spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedChannel = spaceChannels.find((channel) => channel.id === selectedChannelId) ?? null;
@@ -295,6 +299,29 @@ export default function CommunitySpacesStudio() {
     if (ok) setNotice(member.display_name + " ya no tiene acceso a este espacio.");
   }
 
+  async function submitSpaceModeration(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedSpace || !moderationTarget) return;
+    const payload: Record<string, unknown> = {
+      space_id: selectedSpace.id,
+      user_id: moderationTarget.user_id,
+      action: moderationAction,
+      reason: moderationReason.trim(),
+    };
+    if (moderationAction === "timeout") payload.duration_minutes = moderationDuration;
+
+    const ok = await post("/api/community/spaces/moderation", payload, "space-moderation");
+    if (ok) {
+      setNotice(
+        moderationAction === "kick" ? moderationTarget.display_name + " fue expulsado de este espacio." :
+        moderationAction === "restore" ? "Se restauró el acceso de " + moderationTarget.display_name + "." :
+          "Se aplicó un silencio temporal a " + moderationTarget.display_name + ".",
+      );
+      setModerationTarget(null);
+      setModerationReason("");
+    }
+  }
+
   async function saveSpaceChannel(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedSpace) return;
@@ -461,6 +488,12 @@ export default function CommunitySpacesStudio() {
                         <div className="flex items-center gap-1.5">
                           {member.role_keys.includes("colaborador") && <button type="button" onClick={() => void removeSpaceRole(member,"colaborador")} disabled={pending !== null}
                             className="rounded-[4px] border border-[#624d32] px-2 py-1.5 text-[9px] text-[#dfbf84] hover:bg-[#302719] disabled:opacity-40">Retirar colaborador</button>}
+                          <button type="button" onClick={() => { setModerationTarget(member); setModerationAction("timeout"); setModerationReason(""); }} disabled={pending !== null}
+                            className="rounded-[4px] border border-[#5f583a] px-2 py-1.5 text-[9px] text-[#e4ca88] hover:bg-[#302a1c] disabled:opacity-40">Silenciar</button>
+                          <button type="button" onClick={() => { setModerationTarget(member); setModerationAction("kick"); setModerationReason(""); }} disabled={pending !== null}
+                            className="rounded-[4px] border border-[#624044] px-2 py-1.5 text-[9px] text-[#efb1b2] hover:bg-[#321f24] disabled:opacity-40">Expulsar</button>
+                          <button type="button" onClick={() => { setModerationTarget(member); setModerationAction("restore"); setModerationReason(""); }} disabled={pending !== null}
+                            className="rounded-[4px] border border-[#385d3a] px-2 py-1.5 text-[9px] text-[#b8e9aa] hover:bg-[#1a2b1c] disabled:opacity-40">Restaurar</button>
                           <button type="button" onClick={() => void removeSpaceMember(member)} disabled={pending !== null}
                             className="rounded-[4px] border border-[#624044] px-2 py-1.5 text-[9px] text-[#efb1b2] hover:bg-[#321f24] disabled:opacity-40">Quitar acceso</button>
                         </div>
@@ -550,6 +583,44 @@ export default function CommunitySpacesStudio() {
           </div>
         )}
       </section>
+
+      {moderationTarget && (
+        <div className="fixed inset-0 z-[180] flex items-center justify-center bg-[#05080dcc] p-3 backdrop-blur-[4px]"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setModerationTarget(null); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="space-moderation-title"
+            className="w-full max-w-[470px] overflow-hidden rounded-[9px] border border-[#354856] bg-[#101a23] text-[#e8eef3] shadow-[0_25px_80px_rgba(0,0,0,.55)]">
+            <header className="flex items-center justify-between border-b border-[#293b48] bg-[#0b131b] px-5 py-4">
+              <div>
+                <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#8198a9]">MODERACIÓN DEL ESPACIO</p>
+                <h3 id="space-moderation-title" className="mt-1 text-[14px] font-bold text-white">{moderationAction === "kick" ? "Expulsar miembro" : moderationAction === "restore" ? "Restaurar acceso" : "Silenciar temporalmente"}</h3>
+              </div>
+              <button type="button" onClick={() => setModerationTarget(null)} className="grid h-8 w-8 place-items-center rounded-[5px] text-[#a7b7c3] hover:bg-[#1b2a35]" aria-label="Cerrar"><span>×</span></button>
+            </header>
+            <form onSubmit={(event) => void submitSpaceModeration(event)} className="space-y-4 p-5">
+              <p className="text-[11px] text-[#a9bbc5]">Miembro: <strong className="text-white">{moderationTarget.display_name}</strong></p>
+              <label className={LABEL}>Motivo de la medida
+                <textarea required minLength={3} maxLength={500} value={moderationReason} onChange={(event) => setModerationReason(event.target.value)}
+                  className="mt-1.5 min-h-[90px] w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 py-2 text-[11px] text-[#e8eef3] outline-none focus:border-[#01c8ef]"
+                  placeholder="Describe la infracción o el motivo de restauración."/>
+              </label>
+              {moderationAction === "timeout" && (
+                <label className={LABEL}>Duración
+                  <select className={FIELD} value={moderationDuration} onChange={(event) => setModerationDuration(Number(event.target.value))}>
+                    <option value={10}>10 minutos</option><option value={60}>1 hora</option><option value={360}>6 horas</option><option value={1440}>24 horas</option><option value={10080}>7 días</option>
+                  </select>
+                </label>
+              )}
+              <div className="flex justify-end gap-2 border-t border-[#293a47] pt-4">
+                <button type="button" onClick={() => setModerationTarget(null)} className="rounded-[5px] border border-[#334a58] px-3 py-2 text-[10px] text-[#a7bac6] hover:bg-[#182630]">Cancelar</button>
+                <button type="submit" disabled={pending !== null || moderationReason.trim().length < 3}
+                  className="rounded-[5px] border border-[#5eaa45] bg-[#7fe05c] px-4 py-2 text-[10px] font-bold text-[#0b160c] shadow-[0_2px_0_#3c762e] disabled:opacity-40">
+                  {pending === "space-moderation" ? "Aplicando…" : "Confirmar medida"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

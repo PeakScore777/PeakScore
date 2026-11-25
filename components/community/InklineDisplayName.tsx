@@ -36,8 +36,10 @@ export default function InklineDisplayName({
   const Tag = tag;
   const effectTokens = className.split(/\s+/);
   const chromaflow = effectTokens.includes("effect-chromaflow");
+  const gradientFlow = effectTokens.includes("effect-gradient-flow");
   const gummy = effectTokens.includes("effect-gummy");
   const chromaflowGradientId = `ps-inkline-${clipId}-chromaflow`;
+  const gradientFlowGradientId = `ps-inkline-${clipId}-gradient-flow`;
   const gummyGradientId = `ps-inkline-${clipId}-gummy`;
   const styleTokens = style as (CSSProperties & Record<string, unknown>) | undefined;
   const gummyPalette = typeof styleTokens?.["--name-prism-gradient"] === "string"
@@ -102,6 +104,17 @@ export default function InklineDisplayName({
                 <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.5 0;0.5 0;-0.5 0" dur="4.8s" repeatCount="indefinite"/>
               </linearGradient>
             )}
+            {gradientFlow && (
+              <linearGradient id={gradientFlowGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#E84DE8"/>
+                <stop offset="24%" stopColor="#A34DFF"/>
+                <stop offset="48%" stopColor="#527CFF"/>
+                <stop offset="68%" stopColor="#31B9D2"/>
+                <stop offset="84%" stopColor="#48D8A2"/>
+                <stop offset="100%" stopColor="#E84DE8"/>
+                <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-1 0;1 0;-1 0" dur="5.2s" repeatCount="indefinite"/>
+              </linearGradient>
+            )}
             {gummy && (
               <linearGradient id={gummyGradientId} x1="-35%" y1="0%" x2="135%" y2="0%">
                 {gummyStops.map((stop, index) => (
@@ -110,14 +123,11 @@ export default function InklineDisplayName({
                 <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.35 0;0.35 0;-0.35 0" dur="7.2s" repeatCount="indefinite"/>
               </linearGradient>
             )}
-            <clipPath id={`ps-inkline-${clipId}`} clipPathUnits="objectBoundingBox">
-              <rect className="ps-inkline-wipe" x="0" y="0" width="1" height="1" />
-            </clipPath>
           </defs>
           <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
-          <text x="0" y="0" fill={chromaflow ? `url(#${chromaflowGradientId})` : gummy ? `url(#${gummyGradientId})` : fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
+          <text x="0" y="0" fill={gradientFlow ? `url(#${gradientFlowGradientId})` : chromaflow ? `url(#${chromaflowGradientId})` : gummy ? `url(#${gummyGradientId})` : fillColor} stroke="none" className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
         </svg>

@@ -28,6 +28,15 @@ import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { displayNameColorForEffect, displayNameInklineStrokeColor, displayNameSolidColor } from "@/components/community/display-name-color";
 
+type CommunitySpace = {
+  id: string;
+  slug: string;
+  name: string;
+  space_type: "global" | "preicfes";
+  visibility: "public" | "private";
+  icon_key: string;
+  accent_color: string;
+};
 type Channel = {
   id: string; slug: string; name: string; description: string;
   category: string; position: number; is_read_only: boolean; is_private: boolean;
@@ -438,6 +447,8 @@ export default function CommunityPage() {
   const [communityProfileError, setCommunityProfileError] = useState("");
   const [copiedCommunityProfileId, setCopiedCommunityProfileId] = useState<string | null>(null);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [communitySpaces, setCommunitySpaces] = useState<CommunitySpace[]>([]);
+  const [activeSpace, setActiveSpace] = useState<CommunitySpace | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [mentionDisplayNames, setMentionDisplayNames] = useState<Record<string, string>>({});
@@ -1044,6 +1055,39 @@ export default function CommunityPage() {
         return;
       }
       setUserId(user.id);
+
+      const spaceResult = await supabase.from("community_spaces")
+        .select("id,slug,name,space_type,visibility,icon_key,accent_color")
+        .eq("is_enabled", true)
+        .order("created_at", { ascending: false });
+      const fallbackGlobalSpace: CommunitySpace = {
+        id: GLOBAL_COMMUNITY_SPACE_ID,
+        slug: "peakscore",
+        name: "PeakScore Community",
+        space_type: "global",
+        visibility: "public",
+        icon_key: "users",
+        accent_color: "#7FE05C",
+      };
+      const spacesAvailable = !spaceResult.error;
+      const accessibleSpaces = spacesAvailable
+        ? ((spaceResult.data ?? []) as CommunitySpace[])
+        : [fallbackGlobalSpace];
+      if (spacesAvailable && !accessibleSpaces.some((space) => space.space_type === "global")) {
+        accessibleSpaces.unshift(fallbackGlobalSpace);
+      }
+      const requestedSpaceSlug = new URLSearchParams(window.location.search).get("space");
+      const requestedSpace = requestedSpaceSlug
+        ? accessibleSpaces.find((space) => space.slug === requestedSpaceSlug)
+        : null;
+      if (requestedSpaceSlug && spacesAvailable && !requestedSpace) {
+        // RLS did not return this private space for the signed-in member.
+        router.replace("/comunidad");
+      }
+      const resolvedSpace = requestedSpace ?? accessibleSpaces.find((space) => space.space_type === "global") ?? fallbackGlobalSpace;
+      setCommunitySpaces(accessibleSpaces);
+      setActiveSpace(resolvedSpace);
+
       const [
         { data: currentProfile },
         { data: channelData },
@@ -1055,7 +1099,7 @@ export default function CommunityPage() {
           .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
           .select("id,slug,name,description,category,position,is_read_only,is_private,channel_type,icon_key,accent_color")
-          .eq("space_id", GLOBAL_COMMUNITY_SPACE_ID)
+          .eq("space_id", resolvedSpace.id)
           .order("position"),
         supabase.from("community_role_catalog")
           .select("role_key,label,badge_color,display_as_badge,position,hoist"),
@@ -1210,7 +1254,10 @@ export default function CommunityPage() {
     setMentionSearchQuery(null);
     setMentionSuggestions([]);
     setMentionDisplayNames({});
-    window.history.replaceState(null, "", "/comunidad?channel=" + channel.slug);
+    const spaceParam = activeSpace && activeSpace.space_type === "preicfes"
+      ? "&space=" + encodeURIComponent(activeSpace.slug)
+      : "";
+    window.history.replaceState(null, "", "/comunidad?channel=" + encodeURIComponent(channel.slug) + spaceParam);
   }
 
   function updateComposerDraft(value: string, cursor: number) {
@@ -1560,8 +1607,11 @@ export default function CommunityPage() {
   }
 
   async function shareMessage(message: Message) {
+    const spaceParam = activeSpace && activeSpace.space_type === "preicfes"
+      ? "&space=" + encodeURIComponent(activeSpace.slug)
+      : "";
     const url = window.location.origin + "/comunidad?channel="
-      + (message.channel?.slug ?? "general") + "#post-" + message.id;
+      + encodeURIComponent(message.channel?.slug ?? "general") + spaceParam + "#post-" + message.id;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedMessageId(message.id);
@@ -1593,6 +1643,17 @@ export default function CommunityPage() {
           <Link href="/comunidad" className="community-server-icon community-server-icon-active" aria-label="PeakScore Community">
             <Users size={22}/>
           </Link>
+          {communitySpaces.filter((space) => space.space_type === "preicfes").map((space) => (
+            <button key={space.id} type="button"
+              className={"community-server-icon " + (activeSpace?.id === space.id ? "community-server-icon-active" : "")}
+              style={activeSpace?.id === space.id ? { color: space.accent_color, borderColor: space.accent_color + "80" } : undefined}
+              title={space.name}
+              aria-label={"Entrar a " + space.name}
+              aria-current={activeSpace?.id === space.id ? "page" : undefined}
+              onClick={() => { window.location.href = "/comunidad?space=" + encodeURIComponent(space.slug); }}>
+              <GraduationCap size={19}/>
+            </button>
+          ))}
           <Link href="/comunidad/en-vivo" className="community-server-icon" aria-label="Sesiones en vivo">
             <Radio size={20}/>
           </Link>
@@ -1602,7 +1663,7 @@ export default function CommunityPage() {
           <div className="community-server-header">
             <div className="min-w-0">
               <p className="community-server-eyebrow">COMUNIDAD</p>
-              <p className="community-server-name">PeakScore Community</p>
+              <p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>
             </div>
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>

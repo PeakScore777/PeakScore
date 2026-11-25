@@ -415,7 +415,6 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
             }}
             onPointerMove={(event) => { if (event.buttons === 1) updateFromPlane(event); }}
             onPointerUp={(event) => {
-              updateFromPlane(event);
               const nextColor = updateFromPlane(event);
               if (nextColor) requestAnimationFrame(() => apply(nextColor));
             }}

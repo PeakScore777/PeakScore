@@ -3289,3 +3289,51 @@
     font-size: 15px;
   }
 }
+
+
+/* Cover title sits in the upper-left corner, like Discord's server header. */
+.root :global(.community-server-header:has(.community-server-banner-image)) {
+  min-height: 176px !important;
+  height: 176px;
+  align-items: flex-start !important;
+  padding: 15px 14px 0 !important;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) > div.relative.z-20) {
+  align-self: flex-start !important;
+  width: 100%;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-menu-wrap) {
+  align-self: flex-start;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-menu-trigger),
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-member-heading) {
+  min-height: 30px;
+  align-items: center;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-name) {
+  font-size: 16px;
+  line-height: 1.25;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 95%), 0 2px 12px rgb(0 0 0 / 75%);
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-banner-image) {
+  image-rendering: auto;
+  object-fit: cover !important;
+  object-position: center center !important;
+  filter: none !important;
+  transform: none !important;
+  backface-visibility: hidden;
+}
+.root :global(.community-server-header:has(.community-server-banner-image) .community-server-banner-shade) {
+  background:
+    linear-gradient(180deg, rgb(4 7 12 / 48%) 0%, rgb(4 7 12 / 12%) 35%, rgb(4 7 12 / 8%) 65%, rgb(4 7 12 / 42%) 100%);
+}
+@media (max-width: 520px) {
+  .root :global(.community-server-header:has(.community-server-banner-image)) {
+    min-height: 158px !important;
+    height: 158px;
+    padding: 13px 12px 0 !important;
+  }
+  .root :global(.community-server-header:has(.community-server-banner-image) .community-server-name) {
+    font-size: 15px;
+  }
+}

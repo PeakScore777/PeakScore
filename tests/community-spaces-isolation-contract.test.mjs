@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
 const [migration, spaceApi, memberApi, moderationApi, channelApi, studio, founderStudio, mainPage, attachmentApi] = await Promise.all([
-  readFile(new URL("../supabase/migrations/20261124250000_community_spaces_and_preicfes_isolation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261124230200_community_spaces_and_preicfes_isolation.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/spaces/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/spaces/members/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/spaces/moderation/route.ts", import.meta.url), "utf8"),

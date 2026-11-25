@@ -1207,8 +1207,8 @@ export default function CommunityPage() {
           .select("user_id,role_key").eq("user_id", user.id),
         supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
       ]);
-      let compatibleChannels = channelData;
-      let compatibleRoles = roleData;
+      let compatibleChannels: Channel[] | null = channelData as unknown as Channel[] | null;
+      let compatibleRoles: CommunityRole[] | null = roleData as unknown as CommunityRole[] | null;
       if (!channelData) {
         if (resolvedSpace.space_type === "global") {
           // Preserve the legacy global chat until its space_id migration is applied.
@@ -1217,7 +1217,7 @@ export default function CommunityPage() {
             .order("position");
           compatibleChannels = (legacyChannels.data ?? []).map((channel) => ({
             ...channel, channel_type: "text", icon_key: "hash", accent_color: "#01C8EF",
-          })) as typeof channelData;
+          })) as Channel[];
         } else {
           // Never fall back to global channels from inside a private PreICFES route.
           compatibleChannels = [];

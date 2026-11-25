@@ -2667,3 +2667,117 @@
   color: #f4f6f8;
   text-shadow: 0 0 10px rgb(0 200 239 / 12%);
 }
+
+
+/* Final Discord polish: only the Founder chevron is interactive in the server name row. */
+.root :global(.community-server-menu-trigger) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  max-width: 100%;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: default;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.root :global(.community-server-menu-trigger:hover) {
+  border: 0 !important;
+  background: transparent !important;
+}
+.root :global(.community-server-chevron-button) {
+  display: inline-grid;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  margin-left: 1px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #b5bac1;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease, transform .14s ease;
+}
+.root :global(.community-server-chevron-button:hover),
+.root :global(.community-server-chevron-button[aria-expanded="true"]) {
+  background: #35383e;
+  color: #fff;
+}
+.root :global(.community-server-chevron-button:active) {
+  transform: scale(.94);
+}
+.root :global(.community-server-member-heading) {
+  min-height: 40px;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: default;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.root :global(.community-server-member-heading:hover) {
+  background: transparent !important;
+}
+.root :global(.community-server-member-heading .community-verified-dot svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Channel hashes remain neutral gray in every state, including selected/hovered. */
+.root :global(.community-channel-link .community-channel-glyph),
+.root :global(.community-channel-link:hover .community-channel-glyph),
+.root :global(.community-channel-link[aria-current="page"] .community-channel-glyph) {
+  color: #929aa6 !important;
+  filter: none !important;
+}
+.root :global(.community-channel-link:hover .community-channel-glyph) {
+  color: #b5bac1 !important;
+}
+.root :global(.community-chat-hash) {
+  color: #929aa6 !important;
+}
+
+/* Compact header: search and member-panel toggle only. */
+.root :global(.community-chat-header-actions) {
+  gap: 9px;
+}
+
+/* Cleaner account dock without the extra avatar ring or settings gear. */
+.root :global(.community-user-panel-dock .community-user-panel-button) {
+  gap: 10px;
+  padding: 4px 8px 4px 5px;
+  border-radius: 8px;
+  background: transparent;
+  transition: background .15s ease, transform .15s ease;
+}
+.root :global(.community-user-panel-dock .community-user-panel-button:hover) {
+  background: #25282e;
+}
+.root :global(.community-user-panel-dock .community-user-avatar) {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent;
+}
+.root :global(.community-user-panel-dock .community-user-avatar img) {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls) {
+  margin-left: auto;
+  padding-left: 10px;
+  gap: 5px;
+}
+.root :global(.community-user-panel-dock .community-user-control-divider),
+.root :global(.community-user-panel-dock .community-user-settings) {
+  display: none !important;
+}

@@ -963,7 +963,6 @@ $function$;
 revoke all on function public.can_attach_community_files(uuid) from public,anon,authenticated;
 grant execute on function public.can_attach_community_files(uuid) to authenticated;
 
-commit;
 
      or p_name is null or char_length(btrim(p_name)) not between 2 and 60
      or p_description is null or char_length(p_description) > 240
@@ -1210,7 +1209,6 @@ $function$;
 revoke all on function public.can_attach_community_files(uuid) from public,anon,authenticated;
 grant execute on function public.can_attach_community_files(uuid) to authenticated;
 
-commit;
 
      or p_accent_color is null or p_accent_color !~ '^#[0-9A-Fa-f]{6}drop policy if exists community_space_guard_channels on public.community_channels;
 create policy community_space_guard_channels
@@ -1452,7 +1450,6 @@ $function$;
 revoke all on function public.can_attach_community_files(uuid) from public,anon,authenticated;
 grant execute on function public.can_attach_community_files(uuid) to authenticated;
 
-commit;
  then
     raise exception 'Invalid PreICFES channel configuration' using errcode = '22023';
   end if;
@@ -1938,3 +1935,4 @@ revoke all on function public.resolve_community_mention_members(uuid,uuid[])
 grant execute on function public.resolve_community_mention_members(uuid,uuid[])
   to authenticated;
 
+commit;

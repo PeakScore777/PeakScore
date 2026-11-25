@@ -33,6 +33,8 @@ interface FuzzyTextProps {
   trigger?: FuzzTrigger;
   intro?: boolean;
   introDuration?: number;
+  loopIntro?: boolean;
+  loopDelay?: number;
   colorSplit?: number;
   className?: string;
   performanceMode?: "preview" | "full";
@@ -104,6 +106,8 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   trigger = 'hover',
   intro = false,
   introDuration = 1400,
+  loopIntro = false,
+  loopDelay = 1100,
   colorSplit = 0,
   className = '',
   performanceMode = 'full',
@@ -111,7 +115,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glitchRef = useRef(false);
-  const introRef = useRef({ start: 0, done: !intro });
+  const introRef = useRef({ start: 0, done: !intro, nextStart: 0 });
   const tuningRef = useRef<Tuning>({
     enableHover,
     baseIntensity,
@@ -224,14 +228,14 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     let cols = new Int32Array(1);
     let box = { left: 0, ascent: 0, width: 0, height: 0, cssWidth: 0, cssHeight: 0 };
 
-    const computedTypography = () => getComputedStyle(canvas);
+    const computedTypography = () => getComputedStyle(canvas.parentElement || canvas);
     const family = () => (fontFamily === 'inherit' ? computedTypography().fontFamily || 'sans-serif' : fontFamily);
     const font = () => {
       const computed = computedTypography();
       const weight = fontWeight === 'inherit' ? computed.fontWeight : fontWeight;
       return String(weight) + ' ' + fontPx + 'px ' + family();
     };
-    const resolveInk = () => (usesInk ? getComputedStyle(canvas).color || '#000' : color);
+    const resolveInk = () => (usesInk ? computedTypography().color || '#000' : color);
     const pixelRatio = () => Math.min(window.devicePixelRatio || 1, performanceMode === 'preview' ? 1 : 1.25);
     const introPending = () => !introRef.current.done && tuningRef.current.intro && !reduceMotion;
 
@@ -469,6 +473,12 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
         }
       }
       const introState = introRef.current;
+      if (loopIntro && introState.done && introState.nextStart > 0 && now >= introState.nextStart) {
+        introState.done = false;
+        introState.start = now;
+        introState.nextStart = 0;
+        canvas.style.opacity = "0";
+      }
       if (!introState.done) {
         if (!tuning.intro || reduceMotion) {
           introState.done = true;
@@ -480,7 +490,10 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
           level += (INTRO_PEAK - level) * envelope;
           energy = Math.max(energy, envelope);
           canvas.style.opacity = progress < 0.3 ? (1 - Math.pow(1 - progress / 0.3, 2)).toFixed(3) : '';
-          if (progress >= 1) introState.done = true;
+          if (progress >= 1) {
+            introState.done = true;
+            if (loopIntro && !reduceMotion) introState.nextStart = now + Math.max(500, loopDelay);
+          }
         }
       }
       intensity = level;
@@ -627,7 +640,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       typographyObserver?.disconnect();
       document.fonts?.removeEventListener?.('loadingdone', handleTypographyChange);
     };
-  }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn, performanceMode]);
+  }, [text, fontSize, fontWeight, fontFamily, color, gradientKey, letterSpacing, fuzzRange, direction, splitOn, performanceMode, loopIntro, loopDelay]);
 
   return (
     <canvas

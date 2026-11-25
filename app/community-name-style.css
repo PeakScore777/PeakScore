@@ -8455,3 +8455,24 @@ html:has(.ps-community-picker-overlay) * {
     display:none !important;
   }
 }
+
+
+/* Name-style picker: keep the member name directly beside the avatar, like chat. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  justify-content:flex-start !important;
+  gap:10px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex !important;
+  flex:0 1 auto !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  min-width:0 !important;
+  margin:0 !important;
+  text-align:left !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > strong.community-member-nameplate {
+  width:max-content !important;
+  max-width:100% !important;
+  text-align:left !important;
+}

@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, theme, spacesStudio, verificationMigration, readMigration] = await Promise.all([
+const [page, theme, spacesStudio, verificationMigration, readMigration, founderStudio, globalBrandingRoute, globalBrandingMigration, assetRoute] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/comunidad/peakscore-community-theme.module.css", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunitySpacesStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261125120000_community_space_verification.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261125121000_community_channel_reads.sql", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/CommunityFounderStudio.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../app/api/community/branding/route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261125122000_community_global_branding.sql", import.meta.url), "utf8"),
+  readFile(new URL("../app/api/community/spaces/assets/route.ts", import.meta.url), "utf8"),
 ]);
 
 testCase("unread channel markers restore per-user reads and count messages from other members", () => {
@@ -72,4 +76,22 @@ testCase("the old community experience remains readable when new verification co
   assert.match(page, /legacySpaces/);
   assert.match(spacesStudio, /legacySpaces/);
   assert.match(spacesStudio, /verification_status: "unverified"/);
+});
+
+testCase("the founder can configure the global server name, icon and banner through protected APIs", () => {
+  assert.match(founderStudio, /tabButton\("branding", "Identidad"/);
+  assert.match(founderStudio, /saveGlobalBranding/);
+  assert.match(founderStudio, /uploadGlobalBrandingAsset/);
+  assert.match(founderStudio, /community-profile-avatars/);
+  assert.match(founderStudio, /Cambiar portada/);
+  assert.match(founderStudio, /Cambiar icono/);
+  assert.match(globalBrandingRoute, /verifyCommunityFounder/);
+  assert.match(globalBrandingRoute, /update_community_global_branding/);
+  assert.match(globalBrandingMigration, /private\.is_community_founder\(\)/);
+  assert.match(globalBrandingMigration, /community_global_branding_updated/);
+  assert.match(globalBrandingMigration, /update_community_space_asset/);
+  assert.match(assetRoute, /isGlobalCommunity/);
+  assert.match(assetRoute, /sanitizeRasterImage/);
+  assert.match(page, /activeSpace\?\.icon_url/);
+  assert.match(page, /peakscore-community-mark\.svg/);
 });

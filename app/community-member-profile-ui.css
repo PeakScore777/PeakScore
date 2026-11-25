@@ -669,3 +669,138 @@
   .ps-community-profile-overlay,
   .ps-community-profile-dialog { animation: none !important; }
 }
+
+
+/* PeakScore social profile — GameSeek-inspired dark member card. */
+.ps-community-profile-dialog {
+  width: min(438px, calc(100vw - 28px));
+  border-color: #303741;
+  border-radius: 15px;
+  background: #111419;
+  color: #edf1f6;
+  box-shadow: 0 28px 90px rgb(0 0 0 / 62%), 0 0 0 1px rgb(255 255 255 / 2%);
+}
+.ps-community-profile-banner {
+  flex-basis: 142px;
+  height: 142px;
+  min-height: 142px;
+  background:
+    radial-gradient(ellipse at 15% 90%, rgb(0 202 221 / 20%), transparent 48%),
+    radial-gradient(ellipse at 85% 8%, rgb(114 92 255 / 18%), transparent 45%),
+    linear-gradient(115deg, #090d13, #18212b 58%, #10151c);
+}
+.ps-community-profile-banner-meta {
+  top: 13px;
+  bottom: auto;
+  color: rgb(240 245 250 / 82%);
+}
+.ps-community-profile-banner-meta i {
+  background: #8c70ff;
+  box-shadow: 0 0 9px rgb(140 112 255 / 75%);
+}
+.ps-community-profile-body {
+  background: #171a20 !important;
+  color: #e9edf3;
+  padding: 0 20px 20px;
+}
+.ps-community-profile-head {
+  min-height: 65px;
+  margin: -35px 0 11px;
+  align-items: flex-end;
+}
+.ps-community-profile-avatar {
+  width: 82px;
+  height: 82px;
+  flex-basis: 82px;
+  border: 4px solid #171a20;
+  background: #242a34;
+  box-shadow: 0 5px 18px rgb(0 0 0 / 42%);
+}
+.ps-community-profile-avatar > i {
+  width: 15px;
+  height: 15px;
+  border-color: #171a20;
+}
+.ps-community-profile-actions {
+  padding-bottom: 1px;
+}
+.ps-community-profile-actions > button {
+  min-height: 36px;
+  border-color: #35404d;
+  border-radius: 8px;
+  background: #242a33;
+  color: #e5ebf2;
+  font-size: 10px;
+}
+.ps-community-profile-actions > button.is-primary {
+  border-color: #168f9d;
+  background: linear-gradient(135deg, #19c4cf, #0da9b9);
+  color: #071619;
+  box-shadow: 0 3px 12px rgb(0 191 205 / 15%);
+}
+.ps-community-profile-actions > button.is-primary:hover {
+  border-color: #48dbe2;
+  background: linear-gradient(135deg, #43d7dc, #19bdc9);
+}
+.ps-community-profile-actions > button.ps-community-profile-copy {
+  background: #242a33;
+  color: #dce4ed;
+}
+.ps-community-profile-name-row > h2 {
+  color: #f4f6fa;
+  font-size: 21px;
+}
+.ps-community-profile-tag {
+  color: #8d98a7;
+}
+.ps-community-profile-presence {
+  min-height: 26px;
+  margin-top: 8px;
+  padding: 0 9px;
+  border: 1px solid #38424b;
+  border-radius: 7px;
+  background: #222830;
+  color: #c4ccd6;
+  font-size: 10px;
+}
+.ps-community-profile-presence > i.is-online {
+  box-shadow: 0 0 8px rgb(35 165 90 / 35%);
+}
+.ps-community-profile-status {
+  border-color: #343d48;
+  background: #20262f;
+}
+.ps-community-profile-roles-section {
+  margin: 14px 0 13px;
+}
+.ps-community-profile-divider {
+  margin: 12px 0;
+  background: #303741;
+}
+.ps-community-profile-about,
+.ps-community-profile-facts {
+  border-color: #343b46;
+  border-radius: 9px;
+  background: #1d222a;
+}
+.ps-community-profile-about > span,
+.ps-community-profile-facts > div > span,
+.ps-community-profile-roles-section > span {
+  color: #8d98a7;
+}
+.ps-community-profile-about > p,
+.ps-community-profile-facts > div > strong {
+  color: #e2e7ee;
+}
+.ps-community-profile-facts > div + div {
+  border-color: #343b46;
+}
+.ps-community-profile-close {
+  border-color: rgb(255 255 255 / 18%);
+  background: rgb(10 13 18 / 76%);
+}
+@media (max-width: 560px) {
+  .ps-community-profile-dialog { width: min(100%, 438px); }
+  .ps-community-profile-body { padding: 0 15px 17px; }
+  .ps-community-profile-banner { flex-basis: 122px; height: 122px; min-height: 122px; }
+}

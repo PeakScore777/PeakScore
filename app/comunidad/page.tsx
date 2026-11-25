@@ -38,6 +38,7 @@ type CommunitySpace = {
   verification_status?: "unverified" | "pending" | "verified" | "rejected";
   icon_key: string;
   accent_color: string;
+  background_color?: string;
   icon_path?: string | null;
   banner_path?: string | null;
   icon_url?: string | null;
@@ -557,7 +558,7 @@ export default function CommunityPage() {
   const [search, setSearch] = useState("");
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [appearanceOpen, setAppearanceOpen] = useState(false);
-  const [appearanceMode, setAppearanceMode] = useState<"black" | "gray" | "white" | "custom">("black");
+  const [appearanceMode, setAppearanceMode] = useState<"server" | "black" | "gray" | "white" | "custom">("server");
   const [appearanceCustomColor, setAppearanceCustomColor] = useState("#252a32");
   const [chromaEnabled, setChromaEnabled] = useState(true);
   const [appearanceLoadedKey, setAppearanceLoadedKey] = useState<string | null>(null);
@@ -1084,13 +1085,15 @@ export default function CommunityPage() {
       });
   }, []);
 
-  const canvasBackground = appearanceMode === "white"
-    ? "#f1f3f5"
-    : appearanceMode === "gray"
-      ? "#353a43"
-      : appearanceMode === "custom"
-        ? appearanceCustomColor
-        : "#0b0d11";
+  const canvasBackground = appearanceMode === "server"
+    ? (activeSpace?.background_color ?? "#171c24")
+    : appearanceMode === "white"
+      ? "#f1f3f5"
+      : appearanceMode === "gray"
+        ? "#353a43"
+        : appearanceMode === "custom"
+          ? appearanceCustomColor
+          : "#0b0d11";
   const canvasLuminance = (() => {
     const normalized = canvasBackground.replace("#", "");
     const rgb = [0, 2, 4].map((offset) => parseInt(normalized.slice(offset, offset + 2), 16) / 255);
@@ -1116,9 +1119,9 @@ export default function CommunityPage() {
         saved = {};
       }
       setAppearanceMode(
-        saved.mode === "black" || saved.mode === "gray" || saved.mode === "white" || saved.mode === "custom"
+        saved.mode === "server" || saved.mode === "black" || saved.mode === "gray" || saved.mode === "white" || saved.mode === "custom"
           ? saved.mode
-          : "black",
+          : "server",
       );
       if (typeof saved.customColor === "string" && /^#[0-9a-f]{6}$/i.test(saved.customColor)) {
         setAppearanceCustomColor(saved.customColor);
@@ -1521,7 +1524,7 @@ export default function CommunityPage() {
       setUserId(user.id);
 
       const spaceResult = await supabase.from("community_spaces")
-        .select("id,slug,name,space_type,visibility,verification_status,icon_key,accent_color,icon_path,banner_path")
+        .select("id,slug,name,space_type,visibility,verification_status,icon_key,accent_color,background_color,icon_path,banner_path")
         .eq("is_enabled", true)
         .order("created_at", { ascending: false });
       const fallbackGlobalSpace: CommunitySpace = {
@@ -1533,6 +1536,7 @@ export default function CommunityPage() {
         verification_status: "verified",
         icon_key: "users",
         accent_color: "#7FE05C",
+        background_color: "#171C24",
         icon_path: null, banner_path: null, icon_url: null, banner_url: null,
       };
       let spacesRows = (spaceResult.data ?? []) as CommunitySpace[];

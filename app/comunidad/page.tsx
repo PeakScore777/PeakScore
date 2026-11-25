@@ -305,7 +305,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   if (animation === "inkline") {
     const effectName = className.split(/\\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
     const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
-    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.4} fontWeight={900} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
+    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
     return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;

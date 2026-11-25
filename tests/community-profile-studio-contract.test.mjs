@@ -216,17 +216,16 @@ test("saved frames and accent colors render on the community member list, hover 
   assert.match(route, /Optional public role badges unavailable/);
 });
 
-test("identity values render and persist while profile name stays read-only in this editor", () => {
+test("identity fields persist while the founder editor exposes only profile font and plate customization", () => {
   for (const key of ["displayName", "pronouns", "statusText", "about", "cardColor", "plateStyle", "accentColor", "avatarFrame"]) {
     assert.ok(studio.includes(key), "Missing editor state: " + key);
   }
   assert.match(studio, /ps-community-editor-preview-name-static/);
   assert.doesNotMatch(studio, /setDisplayName\(event\.target\.value\)/);
   assert.doesNotMatch(studio, /aria-label="Nombre público"/);
-  assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
-  assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
-  assert.match(studio, /openAppearancePicker\("profileEffect"\)/);
+  assert.doesNotMatch(studio, /openAppearancePicker\("avatarDecoration"\)|openAppearancePicker\("profileFrame"\)|openAppearancePicker\("profileEffect"\)/);
   assert.match(studio, /openAppearancePicker\("plate"\)/);
+  assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(studio, /confirmAvatarCrop/);
   assert.match(studio, /statusExpiresAt/);
   assert.match(studio, /statusDuration/);
@@ -626,14 +625,13 @@ test("the editor receives realtime presence and anchors its status indicator ove
   assert.match(latest, /\.ps-community-profile-avatar > i\.is-online/);
 });
 
-test("the profile editor uses member labels and live profile miniatures instead of generic cosmetic glyphs", () => {
+test("the founder profile editor keeps avatar and font controls without cosmetic catalogs", () => {
   assert.match(studio, /Miembro nuevo/);
   assert.match(studio, /Miembro /);
   assert.doesNotMatch(studio, /avatarDecorationId === "orbit"/);
-  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-frame/);
-  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-effect/);
-  assert.match(studio, /ps-community-picker-mini-profile is-profile-frame-/);
-  assert.match(studio, /ps-community-picker-mini-profile is-effect/);
+  assert.match(studio, /ps-community-editor-avatar-tile/);
+  assert.match(studio, /ps-community-name-font-option/);
+  assert.doesNotMatch(studio, /ps-community-editor-cosmetic-live-preview|ps-community-picker-mini-profile/);
 });
 
 test("mobile cosmetic selectors retain their live preview and the banner hue control has a rendered rainbow track", () => {
@@ -826,14 +824,11 @@ test("saved profile motion renderer exposes supported animations without an edit
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 
-test("name entrance gallery renders as a uniform three-column card grid with separated labels and timings", () => {
+test("legacy motion catalogue styles remain responsive but founder-intro no longer mounts that gallery", () => {
   assert.match(nameStyleCss, /\.ps-community-name-style-group > \.ps-community-name-animation-grid\s*\{[\s\S]*?display:grid !important/);
   assert.match(nameStyleCss, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
-  assert.match(nameStyleCss, /\.ps-community-name-animation-option > strong\s*\{[\s\S]*?display:flex !important/);
-  assert.match(nameStyleCss, /\.ps-community-name-animation-option > small\s*\{[\s\S]*?border-radius:999px !important/);
-  assert.match(nameStyleCss, /width:100% !important/);
-  assert.match(nameStyleCss, /overflow-wrap:anywhere !important/);
   assert.match(nameStyleCss, /@media \(max-width:560px\)/);
+  assert.doesNotMatch(studio, /ps-community-name-animation-grid|DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
 });
 
 
@@ -1335,12 +1330,9 @@ test("name atelier groups all 29 fonts into four curated families without removi
   assert.deepEqual([...ids].sort(), [...groupedIds].sort());
 });
 
-test("name atelier separates finish from profile entrance animation and previews light and dark themes", () => {
-  assert.ok(studio.includes("Acabado del nombre"));
-  assert.ok(studio.includes("Animación de perfil"));
-  assert.ok(studio.includes("SOLO EN PERFIL"));
+test("Name Atelier keeps a unified live preview while founder-intro hides finish and animation selectors", () => {
+  assert.doesNotMatch(studio, /Acabado del nombre|Animación de perfil|SOLO EN PERFIL/);
   assert.ok(studio.includes("ps-community-name-preview-profile-view"));
-  assert.ok(studio.includes("PERFIL"));
   assert.ok(studio.includes("MIEMBROS DE LA COMUNIDAD"));
   assert.ok(studio.includes("ps-community-name-preview-chat-view"));
   assert.ok(nameStyleCss.includes(".ps-community-name-preview-stage {"));
@@ -1349,7 +1341,6 @@ test("name atelier separates finish from profile entrance animation and previews
   assert.ok(nameStyleCss.includes("ps-community-name-preview-chat-view"));
   assert.ok(nameStyleCss.includes(".ps-community-name-static.effect-gradient,"));
   assert.ok(nameStyleCss.includes(".ps-community-name-static.effect-neon,"));
-  assert.ok(nameStyleCss.includes("animation:none !important"));
 });
 
 test("community-only profile and name-style stylesheets are loaded by the community route, not root layout", () => {
@@ -1362,36 +1353,20 @@ test("community-only profile and name-style stylesheets are loaded by the commun
 });
 
 
-test("Name Atelier previews keep independent finishes, profile motion and the borderless Discord reference layout", () => {
-  const effectGrid = studio.slice(studio.indexOf("DISPLAY_NAME_EFFECTS.map"), studio.indexOf("DISPLAY_NAME_ANIMATIONS.map"));
-  const motionGrid = studio.slice(studio.indexOf("DISPLAY_NAME_ANIMATIONS.map"), studio.indexOf("DISPLAY_NAME_COLORS.map"));
-  assert.ok(effectGrid.includes("ps-community-name-effect-option"));
-  assert.ok(effectGrid.includes("ps-community-name-effect-sample is-name-style-"));
-  assert.ok(!effectGrid.includes('className={"ps-community-name-effect-option effect-'));
-  assert.ok(motionGrid.includes("ps-community-name-animation-option"));
-  assert.ok(motionGrid.includes("ps-community-name-animation-sample"));
-  assert.ok(studio.includes("draftDisplayNameAnimation"));
-  assert.doesNotMatch(studio, /loopIntro=|colorSplit=|resolveFuzzyTextAppearance|<FuzzyText\\s/);
-  assert.doesNotMatch(page, /resolveFuzzyTextAppearance|<FuzzyText\\s/);
-  assert.match(studio, /displayNameFuzzySettings/); // Legacy persisted settings remain data-only.
-  assert.match(studio, /loopDelay=\{3400\}/); // Hacking Decode's intentional repeat pause.
-
+test("Name Atelier keeps the font specimen and synchronized preview without showing finish or motion galleries in founder-intro", () => {
+  assert.match(studio, /ps-community-name-font-option/);
+  assert.match(studio, /ps-community-name-preview-profile-view/);
+  assert.match(studio, /ps-community-name-preview-chat-view/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_EFFECTS\.map\(\(item\) =>/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.match(studio, /draftDisplayNameStyle/);
+  assert.match(studio, /displayNameFuzzySettings/);
   const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));
   assert.ok(finalPreviewCss.includes("border:0 !important;"));
   assert.ok(finalPreviewCss.includes("background:transparent !important;"));
-  assert.ok(finalPreviewCss.includes("height:228px !important;"));
-  assert.ok(finalPreviewCss.includes("width:98px !important;"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-community-shell"));
-  assert.ok(finalPreviewCss.includes("border:1px solid #343740 !important;"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-chat-message"));
-  assert.ok(finalPreviewCss.includes("Reference member-name treatment is plain violet text"));
-  assert.ok(finalPreviewCss.includes("border:0 !important;"));
-  assert.ok(finalPreviewCss.includes(".ps-community-name-animation-option > .ps-community-name-preview-live"));
-  assert.ok(finalPreviewCss.includes(".ps-community-name-animation-option .ps-fuzzy-text-wrap"));
-  assert.ok(finalPreviewCss.includes("height:60px !important;"));
-  assert.ok(finalPreviewCss.includes(".ps-community-name-effect-sample.effect-gradient-flow"));
-  assert.ok(finalPreviewCss.includes(".ps-community-name-effect-sample.effect-chromaflow"));
 });
 
 

@@ -8449,3 +8449,9 @@ html:has(.ps-community-picker-overlay) * {
   visibility:hidden !important;
   opacity:0 !important;
 }
+
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render:not(.ps-community-name-preview-live).ps-inkline-name animateTransform {
+    display:none !important;
+  }
+}

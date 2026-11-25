@@ -56,15 +56,6 @@ export default function InklineDisplayName({
     : ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"];
   const forceMotion = effectTokens.includes("ps-community-name-preview-live");
 
-  useEffect(() => {
-    const node = motionRef.current;
-    if (forceMotion) {
-      if (node) node.dataset.motionVisible = "true";
-      return;
-    }
-    return observeNameMotionVisibility(node);
-  }, [forceMotion]);
-
   useLayoutEffect(() => {
     const root = motionRef.current;
     const node = textRef.current;
@@ -118,6 +109,7 @@ export default function InklineDisplayName({
     if (reduced) {
       glyphs.forEach((glyph) => { glyph.style.strokeDashoffset = "0px"; });
       wipe.setAttribute("width", String(box.width));
+      if (motionRef.current) motionRef.current.dataset.motionVisible = "true";
       return;
     }
 
@@ -172,8 +164,22 @@ export default function InklineDisplayName({
       easing: "linear",
     }));
 
-    return () => animations.forEach((animation) => animation.cancel());
-  }, [box, dash, chars.length]);
+    const root = motionRef.current;
+    let stopObserving = () => {};
+    if (forceMotion) {
+      if (root) root.dataset.motionVisible = "true";
+    } else {
+      animations.forEach((animation) => animation.pause());
+      stopObserving = observeNameMotionVisibility(root, (visible) => {
+        animations.forEach((animation) => visible ? animation.play() : animation.pause());
+      });
+    }
+
+    return () => {
+      stopObserving();
+      animations.forEach((animation) => animation.cancel());
+    };
+  }, [box, dash, chars.length, forceMotion]);
 
   const viewBox = box
     ? box.x + " " + box.y + " " + box.width + " " + box.height

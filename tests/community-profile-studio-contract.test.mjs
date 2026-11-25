@@ -1136,7 +1136,9 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(mistfallName, /finished = false/);
   assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);
   assert.match(mistfallName, /\[text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey\]/);
-  assert.match(mistfallName, /styleKey = \[className, styleTokens\?\.\["--name-solid-color"\]/);\n  assert.match(mistfallName, /particleStops = paletteStops\(selectedPalette\.length >= 2 \? selectedPalette/);\n  assert.doesNotMatch(page, /fps=\{fuzzySettings\.fps\}/);
+  assert.match(mistfallName, /styleKey = \[className, styleTokens\?\.\["--name-solid-color"\]/);
+  assert.match(mistfallName, /particleStops = paletteStops\(selectedPalette\.length >= 2 \? selectedPalette/);
+  assert.doesNotMatch(page, /fps=\{fuzzySettings\.fps\}/);
 });
 
 

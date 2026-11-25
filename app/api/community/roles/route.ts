@@ -16,8 +16,17 @@ function fail(message: string, status: number) {
 }
 
 async function verifyFounderBootstrap(userId: string) {
-  const configuredFounderId = process.env.COMMUNITY_FOUNDER_USER_ID;
-  if (!configuredFounderId || configuredFounderId !== userId) return false;
+  // The unique platform owner is the single source of truth. Do not depend on
+  // a manually maintained env var that can drift between Preview/Production.
+  const { data: platformAdmins, error: adminLookupError } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin")
+    .limit(2);
+
+  if (adminLookupError || platformAdmins?.length !== 1 || platformAdmins[0]?.id !== userId) {
+    return false;
+  }
 
   const { data, error } = await supabaseAdmin.rpc("bootstrap_community_founder", {
     p_founder_user_id: userId,

@@ -116,6 +116,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glitchRef = useRef(false);
   const introRef = useRef({ start: 0, done: !intro, nextStart: 0 });
+  const revealProgressRef = useRef(intro ? 0 : 1);
   const tuningRef = useRef<Tuning>({
     enableHover,
     baseIntensity,
@@ -189,13 +190,15 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     const sourceCtx = source.getContext('2d');
     const scratch = document.createElement('canvas');
     const scratchCtx = scratch.getContext('2d');
+    const revealMask = document.createElement('canvas');
+    const revealMaskCtx = revealMask.getContext('2d');
     const channels: ChannelLayer[] = splitOn
       ? [0, 1, 2].map(() => {
           const layer = document.createElement('canvas');
           return { canvas: layer, ctx: layer.getContext('2d') };
         })
       : [];
-    if (!canvas || !ctx || !sourceCtx || !scratchCtx || channels.some(channel => !channel.ctx)) return;
+    if (!canvas || !ctx || !sourceCtx || !scratchCtx || !revealMaskCtx || channels.some(channel => !channel.ctx)) return;
     const layers = channels as { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D }[];
 
     const reduceMotion = respectReducedMotion && (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
@@ -328,6 +331,33 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       }
     };
 
+    const applyNoiseReveal = () => {
+      const progress = Math.max(0, Math.min(1, revealProgressRef.current));
+      if (progress >= 0.999 || !tuningRef.current.intro) return;
+      const width = canvas.width;
+      const height = canvas.height;
+      if (revealMask.width !== width || revealMask.height !== height) {
+        revealMask.width = width;
+        revealMask.height = height;
+      }
+      const cell = Math.max(2, Math.round(3 * dpr));
+      revealMaskCtx.clearRect(0, 0, width, height);
+      revealMaskCtx.fillStyle = '#fff';
+      const edge = padX * dpr + progress * source.width;
+      const grain = Math.max(5, source.width * 0.16);
+      for (let y = 0; y < height; y += cell) {
+        for (let x = 0; x < width; x += cell) {
+          const seed = Math.sin((x * 12.9898 + y * 78.233) * 0.017) * 43758.5453;
+          const noise = (seed - Math.floor(seed) - 0.5) * grain;
+          const localEdge = edge + noise + Math.sin(y * 0.045) * grain * 0.16;
+          if (x + cell * 0.5 <= localEdge) revealMaskCtx.fillRect(x, y, cell, cell);
+        }
+      }
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.drawImage(revealMask, 0, 0);
+      ctx.globalCompositeOperation = 'source-over';
+    };
+
     const draw = () => {
       const tuning = tuningRef.current;
       const step = Math.max(1, Math.round(Math.max(1, tuning.sliceSize) * coarse * dpr));
@@ -363,6 +393,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const split = splitOn ? Math.round(tuning.colorSplit * (2 + intensity * fuzzRange * 0.18) * dpr) : 0;
       if (split < 1) {
         fuzz(source, 0, 0, step, amp);
+        applyNoiseReveal();
         return;
       }
       const jitter = tuning.colorSplit * amp * 0.2;
@@ -371,6 +402,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       fuzz(layers[1].canvas, 0, 0, step, amp);
       fuzz(layers[2].canvas, split, jitter, step, amp);
       ctx.globalCompositeOperation = 'source-over';
+      applyNoiseReveal();
     };
 
     const build = () => {
@@ -475,6 +507,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const introState = introRef.current;
       if (loopIntro && introState.done && introState.nextStart > 0 && now >= introState.nextStart) {
         introState.done = false;
+        revealProgressRef.current = 0;
         introState.start = now;
         introState.nextStart = 0;
         canvas.style.opacity = "0";
@@ -482,16 +515,19 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       if (!introState.done) {
         if (!tuning.intro || reduceMotion) {
           introState.done = true;
+          revealProgressRef.current = 1;
           canvas.style.opacity = '';
         } else {
           if (!introState.start) introState.start = now;
           const progress = Math.min(1, (now - introState.start) / Math.max(1, tuning.introDuration));
+          revealProgressRef.current = progress;
           const envelope = Math.pow(1 - progress, 2.5);
           level += (INTRO_PEAK - level) * envelope;
           energy = Math.max(energy, envelope);
           canvas.style.opacity = progress < 0.3 ? (1 - Math.pow(1 - progress / 0.3, 2)).toFixed(3) : '';
           if (progress >= 1) {
             introState.done = true;
+            revealProgressRef.current = 1;
             if (loopIntro && !reduceMotion) introState.nextStart = now + Math.max(500, loopDelay);
           }
         }

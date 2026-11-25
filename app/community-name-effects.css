@@ -165,8 +165,8 @@
 :is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-domino-flow__glyph {
   color:transparent !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;-webkit-background-clip:text !important;
 }
-.ps-domino-flow__glyph { animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
-:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-domino-flow__glyph { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFFFFF,var(--name-gradient-start,#9D83FF)) !important;background-size:240% 100% !important; }
+/* The tile owns Domino motion; finish animation is added only when an effect is selected. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-domino-flow__glyph { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFFFFF,var(--name-gradient-start,#9D83FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-aurora 5.2s ease-in-out infinite; }
 :is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-domino-flow__glyph { background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC) !important;background-size:100% 220% !important;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
 :is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-domino-flow__glyph { background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
 :is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-domino-flow__glyph { background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF)) !important;background-size:260% 100% !important; }
@@ -252,7 +252,20 @@
 
 /* Mistfall and Fuzzy Text are transparent canvases; never paint their wrapper. */
 .ps-mistfall-name,.ps-fuzzy-text-wrap { background:none !important;background-color:transparent !important; }
-.ps-mistfall-name .ps-mistfall-layout { background-clip:text !important;-webkit-background-clip:text !important; }
+.ps-mistfall-name .ps-mistfall-canvas { filter:none !important; }
+.ps-mistfall-name .ps-mistfall-layout {
+  color:inherit;background-clip:text !important;-webkit-background-clip:text !important;
+}
+.ps-mistfall-name.effect-gradient .ps-mistfall-layout { color:transparent !important;background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFF,var(--name-gradient-start,#9D83FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-aurora 5.2s ease-in-out infinite; }
+.ps-mistfall-name.effect-toon .ps-mistfall-layout { color:transparent !important;background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC) !important;background-size:100% 220% !important;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
+.ps-mistfall-name.effect-gummy .ps-mistfall-layout { color:transparent !important;background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
+.ps-mistfall-name.effect-prism .ps-mistfall-layout { color:transparent !important;background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF)) !important;background-size:260% 100% !important;animation:ps-name-finish-spectrum 4.4s linear infinite; }
+.ps-mistfall-name.effect-chromaflow .ps-mistfall-layout { color:transparent !important;background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E) !important;background-size:260% 100% !important;animation:ps-name-finish-spectrum 3.8s linear infinite; }
+.ps-mistfall-name.effect-gradient-flow .ps-mistfall-layout { color:transparent !important;background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8) !important;background-size:300% 100% !important;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
+.ps-mistfall-name.effect-neon .ps-mistfall-layout { color:#F4EAFF !important;text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2) !important;animation:ps-name-finish-neon 2.5s ease-in-out infinite; }
+.ps-mistfall-name.effect-pop .ps-mistfall-layout { color:var(--name-solid-color,#55CFA3) !important;text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820) !important;animation:ps-name-finish-pop 2.2s ease-in-out infinite; }
+/* SVG Inkline uses explicit fill attributes and should not inherit a clipped HTML background. */
+.ps-inkline-name:is(.effect-gradient,.effect-toon,.effect-gummy,.effect-prism,.effect-chromaflow,.effect-gradient-flow,.effect-neon,.effect-pop) { background:none !important; }
 
 /* Accessibility: freeze only finish motion when reduced motion is explicitly requested. */
 @media (prefers-reduced-motion:reduce) {

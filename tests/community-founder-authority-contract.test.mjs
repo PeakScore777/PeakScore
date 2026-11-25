@@ -86,7 +86,7 @@ testCase("founder control uses a scoped, non-generic dialog and the new communit
     readFile(new URL("../app/comunidad/peakscore-community-theme.module.css", import.meta.url), "utf8"),
   ]);
   assert.match(page, /communityTheme\.root/);
-  assert.match(page, /CONTROL CENTRAL/);
+  assert.match(page, /aria-label="Abrir control central de founder"/);
   assert.match(studio, /Gestión de miembros y roles/);
   assert.match(studio, /manage_community_member_role|\/api\/community\/roles/);
   assert.match(studio, /fundador/);

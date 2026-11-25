@@ -70,6 +70,8 @@ testCase("a PreICFES collaborator can use private staff channels only in assigne
   assert.match(migration, /create or replace function private\.is_space_timed_out\(p_space_id uuid\)/);
   assert.match(migration, /restriction\.restriction_type = 'kick'[\s\S]*?restriction\.revoked_at is null/);
   assert.match(migration, /p_permission in \('send_messages','attach_files','add_reactions'\)[\s\S]*?private\.is_space_timed_out\(p_space_id\)/);
+  assert.match(migration, /v_space_type = 'global'[\s\S]*?private\.is_community_timed_out\(\)/);
+  assert.match(migration, /Only an active assigned collaborator can moderate this PreICFES space/);
 });
 
 testCase("SECURITY DEFINER edit and mention functions cannot bypass PreICFES scope or timeout", () => {

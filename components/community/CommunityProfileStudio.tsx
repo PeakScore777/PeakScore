@@ -547,7 +547,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
-    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.7} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
+    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.7} fontWeight={900} className={renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
     return <HaloSignalDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;

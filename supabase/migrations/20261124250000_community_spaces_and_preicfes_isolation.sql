@@ -157,6 +157,7 @@ set label = excluded.label,
     badge_color = excluded.badge_color,
     position = excluded.position,
     display_as_badge = excluded.display_as_badge,
+    hoist = true,
     is_system = true,
     permissions = excluded.permissions;
 

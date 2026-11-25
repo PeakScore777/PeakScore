@@ -8554,9 +8554,3 @@ html:has(.ps-community-picker-overlay) * {
   color:var(--name-solid-color,#55cfa3) !important;-webkit-text-fill-color:var(--name-solid-color,#55cfa3) !important;
   text-shadow:0 1px 0 rgb(255 255 255 / 36%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111) !important;background:none !important;
 }
-:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-inkline-fill,
-:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-inkline-fill,
-:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-inkline-fill,
-:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-inkline-fill {
-  fill:currentColor !important;
-}

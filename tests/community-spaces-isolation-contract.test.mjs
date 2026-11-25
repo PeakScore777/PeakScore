@@ -54,6 +54,9 @@ testCase("only founder can create spaces, manage membership and administer their
   assert.match(spaceApi, /manage_community_space/);
   assert.match(memberApi, /manage_community_space_member/);
   assert.match(channelApi, /manage_community_space_channel/);
+  assert.match(moderationApi, /isSameOriginMutation/);
+  assert.match(moderationApi, /readBodyWithinLimit/);
+  assert.match(moderationApi, /moderate_community_space_member/);
   assert.match(migration, /Only the founder can manage community spaces/);
   assert.match(migration, /Only the founder can manage community space membership/);
   assert.match(migration, /Only the founder can manage PreICFES channels/);

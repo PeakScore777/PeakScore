@@ -354,6 +354,11 @@ export default function CommunityFounderStudio({
 
   const selectedRole = roles.find((role) => role.role_key === selectedRoleKey) ?? null;
   const selectedChannel = channels.find((channel) => channel.id === selectedChannelId) ?? null;
+  const selectedCategory = categories.find((category) => category.id === selectedCategoryId) ?? null;
+  const categoryOptions = [
+    ...CATEGORIES.map((category) => category.value),
+    ...categories.map((category) => category.name).filter((name) => !CATEGORIES.some((item) => item.value.toLowerCase() === name.toLowerCase())),
+  ];
 
   async function postJson(url: string, payload: Record<string, unknown>, key: string) {
     if (pendingKey) return false;
@@ -399,6 +404,7 @@ export default function CommunityFounderStudio({
           description: globalBranding.description,
           icon_key: globalBranding.icon_key,
           accent_color: globalBranding.accent_color,
+          background_color: globalBranding.background_color,
         }),
       });
       const data = await response.json().catch(() => null) as { error?: string } | null;
@@ -499,6 +505,37 @@ export default function CommunityFounderStudio({
       setSelectedRoleKey(fallbackRole?.role_key ?? "administrador");
       setRoleForm(toRoleForm(fallbackRole));
       setIsCreatingRole(false);
+    }
+  }
+
+  async function saveCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!categoriesReady || !categoryForm.name.trim()) {
+      setError("No se pudo cargar la administración de categorías.");
+      return;
+    }
+    const ok = await postJson("/api/community/categories", {
+      action: isCreatingCategory ? "create" : "update",
+      category_id: selectedCategory?.id ?? null,
+      name: categoryForm.name.trim(),
+      position: categoryForm.position,
+    }, "category-save");
+    if (ok) {
+      setIsCreatingCategory(false);
+      setSelectedCategoryId(null);
+      setSelectedChannelId(null);
+    }
+  }
+
+  async function archiveCategory(category: Category) {
+    const ok = await postJson("/api/community/categories", {
+      action: "archive",
+      category_id: category.id,
+    }, "category-archive");
+    if (ok) {
+      setSelectedCategoryId(null);
+      setIsCreatingCategory(false);
+      setIsCreatingChannel(false);
     }
   }
 

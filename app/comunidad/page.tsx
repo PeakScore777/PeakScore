@@ -460,6 +460,7 @@ export default function CommunityPage() {
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
   const [hoverCommunityProfile, setHoverCommunityProfile] = useState<CommunityMemberProfile | null>(null);
+  const [memberProfileMenuOpen, setMemberProfileMenuOpen] = useState(false);
   const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
   const hoverProfileCloseTimerRef = useRef<number | null>(null);
   const communityProfileRequestRef = useRef(0);
@@ -536,6 +537,7 @@ export default function CommunityPage() {
 
   function openMemberHoverPreview(member: CommunityMemberSummary, event: { clientX: number; clientY: number }) {
     if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
+    setMemberProfileMenuOpen(false);
     const cached = communityProfileCacheRef.current.get(member.id);
     const preview: CommunityMemberProfile = cached ?? {
       userId: member.id,
@@ -582,7 +584,10 @@ export default function CommunityPage() {
 
   function scheduleCloseMemberHoverPreview() {
     if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
-    hoverProfileCloseTimerRef.current = window.setTimeout(() => setHoverCommunityProfile(null), 180);
+    hoverProfileCloseTimerRef.current = window.setTimeout(() => {
+      setHoverCommunityProfile(null);
+      setMemberProfileMenuOpen(false);
+    }, 180);
   }
 
   function keepMemberHoverPreviewOpen() {
@@ -593,6 +598,7 @@ export default function CommunityPage() {
   async function openCommunityProfile(memberId: string) {
     const requestId = ++communityProfileRequestRef.current;
     setHoverCommunityProfile(null);
+    setMemberProfileMenuOpen(false);
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
     const instantProfile: CommunityMemberProfile = cached ?? {
@@ -2745,11 +2751,6 @@ export default function CommunityPage() {
         {memberListOpen && (
           <aside className="community-member-sidebar" aria-label="Miembros de PeakScore Community">
             <div className="community-member-sidebar-scroll">
-              <div className="community-member-online-heading" aria-label={"En línea: " + onlineUsers}>
-                <span className="community-member-online-indicator" aria-hidden="true"/>
-                <span>En línea</span>
-                <strong>{onlineUsers}</strong>
-              </div>
               {communityMemberGroups.map((group) => {
                 const collapsed = Boolean(collapsedMemberGroups[group.key]);
                 return (
@@ -2776,7 +2777,13 @@ export default function CommunityPage() {
                               onMouseLeave={scheduleCloseMemberHoverPreview}
                               onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
                               onBlur={scheduleCloseMemberHoverPreview}
-                              onClick={() => void openCommunityProfile(member.id)}>
+                              onClick={(event) => {
+                                const rect = event.currentTarget.getBoundingClientRect();
+                                openMemberHoverPreview(member, {
+                                  clientX: rect.left + Math.min(rect.width, 220),
+                                  clientY: rect.top + Math.min(rect.height, 28),
+                                });
+                              }}>
                               <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
                                 {member.avatar_url
                                   ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
@@ -2847,9 +2854,13 @@ export default function CommunityPage() {
               style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")", "--community-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3"), "--community-theme-body-text": communityThemeText(communityThemeMidpoint(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6")) } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
-                <div className="ps-community-member-popout__banner-fallback">
-                  <span>PEAK<span>SCORE</span></span>
-                </div>
+                {hoverCommunityProfile.bannerUrl ? (
+                  <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-member-popout__banner-image"/>
+                ) : (
+                  <div className="ps-community-member-popout__banner-fallback">
+                    <span>PEAK<span>SCORE</span></span>
+                  </div>
+                )}
               </div>
               <div className="ps-community-member-popout__body">
                 <div className="ps-community-member-popout__top">
@@ -2863,9 +2874,39 @@ export default function CommunityPage() {
                     <div className="ps-community-member-popout__status-bubble">{hoverCommunityProfile.statusText}</div>
                   )}
                   <div className="ps-community-member-popout__actions">
-                    <button type="button" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)} aria-label="Abrir perfil" title="Abrir perfil">
-                      <ArrowUpRight size={16}/>
-                    </button>
+                    <div className="ps-community-member-popout__menu-anchor">
+                      <button
+                        type="button"
+                        onClick={() => setMemberProfileMenuOpen((open) => !open)}
+                        aria-label="Más opciones del miembro"
+                        title="Más opciones"
+                        aria-haspopup="menu"
+                        aria-expanded={memberProfileMenuOpen}
+                      >
+                        <MoreHorizontal size={17}/>
+                      </button>
+                      {memberProfileMenuOpen && (
+                        <div className="ps-community-member-popout__menu" role="menu" aria-label="Opciones del perfil">
+                          <button type="button" role="menuitem" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)}>
+                            <ArrowUpRight size={15}/> Ver perfil completo
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => {
+                            insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
+                            setHoverCommunityProfile(null);
+                            setMemberProfileMenuOpen(false);
+                          }}>
+                            <AtSign size={15}/> Mencionar
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => {
+                            void navigator.clipboard.writeText(hoverCommunityProfile.displayName)
+                              .then(() => setMemberProfileMenuOpen(false))
+                              .catch(() => setCommunityProfileError("No se pudo copiar el nombre."));
+                          }}>
+                            <Copy size={15}/> Copiar nombre
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -2883,12 +2924,6 @@ export default function CommunityPage() {
                 <div className="ps-community-member-popout__identity">
                   <CommunityStaticName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} className={"ps-community-name-render is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(hoverCommunityProfile.displayNameEffect, hoverCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")", "--name-solid-color": displayNameSolidColor(hoverCommunityProfile.displayNameColor, hoverCommunityProfile.displayNameGradientStart) } as React.CSSProperties}/>
                   <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
-                </div>
-
-                <div className="ps-community-member-popout__presence">
-                  <i className={onlineMemberIds.includes(hoverCommunityProfile.userId) ? "is-online" : ""}/>
-                  {onlineMemberIds.includes(hoverCommunityProfile.userId) ? "En línea" : "Desconectado"}
-                  {hoverCommunityProfile.statusText && <span>· {hoverCommunityProfile.statusText}</span>}
                 </div>
 
                 {hoverCommunityProfile.roles.length > 0 && (
@@ -2926,9 +2961,13 @@ export default function CommunityPage() {
           }}>
             <section className={"ps-community-profile-dialog is-profile-frame-" + (selectedCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
               <div className="ps-community-profile-banner" style={{ backgroundColor: "#20242D" }}>
-                <div className="ps-community-profile-banner__fallback">
-                  <span className="ps-community-brand-wordmark">PeakScore</span>
-                </div>
+                {selectedCommunityProfile.bannerUrl ? (
+                  <Image src={selectedCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-profile-banner-image"/>
+                ) : (
+                  <div className="ps-community-profile-banner__fallback">
+                    <span className="ps-community-brand-wordmark">PeakScore</span>
+                  </div>
+                )}
                 <div className="ps-community-profile-banner-meta" aria-hidden="true">
                   <span>PEAKSCORE <i/> COMMUNITY</span>
                   <span>MEMBER PROFILE</span>

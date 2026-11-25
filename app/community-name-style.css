@@ -6811,3 +6811,64 @@ html:has(.ps-community-picker-overlay) * {
   .ps-domino-flow__tile { animation:none !important; transform:none !important; }
   .ps-mistfall-layout { visibility:visible !important; opacity:1 !important; }
 }
+
+
+/* Mini previews: keep the chosen finish painted on each individual letter,
+   even though the inactive gallery renderer uses lightweight glyph spans. */
+.ps-name-preview-motion .ps-name-preview-face.effect-gradient .ps-name-preview-glyph,
+.ps-name-preview-motion .ps-name-preview-face.color-custom-gradient .ps-name-preview-glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#65d8c2),var(--name-gradient-end,#9c83f5),#fff,var(--name-gradient-start,#65d8c2)) !important;
+  background-size:260% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+}
+.ps-name-preview-motion .ps-name-preview-face.effect-prism .ps-name-preview-glyph,
+.ps-name-preview-motion .ps-name-preview-face.effect-gummy .ps-name-preview-glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c68,#f4db83,#8edbc0,#8db9ef,#c7a4ed)) !important;
+  background-size:260% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+}
+.ps-name-preview-motion .ps-name-preview-face.effect-toon .ps-name-preview-glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(180deg,#fff 0%,#e9edf5 24%,#aab5c9 45%,#fff 53%,#8290a9 76%,#f8f9fc 100%) !important;
+  background-size:100% 220% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+}
+.ps-name-preview-motion .ps-name-preview-face.effect-gradient-flow .ps-name-preview-glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(100deg,#e84de8 0%,#a34dff 24%,#527cff 48%,#31b9d2 68%,#48d8a2 84%,#e84de8 100%) !important;
+  background-size:300% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  animation:ps-gradient-flow-effect 5.2s ease-in-out infinite !important;
+}
+.ps-name-preview-motion .ps-name-preview-face.effect-chromaflow .ps-name-preview-glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:260% 100% !important;
+  background-position:var(--ps-chroma-position,50%) 50% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+}
+
+/* The live Domino animation leans a little further to the right, without
+   changing its staggered fall-and-return choreography. */
+@keyframes ps-domino-flow-topple {
+  0%,12% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+  19% { transform:translate3d(.015em,.015em,0) rotateZ(-8deg) rotateX(3deg); }
+  31% { transform:translate3d(.11em,.06em,0) rotateZ(74deg) rotateX(0deg); }
+  38% { transform:translate3d(.145em,.07em,0) rotateZ(84deg) rotateX(0deg); }
+  46% { transform:translate3d(.078em,.038em,0) rotateZ(40deg) rotateX(0deg); }
+  54%,65% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+  72% { transform:translate3d(-.015em,-.015em,0) rotateZ(5deg); }
+  82%,100% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
+}

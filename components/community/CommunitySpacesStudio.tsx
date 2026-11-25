@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import Image from "next/image";
 import {
-  Archive, GraduationCap, Hash, Lock, Megaphone, Plus, Save, Trash2, Users,
+  Archive, GraduationCap, Hash, Lock, Megaphone, Plus, Save, Trash2, Users, ImagePlus,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -14,6 +15,10 @@ type Space = {
   visibility: "public" | "private";
   icon_key: string;
   accent_color: string;
+  icon_path: string | null;
+  banner_path: string | null;
+  icon_url: string | null;
+  banner_url: string | null;
 };
 type Candidate = { user_id: string; display_name: string; member_number: number | null };
 type SpaceMember = Candidate & { role_keys: string[] };
@@ -30,7 +35,7 @@ type SpaceChannel = {
   icon_key: string;
   accent_color: string;
 };
-type SpaceForm = Pick<Space, "slug" | "name" | "description" | "visibility" | "icon_key" | "accent_color">;
+type SpaceForm = Pick<Space, "slug" | "name" | "description" | "visibility" | "icon_key" | "accent_color" | "icon_path" | "banner_path" | "icon_url" | "banner_url">;
 type SpaceChannelForm = Omit<SpaceChannel, "id">;
 type RoleOption = { role_key: string; label: string };
 
@@ -42,6 +47,7 @@ const EMPTY_SPACE: SpaceForm = {
   visibility: "private" as const,
   icon_key: "graduation-cap",
   accent_color: "#E4B65C",
+  icon_path: null, banner_path: null, icon_url: null, banner_url: null,
 };
 const EMPTY_CHANNEL: SpaceChannelForm = {
   slug: "",
@@ -66,6 +72,8 @@ function toSpaceForm(space: Space | null): SpaceForm {
     visibility: space.visibility,
     icon_key: space.icon_key,
     accent_color: space.accent_color,
+    icon_path: space.icon_path, banner_path: space.banner_path,
+    icon_url: space.icon_url, banner_url: space.banner_url,
   } : { ...EMPTY_SPACE };
 }
 
@@ -106,6 +114,7 @@ export default function CommunitySpacesStudio() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState<string | null>(null);
+  const [assetPending, setAssetPending] = useState<"icon" | "banner" | null>(null);
   const [detailRefresh, setDetailRefresh] = useState(0);
   const [moderationTarget, setModerationTarget] = useState<SpaceMember | null>(null);
   const [moderationAction, setModerationAction] = useState<"kick" | "timeout" | "restore">("timeout");
@@ -122,7 +131,7 @@ export default function CommunitySpacesStudio() {
     setError("");
     const [spaceResult, candidateResult, roleResult] = await Promise.all([
       supabase.from("community_spaces")
-        .select("id,slug,name,description,visibility,icon_key,accent_color")
+        .select("id,slug,name,description,visibility,icon_key,accent_color,icon_path,banner_path")
         .eq("space_type", "preicfes")
         .eq("is_enabled", true)
         .order("created_at", { ascending: false }),
@@ -148,7 +157,11 @@ export default function CommunitySpacesStudio() {
       return;
     }
 
-    const nextSpaces = (spaceResult.data ?? []) as Space[];
+    const nextSpaces = ((spaceResult.data ?? []) as Omit<Space, "icon_url" | "banner_url">[]).map((space) => ({
+      ...space,
+      icon_url: space.icon_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.icon_path).data.publicUrl : null,
+      banner_url: space.banner_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.banner_path).data.publicUrl : null,
+    })) as Space[];
     setSpaces(nextSpaces);
     setCandidates((candidateResult.data ?? []) as Candidate[]);
     setRoles(((roleResult.data ?? []) as RoleOption[]).filter((role) => !ROLE_PROTECTED.has(role.role_key)));
@@ -257,6 +270,25 @@ export default function CommunitySpacesStudio() {
     } finally {
       setPending(null);
     }
+  }
+
+  async function uploadSpaceAsset(assetType: "icon" | "banner", file: File) {
+    if (!selectedSpace || creatingSpace || assetPending) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("Usa una imagen PNG, JPG o WebP."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("La imagen debe pesar máximo 5 MB."); return; }
+    setAssetPending(assetType); setError(""); setNotice("");
+    try {
+      const form = new FormData(); form.set("space_id", selectedSpace.id); form.set("asset_type", assetType); form.set("file", file);
+      const response = await fetch("/api/community/spaces/assets", { method: "POST", credentials: "same-origin", body: form });
+      const data = await response.json().catch(() => null) as { error?: string; assetPath?: string; assetUrl?: string } | null;
+      if (!response.ok || !data?.assetPath || !data.assetUrl) { setError(data?.error ?? "No se pudo actualizar la imagen del servidor."); return; }
+      const pathKey = assetType === "icon" ? "icon_path" : "banner_path";
+      const urlKey = assetType === "icon" ? "icon_url" : "banner_url";
+      setSpaceForm((current) => ({ ...current, [pathKey]: data.assetPath!, [urlKey]: data.assetUrl! }));
+      setSpaces((current) => current.map((space) => space.id === selectedSpace.id ? { ...space, [pathKey]: data.assetPath!, [urlKey]: data.assetUrl! } : space));
+      setNotice(assetType === "icon" ? "Icono del servidor actualizado." : "Banner del servidor actualizado.");
+    } catch { setError("No se pudo subir la imagen. Inténtalo de nuevo."); }
+    finally { setAssetPending(null); }
   }
 
   async function saveSpace(event: FormEvent<HTMLFormElement>) {
@@ -397,7 +429,7 @@ export default function CommunitySpacesStudio() {
                 className={"mb-1 flex w-full items-center gap-2 rounded-[6px] border px-2.5 py-2.5 text-left transition " + (!creatingSpace && selectedSpaceId === space.id
                   ? "border-[#2b5665] bg-[#142a35]" : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[7px] border border-[#364d56] bg-[#15252c]" style={{ color: space.accent_color }}>
-                  <GraduationCap size={16}/>
+                  {space.icon_url ? <Image src={space.icon_url} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover"/> : <GraduationCap size={16}/>}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[11px] font-semibold text-[#dce7ed]">{space.name}</span>
@@ -437,6 +469,24 @@ export default function CommunitySpacesStudio() {
             <div className="min-h-0 flex-1 overflow-y-auto p-5">
               {selectedTab === "settings" && (
                 <form onSubmit={(event) => void saveSpace(event)} className="max-w-[720px] space-y-4">
+                  {!creatingSpace && selectedSpace && (
+                    <section className="rounded-[9px] border border-[#293c49] bg-[#0d161f] p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold text-[#e5edf2]">Identidad visual del servidor</p><p className="mt-1 text-[9px] text-[#718797]">Personaliza el icono y el banner que verán todos los miembros.</p></div><span className="rounded-[4px] border border-[#38513a] bg-[#17271b] px-2 py-1 text-[8px] text-[#a8e596]">FUNDADOR</span></div>
+                      <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
+                        <div className="rounded-[7px] border border-[#2a3d4b] bg-[#111d27] p-3"><div className="mx-auto grid h-20 w-20 place-items-center overflow-hidden rounded-[22px] border border-[#3a5360] bg-[#172831]" style={{ boxShadow: "0 0 0 3px " + spaceForm.accent_color + "22" }}>
+                          {spaceForm.icon_url ? <Image src={spaceForm.icon_url} alt="Icono del servidor" width={80} height={80} unoptimized className="h-full w-full object-cover"/> : <GraduationCap size={28} style={{ color: spaceForm.accent_color }}/>}
+                        </div><label className="mt-3 flex cursor-pointer items-center justify-center gap-1.5 rounded-[5px] border border-[#3d6240] bg-[#192b1d] px-2 py-2 text-[9px] font-semibold text-[#b5e9a6] hover:bg-[#213923]"><ImagePlus size={12}/>{assetPending === "icon" ? "Subiendo…" : "Cambiar icono"}
+                          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={assetPending !== null} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadSpaceAsset("icon", file); event.currentTarget.value = ""; }}/></label></div>
+                        <div className="min-w-0 rounded-[7px] border border-[#2a3d4b] bg-[#111d27] p-3"><div className="relative flex h-[92px] items-center justify-center overflow-hidden rounded-[6px] border border-[#304451] bg-[#17232d]">
+                          {spaceForm.banner_url ? <Image src={spaceForm.banner_url} alt="Banner del servidor" fill unoptimized className="object-cover"/> : <span className="font-[var(--font-silkscreen)] text-[7px] tracking-[.12em] text-[#758b9a]">BANNER PEAKSCORE</span>}
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#081018]/45 to-transparent"/></div>
+                          <label className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-[5px] border border-[#344b5b] bg-[#16242e] px-3 py-2 text-[9px] font-semibold text-[#b6c8d3] hover:border-[#5a7789] hover:text-white"><ImagePlus size={12}/>{assetPending === "banner" ? "Subiendo…" : "Cambiar banner"}
+                            <input type="file" accept="image/png,image/jpeg,image/webp" disabled={assetPending !== null} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadSpaceAsset("banner", file); event.currentTarget.value = ""; }}/></label>
+                          <p className="mt-2 text-[8px] text-[#718797]">PNG, JPG o WebP · máximo 5 MB · metadatos eliminados al procesar.</p>
+                        </div>
+                      </div>
+                    </section>
+                  )}
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className={LABEL}>Nombre de la comunidad
                       <input className={FIELD} required maxLength={60} value={spaceForm.name} onChange={(event) => setSpaceForm((current) => ({ ...current, name: event.target.value }))} placeholder="PreICFES · Grupo Norte"/>

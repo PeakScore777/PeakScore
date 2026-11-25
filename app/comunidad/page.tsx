@@ -36,6 +36,10 @@ type CommunitySpace = {
   visibility: "public" | "private";
   icon_key: string;
   accent_color: string;
+  icon_path?: string | null;
+  banner_path?: string | null;
+  icon_url?: string | null;
+  banner_url?: string | null;
 };
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -1148,7 +1152,7 @@ export default function CommunityPage() {
       setUserId(user.id);
 
       const spaceResult = await supabase.from("community_spaces")
-        .select("id,slug,name,space_type,visibility,icon_key,accent_color")
+        .select("id,slug,name,space_type,visibility,icon_key,accent_color,icon_path,banner_path")
         .eq("is_enabled", true)
         .order("created_at", { ascending: false });
       const fallbackGlobalSpace: CommunitySpace = {
@@ -1159,10 +1163,15 @@ export default function CommunityPage() {
         visibility: "public",
         icon_key: "users",
         accent_color: "#7FE05C",
+        icon_path: null, banner_path: null, icon_url: null, banner_url: null,
       };
       const spacesAvailable = !spaceResult.error;
       const accessibleSpaces = spacesAvailable
-        ? ((spaceResult.data ?? []) as CommunitySpace[])
+        ? ((spaceResult.data ?? []) as CommunitySpace[]).map((space) => ({
+            ...space,
+            icon_url: space.icon_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.icon_path).data.publicUrl : null,
+            banner_url: space.banner_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.banner_path).data.publicUrl : null,
+          }))
         : [fallbackGlobalSpace];
       if (spacesAvailable && !accessibleSpaces.some((space) => space.space_type === "global")) {
         accessibleSpaces.unshift(fallbackGlobalSpace);
@@ -1761,7 +1770,7 @@ export default function CommunityPage() {
               aria-label={"Entrar a " + space.name}
               aria-current={activeSpace?.id === space.id ? "page" : undefined}
               onClick={() => router.push("/comunidad?space=" + encodeURIComponent(space.slug))}>
-              <GraduationCap size={19}/>
+              {space.icon_url ? <Image src={space.icon_url} alt="" width={36} height={36} unoptimized className="h-full w-full rounded-[inherit] object-cover"/> : <GraduationCap size={19}/>}
             </button>
           ))}
           <Link href={activeSpace?.space_type === "preicfes" ? "/comunidad/en-vivo?space=" + encodeURIComponent(activeSpace.slug) : "/comunidad/en-vivo"} className="community-server-icon" aria-label="Sesiones en vivo">
@@ -1770,10 +1779,12 @@ export default function CommunityPage() {
         </nav>
 
         <aside id="community-channel-drawer" className={"community-sidebar " + (mobileChannelsOpen ? "community-sidebar-open" : "")}>
-          <div className="community-server-header">
-            <div className="min-w-0">
+          <div className="community-server-header relative overflow-hidden">
+            {activeSpace?.banner_url && <Image src={activeSpace.banner_url} alt="" fill unoptimized className="object-cover opacity-35"/>}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#101824]/95 via-[#101824]/75 to-[#101824]/45"/>
+            <div className="relative z-10 min-w-0">
               <p className="community-server-eyebrow">COMUNIDAD</p>
-              <p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>
+              <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={22} height={22} unoptimized className="h-[22px] w-[22px] shrink-0 rounded-[6px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p></div>
             </div>
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>

@@ -465,7 +465,7 @@ export default function CommunitySpacesStudio() {
     <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[270px_minmax(0,1fr)]">
       <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
         <div className="flex min-h-[58px] items-center justify-between border-b border-[#253644] px-4">
-          <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#8198a9]">COMUNIDADES PREICFES</span>
+          <span className="font-sans text-[9px] tracking-[.1em] text-[#8198a9]">COMUNIDADES PREICFES</span>
           <button type="button" disabled={!schemaReady} onClick={() => { selectedSpaceIdRef.current = null; setCreatingSpace(true); setSpaceForm({ ...EMPTY_SPACE }); setSelectedSpaceId(null); setSelectedChannelId(null); setChannelForm({ ...EMPTY_CHANNEL }); }}
             className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear comunidad PreICFES">
             <Plus size={15}/>
@@ -483,7 +483,7 @@ export default function CommunitySpacesStudio() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[11px] font-semibold text-[#dce7ed]">{space.name}</span>
-                  <span className="mt-0.5 block text-[8px] uppercase tracking-wide text-[#718b9b]">{space.visibility === "private" ? "Privada" : "Pública"}</span>
+                  <span className="mt-0.5 block text-[9px] uppercase tracking-wide text-[#718b9b]">{space.visibility === "private" ? "Privada" : "Pública"}</span>
                 </span>
                 {space.visibility === "private" && <Lock size={12} className="text-[#d5af67]"/>}
               </button>
@@ -504,10 +504,10 @@ export default function CommunitySpacesStudio() {
             <div className="border-b border-[#263744] px-5 pt-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">ESPACIO INDEPENDIENTE</p>
+                  <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">ESPACIO INDEPENDIENTE</p>
                   <h3 className="mt-1.5 text-[16px] font-bold text-white">{creatingSpace ? "Crear comunidad PreICFES" : selectedSpace?.name}</h3>
                 </div>
-                {selectedSpace && <span className="rounded-[4px] border border-[#3c5361] bg-[#15232d] px-2 py-1 text-[8px] text-[#9fb5c1]">ID AISLADO</span>}
+                {selectedSpace && <span className="rounded-[4px] border border-[#3c5361] bg-[#15232d] px-2 py-1 text-[9px] text-[#9fb5c1]">ID AISLADO</span>}
               </div>
               <div className="mt-3 flex gap-1">
                 {subTab("settings", "Configuración")}
@@ -521,18 +521,18 @@ export default function CommunitySpacesStudio() {
                 <form onSubmit={(event) => void saveSpace(event)} className="max-w-[720px] space-y-4">
                   {!creatingSpace && selectedSpace && (
                     <section className="rounded-[9px] border border-[#293c49] bg-[#0d161f] p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold text-[#e5edf2]">Identidad visual del servidor</p><p className="mt-1 text-[9px] text-[#718797]">Personaliza el icono y el banner que verán todos los miembros.</p></div><span className="rounded-[4px] border border-[#38513a] bg-[#17271b] px-2 py-1 text-[8px] text-[#a8e596]">FUNDADOR</span></div>
+                      <div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold text-[#e5edf2]">Identidad visual del servidor</p><p className="mt-1 text-[9px] text-[#718797]">Personaliza el icono y el banner que verán todos los miembros.</p></div><span className="rounded-[4px] border border-[#38513a] bg-[#17271b] px-2 py-1 text-[9px] text-[#a8e596]">FUNDADOR</span></div>
                       <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
                         <div className="rounded-[7px] border border-[#2a3d4b] bg-[#111d27] p-3"><div className="mx-auto grid h-20 w-20 place-items-center overflow-hidden rounded-[22px] border border-[#3a5360] bg-[#172831]" style={{ boxShadow: "0 0 0 3px " + spaceForm.accent_color + "22" }}>
                           {spaceForm.icon_url ? <Image src={spaceForm.icon_url} alt="Icono del servidor" width={80} height={80} unoptimized className="h-full w-full object-cover"/> : <GraduationCap size={28} style={{ color: spaceForm.accent_color }}/>}
                         </div><label className="mt-3 flex cursor-pointer items-center justify-center gap-1.5 rounded-[5px] border border-[#3d6240] bg-[#192b1d] px-2 py-2 text-[9px] font-semibold text-[#b5e9a6] hover:bg-[#213923]"><ImagePlus size={12}/>{assetPending === "icon" ? "Subiendo…" : "Cambiar icono"}
                           <input type="file" accept="image/png,image/jpeg,image/webp" disabled={assetPending !== null} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadSpaceAsset("icon", file); event.currentTarget.value = ""; }}/></label></div>
                         <div className="min-w-0 rounded-[7px] border border-[#2a3d4b] bg-[#111d27] p-3"><div className="relative flex h-[92px] items-center justify-center overflow-hidden rounded-[6px] border border-[#304451] bg-[#17232d]">
-                          {spaceForm.banner_url ? <Image src={spaceForm.banner_url} alt="Banner del servidor" fill unoptimized className="object-cover"/> : <span className="font-[var(--font-silkscreen)] text-[7px] tracking-[.12em] text-[#758b9a]">BANNER PEAKSCORE</span>}
+                          {spaceForm.banner_url ? <Image src={spaceForm.banner_url} alt="Banner del servidor" fill unoptimized className="object-cover"/> : <span className="font-sans text-[10px] tracking-[.12em] text-[#758b9a]">BANNER PEAKSCORE</span>}
                           <div className="absolute inset-0 bg-gradient-to-r from-[#081018]/45 to-transparent"/></div>
                           <label className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-[5px] border border-[#344b5b] bg-[#16242e] px-3 py-2 text-[9px] font-semibold text-[#b6c8d3] hover:border-[#5a7789] hover:text-white"><ImagePlus size={12}/>{assetPending === "banner" ? "Subiendo…" : "Cambiar banner"}
                             <input type="file" accept="image/png,image/jpeg,image/webp" disabled={assetPending !== null} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadSpaceAsset("banner", file); event.currentTarget.value = ""; }}/></label>
-                          <p className="mt-2 text-[8px] text-[#718797]">PNG, JPG o WebP · máximo 5 MB · metadatos eliminados al procesar.</p>
+                          <p className="mt-2 text-[9px] text-[#718797]">PNG, JPG o WebP · máximo 5 MB · metadatos eliminados al procesar.</p>
                         </div>
                       </div>
                     </section>
@@ -661,8 +661,8 @@ export default function CommunitySpacesStudio() {
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[11px] font-semibold text-[#e2ebf0]">{member.display_name}</p>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {member.role_keys.map((roleKey) => <span key={roleKey} className={"rounded-[3px] border px-1.5 py-0.5 text-[8px] " + (roleKey === "colaborador" ? "border-[#80673b] bg-[#342a18] text-[#e5c27d]" : "border-[#36505f] bg-[#14232d] text-[#9bb5c2]")}>{roleOptions.find((role) => role.role_key === roleKey)?.label ?? roleKey}</span>)}
-                            {!member.role_keys.length && <span className="text-[8px] text-[#748a99]">Miembro</span>}
+                            {member.role_keys.map((roleKey) => <span key={roleKey} className={"rounded-[3px] border px-1.5 py-0.5 text-[9px] " + (roleKey === "colaborador" ? "border-[#80673b] bg-[#342a18] text-[#e5c27d]" : "border-[#36505f] bg-[#14232d] text-[#9bb5c2]")}>{roleOptions.find((role) => role.role_key === roleKey)?.label ?? roleKey}</span>)}
+                            {!member.role_keys.length && <span className="text-[9px] text-[#748a99]">Miembro</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -688,7 +688,7 @@ export default function CommunitySpacesStudio() {
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
                   <aside className="rounded-[7px] border border-[#273a48] bg-[#0d1721] p-2">
                     <div className="flex items-center justify-between px-2 py-2">
-                      <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#8198a9]">CANALES</span>
+                      <span className="font-sans text-[9px] tracking-[.1em] text-[#8198a9]">CANALES</span>
                       <button type="button" onClick={() => { setCreatingChannel(true); setChannelForm({ ...EMPTY_CHANNEL }); setSelectedChannelId(null); }}
                         className="grid h-7 w-7 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794]"><Plus size={13}/></button>
                     </div>
@@ -771,7 +771,7 @@ export default function CommunitySpacesStudio() {
             className="w-full max-w-[470px] overflow-hidden rounded-[9px] border border-[#354856] bg-[#101a23] text-[#e8eef3] shadow-[0_25px_80px_rgba(0,0,0,.55)]">
             <header className="flex items-center justify-between border-b border-[#293b48] bg-[#0b131b] px-5 py-4">
               <div>
-                <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#8198a9]">MODERACIÓN DEL ESPACIO</p>
+                <p className="font-sans text-[9px] tracking-[.1em] text-[#8198a9]">MODERACIÓN DEL ESPACIO</p>
                 <h3 id="space-moderation-title" className="mt-1 text-[14px] font-bold text-white">{moderationAction === "kick" ? "Expulsar miembro" : moderationAction === "restore" ? "Restaurar acceso" : "Silenciar temporalmente"}</h3>
               </div>
               <button type="button" onClick={() => setModerationTarget(null)} className="grid h-8 w-8 place-items-center rounded-[5px] text-[#a7b7c3] hover:bg-[#1b2a35]" aria-label="Cerrar"><span>×</span></button>

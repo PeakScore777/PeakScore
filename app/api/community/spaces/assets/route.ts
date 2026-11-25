@@ -12,18 +12,21 @@ export const dynamic = "force-dynamic";
 const BUCKET = "community-profile-avatars";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_IMAGE_BYTES + 64 * 1024;
-const ALLOWED_MIME_TYPES = new Set<SupportedRasterMime>(["image/png", "image/jpeg", "image/webp"]);
+const STATIC_IMAGE_MIME_TYPES = new Set<SupportedRasterMime>(["image/png", "image/jpeg", "image/webp"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
-function ownedSpaceAssetPath(value: string | null, spaceId: string) {
+function ownedSpaceAssetPath(value: string | null, spaceId: string, assetType: "icon" | "banner") {
   const prefix = "spaces/" + spaceId + "/";
   if (!value?.startsWith(prefix)) return null;
   const filename = value.slice(prefix.length);
-  return /^[0-9a-f-]{36}\.(png|jpg|webp)$/i.test(filename) ? value : null;
+  const allowedExtensions = assetType === "banner"
+    ? /^[0-9a-f-]{36}\\.(png|jpg|webp|gif)$/i
+    : /^[0-9a-f-]{36}\\.(png|jpg|webp)$/i;
+  return allowedExtensions.test(filename) ? value : null;
 }
 
 export async function POST(request: Request) {
@@ -44,7 +47,14 @@ export async function POST(request: Request) {
   if (assetType !== "icon" && assetType !== "banner") return fail("El tipo de imagen no es válido.", 400);
   if (!(file instanceof File) || file.size <= 0) return fail("Selecciona una imagen válida.", 400);
   if (file.size > MAX_IMAGE_BYTES) return fail("La imagen debe pesar máximo 5 MB.", 413);
-  if (!ALLOWED_MIME_TYPES.has(file.type as SupportedRasterMime)) return fail("Solo se permiten imágenes PNG, JPG o WebP estáticas.", 415);
+  const isStaticImage = STATIC_IMAGE_MIME_TYPES.has(file.type as SupportedRasterMime);
+  const isAnimatedBanner = assetType === "banner" && file.type === "image/gif";
+  if (!isStaticImage && !isAnimatedBanner) {
+    return fail(assetType === "icon"
+      ? "El icono solo admite PNG, JPG o WebP estáticos."
+      : "La portada admite PNG, JPG, WebP o GIF animado.",
+    415);
+  }
 
   const { data: space, error: spaceError } = await supabaseAdmin.from("community_spaces")
     .select("id,space_type,icon_path,banner_path").eq("id", spaceId).eq("is_enabled", true).maybeSingle();
@@ -67,7 +77,7 @@ export async function POST(request: Request) {
     return fail("No se pudo guardar la imagen.", 503);
   }
 
-  const previousPath = ownedSpaceAssetPath(assetType === "icon" ? space.icon_path : space.banner_path, spaceId);
+  const previousPath = ownedSpaceAssetPath(assetType === "icon" ? space.icon_path : space.banner_path, spaceId, assetType);
   const { data: updated, error: updateError } = await supabase.rpc("update_community_space_asset", {
     p_space_id: spaceId, p_asset_type: assetType, p_asset_path: assetPath,
   });

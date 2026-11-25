@@ -502,6 +502,11 @@ begin
   elsif p_action = 'remove' then
     delete from public.community_space_members
     where space_id = p_space_id and user_id = p_user_id;
+
+    -- Removing membership also clears a scoped kick/timeout; a future invite
+    -- starts clean instead of inheriting an invisible stale restriction.
+    delete from private.community_space_restrictions
+    where space_id = p_space_id and user_id = p_user_id;
   elsif p_action = 'grant_role' then
     if p_role_key is null or p_role_key in ('fundador','administrador','moderador','profesor')
        or not exists (select 1 from public.community_role_catalog catalog where catalog.role_key = p_role_key) then

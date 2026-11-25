@@ -2268,6 +2268,8 @@ export default function CommunityPage() {
               <p className="community-audio-note">Preferencias guardadas en este dispositivo. La salida seleccionada se aplica a reproductores compatibles del navegador.</p>
             </div>
           )}
+        </aside>
+
         <div className="community-user-panel-shell community-user-panel-dock">
 
             <button type="button" className="community-user-panel community-user-panel-button"
@@ -2315,7 +2317,6 @@ export default function CommunityPage() {
               </button>
             </div>
         </div>
-        </aside>
 
         {mobileChannelsOpen && (
           <button type="button" aria-label="Cerrar menú de canales"

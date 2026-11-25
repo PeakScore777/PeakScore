@@ -2215,3 +2215,181 @@
   color: #69b1ff;
   filter: drop-shadow(0 0 5px rgb(59 151 255 / 36%));
 }
+
+
+/* Discord-inspired server identity and Founder context menu. */
+.root :global(.community-server-header) {
+  min-height: 64px !important;
+  padding: 8px 10px !important;
+  overflow: visible !important;
+  border-bottom-color: #282b31 !important;
+  background: #111214;
+}
+.root :global(.community-server-banner-image) {
+  opacity: 1 !important;
+  filter: saturate(1.08) contrast(1.04);
+}
+.root :global(.community-server-banner-shade) {
+  background: linear-gradient(90deg, rgb(9 11 15 / 84%) 0%, rgb(9 11 15 / 56%) 70%, rgb(9 11 15 / 30%) 100%);
+}
+.root :global(.community-server-menu-trigger),
+.root :global(.community-server-member-heading) {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: rgb(16 18 22 / 55%);
+  color: #f2f3f5;
+  text-align: left;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+}
+.root :global(.community-server-menu-trigger:hover) {
+  border-color: rgb(255 255 255 / 10%);
+  background: rgb(36 39 45 / 88%);
+}
+.root :global(.community-server-menu-trigger:focus-visible) {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+.root :global(.community-server-menu-trigger .community-server-name),
+.root :global(.community-server-member-heading .community-server-name) {
+  max-width: 230px;
+  font: 690 14px/1.2 Inter, "DM Sans", sans-serif;
+  letter-spacing: -.015em;
+}
+.root :global(.community-verified-dot) {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  place-items: center;
+  border: 1px solid rgb(196 181 253 / 68%);
+  border-radius: 50%;
+  background: #7657e8;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgb(118 87 232 / 13%), 0 2px 9px rgb(0 0 0 / 28%);
+}
+.root :global(.community-server-menu-chevron) {
+  flex: 0 0 auto;
+  color: #c6cad1;
+  transition: transform .15s ease, color .15s ease;
+}
+.root :global(.community-server-menu-chevron.is-open) {
+  transform: rotate(180deg);
+  color: #fff;
+}
+.root :global(.community-server-menu) {
+  position: absolute;
+  z-index: 360;
+  top: calc(100% + 7px);
+  left: 0;
+  width: min(292px, calc(100vw - 28px));
+  padding: 7px;
+  border: 1px solid #30343b;
+  border-radius: 9px;
+  background: #111214;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 52%), 0 3px 12px rgb(0 0 0 / 25%);
+  color: #dbdee1;
+  animation: ps-community-server-menu-enter .13s ease-out;
+}
+@keyframes ps-community-server-menu-enter {
+  from { opacity: 0; transform: translateY(-4px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.root :global(.community-server-menu-heading) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 9px 7px;
+  color: #9299a3;
+  font: 750 8px/1.2 Inter, "DM Sans", sans-serif;
+  letter-spacing: .11em;
+}
+.root :global(.community-server-menu-founder) {
+  padding: 3px 6px;
+  border: 1px solid rgb(167 139 250 / 34%);
+  border-radius: 999px;
+  background: rgb(124 94 228 / 13%);
+  color: #c4b5fd;
+  font-size: 8px;
+  letter-spacing: .04em;
+}
+.root :global(.community-server-menu > button) {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  gap: 11px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #c8cbd1;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.root :global(.community-server-menu > button:hover) {
+  background: #3b3472;
+  color: #fff;
+}
+.root :global(.community-server-menu > button > svg) {
+  flex: 0 0 auto;
+  color: #aeb4bf;
+}
+.root :global(.community-server-menu > button:hover > svg) {
+  color: #fff;
+}
+.root :global(.community-server-menu > button span) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.root :global(.community-server-menu > button strong) {
+  color: inherit;
+  font: 620 12px/1.25 Inter, "DM Sans", sans-serif;
+}
+.root :global(.community-server-menu > button small) {
+  color: #949ba6;
+  font: 450 9px/1.25 Inter, "DM Sans", sans-serif;
+}
+.root :global(.community-server-menu > button:hover small) {
+  color: rgb(255 255 255 / 78%);
+}
+.root :global(.community-server-menu-divider) {
+  height: 1px;
+  margin: 6px 4px;
+  background: #2c2f36;
+}
+@media (max-width: 680px) {
+  .root :global(.community-server-header) {
+    min-height: 60px !important;
+    padding: 7px 8px !important;
+  }
+  .root :global(.community-server-menu-trigger),
+  .root :global(.community-server-member-heading) {
+    min-height: 38px;
+    padding: 0 8px;
+  }
+  .root :global(.community-server-menu-trigger .community-server-name),
+  .root :global(.community-server-member-heading .community-server-name) {
+    max-width: 190px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .root :global(.community-server-menu),
+  .root :global(.community-server-menu-chevron) {
+    animation: none;
+    transition: none;
+  }
+}

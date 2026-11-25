@@ -8554,3 +8554,75 @@ html:has(.ps-community-picker-overlay) * {
   color:var(--name-solid-color,#55cfa3) !important;-webkit-text-fill-color:var(--name-solid-color,#55cfa3) !important;
   text-shadow:0 1px 0 rgb(255 255 255 / 36%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111) !important;background:none !important;
 }
+
+
+/* Composition compatibility: keep the selected finish on the actual animated glyphs,
+   not only on the outer wrapper. This preserves font + finish + motion as independent layers. */
+.ps-community-name-render.effect-gradient :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-gradient :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-gradient :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(100deg,var(--name-gradient-start,#9d83ff),var(--name-gradient-end,#61b8ed),var(--name-gradient-start,#9d83ff)) !important;
+  background-size:220% 100% !important;background-position:0 50%;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  animation:ps-dns-gradient-flow 4.8s ease-in-out infinite !important;
+  text-shadow:none !important;-webkit-text-stroke:0 transparent !important;
+}
+.ps-community-name-render.effect-neon :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-neon :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-neon :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:var(--name-solid-color,#c99bff) !important;-webkit-text-fill-color:currentColor !important;
+  background:none !important;text-shadow:0 0 1px #fff,0 0 6px var(--name-solid-color,#c99bff),0 0 14px var(--name-solid-color,#a35cff) !important;
+  -webkit-text-stroke:0 transparent !important;
+}
+.ps-community-name-render.effect-toon :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-toon :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-toon :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  -webkit-text-stroke:.42px var(--name-solid-color,#f2f3f5) !important;
+  background-image:linear-gradient(105deg,var(--name-solid-color,#f2f3f5) 0%,var(--name-solid-color,#f2f3f5) 34%,#fff 46%,#fff 50%,var(--name-solid-color,#f2f3f5) 62%,var(--name-solid-color,#f2f3f5) 100%) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 35%),0 2px 0 rgb(25 20 45 / 42%) !important;
+  animation:ps-dns-toon-sweep 3.4s linear infinite !important;
+}
+.ps-community-name-render.effect-gummy :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-gummy :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-gummy :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9ccb,#ffd0a7,#fff0a6,#9de8d3,#9fc8ff)) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 62%),0 2px 0 rgb(119 60 100 / 30%),0 3px 7px rgb(0 0 0 / 16%) !important;
+  -webkit-text-stroke:0 transparent !important;animation:ps-dns-gummy-flow 5.2s linear infinite !important;
+}
+.ps-community-name-render.effect-prism :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-prism :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-prism :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c45,#36e58c,#ffe05d,#e84abf,#686bff)) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 30%),0 2px 6px rgb(0 0 0 / 14%) !important;
+  -webkit-text-stroke:0 transparent !important;animation:ps-dns-prism-flow 4.2s linear infinite !important;
+}
+.ps-community-name-render.effect-pop :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-pop :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-pop :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:var(--name-solid-color,#65e3c0) !important;-webkit-text-fill-color:currentColor !important;
+  background:none !important;text-shadow:0 1px 0 rgb(255 255 255 / 38%),0 2px 0 rgb(18 83 76 / 52%),0 4px 9px rgb(38 194 168 / 16%) !important;
+  -webkit-text-stroke:0 transparent !important;
+}
+.ps-community-name-render.effect-plain :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-member-nameplate.effect-plain :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span),
+.community-chat-author.effect-plain :is(.ps-domino-flow__glyph,.ps-halo-signal__glyph,.ps-depth-lift__face,.ps-name-animation-char,.ps-name-shuffle__track > span) {
+  color:var(--name-solid-color,currentColor) !important;-webkit-text-fill-color:currentColor !important;
+  background:none !important;text-shadow:none !important;-webkit-text-stroke:0 transparent !important;
+}
+/* Aurora and the special SVG/canvas animations retain their own draw layers; remove
+   inherited block fills from the animation host so no coloured rectangle can leak behind text. */
+.ps-community-name-render:is(.effect-gradient,.effect-toon,.effect-gummy,.effect-prism),
+.community-member-nameplate:is(.effect-gradient,.effect-toon,.effect-gummy,.effect-prism),
+.community-chat-author:is(.effect-gradient,.effect-toon,.effect-gummy,.effect-prism) {
+  background-color:transparent !important;
+}
+.ps-community-name-render.effect-gradient .ps-inkline-fill,
+.community-member-nameplate.effect-gradient .ps-inkline-fill,
+.community-chat-author.effect-gradient .ps-inkline-fill { fill:url(#ps-inkline-gradient) !important; }

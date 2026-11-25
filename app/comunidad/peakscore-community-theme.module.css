@@ -2603,3 +2603,60 @@
     transition: none;
   }
 }
+
+
+/* Founder presence and GameSeek-inspired channel typography. */
+.root :global(.community-member-verified-dot) {
+  display: inline-grid;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  margin-left: 4px;
+  border: 1px solid rgb(196 181 253 / 72%);
+  border-radius: 50%;
+  background: #7657e8;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgb(118 87 232 / 12%), 0 1px 5px rgb(0 0 0 / 28%);
+  vertical-align: middle;
+}
+.root :global(.community-member-copy) {
+  min-width: 0;
+}
+.root :global(.community-member-copy .community-member-nameplate) {
+  display: inline;
+  max-width: 100%;
+}
+.root :global(.community-member-group[data-role="fundador"] .community-member-group-toggle) {
+  color: #c4b5fd;
+}
+.root :global(.community-member-group[data-role="fundador"] .community-member-group-toggle > i) {
+  background: #8b5cf6;
+  box-shadow: 0 0 10px rgb(139 92 246 / 48%);
+}
+.root :global(.community-channel-name) {
+  font-family: var(--font-silkscreen), "DM Sans", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .015em;
+  text-transform: lowercase;
+  text-rendering: geometricPrecision;
+}
+.root :global(.community-channel-glyph) {
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.7;
+  color: var(--ps-cyan, #00c8ef);
+  filter: drop-shadow(0 0 3px rgb(0 200 239 / 12%));
+  transition: transform .16s ease, filter .16s ease;
+}
+.root :global(.community-channel-link:hover .community-channel-glyph) {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 5px rgb(0 200 239 / 28%));
+}
+.root :global(.community-channel-link[aria-current="page"] .community-channel-name) {
+  color: #f4f6f8;
+  text-shadow: 0 0 10px rgb(0 200 239 / 12%);
+}

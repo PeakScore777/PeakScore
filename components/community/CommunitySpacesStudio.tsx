@@ -149,7 +149,24 @@ export default function CommunitySpacesStudio() {
         .order("position", { ascending: true }),
     ]);
 
-    if (spaceResult.error) {
+    let spaceRows = (spaceResult.data ?? []) as Omit<Space, "icon_url" | "banner_url">[];
+    let spaceQueryError = spaceResult.error;
+    if (spaceQueryError && ["42703", "PGRST204", "PGRST205"].includes(spaceQueryError.code ?? "")) {
+      const legacySpaces = await supabase.from("community_spaces")
+        .select("id,slug,name,description,visibility,icon_key,accent_color,icon_path,banner_path")
+        .eq("space_type", "preicfes")
+        .eq("is_enabled", true)
+        .order("created_at", { ascending: false });
+      spaceQueryError = legacySpaces.error;
+      spaceRows = ((legacySpaces.data ?? []) as Omit<Space, "icon_url" | "banner_url" | "verification_status" | "verification_requested_at" | "verification_note">[])
+        .map((space) => ({
+          ...space,
+          verification_status: "unverified" as const,
+          verification_requested_at: null,
+          verification_note: null,
+        }));
+    }
+    if (spaceQueryError) {
       selectedSpaceIdRef.current = null;
       setSelectedSpaceId(null);
       setSpaceForm({ ...EMPTY_SPACE });
@@ -162,8 +179,11 @@ export default function CommunitySpacesStudio() {
       return;
     }
 
-    const nextSpaces = ((spaceResult.data ?? []) as Omit<Space, "icon_url" | "banner_url">[]).map((space) => ({
+    const nextSpaces = spaceRows.map((space) => ({
       ...space,
+      verification_status: space.verification_status ?? "unverified",
+      verification_requested_at: space.verification_requested_at ?? null,
+      verification_note: space.verification_note ?? null,
       icon_url: space.icon_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.icon_path).data.publicUrl : null,
       banner_url: space.banner_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.banner_path).data.publicUrl : null,
     })) as Space[];

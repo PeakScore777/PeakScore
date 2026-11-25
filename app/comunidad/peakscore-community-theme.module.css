@@ -473,11 +473,11 @@
   color-scheme: dark;
   color: var(--community-discord-text);
   background: #090b0e;
-  font-family: Inter, "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-name-classic), Inter, "DM Sans", system-ui, sans-serif;
 }
 
 .root :global(.community-page) {
-  font-family: Inter, "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-name-classic), Inter, "DM Sans", system-ui, sans-serif;
 }
 
 .root :global(.community-layout) {
@@ -607,7 +607,7 @@
 .root :global(.community-server-eyebrow) {
   margin: 0 0 3px;
   color: #8e96a3;
-  font: 700 10px/1.2 Inter, "DM Sans", sans-serif;
+  font: 700 10px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: .13em;
 }
 
@@ -615,7 +615,7 @@
   min-width: 0;
   margin: 0;
   color: #f2f3f5;
-  font: 750 15px/1.25 Inter, "DM Sans", sans-serif;
+  font: 750 15px/1.25 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: -.025em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -632,7 +632,7 @@
   border-radius: 6px;
   background: rgb(139 234 69 / 9%);
   color: #a4ec6d;
-  font: 750 9px/1 Inter, "DM Sans", sans-serif;
+  font: 750 9px/1 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: .055em;
 }
 
@@ -662,7 +662,7 @@
 .root :global(.community-nav-heading) {
   margin: 0;
   color: #8e96a3;
-  font: 750 10px/1.2 Inter, "DM Sans", sans-serif;
+  font: 750 10px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: .085em;
   text-transform: uppercase;
 }
@@ -673,7 +673,7 @@
   background: transparent;
   padding: 2px 5px;
   color: #727b88;
-  font: 600 10px/1.3 Inter, "DM Sans", sans-serif;
+  font: 600 10px/1.3 var(--font-name-classic), Inter, "DM Sans", sans-serif;
 }
 
 .root :global(.community-nav-item) {
@@ -690,7 +690,7 @@
   border-radius: 7px;
   background: transparent;
   color: #aeb4be;
-  font: 500 13px/1.35 Inter, "DM Sans", sans-serif;
+  font: 500 13px/1.35 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: 0;
   text-align: left;
   cursor: pointer;
@@ -733,7 +733,7 @@
   background: rgb(139 234 69 / 9%);
   padding: 3px 5px;
   color: #a4e973;
-  font: 800 9px/1 Inter, "DM Sans", sans-serif;
+  font: 800 9px/1 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: .06em;
 }
 
@@ -777,7 +777,7 @@
 
 .root :global(.community-user-panel .text-left > span:first-child) {
   color: #f0f2f5;
-  font: 650 12px/1.35 Inter, "DM Sans", sans-serif;
+  font: 650 12px/1.35 var(--font-name-classic), Inter, "DM Sans", sans-serif;
 }
 
 .root :global(.community-user-presence) {
@@ -787,7 +787,7 @@
   min-width: 0;
   margin-top: 3px;
   color: #9098a4;
-  font: 450 10px/1.3 Inter, "DM Sans", sans-serif;
+  font: 450 10px/1.3 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -863,7 +863,7 @@
   overflow: hidden;
   margin: 0;
   color: #f1f3f6;
-  font: 700 15px/1.25 Inter, "DM Sans", sans-serif;
+  font: 700 15px/1.25 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: -.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -908,7 +908,7 @@
 
 .root :global(.community-chat-online) {
   color: #aab1bb;
-  font: 500 11px/1.2 Inter, "DM Sans", sans-serif;
+  font: 500 11px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
 }
 
 .root :global(.community-chat-online i) {
@@ -971,7 +971,7 @@
 .root :global(.community-chat-hint) {
   margin-top: 5px;
   color: #747d89;
-  font: 450 10px/1.35 Inter, "DM Sans", sans-serif;
+  font: 450 10px/1.35 var(--font-name-classic), Inter, "DM Sans", sans-serif;
 }
 
 .root :global(.community-member-sidebar) {
@@ -1000,7 +1000,7 @@
 
 .root :global(.community-member-sidebar-header span) {
   color: #d5d9df;
-  font: 750 11px/1.2 Inter, "DM Sans", sans-serif;
+  font: 750 11px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: .08em;
 }
 
@@ -1011,7 +1011,7 @@
   border-radius: 6px;
   background: #242a33;
   color: #e4e8ed;
-  font: 650 11px/1.2 Inter, "DM Sans", sans-serif;
+  font: 650 11px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   text-align: center;
 }
 
@@ -1037,7 +1037,7 @@
   margin: 0 0 4px;
   padding: 0 8px;
   color: #9ba3ae;
-  font: 750 10px/1.2 Inter, "DM Sans", sans-serif;
+  font: 750 10px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   letter-spacing: .065em;
 }
 
@@ -1121,7 +1121,7 @@
   max-width: 100%;
   overflow: hidden;
   color: #e4e7eb;
-  font: 600 12px/1.35 Inter, "DM Sans", sans-serif;
+  font: 600 12px/1.35 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1129,7 +1129,7 @@
 .root :global(.community-member-copy small) {
   overflow: hidden;
   color: #8f98a4;
-  font: 450 10px/1.3 Inter, "DM Sans", sans-serif;
+  font: 450 10px/1.3 var(--font-name-classic), Inter, "DM Sans", sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1151,7 +1151,7 @@
   border-top: 1px solid #252a32;
   background: #0c0f13;
   color: #9099a5;
-  font: 500 10px/1.2 Inter, "DM Sans", sans-serif;
+  font: 500 10px/1.2 var(--font-name-classic), Inter, "DM Sans", sans-serif;
 }
 
 .root :global(.community-chat-title .community-channel-lock),
@@ -1232,4 +1232,26 @@
     scroll-behavior: auto;
     transition-duration: .01ms !important;
   }
+}
+
+
+/* Per-member role chips: restrained role identity, no oversized badges. */
+.root :global(.community-member-role-badges) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 2px;
+}
+.root :global(.community-member-role-badges > span) {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, var(--member-role-color, #929aa6) 34%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--member-role-color, #929aa6) 10%, transparent);
+  color: color-mix(in srgb, var(--member-role-color, #929aa6) 82%, white);
+  font: 650 9px/1.25 var(--font-name-classic), Inter, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

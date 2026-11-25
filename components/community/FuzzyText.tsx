@@ -645,7 +645,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className={`${trigger === 'click' ? 'cursor-pointer' : ''} ${className}`.trim()}
+      className={`ps-fuzzy-text-canvas ${trigger === 'click' ? 'cursor-pointer' : ''} ${className}`.trim()}
       role="img"
       aria-label={text}
     />

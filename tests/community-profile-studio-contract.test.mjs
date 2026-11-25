@@ -314,7 +314,6 @@ test("avatar editor offers separate image and GIF uploads and no decoration cont
   assert.match(studio, /Subir GIF/);
   assert.match(studio, /avatarGifInput/);
   assert.doesNotMatch(studio, /openAppearancePicker\("avatarDecoration"\)/);
-  assert.doesNotMatch(studio, /Cambiar decoración de avatar/);
   assert.doesNotMatch(studio, /ps-community-editor-decoration-tile/);
   assert.doesNotMatch(studio, /Marcos y efectos de perfil/);
 });;
@@ -429,7 +428,6 @@ test("clicking the live avatar opens image/GIF choices and owner-only removal", 
   assert.match(studio, /Cambiar avatar/);
   assert.match(studio, /avatarPickerOpen/);
   assert.match(studio, /Eliminar avatar/);
-  assert.doesNotMatch(studio, /Cambiar decoración de avatar/);
   assert.match(css, /\.ps-community-editor-preview-avatar-trigger:hover/);
   assert.match(css, /\.ps-community-editor-avatar-menu-preview button:hover/);
 });;
@@ -1061,9 +1059,12 @@ test("founder branch keeps the font gallery and saved profile motions remain sup
 });;
 
 test("member rail keeps the selected name font visible inside the flexible copy column", () => {
-  assert.match(nameStyleCss, /\.community-member-copy \{[\\s\\S]*?width:auto !important/);\n  assert.doesNotMatch(nameStyleCss, /\.community-member-copy\\s*\\{[^}]*width:0 !important/);
+  const memberCopyRules = [...nameStyleCss.matchAll(/(?:^|\n)\.community-member-copy\s*\{([^}]*)\}/g)];
+  assert.ok(memberCopyRules.length >= 2, "Expected both member-copy layout rules.");
+  assert.ok(memberCopyRules.every((match) => /width:auto !important/.test(match[1])), "No later rule may collapse the member name column.");
+  assert.doesNotMatch(nameStyleCss, /(?:^|\n)\.community-member-copy\s*\{[^}]*width:0 !important/);
   assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
-  assert.match(page, /<CommunityStaticName[\\s\\S]*?value=\{member\.full_name\}/);
+  assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
   assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);
 });
 

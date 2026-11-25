@@ -7634,3 +7634,89 @@ html:has(.ps-community-picker-overlay) * {
   content:none !important;
   display:none !important;
 }
+
+
+/* Final reference alignment: the profile name sits directly below the avatar,
+   while the chat author is plain text with no decorative underline. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+  position:absolute !important;
+  top:105px !important;
+  left:10px !important;
+  right:12px !important;
+  bottom:auto !important;
+  display:block !important;
+  width:auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  z-index:3 !important;
+  pointer-events:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+  display:block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  text-align:left !important;
+  text-decoration:none !important;
+  border:0 !important;
+  border-bottom:0 !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author:hover,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author:focus {
+  text-decoration:none !important;
+  text-decoration-line:none !important;
+  text-decoration-color:transparent !important;
+  text-decoration-thickness:0 !important;
+  text-underline-offset:0 !important;
+  border:0 !important;
+  border-bottom:0 !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author::before,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author::after {
+  content:none !important;
+  display:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+/* Inkline: a deliberate pen pass, a short ink fill, then a long clean hold.
+   The outline stays crisp and the name does not disappear immediately. */
+.ps-community-name-render.ps-inkline-name .ps-inkline-svg {
+  overflow:visible !important;
+  max-height:1.45em !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-outline {
+  stroke-width:1.45px !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  stroke-dasharray:var(--ps-inkline-dash-length,1800) !important;
+  stroke-dashoffset:var(--ps-inkline-dash-length,1800) !important;
+  animation:ps-inkline-contour-finish 8.6s cubic-bezier(.42,.04,.2,1) infinite !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-fill {
+  clip-path:inset(0 100% 0 0);
+  animation:ps-inkline-fill-finish 8.6s cubic-bezier(.2,.72,.22,1) infinite !important;
+}
+@keyframes ps-inkline-contour-finish {
+  0%,5% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); }
+  37%,82% { stroke-dashoffset:0; }
+  96%,100% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); }
+}
+@keyframes ps-inkline-fill-finish {
+  0%,31% { clip-path:inset(0 100% 0 0); }
+  53%,82% { clip-path:inset(0 0 0 0); }
+  96%,100% { clip-path:inset(0 100% 0 0); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline,
+  .ps-community-name-render.ps-inkline-name .ps-inkline-fill {
+    animation:none !important;
+  }
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline { stroke-dashoffset:0 !important; }
+  .ps-community-name-render.ps-inkline-name .ps-inkline-fill { clip-path:inset(0 0 0 0) !important; }
+}

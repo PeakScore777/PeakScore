@@ -35,7 +35,7 @@ testCase("live session SELECT, INSERT, UPDATE and DELETE policies enforce space 
 testCase("the live calendar filters queries and Realtime refreshes to the active space", () => {
   assert.match(page, /activeSpace/);
   assert.match(page, /\.eq\("space_id", spaceId\)/);
-  assert.match(page, /filter: "space_id=eq\." \+ spaceId/);
+  assert.match(page, /community-live-session-schedule-" \+ spaceId/);
   assert.match(page, /space_id: activeSpace\.id/);
   assert.match(page, /loadSessions\(activeSpace\.id\)/);
   assert.match(page, /community_space_member_roles/);

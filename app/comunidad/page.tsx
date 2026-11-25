@@ -492,6 +492,7 @@ export default function CommunityPage() {
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
+  const [messageMenuFor, setMessageMenuFor] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
@@ -2419,8 +2420,6 @@ export default function CommunityPage() {
                 </div>
               )}
             </div>
-            <button type="button" className="community-sidebar-close lg:hidden"
-              onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>
           </div>
 
           <nav className="community-channel-list" aria-label="Canales de PeakScore">
@@ -2448,9 +2447,12 @@ export default function CommunityPage() {
                       <button type="button" onClick={() => void selectChannel(channel)}
                         aria-current={active ? "page" : undefined}
                         className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
-                        <Icon size={17} className="community-channel-glyph"/>
+                        {channel.is_private ? (
+                          <span className="community-private-channel-glyph" aria-label="Canal privado">
+                            <Hash size={17}/><LockKeyhole size={9}/>
+                          </span>
+                        ) : <Icon size={17} className="community-channel-glyph"/>}
                         <span className="community-channel-name min-w-0 flex-1 truncate">{channel.name}</span>
-                        {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
                         {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
                         {(unreadCounts[channel.id] ?? 0) > 0 && (
                           <span className="community-unread-count" aria-label={unreadCounts[channel.id] + " mensajes sin leer"}>
@@ -2664,7 +2666,7 @@ export default function CommunityPage() {
                         <div className="community-date-divider"><span>{dayLabel(message.created_at)}</span></div>
                       )}
                       <article id={"post-" + message.id}
-                        className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "") + (message.pending ? " community-chat-message-pending" : "")}>
+                        className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "") + (message.pending ? " community-chat-message-pending" : "") + (userId && message.body.includes("@{" + userId + "|") ? " community-chat-message-mentioned" : "")}>
                         <div className="community-chat-avatar-column">
                           {groupedWithPrevious ? (
                             <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
@@ -2804,16 +2806,45 @@ export default function CommunityPage() {
                             <button type="button" onClick={() => void shareMessage(message)} className="community-chat-action">
                               <Share2 size={15}/><span>{copiedMessageId === message.id ? "Copiado" : "Compartir"}</span>
                             </button>
-                            {message.author_id === userId && (
-                              <>
-                                <button type="button" onClick={() => beginEdit(message)}
-                                  className="community-chat-action" aria-label="Editar mensaje"
-                                  title="Editar mensaje"><Pencil size={14}/></button>
-                                <button type="button" onClick={() => void deleteMessage(message)}
-                                  className="community-chat-action community-chat-delete" aria-label="Eliminar mensaje"
-                                  title="Eliminar mensaje"><MoreHorizontal size={17}/></button>
-                              </>
-                            )}
+                            <div className="community-message-more-wrap">
+                              <button type="button"
+                                onClick={() => setMessageMenuFor((current) => current === message.id ? null : message.id)}
+                                className={"community-chat-action community-message-more-trigger" + (messageMenuFor === message.id ? " is-open" : "")}
+                                aria-label="Más opciones del mensaje" aria-haspopup="menu"
+                                aria-expanded={messageMenuFor === message.id} title="Más opciones">
+                                <MoreHorizontal size={18}/>
+                              </button>
+                              {messageMenuFor === message.id && (
+                                <div className="community-message-context-menu" role="menu" aria-label="Opciones del mensaje">
+                                  <button type="button" role="menuitem" onClick={() => { beginReply(message); setMessageMenuFor(null); }}>
+                                    <Reply size={16}/>Responder
+                                  </button>
+                                  <button type="button" role="menuitem" onClick={() => { void shareMessage(message); setMessageMenuFor(null); }}>
+                                    <Share2 size={16}/>{copiedMessageId === message.id ? "Enlace copiado" : "Compartir enlace"}
+                                  </button>
+                                  <button type="button" role="menuitem" onClick={() => {
+                                    void navigator.clipboard.writeText(message.body);
+                                    setMessageMenuFor(null);
+                                  }}>
+                                    <Copy size={16}/>Copiar texto
+                                  </button>
+                                  {message.author_id === userId && (
+                                    <>
+                                      <div className="community-message-menu-divider"/>
+                                      <button type="button" role="menuitem" onClick={() => { beginEdit(message); setMessageMenuFor(null); }}>
+                                        <Pencil size={16}/>Editar mensaje
+                                      </button>
+                                      <button type="button" role="menuitem" className="is-danger" onClick={() => {
+                                        setMessageMenuFor(null);
+                                        if (window.confirm("¿Eliminar este mensaje? Esta acción no se puede deshacer.")) void deleteMessage(message);
+                                      }}>
+                                        <Trash2 size={16}/>Eliminar mensaje
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </article>

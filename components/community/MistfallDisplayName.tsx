@@ -33,7 +33,6 @@ export default function MistfallDisplayName({
   const Tag = tag;
   const effectName = className.split(/\s+/).find((name) => name.startsWith("effect-"))?.slice(7) ?? "plain";
   const chromaflow = effectName === "chromaflow";
-  const gradientFlow = effectName === "gradient-flow";
   const styleTokens = style as (CSSProperties & Record<string, string | undefined>) | undefined;
   // A font/effect switch must rebuild the canvas text mask, not keep a stale font bitmap.
   const styleKey = [className, styleTokens?.["--name-solid-color"], styleTokens?.["--name-gradient-start"], styleTokens?.["--name-gradient-end"], styleTokens?.["--name-prism-gradient"]].join("|");
@@ -252,7 +251,7 @@ export default function MistfallDisplayName({
       resizeObserver.disconnect();
       intersectionObserver?.disconnect();
     };
-  }, [text, previewMode, respectReducedMotion, effectName, chromaflow, gradientFlow, styleKey]);
+  }, [text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey]);
 
   return (
     <Tag className={className + " ps-mistfall-name" + (formed ? " is-formed" : "")} style={style} aria-label={text}>

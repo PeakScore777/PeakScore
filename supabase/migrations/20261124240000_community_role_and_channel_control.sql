@@ -46,6 +46,7 @@ set
     else position
   end,
   is_system = role_key in ('fundador','administrador','moderador','profesor','docente','estudiante'),
+  hoist = role_key in ('fundador','administrador','moderador','profesor'),
   permissions = case
     when role_key = 'estudiante' then '{"view_channels":true,"send_messages":true,"attach_files":true,"add_reactions":true}'::jsonb
     when role_key = 'docente' then '{"view_channels":true,"send_messages":true,"attach_files":true,"add_reactions":true}'::jsonb

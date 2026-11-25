@@ -77,7 +77,7 @@ testCase("SECURITY DEFINER edit and mention functions cannot bypass PreICFES sco
   assert.match(migration, /and private\.has_space_permission\(channel\.space_id,'send_messages'\)/);
   assert.match(migration, /and private\.can_access_community_space\(channel\.space_id\)/);
   assert.match(migration, /and not private\.is_community_timed_out\(\)/);
-  assert.match(migration, /create or replace function public\.search_community_mention_members\([\s\S]*?community_space_members/);
+  assert.match(migration, /create or replace function public\.search_community_member_profiles\([\s\S]*?community_space_members/);
   assert.match(migration, /create or replace function public\.resolve_community_mention_members\([\s\S]*?community_space_members/);
 });
 

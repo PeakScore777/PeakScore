@@ -33,8 +33,10 @@ export default function MistfallDisplayName({
   const Tag = tag;
   const effectName = className.split(/\s+/).find((name) => name.startsWith("effect-"))?.slice(7) ?? "plain";
   const chromaflow = effectName === "chromaflow";
+  const gradientFlow = effectName === "gradient-flow";
   const styleTokens = style as (CSSProperties & Record<string, string | undefined>) | undefined;
-  const styleKey = [styleTokens?.["--name-solid-color"], styleTokens?.["--name-gradient-start"], styleTokens?.["--name-gradient-end"], styleTokens?.["--name-prism-gradient"]].join("|");
+  // A font/effect switch must rebuild the canvas text mask, not keep a stale font bitmap.
+  const styleKey = [className, styleTokens?.["--name-solid-color"], styleTokens?.["--name-gradient-start"], styleTokens?.["--name-gradient-end"], styleTokens?.["--name-prism-gradient"]].join("|");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,7 +49,8 @@ export default function MistfallDisplayName({
 
     let raf = 0, resizeRaf = 0, loopTimer = 0, lastFrame = 0, startedAt = 0;
     let width = 1, height = 1, dpr = 1, particles: Particle[] = [];
-    let particleFill: string | CanvasGradient = "#f8f6ff";
+    let particleFill = "#f8f6ff";
+    let particleStops: Array<[number, string]> | null = null;
     let particleShadow = "transparent";
     let disposed = false, started = false, finished = false, visible = false, pausedAt = 0;
     const duration = previewMode ? 2.05 : 2.45;
@@ -73,26 +76,27 @@ export default function MistfallDisplayName({
       const fontSize = parseFloat(computed.fontSize) || 16;
       const effect = effectName;
       const solidColor = computed.getPropertyValue("--name-solid-color").trim() || computed.color || "#f8f6ff";
-      const makeGradient = (stops: Array<[number, string]>, vertical = false) => {
-        const gradient = ctx.createLinearGradient(0, 0, vertical ? 0 : Math.max(1, width), vertical ? Math.max(1, height) : 0);
-        stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
-        return gradient;
-      };
-      particleShadow = effect === "neon" ? solidColor : "transparent";
+      const selectedPaletteText = computed.getPropertyValue("--name-prism-gradient").trim();
+      const selectedPalette = selectedPaletteText.match(/#[0-9a-f]{6}/gi) ?? [];
+      const paletteStops = (colors: string[]): Array<[number, string]> =>
+        colors.map((color, index) => [index / Math.max(1, colors.length - 1), color]);
+      const defaultGlossPalette = ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"];
+      particleShadow = effect === "neon" || effect === "pop" ? solidColor : "transparent";
+      particleFill = effect === "neon" ? "#F4EAFF" : solidColor;
+      particleStops = null;
+
       if (effect === "gradient") {
-        const start = computed.getPropertyValue("--name-gradient-start").trim() || "#65d8c2";
-        const end = computed.getPropertyValue("--name-gradient-end").trim() || "#9c83f5";
-        particleFill = makeGradient([[0, start], [0.55, end], [1, "#ffffff"]]);
-      } else if (effect === "prism" || effect === "chromaflow") {
-        particleFill = makeGradient(CHROMAFLOW_STOPS);
-      } else if (effect === "gummy") {
-        particleFill = makeGradient([[0, "#f6a8cf"], [0.2, "#ffe2b8"], [0.4, "#b7f1e0"], [0.65, "#a9c8ff"], [0.82, "#d5a6ff"], [1, "#f6a8cf"]]);
+        const start = computed.getPropertyValue("--name-gradient-start").trim() || "#9D83FF";
+        const end = computed.getPropertyValue("--name-gradient-end").trim() || "#61B8ED";
+        particleStops = paletteStops([start, "#FFFFFF", end, start]);
+      } else if (effect === "gradient-flow") {
+        particleStops = paletteStops(["#E84DE8", "#A34DFF", "#527CFF", "#31B9D2", "#48D8A2", "#E84DE8"]);
+      } else if (effect === "chromaflow") {
+        particleStops = CHROMAFLOW_STOPS;
+      } else if (effect === "prism" || effect === "gummy") {
+        particleStops = paletteStops(selectedPalette.length >= 2 ? selectedPalette : defaultGlossPalette);
       } else if (effect === "toon") {
-        particleFill = makeGradient([[0, "#ffffff"], [0.24, "#e9edf5"], [0.48, "#aab5c9"], [0.54, "#ffffff"], [0.78, "#8290a9"], [1, "#f8f9fc"]], true);
-      } else if (effect === "neon") {
-        particleFill = "#f4eaff";
-      } else {
-        particleFill = solidColor;
+        particleStops = paletteStops(["#778294", "#DDE3EC", "#FFFFFF", "#8793A6", "#FFFFFF", "#788395"]);
       }
       pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // Canvas rejects CSS font shorthands containing computed line-height (e.g. "700 16px / 24px Inter").
@@ -164,10 +168,14 @@ export default function MistfallDisplayName({
         ctx.moveTo(x + p.radius, y);
         ctx.arc(x,y,p.radius,0,Math.PI*2);
       }
-      if (chromaflow) {
-        const spectrum = ctx.createLinearGradient(0, 0, Math.max(1, width), 0);
-        CHROMAFLOW_STOPS.forEach(([offset, color]) => spectrum.addColorStop(offset, color));
-        ctx.fillStyle = spectrum;
+      if (particleStops && particleStops.length >= 2) {
+        // Move the colour field across the particle word; the canvas stays transparent.
+        // Chromaflow and the custom finishes therefore animate as lettering, never as a tile.
+        const phase = (now / (effectName === "toon" ? 4200 : 5600)) % 1;
+        const drift = effectName === "toon" ? (Math.sin(now / 1500) + 1) * 0.24 : phase * 0.7;
+        const gradient = ctx.createLinearGradient(-width * drift, 0, Math.max(1, width) * (1.35 - drift), 0);
+        particleStops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
+        ctx.fillStyle = gradient;
       } else {
         ctx.fillStyle = particleFill;
       }
@@ -180,7 +188,7 @@ export default function MistfallDisplayName({
       if (progress < 0.82) {
         ctx.globalCompositeOperation = "lighter";
         ctx.globalAlpha = (1 - progress / 0.82) * 0.13;
-        ctx.fillStyle = "#a78bfa";
+        ctx.fillStyle = "#ffffff";
         ctx.fill();
         ctx.globalCompositeOperation = "source-over";
       }
@@ -244,7 +252,7 @@ export default function MistfallDisplayName({
       resizeObserver.disconnect();
       intersectionObserver?.disconnect();
     };
-  }, [text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey]);
+  }, [text, previewMode, respectReducedMotion, effectName, chromaflow, gradientFlow, styleKey]);
 
   return (
     <Tag className={className + " ps-mistfall-name" + (formed ? " is-formed" : "")} style={style} aria-label={text}>

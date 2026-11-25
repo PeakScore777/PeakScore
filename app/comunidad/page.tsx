@@ -2135,8 +2135,12 @@ export default function CommunityPage() {
           <button type="button"
             className={"community-server-icon " + (activeSpace?.space_type === "global" ? "community-server-icon-active" : "")}
             onClick={() => router.push("/comunidad")}
-            aria-label="PeakScore Community" aria-current={activeSpace?.space_type === "global" ? "page" : undefined}>
-            <Users size={22}/>
+            aria-label="PeakScore Community"
+            aria-current={activeSpace?.space_type === "global" ? "page" : undefined}
+            style={activeSpace?.space_type === "global" ? { borderColor: activeSpace.accent_color + "80", color: activeSpace.accent_color } : undefined}>
+            {activeSpace?.icon_url
+              ? <Image src={activeSpace.icon_url} alt="" width={38} height={38} unoptimized className="h-full w-full rounded-[inherit] object-cover"/>
+              : <Image src="/peakscore/peakscore-community-mark.svg" alt="PeakScore" width={38} height={38} unoptimized className="h-[38px] w-[38px] object-contain"/>}
           </button>
           {communitySpaces.filter((space) => space.space_type === "preicfes").map((space) => (
             <button key={space.id} type="button"

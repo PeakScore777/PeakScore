@@ -8635,3 +8635,47 @@ html:has(.ps-community-picker-overlay) * {
   text-shadow:none !important;-webkit-text-stroke:0 transparent !important;
   animation:ps-chromaflow-spectrum 3.6s linear infinite !important;
 }
+
+
+/* Hacking Decode uses nested encrypted glyphs; keep their temporary symbols on the
+   same selected finish instead of the component's legacy fallback scramble colour. */
+.ps-community-name-render.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.ps-community-name-render.effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.ps-community-name-render.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.ps-community-name-render:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9ccb,#ffd0a7,#fff0a6,#9de8d3,#9fc8ff)) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;
+}
+.ps-community-name-render.effect-neon :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-neon :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-neon :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+  color:var(--name-solid-color,#c99bff) !important;-webkit-text-fill-color:currentColor !important;
+  text-shadow:0 0 5px var(--name-solid-color,#c99bff),0 0 12px var(--name-solid-color,#a35cff) !important;
+}
+.ps-community-name-render.effect-toon :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-toon :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-toon :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  -webkit-text-stroke:.42px var(--name-solid-color,#f2f3f5) !important;
+  background-image:linear-gradient(105deg,var(--name-solid-color,#f2f3f5) 0%,#fff 48%,var(--name-solid-color,#f2f3f5) 100%) !important;
+  background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 2px 0 rgb(25 20 45 / 42%) !important;
+}
+.ps-community-name-render.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.ps-community-name-render.effect-plain :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate.effect-plain :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-plain :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+  color:var(--name-solid-color,currentColor) !important;-webkit-text-fill-color:currentColor !important;
+  background:none !important;text-shadow:none !important;-webkit-text-stroke:0 transparent !important;
+}

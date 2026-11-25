@@ -35,6 +35,20 @@ create index if not exists community_spaces_active_idx
   on public.community_spaces (is_enabled, space_type, created_at desc);
 
 -- The global community keeps its current channels and messages. It is not recreated.
+do $block$
+declare
+  v_admin_count integer;
+begin
+  select count(*) into v_admin_count
+  from public.profiles profile
+  where profile.role = 'admin';
+
+  if v_admin_count <> 1 then
+    raise exception 'Community spaces require exactly one verified platform admin; found %', v_admin_count;
+  end if;
+end;
+$block$;
+
 insert into public.community_spaces
   (id,slug,name,description,space_type,visibility,icon_key,accent_color,owner_id)
 select
@@ -46,9 +60,9 @@ select
   'public',
   'users',
   '#7FE05C',
-  founder.founder_user_id
-from private.community_founder_control founder
-where founder.singleton = true
+  profile.id
+from public.profiles profile
+where profile.role = 'admin'
 on conflict (id) do nothing;
 
 create table if not exists public.community_space_members (
@@ -493,13 +507,28 @@ begin
     raise exception 'A moderation reason between 3 and 500 characters is required' using errcode = '22023';
   end if;
 
-  if exists (
-    select 1 from public.community_space_member_roles role_assignment
-    where role_assignment.space_id = p_space_id
-      and role_assignment.user_id = p_target_user_id
-      and role_assignment.role_key = 'colaborador'
-  ) and not v_is_founder then
-    raise exception 'Collaborators cannot moderate other collaborators' using errcode = '42501';
+  if not exists (
+    select 1 from public.community_space_members membership
+    where membership.space_id = p_space_id
+      and membership.user_id = p_target_user_id
+  ) then
+    raise exception 'The moderation target is not a member of this space' using errcode = '22023';
+  end if;
+
+  if not v_is_founder and (
+    exists (
+      select 1 from public.community_space_member_roles role_assignment
+      where role_assignment.space_id = p_space_id
+        and role_assignment.user_id = p_target_user_id
+        and role_assignment.role_key = 'colaborador'
+    )
+    or exists (
+      select 1 from public.community_member_roles global_assignment
+      where global_assignment.user_id = p_target_user_id
+        and global_assignment.role_key in ('fundador','administrador','moderador','profesor')
+    )
+  ) then
+    raise exception 'Collaborators cannot moderate other staff accounts' using errcode = '42501';
   end if;
 
   if p_action = 'restore' then
@@ -796,5 +825,25 @@ create policy community_comments_insert_as_self
 
 -- The collaborator has no global powers; even a direct global role assignment is rejected.
 -- Global channel/message policies remain otherwise unchanged for the main PeakScore space.
+
+create or replace function public.can_attach_community_files(p_channel_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select p_channel_id is not null and exists (
+    select 1
+    from public.community_channels channel
+    where channel.id = p_channel_id
+      and not channel.is_archived
+      and private.has_space_permission(channel.space_id,'attach_files')
+      and not private.is_community_timed_out()
+  );
+$function$;
+
+revoke all on function public.can_attach_community_files(uuid) from public,anon,authenticated;
+grant execute on function public.can_attach_community_files(uuid) to authenticated;
 
 commit;

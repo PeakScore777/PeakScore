@@ -230,7 +230,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
             </div>
             <footer className="flex min-h-[45px] items-center justify-between border-t border-[#263744] bg-[#0c141d] px-5 text-[9px] text-[#728897] sm:px-7">
               <span>La autoridad de founder no se puede delegar.</span>
-              <span className="inline-flex items-center gap-1.5 text-[#8ea7b5]"><Check size={12} className="text-[#7fe05c}"/> CAMBIOS AUDITADOS</span>
+              <span className="inline-flex items-center gap-1.5 text-[#8ea7b5]"><Check size={12} className="text-[#7fe05c]"/> CAMBIOS AUDITADOS</span>
             </footer>
           </div>
         </div>

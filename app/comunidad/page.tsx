@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, BadgeCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
-  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings,
+  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import communityTheme from "./peakscore-community-theme.module.css";
@@ -458,6 +458,10 @@ export default function CommunityPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isFounder, setIsFounder] = useState(false);
   const [founderStudioOpen, setFounderStudioOpen] = useState(false);
+  const [founderStudioTab, setFounderStudioTab] = useState<"branding" | "channels">("branding");
+  const [founderStudioAction, setFounderStudioAction] = useState<"create-channel" | "create-category" | null>(null);
+  const [communityServerMenuOpen, setCommunityServerMenuOpen] = useState(false);
+  const communityServerMenuRef = useRef<HTMLDivElement | null>(null);
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
   const [hoverCommunityProfile, setHoverCommunityProfile] = useState<CommunityMemberProfile | null>(null);
@@ -501,6 +505,32 @@ export default function CommunityPage() {
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberSummary[]>([]);
   const [memberListOpen, setMemberListOpen] = useState(true);
   const [collapsedMemberGroups, setCollapsedMemberGroups] = useState<Record<string, boolean>>({});
+  const openFounderStudio = useCallback((
+    tab: "branding" | "channels",
+    action: "create-channel" | "create-category" | null = null,
+  ) => {
+    setFounderStudioTab(tab);
+    setFounderStudioAction(action);
+    setCommunityServerMenuOpen(false);
+    setFounderStudioOpen(true);
+  }, []);
+  useEffect(() => {
+    if (!communityServerMenuOpen) return;
+    function closeServerMenuOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !communityServerMenuRef.current?.contains(event.target)) {
+        setCommunityServerMenuOpen(false);
+      }
+    }
+    function closeServerMenuEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setCommunityServerMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", closeServerMenuOutside);
+    document.addEventListener("keydown", closeServerMenuEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeServerMenuOutside);
+      document.removeEventListener("keydown", closeServerMenuEscape);
+    };
+  }, [communityServerMenuOpen]);
   useEffect(() => {
     if (!hoverCommunityProfile) return;
     function handleOutsidePointer(event: PointerEvent) {
@@ -2249,7 +2279,7 @@ export default function CommunityPage() {
         </nav>
 
         <aside id="community-channel-drawer" className={"community-sidebar " + (mobileChannelsOpen ? "community-sidebar-open" : "")}>
-          <div className="community-server-header relative isolate flex min-h-[92px] items-center overflow-hidden border-b border-[#28313d] px-4 py-3">
+          <div className="community-server-header relative isolate flex min-h-[78px] items-center overflow-visible border-b border-[#28313d] px-3 py-2">
             {activeSpace?.banner_url && (
               <Image
                 src={activeSpace.banner_url}
@@ -2261,19 +2291,58 @@ export default function CommunityPage() {
               />
             )}
             <div className="community-server-banner-shade pointer-events-none absolute inset-0" aria-hidden="true"/>
-            <div className="relative z-10 min-w-0 flex-1 pr-12">
-              <p className="community-server-eyebrow">COMUNIDAD</p>
-              <div className="flex min-w-0 items-center gap-2.5">
-                {activeSpace?.icon_url && (
-                  <Image src={activeSpace.icon_url} alt="" width={30} height={30} unoptimized className="h-[30px] w-[30px] shrink-0 rounded-[9px] object-cover ring-1 ring-white/20"/>
-                )}
-                <p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>
-                {activeSpace?.verification_status === "verified" && (
-                  <span className="community-verified-badge" title="Comunidad verificada por PeakScore" aria-label="Comunidad verificada">
-                    <BadgeCheck size={16} strokeWidth={2.6}/><span>Verificada</span>
-                  </span>
-                )}
-              </div>
+            <div className="relative z-20 min-w-0 flex-1">
+              {isFounder ? (
+                <div className="relative min-w-0" ref={communityServerMenuRef}>
+                  <button
+                    type="button"
+                    className="community-server-menu-trigger"
+                    onClick={() => setCommunityServerMenuOpen((open) => !open)}
+                    aria-haspopup="menu"
+                    aria-expanded={communityServerMenuOpen}
+                    aria-label="Abrir ajustes de la comunidad"
+                  >
+                    {activeSpace?.verification_status === "verified" && (
+                      <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada">
+                        <Check size={10} strokeWidth={3.2}/>
+                      </span>
+                    )}
+                    <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
+                    <ChevronDown size={15} className={"community-server-menu-chevron" + (communityServerMenuOpen ? " is-open" : "")}/>
+                  </button>
+                  {communityServerMenuOpen && (
+                    <div className="community-server-menu" role="menu" aria-label="Administración del servidor">
+                      <div className="community-server-menu-heading">
+                        <span>ADMINISTRAR COMUNIDAD</span>
+                        <span className="community-server-menu-founder">FOUNDER</span>
+                      </div>
+                      <button type="button" role="menuitem" onClick={() => openFounderStudio("branding")}>
+                        <Settings size={16}/><span><strong>Ajustes del servidor</strong><small>Identidad, icono, portada y apariencia</small></span>
+                      </button>
+                      <div className="community-server-menu-divider"/>
+                      <button type="button" role="menuitem" onClick={() => openFounderStudio("channels", "create-channel")}>
+                        <Plus size={16}/><span><strong>Crear canal</strong><small>Añadir un canal de texto</small></span>
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => openFounderStudio("channels", "create-category")}>
+                        <FolderPlus size={16}/><span><strong>Crear categoría</strong><small>Organizar los canales del servidor</small></span>
+                      </button>
+                      <div className="community-server-menu-divider"/>
+                      <button type="button" role="menuitem" onClick={() => openFounderStudio("branding")}>
+                        <Palette size={16}/><span><strong>Fondo e identidad</strong><small>Banner, colores y distintivo</small></span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="community-server-member-heading">
+                  {activeSpace?.verification_status === "verified" && (
+                    <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada">
+                      <Check size={10} strokeWidth={3.2}/>
+                    </span>
+                  )}
+                  <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
+                </div>
+              )}
               {activeSpace?.space_type === "preicfes" && activeSpace.verification_status !== "verified" && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {activeSpace.verification_status === "pending" ? (
@@ -2289,17 +2358,6 @@ export default function CommunityPage() {
                 </div>
               )}
             </div>
-            {isFounder && (
-              <button
-                type="button"
-                className="community-server-branding-edit"
-                onClick={() => setFounderStudioOpen(true)}
-                title="Editar nombre, icono y portada de la comunidad"
-                aria-label="Editar nombre, icono y portada de la comunidad"
-              >
-                <Pencil size={15}/>
-              </button>
-            )}
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>
           </div>
@@ -2921,7 +2979,12 @@ export default function CommunityPage() {
         )}
 
         {founderStudioOpen && isFounder && (
-          <CommunityFounderStudio onClose={() => setFounderStudioOpen(false)}/>
+          <CommunityFounderStudio
+            key={founderStudioTab + ":" + (founderStudioAction ?? "")}
+            initialTab={founderStudioTab}
+            initialAction={founderStudioAction}
+            onClose={() => setFounderStudioOpen(false)}
+          />
         )}
 
         {communityProfileStudioOpen && selectedCommunityProfile?.isOwnProfile && (

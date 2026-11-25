@@ -1320,24 +1320,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </section>
 
             <section className="ps-community-editor-settings-section">
-              <div className="ps-community-editor-settings-section-title">Avatar y decoración</div>
-              <div className="ps-community-editor-avatar-tiles">
+              <div className="ps-community-editor-settings-section-title">Avatar</div>
+              <div className="ps-community-editor-avatar-tiles is-avatar-only">
                 <button type="button" className="ps-community-editor-avatar-tile" onClick={() => avatarInput.current?.click()} aria-label="Cambiar avatar">
-                  <span className={"ps-community-editor-avatar-tile-image is-decoration-" + avatarDecorationId}>
+                  <span className="ps-community-editor-avatar-tile-image">
                     {profile.avatarUrl
                       ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="70px"/>
                       : initials(displayName || "PeakScore")}
                   </span>
                   <small>Avatar</small>
-                </button>
-                <button type="button" className="ps-community-editor-decoration-tile" onClick={() => openAppearancePicker("avatarDecoration")} aria-label="Cambiar decoración de avatar">
-                  <span className={"ps-community-editor-decoration-tile-preview is-decoration-" + avatarDecorationId}>
-                    {profile.avatarUrl
-                      ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="61px"/>
-                      : initials(displayName || "PeakScore")}
-                    <i><Plus size={12}/></i>
-                  </span>
-                  <small>Decoración</small>
                 </button>
               </div>
             </section>
@@ -1367,42 +1358,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
             </section>
 
-            <section className="ps-community-editor-settings-section">
-              <div className="ps-community-editor-settings-section-title">Marcos y efectos de perfil</div>
-              <div className="ps-community-editor-cosmetic-tiles">
-                <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileFrame")} aria-label="Cambiar marco de perfil">
-                  <span className={"ps-community-editor-cosmetic-live-preview is-frame is-profile-frame-" + profileFrameId} aria-hidden="true">
-                    <span className="ps-community-editor-cosmetic-preview-banner" style={{ backgroundColor: cardColor }}/>
-                    <span className="ps-community-editor-cosmetic-preview-avatar">
-                      {profile.avatarUrl
-                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
-                        : initials(displayName || "PeakScore")}
-                    </span>
-                    <span className="ps-community-editor-cosmetic-preview-lines"><i/><i/></span>
-                    <span className="ps-community-editor-cosmetic-preview-sweep"/>
-                  </span>
-                  <small>Marco</small>
-                </button>
-                <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileEffect")} aria-label="Añadir animación al banner">
-                  <span className={"ps-community-editor-cosmetic-live-preview is-effect is-profile-effect-" + profileEffectId} aria-hidden="true">
-                    <span className="ps-community-editor-cosmetic-preview-banner" style={{ backgroundColor: cardColor }}/>
-                    <span className="ps-community-editor-cosmetic-preview-avatar">
-                      {profile.avatarUrl
-                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
-                        : initials(displayName || "PeakScore")}
-                    </span>
-                    <span className="ps-community-editor-cosmetic-preview-lines"><i/><i/></span>
-                    <span className="ps-community-editor-cosmetic-preview-art">
-                      <Image src="/profile-cosmetics/effects/starfall.svg" alt="" fill unoptimized sizes="100px"/>
-                      <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="100px"/>
-                    </span>
-                    <span className="ps-community-editor-cosmetic-preview-sweep"/>
-                  </span>
-                  <small>Animación</small>
-                </button>
-              </div>
-            </section>
-
             <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
               <div className="ps-community-editor-settings-section-title">Decorar cartel de perfil</div>
               <button type="button" className="ps-community-editor-banner-decoration-tile" onClick={() => setNotice("El catálogo de decoraciones del cartel estará disponible próximamente.")}>
@@ -1426,9 +1381,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
-                  <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
+                  <div className="ps-community-editor-preview-banner" style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>
@@ -1436,8 +1391,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">
                     <div className="ps-community-editor-preview-avatar-anchor" ref={avatarMenuAnchorRef}>
-                      <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar o decoración">
-                        <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                      <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar">
+                        <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame}>
                           {profile.avatarUrl
                             ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
                             : <span>{initials(displayName || "PeakScore")}</span>}
@@ -1452,9 +1407,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <div className="ps-community-editor-avatar-menu ps-community-editor-avatar-menu-preview" role="menu" aria-label="Opciones del avatar">
                           <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); avatarInput.current?.click(); }}>
                             <Camera size={15}/> Cambiar avatar
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); openAppearancePicker("avatarDecoration"); }}>
-                            <ImagePlus size={15}/> Cambiar decoración de avatar
                           </button>
                           {profile.avatarUrl && (
                             <button type="button" role="menuitem" className="is-danger" onClick={() => { setAvatarMenuOpen(false); void removeAsset("avatar"); }} disabled={Boolean(deleting) || busy}>
@@ -2000,7 +1952,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
                           "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? readableThemeText(cardColor),
                         } as CSSProperties}>
-                        <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                        <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                           {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}
                           <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
@@ -2015,7 +1967,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <div className="ps-community-name-community-channel"><span className="ps-community-name-channel-hash">#</span> general</div>
                         <div className="ps-community-name-members-title">MIEMBROS — 1</div>
                         <div className="ps-community-name-member-row">
-                          <span className={"ps-community-name-member-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                          <span className={"ps-community-name-member-avatar frame-" + avatarFrame}>
                             {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>

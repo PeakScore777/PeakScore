@@ -111,12 +111,13 @@ test("responsive modal stacks the live profile above settings on mobile", () => 
   assert.match(latest, /\.ps-community-editor-savebar/);
 });
 
-test("the studio uses the requested left appearance rail and center editable profile with no right dashboard", () => {
+test("the founder studio uses a compact left rail, one avatar control and a central live profile", () => {
   assert.match(studio, /ps-community-editor-settings-sidebar/);
   assert.match(studio, /Placa de identificación/);
-  assert.match(studio, /Avatar y decoración/);
+  assert.match(studio, /<div className="ps-community-editor-settings-section-title">Avatar<\/div>/);
+  assert.doesNotMatch(studio, /Avatar y decoración|Marcos y efectos de perfil/);
   assert.match(studio, /Tema de perfil/);
-  assert.match(studio, /Marcos y efectos de perfil/);
+  assert.match(studio, /Decorar cartel de perfil/);
   assert.match(studio, /Estilo de nombre de visualización/);
   assert.match(studio, /ps-community-editor-preview-column/);
   assert.match(studio, /ps-community-editor-preview-card/);

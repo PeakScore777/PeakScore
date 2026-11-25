@@ -1606,3 +1606,40 @@
     overflow-y: auto !important;
   }
 }
+
+
+/* One remaining Avatar control: use the freed second tile for a balanced full-width row. */
+.ps-community-editor-avatar-tiles.is-avatar-only {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.ps-community-editor-avatar-tiles.is-avatar-only .ps-community-editor-avatar-tile {
+  display: flex !important;
+  min-height: 76px !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding: 9px 12px !important;
+}
+.ps-community-editor-avatar-tiles.is-avatar-only .ps-community-editor-avatar-tile-image {
+  flex: 0 0 54px !important;
+  width: 54px !important;
+  height: 54px !important;
+}
+.ps-community-editor-avatar-tiles.is-avatar-only .ps-community-editor-avatar-tile small {
+  color: #e4e6eb !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+
+/* The read-only social profile biography follows the same readable theme token as the editor. */
+.ps-community-profile-live-readonly-body .ps-community-profile-bio-readonly {
+  color: var(--editor-theme-body-text, #202126) !important;
+  -webkit-text-fill-color: var(--editor-theme-body-text, #202126) !important;
+  font: inherit !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  cursor: default !important;
+  pointer-events: none !important;
+}

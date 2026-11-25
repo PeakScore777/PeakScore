@@ -752,7 +752,8 @@ test("name-style picker stays open while scrolling and supports laptop trackpads
 });
 
 test("display-name style picker uses one live profile surface, synchronized member/chat names and expanded real fonts/effects", () => {
-  assert.match(studio, /ps-community-status-profile-preview ps-community-name-style-profile-preview/);
+  assert.match(studio, /className="ps-community-name-style-profile-preview"/);
+  assert.doesNotMatch(studio.slice(studio.indexOf("ps-community-name-preview-stage"), studio.indexOf('{appearancePicker !== "nameStyle"')), /ps-community-status-preview-bubble-wrap|ps-community-status-bubble/);
   assert.match(studio, /--status-theme-secondary/);
   assert.match(studio, /profile\.bannerUrl/);
   assert.match(studio, /profile\.avatarUrl/);

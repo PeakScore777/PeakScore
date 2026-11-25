@@ -1207,12 +1207,19 @@ export default function CommunityPage() {
       let compatibleChannels = channelData;
       let compatibleRoles = roleData;
       if (!channelData) {
-        const legacyChannels = await supabase.from("community_channels")
-          .select("id,slug,name,description,category,position,is_read_only,is_private")
-          .order("position");
-        compatibleChannels = (legacyChannels.data ?? []).map((channel) => ({
-          ...channel, channel_type: "text", icon_key: "hash", accent_color: "#01C8EF",
-        })) as typeof channelData;
+        if (resolvedSpace.space_type === "global") {
+          // Preserve the legacy global chat until its space_id migration is applied.
+          const legacyChannels = await supabase.from("community_channels")
+            .select("id,slug,name,description,category,position,is_read_only,is_private")
+            .order("position");
+          compatibleChannels = (legacyChannels.data ?? []).map((channel) => ({
+            ...channel, channel_type: "text", icon_key: "hash", accent_color: "#01C8EF",
+          })) as typeof channelData;
+        } else {
+          // Never fall back to global channels from inside a private PreICFES route.
+          compatibleChannels = [];
+          setError("La separación de esta comunidad todavía está pendiente de migración. No se cargaron canales globales como alternativa.");
+        }
       }
       if (!roleData) {
         const legacyRoles = await supabase.from("community_role_catalog")

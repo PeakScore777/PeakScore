@@ -20,7 +20,7 @@ begin
     raise exception 'Only the founder can update community branding' using errcode = '42501';
   end if;
 
-  if p_space_id is null or p_asset_type not in ('icon','banner') or p_asset_path is null
+  if p_space_id is null or p_asset_type is null or p_asset_type not in ('icon','banner') or p_asset_path is null
      or p_asset_path !~ ('^spaces/' || p_space_id::text || '/[0-9a-f-]{36}[.](png|jpg|webp)$') then
     raise exception 'Invalid community branding asset' using errcode = '22023';
   end if;

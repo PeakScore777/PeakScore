@@ -13,6 +13,9 @@ type Space = {
   name: string;
   description: string;
   visibility: "public" | "private";
+  verification_status: "unverified" | "pending" | "verified" | "rejected";
+  verification_requested_at: string | null;
+  verification_note: string | null;
   icon_key: string;
   accent_color: string;
   icon_path: string | null;
@@ -120,6 +123,8 @@ export default function CommunitySpacesStudio() {
   const [moderationAction, setModerationAction] = useState<"kick" | "timeout" | "restore">("timeout");
   const [moderationReason, setModerationReason] = useState("");
   const [moderationDuration, setModerationDuration] = useState(60);
+  const [verificationNote, setVerificationNote] = useState("");
+  const [verificationBusy, setVerificationBusy] = useState(false);
 
   const selectedSpace = spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const visibleSpaceMembers = detailSpaceId === selectedSpaceId ? spaceMembers : [];
@@ -131,7 +136,7 @@ export default function CommunitySpacesStudio() {
     setError("");
     const [spaceResult, candidateResult, roleResult] = await Promise.all([
       supabase.from("community_spaces")
-        .select("id,slug,name,description,visibility,icon_key,accent_color,icon_path,banner_path")
+        .select("id,slug,name,description,visibility,verification_status,verification_requested_at,verification_note,icon_key,accent_color,icon_path,banner_path")
         .eq("space_type", "preicfes")
         .eq("is_enabled", true)
         .order("created_at", { ascending: false }),
@@ -302,6 +307,31 @@ export default function CommunitySpacesStudio() {
       setCreatingSpace(false);
       setSelectedTab("settings");
     }
+  }
+
+  async function reviewVerification(decision: "verify" | "reject" | "revoke") {
+    if (!selectedSpace || verificationBusy) return;
+    setVerificationBusy(true);
+    setError("");
+    setNotice("");
+    const { error: reviewError } = await supabase.rpc("review_community_space_verification", {
+      p_space_id: selectedSpace.id,
+      p_decision: decision,
+      p_note: verificationNote.trim() || null,
+    });
+    if (reviewError) {
+      setError(reviewError.code === "42501"
+        ? "Solo el Founder puede revisar la verificación."
+        : "No se pudo actualizar la verificación. Comprueba que la migración de verificación esté aplicada.");
+    } else {
+      const nextStatus = decision === "verify" ? "verified" : decision === "reject" ? "rejected" : "unverified";
+      setSpaces((current) => current.map((space) => space.id === selectedSpace.id
+        ? { ...space, verification_status: nextStatus, verification_note: verificationNote.trim() || null }
+        : space));
+      setNotice(decision === "verify" ? "Comunidad verificada." : decision === "reject" ? "Solicitud de verificación rechazada." : "Verificación retirada.");
+      setVerificationNote("");
+    }
+    setVerificationBusy(false);
   }
 
   async function archiveSpace() {
@@ -485,6 +515,64 @@ export default function CommunitySpacesStudio() {
                           <p className="mt-2 text-[8px] text-[#718797]">PNG, JPG o WebP · máximo 5 MB · metadatos eliminados al procesar.</p>
                         </div>
                       </div>
+                    </section>
+                  )}
+                  {!creatingSpace && selectedSpace && (
+                    <section className="rounded-[9px] border border-[#34433a] bg-[#111b16] p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-bold text-[#e9f3e8]">Verificación de comunidad</p>
+                          <p className="mt-1 max-w-[460px] text-[10px] leading-5 text-[#98a99b]">
+                            Las comunidades verificadas muestran una insignia oficial de PeakScore. La aprobación queda registrada en la auditoría.
+                          </p>
+                        </div>
+                        <span className={"rounded-full border px-2.5 py-1 text-[9px] font-bold " + (
+                          selectedSpace.verification_status === "verified"
+                            ? "border-[#477c43] bg-[#1b3420] text-[#b9f0a6]"
+                            : selectedSpace.verification_status === "pending"
+                              ? "border-[#8a7139] bg-[#332a18] text-[#f4d58b]"
+                              : selectedSpace.verification_status === "rejected"
+                                ? "border-[#75424a] bg-[#321d22] text-[#f2aeb8]"
+                                : "border-[#4a535d] bg-[#242a31] text-[#c3cbd4]"
+                        )}>
+                          {selectedSpace.verification_status === "verified" ? "VERIFICADA"
+                            : selectedSpace.verification_status === "pending" ? "PENDIENTE"
+                              : selectedSpace.verification_status === "rejected" ? "RECHAZADA" : "NO VERIFICADA"}
+                        </span>
+                      </div>
+                      <label className="mt-3 block text-[10px] font-semibold text-[#aebbb0]">
+                        Nota de revisión (opcional)
+                        <textarea value={verificationNote} onChange={(event) => setVerificationNote(event.target.value)}
+                          maxLength={500} rows={2}
+                          className="mt-1.5 w-full rounded-[6px] border border-[#34473a] bg-[#0b120d] px-3 py-2 text-[11px] text-[#edf3ed] outline-none focus:border-[#8bea45]"
+                          placeholder="Motivo de aprobación, rechazo o retirada…"/>
+                      </label>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {selectedSpace.verification_status !== "verified" && (
+                          <button type="button" disabled={verificationBusy}
+                            onClick={() => void reviewVerification("verify")}
+                            className="inline-flex min-h-9 items-center gap-2 rounded-[6px] border border-[#5d8d4d] bg-[#203b23] px-3 text-[10px] font-bold text-[#c4f2b4] hover:bg-[#29492b] disabled:opacity-50">
+                            <ShieldCheck size={14}/> {verificationBusy ? "Guardando…" : selectedSpace.verification_status === "pending" ? "Aprobar verificación" : "Verificar comunidad"}
+                          </button>
+                        )}
+                        {selectedSpace.verification_status === "pending" && (
+                          <button type="button" disabled={verificationBusy}
+                            onClick={() => void reviewVerification("reject")}
+                            className="inline-flex min-h-9 items-center gap-2 rounded-[6px] border border-[#75424a] bg-[#321d22] px-3 text-[10px] font-semibold text-[#f2b3bb] hover:bg-[#43252c] disabled:opacity-50">
+                            Rechazar solicitud
+                          </button>
+                        )}
+                        {selectedSpace.verification_status === "verified" && (
+                          <button type="button" disabled={verificationBusy}
+                            onClick={() => void reviewVerification("revoke")}
+                            className="inline-flex min-h-9 items-center gap-2 rounded-[6px] border border-[#75424a] bg-[#321d22] px-3 text-[10px] font-semibold text-[#f2b3bb] hover:bg-[#43252c] disabled:opacity-50">
+                            Retirar verificación
+                          </button>
+                        )}
+                      </div>
+                      {selectedSpace.verification_note && (
+                        <p className="mt-3 text-[9px] leading-4 text-[#9aa99d]">Última nota: {selectedSpace.verification_note}</p>
+                      )}
                     </section>
                   )}
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

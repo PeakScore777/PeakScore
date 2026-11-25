@@ -3022,6 +3022,13 @@ export default function CommunityPage() {
             key={founderStudioTab + ":" + (founderStudioAction ?? "")}
             initialTab={founderStudioTab}
             initialAction={founderStudioAction}
+            onAssetUpdated={(assetType, path, url) => setActiveSpace((current) => current ? ({
+              ...current,
+              icon_path: assetType === "icon" ? path : current.icon_path,
+              icon_url: assetType === "icon" ? url : current.icon_url,
+              banner_path: assetType === "banner" ? path : current.banner_path,
+              banner_url: assetType === "banner" ? url : current.banner_url,
+            }) : current)}
             onClose={() => setFounderStudioOpen(false)}
           />
         )}

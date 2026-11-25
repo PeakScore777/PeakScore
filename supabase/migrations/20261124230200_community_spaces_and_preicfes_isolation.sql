@@ -1806,9 +1806,8 @@ revoke all on function public.edit_community_message(uuid,text)
 grant execute on function public.edit_community_message(uuid,text)
   to authenticated;
 
--- Mention resolution follows the same space scope and never exposes members
--- from another private PreICFES community.
-create or replace function public.search_community_mention_members(
+-- Search and resolve @mentions against the social identity and within the channel's space.
+create or replace function public.search_community_member_profiles(
   p_channel_id uuid,
   p_query text,
   p_limit integer default 8
@@ -1817,7 +1816,7 @@ returns table (
   user_id uuid,
   full_name text,
   avatar_url text,
-  level integer
+  status_text text
 )
 language sql
 stable
@@ -1825,26 +1824,28 @@ security invoker
 set search_path = ''
 as $function$
   select
-    profile.id,
-    profile.full_name,
-    profile.avatar_url,
-    profile.level
+    member_profile.user_id,
+    member_profile.display_name as full_name,
+    null::text as avatar_url,
+    member_profile.status_text
   from public.community_channels channel
-  join public.community_public_profiles profile on true
+  join public.community_member_profiles member_profile on true
   where auth.uid() is not null
     and channel.id = p_channel_id
     and channel.is_archived = false
     and private.can_access_community_space(channel.space_id)
     and private.has_space_permission(channel.space_id,'view_channels')
-    and char_length(btrim(coalesce(p_query,''))) between 1 and 32
-    and profile.id <> auth.uid()
-    and strpos(lower(profile.full_name),lower(btrim(p_query))) > 0
+    and char_length(btrim(coalesce(p_query,''))) between 1 and 40
+    and strpos(
+      lower(member_profile.display_name),
+      lower(btrim(p_query))
+    ) > 0
     and (
       channel.space_id = '00000000-0000-4000-8000-000000000001'::uuid
       or exists (
         select 1 from public.community_space_members membership
         where membership.space_id = channel.space_id
-          and membership.user_id = profile.id
+          and membership.user_id = member_profile.user_id
       )
     )
     and (
@@ -1853,16 +1854,28 @@ as $function$
       or private.is_space_collaborator(channel.space_id)
       or exists (
         select 1
-        from public.community_member_roles global_role
-        where global_role.user_id = profile.id
-          and global_role.role_key in ('profesor','moderador','administrador')
+        from public.community_space_member_roles target_role
+        where target_role.space_id = channel.space_id
+          and target_role.user_id = member_profile.user_id
+          and target_role.role_key in ('colaborador','docente','profesor')
+      )
+      or exists (
+        select 1
+        from public.community_member_roles target_role
+        where target_role.user_id = member_profile.user_id
+          and target_role.role_key in ('profesor','moderador','administrador')
       )
     )
   order by
-    (lower(profile.full_name) = lower(btrim(p_query))) desc,
-    profile.full_name asc
-  limit greatest(1,least(coalesce(p_limit,8),8));
+    (lower(member_profile.display_name) = lower(btrim(p_query))) desc,
+    member_profile.display_name asc
+  limit greatest(1, least(coalesce(p_limit,8),8));
 $function$;
+
+revoke all on function public.search_community_member_profiles(uuid,text,integer)
+  from public,anon,authenticated;
+grant execute on function public.search_community_member_profiles(uuid,text,integer)
+  to authenticated;
 
 create or replace function public.resolve_community_mention_members(
   p_channel_id uuid,
@@ -1877,9 +1890,12 @@ stable
 security invoker
 set search_path = ''
 as $function$
-  select profile.id, profile.full_name
+  select
+    member_profile.user_id,
+    member_profile.display_name as full_name
   from public.community_channels channel
-  join public.community_public_profiles profile on true
+  join public.community_member_profiles member_profile
+    on member_profile.user_id = any(p_user_ids)
   where auth.uid() is not null
     and channel.id = p_channel_id
     and channel.is_archived = false
@@ -1887,13 +1903,12 @@ as $function$
     and private.has_space_permission(channel.space_id,'view_channels')
     and p_user_ids is not null
     and cardinality(p_user_ids) between 1 and 80
-    and profile.id = any(p_user_ids)
     and (
       channel.space_id = '00000000-0000-4000-8000-000000000001'::uuid
       or exists (
         select 1 from public.community_space_members membership
         where membership.space_id = channel.space_id
-          and membership.user_id = profile.id
+          and membership.user_id = member_profile.user_id
       )
     )
     and (
@@ -1902,14 +1917,24 @@ as $function$
       or private.is_space_collaborator(channel.space_id)
       or exists (
         select 1
-        from public.community_member_roles global_role
-        where global_role.user_id = profile.id
-          and global_role.role_key in ('profesor','moderador','administrador')
+        from public.community_space_member_roles target_role
+        where target_role.space_id = channel.space_id
+          and target_role.user_id = member_profile.user_id
+          and target_role.role_key in ('colaborador','docente','profesor')
+      )
+      or exists (
+        select 1
+        from public.community_member_roles target_role
+        where target_role.user_id = member_profile.user_id
+          and target_role.role_key in ('profesor','moderador','administrador')
       )
     )
-  order by profile.full_name asc
+  order by member_profile.display_name
   limit 80;
 $function$;
 
+revoke all on function public.resolve_community_mention_members(uuid,uuid[])
+  from public,anon,authenticated;
+grant execute on function public.resolve_community_mention_members(uuid,uuid[])
+  to authenticated;
 
-commit;

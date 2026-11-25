@@ -710,18 +710,67 @@ export default function CommunityPage() {
     if (!userId) return;
     let active = true;
     async function loadCommunityMembers() {
-      const { data, error: memberError } = await supabase
-        .from("community_member_profiles")
-        .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
-        .order("display_name", { ascending: true })
-        .limit(100);
-      if (!active || memberError) return;
-      const ids = (data ?? []).map((member) => member.user_id);
+      type MemberRow = {
+        user_id: string; member_number: number | null; display_name: string; avatar_path: string | null;
+        status_text: string | null; about: string | null; created_at: string; status_expires_at: string | null;
+      };
+      let memberData: MemberRow[] = [];
+      if (activeSpace?.space_type === "preicfes") {
+        const { data: memberships, error: membershipError } = await supabase
+          .from("community_space_members")
+          .select("user_id")
+          .eq("space_id", activeSpace.id);
+        if (!active || membershipError) return;
+        const memberIds = (memberships ?? []).map((membership) => membership.user_id);
+        if (memberIds.length) {
+          const { data: spaceProfiles, error: spaceProfilesError } = await supabase
+            .from("community_member_profiles")
+            .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
+            .in("user_id", memberIds)
+            .order("display_name", { ascending: true });
+          if (!active || spaceProfilesError) return;
+          memberData = (spaceProfiles ?? []) as MemberRow[];
+        }
+      } else {
+        const { data: globalProfiles, error: memberError } = await supabase
+          .from("community_member_profiles")
+          .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
+          .order("display_name", { ascending: true })
+          .limit(100);
+        if (!active || memberError) return;
+        memberData = (globalProfiles ?? []) as MemberRow[];
+      }
+      const ids = memberData.map((member) => member.user_id);
       let roleRows: Array<{
         user_id: string; role_key: string; label: string; badge_color: string;
         position?: number; mentionable?: boolean; hoist?: boolean;
       }> = [];
-      if (ids.length) {
+      if (ids.length && activeSpace?.space_type === "preicfes") {
+        const { data: assignments, error: assignmentError } = await supabase
+          .from("community_space_member_roles")
+          .select("user_id,role_key")
+          .eq("space_id", activeSpace.id)
+          .in("user_id", ids);
+        if (!assignmentError && (assignments ?? []).length) {
+          const roleKeys = [...new Set((assignments ?? []).map((assignment) => assignment.role_key))];
+          const { data: catalog } = await supabase.from("community_role_catalog")
+            .select("role_key,label,badge_color,position,mentionable,hoist")
+            .in("role_key", roleKeys);
+          const byKey = new Map((catalog ?? []).map((role) => [role.role_key, role]));
+          roleRows = (assignments ?? []).flatMap((assignment) => {
+            const role = byKey.get(assignment.role_key);
+            return role ? [{
+              user_id: assignment.user_id,
+              role_key: assignment.role_key,
+              label: role.label,
+              badge_color: role.badge_color,
+              position: role.position ?? undefined,
+              mentionable: role.mentionable ?? false,
+              hoist: role.hoist ?? false,
+            }] : [];
+          }).sort((a, b) => (a.position ?? 100) - (b.position ?? 100));
+        }
+      } else if (ids.length) {
         const extendedRoles = await supabase.from("community_public_role_badges")
           .select("user_id,role_key,label,badge_color,position,mentionable,hoist")
           .in("user_id", ids)
@@ -764,7 +813,7 @@ export default function CommunityPage() {
         });
         rolesByMember.set(role.user_id, list);
       });
-      const memberRows = (data ?? []).map((member) => ({
+      const memberRows = memberData.map((member) => ({
         id: member.user_id,
         member_number: member.member_number,
         full_name: member.display_name,
@@ -801,7 +850,7 @@ export default function CommunityPage() {
     }
     void loadCommunityMembers();
     return () => { active = false; };
-  }, [userId]);
+  }, [userId, activeSpace?.id, activeSpace?.space_type]);
 
   const communityMemberGroups = useMemo(() => {
     const priority: Record<string, number> = {

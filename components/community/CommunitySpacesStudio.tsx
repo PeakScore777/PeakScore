@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   Archive, GraduationCap, Hash, Lock, Megaphone, Plus, Save, Trash2, Users,
 } from "lucide-react";
@@ -56,12 +56,40 @@ const EMPTY_CHANNEL = {
 const FIELD = "mt-1.5 h-10 w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 text-[11px] text-[#e8eef3] outline-none transition placeholder:text-[#647a89] focus:border-[#01c8ef] focus:ring-2 focus:ring-[#01c8ef]/10";
 const LABEL = "block text-[10px] font-semibold tracking-wide text-[#a4b5c0]";
 
+function toSpaceForm(space: Space | null) {
+  return space ? {
+    slug: space.slug,
+    name: space.name,
+    description: space.description,
+    visibility: space.visibility,
+    icon_key: space.icon_key,
+    accent_color: space.accent_color,
+  } : { ...EMPTY_SPACE };
+}
+
+function toSpaceChannelForm(channel: SpaceChannel | null) {
+  return channel ? {
+    slug: channel.slug,
+    name: channel.name,
+    description: channel.description,
+    category: channel.category,
+    position: channel.position,
+    is_private: channel.is_private,
+    is_read_only: channel.is_read_only,
+    channel_type: channel.channel_type,
+    icon_key: channel.icon_key,
+    accent_color: channel.accent_color,
+  } : { ...EMPTY_CHANNEL };
+}
+
 export default function CommunitySpacesStudio() {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [roles, setRoles] = useState<RoleOption[]>([]);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [spaceMembers, setSpaceMembers] = useState<SpaceMember[]>([]);
+  const [detailSpaceId, setDetailSpaceId] = useState<string | null>(null);
+  const selectedSpaceIdRef = useRef<string | null>(null);
   const [spaceChannels, setSpaceChannels] = useState<SpaceChannel[]>([]);
   const [schemaReady, setSchemaReady] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -83,7 +111,9 @@ export default function CommunitySpacesStudio() {
   const [moderationDuration, setModerationDuration] = useState(60);
 
   const selectedSpace = spaces.find((space) => space.id === selectedSpaceId) ?? null;
-  const selectedChannel = spaceChannels.find((channel) => channel.id === selectedChannelId) ?? null;
+  const visibleSpaceMembers = detailSpaceId === selectedSpaceId ? spaceMembers : [];
+  const visibleSpaceChannels = detailSpaceId === selectedSpaceId ? spaceChannels : [];
+  const selectedChannel = visibleSpaceChannels.find((channel) => channel.id === selectedChannelId) ?? null;
 
   const loadSpaces = useCallback(async () => {
     setLoading(true);
@@ -104,6 +134,11 @@ export default function CommunitySpacesStudio() {
     ]);
 
     if (spaceResult.error) {
+      selectedSpaceIdRef.current = null;
+      setSelectedSpaceId(null);
+      setSpaceForm({ ...EMPTY_SPACE });
+      setSelectedChannelId(null);
+      setChannelForm({ ...EMPTY_CHANNEL });
       setSchemaReady(false);
       setSpaces([]);
       setError("El esquema de comunidades PreICFES todavía no está disponible. La migración está preparada en GitHub, pero no se ha aplicado al proyecto activo.");
@@ -116,20 +151,32 @@ export default function CommunitySpacesStudio() {
     setCandidates((candidateResult.data ?? []) as Candidate[]);
     setRoles(((roleResult.data ?? []) as RoleOption[]).filter((role) => !ROLE_PROTECTED.has(role.role_key)));
     setSchemaReady(true);
-    setSelectedSpaceId((current) => current && nextSpaces.some((space) => space.id === current)
-      ? current
-      : nextSpaces[0]?.id ?? null);
+    const nextSelectedSpaceId = selectedSpaceIdRef.current && nextSpaces.some((space) => space.id === selectedSpaceIdRef.current)
+      ? selectedSpaceIdRef.current
+      : nextSpaces[0]?.id ?? null;
+    const selectionChanged = nextSelectedSpaceId !== selectedSpaceIdRef.current;
+    selectedSpaceIdRef.current = nextSelectedSpaceId;
+    setSelectedSpaceId(nextSelectedSpaceId);
+    if (selectionChanged) {
+      setSpaceForm(toSpaceForm(nextSpaces.find((space) => space.id === nextSelectedSpaceId) ?? null));
+      setSelectedChannelId(null);
+      setChannelForm({ ...EMPTY_CHANNEL });
+      setCreatingChannel(false);
+    }
     setLoading(false);
   }, []);
 
-  useEffect(() => { void loadSpaces(); }, [loadSpaces]);
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      await Promise.resolve();
+      if (active) await loadSpaces();
+    })();
+    return () => { active = false; };
+  }, [loadSpaces]);
 
   useEffect(() => {
-    if (!selectedSpaceId || !schemaReady) {
-      setSpaceMembers([]);
-      setSpaceChannels([]);
-      return;
-    }
+    if (!selectedSpaceId || !schemaReady) return;
     let active = true;
     async function loadSpaceDetail() {
       const [membershipResult, roleResult, channelResult] = await Promise.all([
@@ -169,38 +216,11 @@ export default function CommunitySpacesStudio() {
         role_keys: roleMap.get(profile.user_id) ?? [],
       })) as SpaceMember[]);
       setSpaceChannels((channelResult.data ?? []) as SpaceChannel[]);
+      setDetailSpaceId(selectedSpaceId);
     }
     void loadSpaceDetail();
     return () => { active = false; };
   }, [selectedSpaceId, schemaReady, detailRefresh]);
-
-  useEffect(() => {
-    if (creatingSpace) return;
-    setSpaceForm(selectedSpace ? {
-      slug: selectedSpace.slug,
-      name: selectedSpace.name,
-      description: selectedSpace.description,
-      visibility: selectedSpace.visibility,
-      icon_key: selectedSpace.icon_key,
-      accent_color: selectedSpace.accent_color,
-    } : EMPTY_SPACE);
-  }, [selectedSpace, creatingSpace]);
-
-  useEffect(() => {
-    if (creatingChannel) return;
-    setChannelForm(selectedChannel ? {
-      slug: selectedChannel.slug,
-      name: selectedChannel.name,
-      description: selectedChannel.description,
-      category: selectedChannel.category,
-      position: selectedChannel.position,
-      is_private: selectedChannel.is_private,
-      is_read_only: selectedChannel.is_read_only,
-      channel_type: selectedChannel.channel_type,
-      icon_key: selectedChannel.icon_key,
-      accent_color: selectedChannel.accent_color,
-    } : EMPTY_CHANNEL);
-  }, [selectedChannel, creatingChannel]);
 
   const roleOptions = useMemo(() => roles.length ? roles : [
     { role_key: "colaborador", label: "Colaborador PreICFES" },
@@ -362,7 +382,7 @@ export default function CommunitySpacesStudio() {
       <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
         <div className="flex min-h-[58px] items-center justify-between border-b border-[#253644] px-4">
           <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#8198a9]">COMUNIDADES PREICFES</span>
-          <button type="button" disabled={!schemaReady} onClick={() => { setCreatingSpace(true); setSpaceForm(EMPTY_SPACE); setSelectedSpaceId(null); }}
+          <button type="button" disabled={!schemaReady} onClick={() => { selectedSpaceIdRef.current = null; setCreatingSpace(true); setSpaceForm({ ...EMPTY_SPACE }); setSelectedSpaceId(null); setSelectedChannelId(null); setChannelForm({ ...EMPTY_CHANNEL }); }}
             className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear comunidad PreICFES">
             <Plus size={15}/>
           </button>
@@ -371,7 +391,7 @@ export default function CommunitySpacesStudio() {
           {loading ? <p className="p-4 text-[11px] text-[#8095a5]">Cargando espacios…</p>
             : spaces.length === 0 ? <p className="p-4 text-[10px] leading-5 text-[#8095a5]">Todavía no hay comunidades PreICFES. Crea una para separar a los estudiantes y colaboradores por grupo.</p>
             : spaces.map((space) => (
-              <button key={space.id} type="button" onClick={() => { setSelectedSpaceId(space.id); setCreatingSpace(false); }}
+              <button key={space.id} type="button" onClick={() => { selectedSpaceIdRef.current = space.id; setSelectedSpaceId(space.id); setSpaceForm(toSpaceForm(space)); setSelectedChannelId(null); setChannelForm({ ...EMPTY_CHANNEL }); setCreatingChannel(false); setCreatingSpace(false); }}
                 className={"mb-1 flex w-full items-center gap-2 rounded-[6px] border px-2.5 py-2.5 text-left transition " + (!creatingSpace && selectedSpaceId === space.id
                   ? "border-[#2b5665] bg-[#142a35]" : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[7px] border border-[#364d56] bg-[#15252c]" style={{ color: space.accent_color }}>
@@ -474,9 +494,9 @@ export default function CommunitySpacesStudio() {
                   <div className="rounded-[7px] border border-[#273a48]">
                     <div className="flex items-center justify-between border-b border-[#273a48] px-4 py-3">
                       <h4 className="text-[11px] font-bold text-[#e2ebf0]">Miembros del espacio</h4>
-                      <span className="text-[9px] tabular-nums text-[#8298a7]">{spaceMembers.length} miembros</span>
+                      <span className="text-[9px] tabular-nums text-[#8298a7]">{visibleSpaceMembers.length} miembros</span>
                     </div>
-                    {spaceMembers.map((member) => (
+                    {visibleSpaceMembers.map((member) => (
                       <div key={member.user_id} className="flex flex-wrap items-center gap-3 border-b border-[#202f3b] px-4 py-3 last:border-b-0">
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[11px] font-semibold text-[#e2ebf0]">{member.display_name}</p>
@@ -499,7 +519,7 @@ export default function CommunitySpacesStudio() {
                         </div>
                       </div>
                     ))}
-                    {spaceMembers.length === 0 && <p className="p-4 text-[10px] text-[#8095a5]">Todavía no hay miembros invitados.</p>}
+                    {visibleSpaceMembers.length === 0 && <p className="p-4 text-[10px] text-[#8095a5]">Todavía no hay miembros invitados.</p>}
                   </div>
                 </div>
               )}
@@ -509,17 +529,17 @@ export default function CommunitySpacesStudio() {
                   <aside className="rounded-[7px] border border-[#273a48] bg-[#0d1721] p-2">
                     <div className="flex items-center justify-between px-2 py-2">
                       <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#8198a9]">CANALES</span>
-                      <button type="button" onClick={() => { setCreatingChannel(true); setChannelForm(EMPTY_CHANNEL); setSelectedChannelId(null); }}
+                      <button type="button" onClick={() => { setCreatingChannel(true); setChannelForm({ ...EMPTY_CHANNEL }); setSelectedChannelId(null); }}
                         className="grid h-7 w-7 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794]"><Plus size={13}/></button>
                     </div>
-                    {spaceChannels.map((channel) => (
-                      <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setCreatingChannel(false); }}
+                    {visibleSpaceChannels.map((channel) => (
+                      <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setChannelForm(toSpaceChannelForm(channel)); setCreatingChannel(false); }}
                         className={"mb-1 flex w-full items-center gap-2 rounded-[5px] border px-2 py-2 text-left " + (!creatingChannel && selectedChannelId === channel.id ? "border-[#2b5665] bg-[#142a35]" : "border-transparent hover:bg-[#13212c]")}>
                         {channel.channel_type === "announcement" ? <Megaphone size={13} style={{ color: channel.accent_color }}/> : <Hash size={13} style={{ color: channel.accent_color }}/>}
                         <span className="min-w-0 flex-1 truncate text-[10px] text-[#dce7ed]">{channel.name}</span>
                       </button>
                     ))}
-                    {spaceChannels.length === 0 && <p className="px-2 py-3 text-[9px] text-[#788f9d]">Este espacio todavía no tiene canales.</p>}
+                    {visibleSpaceChannels.length === 0 && <p className="px-2 py-3 text-[9px] text-[#788f9d]">Este espacio todavía no tiene canales.</p>}
                   </aside>
                   <section>
                     {(creatingChannel || selectedChannel) && (

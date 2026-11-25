@@ -645,7 +645,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       <Tag className={renderedClassName + ' ps-fuzzy-text-wrap'} style={safeStyle}>
         <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
-          colorSplit={previewMode ? Math.max(fuzzySettings.colorSplit, 0.12) : fuzzySettings.colorSplit}
+          colorSplit={fuzzySettings.colorSplit}
           trigger="always"
           direction={fuzzySettings.direction}
           fontSize="1em"
@@ -657,14 +657,14 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
             : className.includes("effect-chromaflow")
               ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
               : fuzzyAppearance.gradient}
-          baseIntensity={previewMode ? Math.max(fuzzySettings.baseIntensity, 0.24) : fuzzySettings.baseIntensity}
-          hoverIntensity={previewMode ? Math.max(fuzzySettings.hoverIntensity, 0.36) : fuzzySettings.hoverIntensity}
-          fuzzRange={previewMode ? Math.max(fuzzySettings.fuzzRange, 20) : fuzzySettings.fuzzRange}
+          baseIntensity={fuzzySettings.baseIntensity}
+          hoverIntensity={fuzzySettings.hoverIntensity}
+          fuzzRange={fuzzySettings.fuzzRange}
           sliceSize={fuzzySettings.sliceSize}
-          fps={previewMode ? 45 : fuzzySettings.fps}
+          fps={fuzzySettings.fps}
           transitionDuration={fuzzySettings.transitionDuration}
           intro={true}
-          introDuration={previewMode ? 950 : fuzzySettings.introDuration}
+          introDuration={fuzzySettings.introDuration}
           loopIntro={false}
           loopDelay={1100}
           letterSpacing={fuzzySettings.letterSpacing}

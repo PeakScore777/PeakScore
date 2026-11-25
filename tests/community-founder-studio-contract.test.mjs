@@ -7,7 +7,7 @@ const [studio, roleApi, channelApi, founderHelper, migration, communityPage] = a
   readFile(new URL("../app/api/community/roles/catalog/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/channels/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../lib/community/verify-founder.ts", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261124240000_community_role_and_channel_control.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261124230100_community_role_and_channel_control.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
 ]);
 

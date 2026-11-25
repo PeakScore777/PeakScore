@@ -345,7 +345,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     }
   }
 
-  async function saveChannel(event: React.FormEvent<HTMLFormElement>) {
+  async function saveChannel(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!channelsReady) {
       setError("Primero debe aplicarse la migración de canales en un entorno validado.");

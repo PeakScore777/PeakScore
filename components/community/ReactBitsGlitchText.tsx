@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import "./ReactBitsGlitchText.css";
 
 type GlitchMode = "slices" | "rgb" | "scan" | "noise";
@@ -128,9 +128,9 @@ export default function ReactBitsGlitchText({
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const charRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const settings: Settings = {
+  const settings = useMemo<Settings>(() => ({
     speed, offset, intensity, skew, flicker, enableShadows, shadowColors, burstDuration
-  };
+  }), [speed, offset, intensity, skew, flicker, enableShadows, shadowColors, burstDuration]);
   const settingsRef = useRef(settings);
   useEffect(() => {
     settingsRef.current = settings;

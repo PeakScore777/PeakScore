@@ -469,3 +469,20 @@
 .ps-inkline-name.effect-pop .ps-inkline-fill {
   fill:var(--name-solid-color,#55CFA3) !important;
 }
+
+
+/* Chrome's silver bevel is shared by text, SVG-backed and canvas-backed names. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-name-animation-char::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-halo-signal__glyph::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-name-shuffle__track > span::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-decrypted-glyph::after,
+.ps-mistfall-name.effect-toon .ps-mistfall-layout {
+  -webkit-text-stroke:.35px rgb(255 255 255 / 55%);
+  text-shadow:0 1px 0 rgb(255 255 255 / 38%),0 2px 0 rgb(36 42 55 / 26%);
+}
+.ps-depth-lift.effect-toon .ps-depth-lift__face,
+.ps-community-name-render.effect-toon .ps-depth-lift__face {
+  -webkit-text-stroke:.35px rgb(255 255 255 / 55%);
+}

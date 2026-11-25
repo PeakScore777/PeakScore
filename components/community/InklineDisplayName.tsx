@@ -15,7 +15,11 @@ type Props = {
   tag?: "strong" | "span" | "h2" | "h3";
 };
 
-/** A measured SVG lettering reveal with a restrained draw / hold / erase cycle. */
+/**
+ * SVG contour animation with a real text sizing layer underneath.
+ * The sizing layer prevents the SVG from having to determine its own width,
+ * which used to create a circular 100%-width layout and blank previews.
+ */
 export default function InklineDisplayName({
   text,
   strokeColor = "#A78BFA",
@@ -27,14 +31,14 @@ export default function InklineDisplayName({
   style,
   tag = "strong",
 }: Props) {
-  const rootRef = useRef<HTMLSpanElement | null>(null);
+  const layoutRef = useRef<HTMLSpanElement | null>(null);
   const motionRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<SVGTextElement | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const clipId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const Tag = tag;
-  const effectTokens = className.split(/\s+/);
+  const effectTokens = className.split(/\\s+/);
   const chromaflow = effectTokens.includes("effect-chromaflow");
   const gradientFlow = effectTokens.includes("effect-gradient-flow");
   const gummy = effectTokens.includes("effect-gummy");
@@ -48,7 +52,6 @@ export default function InklineDisplayName({
   const gummyStops = gummyPalette.length >= 2
     ? gummyPalette
     : ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"];
-
   const forceMotion = effectTokens.includes("ps-community-name-preview-live");
 
   useEffect(() => {
@@ -61,7 +64,7 @@ export default function InklineDisplayName({
   }, [forceMotion]);
 
   useLayoutEffect(() => {
-    const root = rootRef.current;
+    const root = layoutRef.current;
     const node = textRef.current;
     if (!root || !node) return;
     let cancelled = false;
@@ -73,7 +76,9 @@ export default function InklineDisplayName({
         const pad = Math.max(3, strokeWidth * 2);
         const next = { x: b.x - pad, y: b.y - pad, width: b.width + pad * 2, height: b.height + pad * 2 };
         setBox((prev) => prev && Math.abs(prev.width - next.width) < 0.5 && Math.abs(prev.height - next.height) < 0.5 ? prev : next);
-      } catch { /* SVG may not be measurable until its font is ready. */ }
+      } catch {
+        // Keep the sizing text visible if SVG text metrics are not ready yet.
+      }
     };
     measure();
     document.fonts?.ready?.then(measure).catch(() => {});
@@ -84,12 +89,30 @@ export default function InklineDisplayName({
 
   const viewBox = box ? `${box.x} ${box.y} ${box.width} ${box.height}` : "0 -100 800 140";
   const dashLength = box ? Math.max(240, Math.ceil((box.width + box.height) * 4)) : 1800;
-  const sharedStyle = { ...style, "--ps-inkline-dash-length": dashLength, maxWidth: "100%" } as CSSProperties;
+  const sharedStyle = {
+    ...style,
+    "--ps-inkline-dash-length": dashLength,
+    maxWidth: "100%",
+    position: "relative",
+  } as CSSProperties;
 
   return (
-    <Tag ref={motionRef as Ref<HTMLElement>} className={className + " ps-inkline-name"} style={sharedStyle} aria-label={text} data-motion-visible={forceMotion ? "true" : "false"}>
-      <span ref={rootRef} className="ps-inkline-measure" aria-hidden="true">
-        <svg className="ps-inkline-svg" viewBox={viewBox} preserveAspectRatio="xMinYMid meet" aria-hidden="true" style={{ visibility: box ? "visible" : "hidden" }}>
+    <Tag
+      ref={motionRef as Ref<HTMLElement>}
+      className={className + " ps-inkline-name"}
+      style={sharedStyle}
+      aria-label={text}
+      data-motion-visible={forceMotion ? "true" : "false"}
+    >
+      <span ref={layoutRef} className="ps-inkline-layout" aria-hidden="true">{text}</span>
+      <span className="ps-inkline-measure" aria-hidden="true">
+        <svg
+          className="ps-inkline-svg"
+          viewBox={viewBox}
+          preserveAspectRatio="xMinYMid meet"
+          aria-hidden="true"
+          style={{ visibility: box ? "visible" : "hidden" }}
+        >
           <defs>
             {chromaflow && (
               <linearGradient id={chromaflowGradientId} x1="-50%" y1="0%" x2="150%" y2="0%">
@@ -125,11 +148,29 @@ export default function InklineDisplayName({
               </linearGradient>
             )}
           </defs>
-          <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
-            {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
+          <text
+            ref={textRef}
+            x="0"
+            y="0"
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            className="ps-inkline-outline"
+            style={{ fontFamily, fontWeight }}
+          >
+            {chars.map((char, index) => <tspan key={index}>{char === " " ? "\\u00a0" : char}</tspan>)}
           </text>
-          <text x="0" y="0" fill={gradientFlow ? `url(#${gradientFlowGradientId})` : chromaflow ? `url(#${chromaflowGradientId})` : gummy ? `url(#${gummyGradientId})` : fillColor} stroke="none" className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>
-            {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
+          <text
+            x="0"
+            y="0"
+            fill={gradientFlow ? `url(#${gradientFlowGradientId})` : chromaflow ? `url(#${chromaflowGradientId})` : gummy ? `url(#${gummyGradientId})` : fillColor}
+            stroke="none"
+            className="ps-inkline-fill"
+            style={{ fontFamily, fontWeight }}
+          >
+            {chars.map((char, index) => <tspan key={index}>{char === " " ? "\\u00a0" : char}</tspan>)}
           </text>
         </svg>
       </span>

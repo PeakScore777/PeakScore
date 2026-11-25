@@ -1051,9 +1051,9 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","fuzzy-text"/);
   const expectedProps = [
-    'colorSplit={fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
+    'colorSplit={previewMode ? Math.max(fuzzySettings.colorSplit, 0.12) : fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
     'sliceSize={fuzzySettings.sliceSize}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
-    'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
+    'intro={previewMode ? true : fuzzySettings.intro}', 'introDuration={previewMode ? 950 : fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
     'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
     'glitchDuration={fuzzySettings.glitchDuration}'
   ];

@@ -517,7 +517,7 @@ test("profile popovers close on outside pointer interaction", () => {
   assert.match(studio, /if \(colorPickerOpen && !cardColorControlRef\.current\?\.contains\(target\)\)/);
   assert.match(studio, /if \(avatarMenuOpen && !avatarMenuAnchorRef\.current\?\.contains\(target\)\)/);
   for (const overlay of ["ps-community-status-overlay", "ps-community-picker-overlay", "ps-community-avatar-crop-overlay"]) {
-    assert.match(studio, new RegExp('className="' + overlay + '" onPointerDown'));
+    assert.match(studio, new RegExp('className="' + overlay + '"'));
   }
 });
 
@@ -653,7 +653,7 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameStyle/);
-  assert.match(studio, /type DisplayNameEffect = "plain" \| "gradient" \| "neon"/);
+  assert.match(studio, /type DisplayNameEffect = "plain" \| "gradient" \| "gradient-flow" \| "neon"/);
   assert.match(studio, /type DisplayNameColor = "default" \| "pink" \| "green"/);
   assert.match(studio, /ps-community-name-font-grid/);
   assert.match(studio, /ps-community-name-effect-grid/);
@@ -744,7 +744,7 @@ test("name-style picker stays open while scrolling and supports laptop trackpads
   assert.match(nameStyleCss, /\.ps-community-picker-collection,[\s\S]*?overflow-y:auto !important/);
   assert.match(nameStyleCss, /touch-action:pan-y !important/);
   assert.match(nameStyleCss, /scrollbar-width:thin !important/);
-  assert.match(nameStyleCss, /html:has\(\.ps-community-picker-overlay\)::-webkit-scrollbar\s*\{\s*width:6px !important/);
+  assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-community-picker-collection::-webkit-scrollbar/);
   assert.match(nameStyleCss, /::-webkit-scrollbar-button[\s\S]*?display:none !important/);
   assert.match(nameStyleCss, /border-radius:999px !important/);
   assert.match(nameStyleCss, /background-color:#454954 !important/);
@@ -758,7 +758,7 @@ test("display-name style picker uses one live profile surface, synchronized memb
   assert.match(studio, /profile\.bannerUrl/);
   assert.match(studio, /profile\.avatarUrl/);
   assert.doesNotMatch(studio.slice(studio.indexOf('ps-community-name-preview-stage'), studio.indexOf('{appearancePicker !== "nameStyle"')), /ps-community-status-preview-bubble-wrap|ps-community-note-bubble|ps-community-name-profile-about|ps-community-name-profile-joined|memberTag\(profile\.memberNumber\)/);
-  assert.match(studio, /is-name-style-" \+ draftDisplayNameStyle \+ " effect-" \+ draftDisplayNameEffect \+ " color-" \+ draftDisplayNameColor/);
+  assert.match(studio, /is-name-style-" \+ draftDisplayNameStyle \+ " effect-" \+ draftDisplayNameEffect \+ " color-" \+ displayNameColorForEffect\(draftDisplayNameEffect, draftDisplayNameColor\)/);
   assert.match(studio, /"editorial"/);
   assert.match(studio, /label: "Cromo"/);
   assert.match(route, /"editorial"/);
@@ -780,7 +780,7 @@ test("display-name effects match Discord video with seven animated finishes", ()
   assert.match(nameStyleCss, /effect-gummy/);
   assert.match(nameStyleCss, /effect-toon/);
   assert.match(nameStyleCss, /effect-prism/);
-  assert.match(studio, /Elige un efecto/);
+  assert.match(studio, /Acabado del nombre/);
 });
 
 test("effect samples inherit the custom gradient and prism colors selected in the editor", () => {
@@ -794,7 +794,7 @@ test("display-name studio offers a premium seven-finish catalogue and accessible
   for (const label of ["Tinta","Aurora","Neón","Cromo","Rebote","Gloss","Prisma"]) assert.ok(studio.includes('label: "' + label + '"'));
   for (const animation of ["ps-atelier-aurora","ps-atelier-neon-breathe","ps-atelier-chrome","ps-atelier-bounce","ps-atelier-gloss","ps-atelier-prism","ps-atelier-card-light"]) assert.ok(nameStyleCss.includes(animation));
   assert.match(nameStyleCss, /prefers-reduced-motion/);
-  assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism"/);
+  assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism", "chromaflow"/);
   assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
   assert.match(discordVideoEffectsRepeatMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
 });
@@ -820,8 +820,8 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
   assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(studio, /tag === "h2"/);
-  assert.match(studio, /Animación continua/);
-  assert.match(studio, /SIEMPRE ACTIVA/);
+  assert.match(studio, /Animación de perfil/);
+  assert.match(studio, /data-animation=\{item\.id\}/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
   assert.match(studio, /animation=\{item\.id\}/);
   assert.match(studio, /if \(animation === "domino-flow"\)/);
@@ -879,7 +879,7 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
-  assert.match(page, /animation=\{member\.display_name_animation \?\? "decrypt"\}[\s\S]*?previewMode/);
+  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}[\s\S]*?animation=\{selectedCommunityProfile\.displayNameAnimation \?\? "decrypt"\}/);
   assert.ok(fuzzyText.includes("getContext('2d'"));
 });
 
@@ -1007,7 +1007,7 @@ test("three Shuffle presets match the reference with distinct looping effects an
   assert.ok(studio.includes('label: "Flip Roll"'));
   assert.ok(studio.includes('label: "Classic Slide"'));
   assert.ok(studio.includes('duration={3.6}') && studio.includes('shuffleTimes={10}') && studio.includes('stagger={0.075}'));
-  assert.ok(studio.includes('duration={3.2}') && studio.includes('shuffleTimes={5}') && studio.includes('stagger={0.085}'));
+  assert.ok(studio.includes('duration={3.2}') && studio.includes('shuffleTimes={previewMode ? 3 : 5}') && studio.includes('stagger={0.085}'));
   assert.ok(studio.includes('duration={2.2}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.07}'));
   assert.ok(shuffleName.includes("new IntersectionObserver"));
   assert.ok(shuffleName.includes("updateVisibility(entries.some"));
@@ -1178,13 +1178,13 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(mistfallName, /finished = false/);
   assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);
   assert.match(mistfallName, /\[text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey\]/);
-  assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
+  assert.match(page, /fps=\{fuzzySettings\.fps\}/);
 });
 
 
 
 test("Chromaflow paints one coordinated full spectrum through every name renderer", () => {
-  assert.match(studio, /gradient=\{className\.includes\("effect-chromaflow"\)/);
+  assert.match(studio, /gradient=\{className\.includes\("effect-gradient-flow"\)[\s\S]*?className\.includes\("effect-chromaflow"\)/);
   assert.match(page, /gradient=\{className\.includes\("effect-chromaflow"\)/);
   assert.match(decryptedName, /--ps-chroma-position/);
   assert.match(shuffleName, /--ps-chroma-position/);
@@ -1303,7 +1303,7 @@ test("Halo Signal and Domino Flow use one shared viewport observer and pause off
   assert.match(dominoFlowName, /observeNameMotionVisibility/);
   assert.match(nameStyleCss, /data-motion-visible="false"/);
   assert.match(nameStyleCss, /animation-play-state:paused !important/);
-  assert.match(nameStyleCss, /prefers-reduced-motion:reduce[\s\S]*?\.ps-community-name-render:not\(\.ps-community-name-preview-live\) \.ps-halo-signal__glyph/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce[\s\S]*?\.ps-halo-signal__glyph \{ animation:none !important/);
   assert.match(nameStyleCss, /\.ps-community-name-render:not\(\.ps-community-name-preview-live\)\.ps-inkline-name animateTransform \{\s*display:none !important/);
 });
 

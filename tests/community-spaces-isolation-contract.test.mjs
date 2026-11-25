@@ -46,14 +46,14 @@ testCase("PreICFES collaborator is scoped and cannot become a global staff role"
     migration.indexOf("drop policy if exists community_reactions_read"),
     migration.indexOf("-- SECURITY DEFINER message editing must enforce"),
   );
-  assert.equal((privateRelatedPolicies.match(/private\\.can_view_private_community_channel\\(channel\\.space_id\\)/g) ?? []).length, 5);
+  assert.equal((privateRelatedPolicies.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 5);
   const mentionRpcs = migration.slice(
     migration.indexOf("create or replace function public.search_community_member_profiles("),
     migration.indexOf("commit;"),
   );
-  assert.equal((mentionRpcs.match(/private\\.can_view_private_community_channel\\(channel\\.space_id\\)/g) ?? []).length, 2);
-  assert.doesNotMatch(mentionRpcs, /target_role\\.user_id = member_profile\\.user_id/);
-  assert.match(privateRelatedPolicies, /create or replace function public\\.can_attach_community_files\\([\\s\\S]*?private\\.can_view_private_community_channel\\(channel\\.space_id\\)/);
+  assert.equal((mentionRpcs.match(/private\.can_view_private_community_channel\(channel\.space_id\)/g) ?? []).length, 2);
+  assert.doesNotMatch(mentionRpcs, /target_role\.user_id = member_profile\.user_id/);
+  assert.match(privateRelatedPolicies, /create or replace function public\.can_attach_community_files\([\s\S]*?private\.can_view_private_community_channel\(channel\.space_id\)/);
   assert.match(migration, /private\.can_view_private_community_channel\(channel\.space_id\)/);
   assert.doesNotMatch(migration, /grant execute on function public\.manage_community_space_member[\s\S]*?to service_role/i);
 });

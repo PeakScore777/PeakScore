@@ -7460,95 +7460,92 @@ html:has(.ps-community-picker-overlay) * {
 }
 
 
-/* Final screenshot correction — keep Noise Reveal's real canvas class attached,
-   move the profile name clear of the overlapping avatar, and restore readable
-   Discord-sized member/chat names with the lower vertical rhythm in the mock. */
+/* Exact right-column composition from the supplied reference image. */
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
-  min-height:185px !important;
-  height:185px !important;
-  max-height:185px !important;
+  height:166px !important;
+  min-height:166px !important;
+  max-height:166px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
-  left:136px !important;
-  right:14px !important;
-  bottom:62px !important;
-  top:auto !important;
+  position:absolute !important;
+  left:10px !important;
+  right:12px !important;
+  top:105px !important;
+  bottom:auto !important;
+  display:block !important;
   width:auto !important;
-  min-height:28px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
+  min-height:24px !important;
   z-index:3 !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
-  display:block !important;
+  display:inline-block !important;
   width:max-content !important;
   max-width:100% !important;
-  font-size:18px !important;
-  line-height:1.25 !important;
+  font-size:17px !important;
+  line-height:1.2 !important;
   font-weight:750 !important;
   white-space:nowrap !important;
   overflow:visible !important;
   text-overflow:clip !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
-  gap:17px !important;
+  gap:11px !important;
 }
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-members-view {
-  margin-top:12px !important;
-}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-members-view,
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-chat-view {
-  margin-top:7px !important;
+  margin-top:0 !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-members-title {
-  padding:15px 14px 9px !important;
+  padding:12px 14px 8px !important;
   font-size:11px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
-  min-height:54px !important;
-  height:54px !important;
-  margin:5px 7px 8px !important;
-  padding:7px 11px !important;
-  gap:11px !important;
+  min-height:52px !important;
+  height:52px !important;
+  margin:5px 7px 7px !important;
+  padding:7px 10px !important;
+  gap:10px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar {
-  width:36px !important;
-  height:36px !important;
-  flex-basis:36px !important;
+  width:34px !important;
+  height:34px !important;
+  flex-basis:34px !important;
   font-size:10px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > strong.community-member-nameplate {
-  display:inline-block !important;
-  width:max-content !important;
-  max-width:100% !important;
-  padding:0 !important;
-  border:0 !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  font-size:13px !important;
+  font-size:12px !important;
   font-weight:700 !important;
   line-height:1.3 !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-presence {
-  font-size:11px !important;
+  font-size:10px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-message {
-  min-height:82px !important;
-  height:82px !important;
-  padding:11px 12px !important;
-  gap:11px !important;
+  min-height:80px !important;
+  height:80px !important;
+  padding:10px 11px !important;
+  gap:10px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-avatar {
-  width:36px !important;
-  height:36px !important;
-  flex-basis:36px !important;
+  width:34px !important;
+  height:34px !important;
+  flex-basis:34px !important;
   font-size:10px !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author {
   font-size:12px !important;
   font-weight:700 !important;
   line-height:1.3 !important;
+  text-decoration:none !important;
+  text-decoration-line:none !important;
+  text-decoration-color:transparent !important;
+  border-bottom:0 !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author::before,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author::after {
+  content:none !important;
+  display:none !important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta time {
   font-size:9px !important;
@@ -7558,24 +7555,40 @@ html:has(.ps-community-picker-overlay) * {
   font-size:10px !important;
   line-height:1.45 !important;
 }
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-fuzzy-text-wrap {
-  display:flex !important;
-  width:100% !important;
-  min-width:0 !important;
-  height:58px !important;
-  align-items:center !important;
-  justify-content:center !important;
+
+/* Inkline: a cleaner pen-outline pass, then a left-to-right ink fill.
+   A longer readable hold keeps the finished name on screen before the loop. */
+.ps-community-name-render.ps-inkline-name .ps-inkline-svg {
+  overflow:visible !important;
+  max-height:1.45em !important;
 }
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-fuzzy-text-canvas {
-  display:block !important;
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  width:auto !important;
-  height:auto !important;
-  max-width:calc(100% - 8px) !important;
-  max-height:52px !important;
-  transform:translate(-50%,-50%) !important;
-  visibility:visible !important;
-  opacity:1 !important;
+.ps-community-name-render.ps-inkline-name .ps-inkline-outline {
+  stroke-width:1.7px !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  stroke-dasharray:var(--ps-inkline-dash-length,1800) !important;
+  stroke-dashoffset:var(--ps-inkline-dash-length,1800) !important;
+  animation:ps-inkline-contour-refined 7.6s cubic-bezier(.48,.04,.2,1) infinite !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-fill {
+  clip-path:inset(0 100% 0 0);
+  animation:ps-inkline-fill-refined 7.6s cubic-bezier(.22,.72,.22,1) infinite !important;
+}
+@keyframes ps-inkline-contour-refined {
+  0%,4% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); }
+  38%,70% { stroke-dashoffset:0; }
+  86%,100% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); }
+}
+@keyframes ps-inkline-fill-refined {
+  0%,30% { clip-path:inset(0 100% 0 0); }
+  52%,70% { clip-path:inset(0 0 0 0); }
+  86%,100% { clip-path:inset(0 100% 0 0); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline,
+  .ps-community-name-render.ps-inkline-name .ps-inkline-fill {
+    animation:none !important;
+  }
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline { stroke-dashoffset:0 !important; }
+  .ps-community-name-render.ps-inkline-name .ps-inkline-fill { clip-path:inset(0 0 0 0) !important; }
 }

@@ -32,11 +32,13 @@ export async function POST(request: Request) {
   const description = typeof payload.description === "string" ? payload.description : "";
   const iconKey = typeof payload.icon_key === "string" ? payload.icon_key : "";
   const accentColor = typeof payload.accent_color === "string" ? payload.accent_color : "";
+  const backgroundColor = typeof payload.background_color === "string" ? payload.background_color : "";
 
   if (name.length < 2 || name.length > 60
       || description.length > 500
       || !/^[a-z][a-z0-9-]{1,31}$/.test(iconKey)
-      || !/^#[0-9a-f]{6}$/i.test(accentColor)) {
+      || !/^#[0-9a-f]{6}$/i.test(accentColor)
+      || !/^#[0-9a-f]{6}$/i.test(backgroundColor)) {
     return fail("Revisa el nombre, descripción, icono y color de la comunidad.", 400);
   }
 
@@ -54,6 +56,17 @@ export async function POST(request: Request) {
         invalid ? "La identidad de comunidad no es válida." :
           "No se pudo guardar la identidad global. Comprueba que la migración esté aplicada.",
       denied ? 403 : invalid ? 400 : 503,
+    );
+  }
+
+  const { data: appearanceSaved, error: appearanceError } = await supabase.rpc("update_community_global_appearance", {
+    p_background_color: backgroundColor,
+  });
+  if (appearanceError || appearanceSaved !== true) {
+    const denied = appearanceError?.code === "42501";
+    return fail(
+      denied ? "Solo el Founder puede cambiar el fondo predeterminado." : "No se pudo guardar el fondo predeterminado de la comunidad.",
+      denied ? 403 : 503,
     );
   }
 

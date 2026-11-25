@@ -434,6 +434,24 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   </Tag>;
 }
 
+type CommunityReadMarker = { channel_id: string; last_read_at: string };
+type CommunityReadClient = {
+  from(table: string): {
+    select(columns: string): {
+      eq(column: string, value: string): {
+        in(column: string, values: string[]): PromiseLike<{
+          data: CommunityReadMarker[] | null;
+          error: { code?: string } | null;
+        }>;
+      };
+    };
+    upsert(
+      values: { user_id: string; channel_id: string; last_read_at: string },
+      options: { onConflict: string },
+    ): PromiseLike<{ error: { code?: string } | null }>;
+  };
+};
+
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -933,17 +951,30 @@ export default function CommunityPage() {
   const canUseMicrophone = isFounder || Boolean(profile?.roles?.some((role) =>
     ["administrador", "moderador", "profesor", "docente"].includes(role.role_key),
   ));
-  const markChannelRead = useCallback((channelId: string) => {
-    setUnreadCounts((current) => current[channelId] ? { ...current, [channelId]: 0 } : current);
-    if (!userId || !activeSpaceId) return;
+  const markChannelRead = useCallback((
+    channelId: string,
+    readerId: string | null = userId,
+    markerSpaceId: string | null = activeSpaceId,
+  ) => {
+    setUnreadCounts((current) => ({ ...current, [channelId]: 0 }));
+    if (!readerId || !markerSpaceId) return;
+    const readAt = new Date().toISOString();
     try {
-      const key = "peakscore:community:read:" + userId + ":" + activeSpaceId;
+      const key = "peakscore:community:read:" + readerId + ":" + markerSpaceId;
       const current = JSON.parse(window.localStorage.getItem(key) || "{}") as Record<string, string>;
-      current[channelId] = new Date().toISOString();
+      current[channelId] = readAt;
       window.localStorage.setItem(key, JSON.stringify(current));
     } catch {
-      // Unread indicators remain available for the current session when storage is blocked.
+      // The database marker still persists when local storage is blocked.
     }
+    const readClient = supabase as unknown as CommunityReadClient;
+    void readClient.from("community_channel_reads")
+      .upsert({ user_id: readerId, channel_id: channelId, last_read_at: readAt }, { onConflict: "user_id,channel_id" })
+      .then(({ error: markerError }) => {
+        if (markerError && markerError.code !== "42P01" && markerError.code !== "PGRST205") {
+          console.warn("[PeakScore Community] Channel read marker was not saved.", { code: markerError.code });
+        }
+      });
   }, [userId, activeSpaceId]);
 
   const canvasBackground = appearanceMode === "white"
@@ -1042,8 +1073,49 @@ export default function CommunityPage() {
   }, []);
 
   useEffect(() => {
+    if (!audioOutputDeviceId) return;
+    type SinkCapableMediaElement = HTMLMediaElement & {
+      setSinkId?: (deviceId: string) => Promise<void>;
+    };
+    const applyOutput = (root: ParentNode) => {
+      root.querySelectorAll("audio,video").forEach((element) => {
+        const media = element as SinkCapableMediaElement;
+        if (typeof media.setSinkId !== "function") return;
+        void media.setSinkId(audioOutputDeviceId).catch(() => {
+          setAudioFeedback("El navegador no permitió aplicar esa salida a un reproductor.");
+        });
+      });
+    };
+    applyOutput(document);
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        record.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            if (node.matches("audio,video")) {
+              const media = node as SinkCapableMediaElement;
+              if (typeof media.setSinkId === "function") {
+                void media.setSinkId(audioOutputDeviceId).catch(() => {
+                  setAudioFeedback("El navegador no permitió aplicar esa salida a un reproductor.");
+                });
+              }
+            }
+            applyOutput(node);
+          }
+        });
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [audioOutputDeviceId]);
+
+  useEffect(() => {
     if (!audioPanelMode) return;
     void refreshAudioDevices();
+    const mediaDevices = navigator.mediaDevices;
+    if (!mediaDevices?.addEventListener) return;
+    const handleDeviceChange = () => void refreshAudioDevices();
+    mediaDevices.addEventListener("devicechange", handleDeviceChange);
+    return () => mediaDevices.removeEventListener("devicechange", handleDeviceChange);
   }, [audioPanelMode, refreshAudioDevices]);
 
   async function requestCommunityVerification() {
@@ -1445,13 +1517,27 @@ export default function CommunityPage() {
       const list = (compatibleChannels ?? []) as Channel[];
       setChannels(list);
 
-      // Restore unread counts from the last channel visit on this device.
+      // Restore cross-device read markers; local storage remains a backward-compatible fallback.
       const readStorageKey = "peakscore:community:read:" + user.id + ":" + resolvedSpace.id;
       let seenAt: Record<string, string> = {};
       try {
         seenAt = JSON.parse(window.localStorage.getItem(readStorageKey) || "{}") as Record<string, string>;
       } catch {
         seenAt = {};
+      }
+      const readClient = supabase as unknown as CommunityReadClient;
+      const remoteReads = await readClient.from("community_channel_reads")
+        .select("channel_id,last_read_at")
+        .eq("user_id", user.id)
+        .in("channel_id", list.map((channel) => channel.id));
+      if (!remoteReads.error) {
+        for (const marker of remoteReads.data ?? []) {
+          const previous = Date.parse(seenAt[marker.channel_id] ?? "");
+          const remote = Date.parse(marker.last_read_at);
+          if (Number.isFinite(remote) && (!Number.isFinite(previous) || remote > previous)) {
+            seenAt[marker.channel_id] = marker.last_read_at;
+          }
+        }
       }
       const trackedChannels = list.filter((channel) => typeof seenAt[channel.id] === "string");
       const unread: Record<string, number> = {};
@@ -1492,7 +1578,7 @@ export default function CommunityPage() {
       const selected = list.find((item) => item.slug === requested)
         ?? list.find((item) => item.slug === "general") ?? list[0];
       if (selected) {
-        markChannelRead(selected.id);
+        markChannelRead(selected.id, user.id, resolvedSpace.id);
         activeChannelIdRef.current = selected.id;
         setActiveChannelId(selected.id);
       }
@@ -1548,7 +1634,10 @@ export default function CommunityPage() {
         const row = payload.new as { channel_id?: string; author_id?: string };
         const channelId = row.channel_id;
         if (!channelId || !allowedChannelIds.has(channelId) || row.author_id === userId) return;
-        if (activeChannelIdRef.current === channelId) return;
+        if (activeChannelIdRef.current === channelId && document.visibilityState === "visible") {
+          markChannelRead(channelId);
+          return;
+        }
         setUnreadCounts((current) => ({
           ...current,
           [channelId]: Math.min(99, (current[channelId] ?? 0) + 1),
@@ -1556,7 +1645,17 @@ export default function CommunityPage() {
       })
       .subscribe();
     return () => { void supabase.removeChannel(notificationChannel); };
-  }, [userId, activeSpaceId, channels]);
+  }, [userId, activeSpaceId, channels, markChannelRead]);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible" && activeChannelIdRef.current) {
+        markChannelRead(activeChannelIdRef.current);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [markChannelRead]);
 
   // Presence is global to the community, not to an individual channel.
   // Keep this socket stable while the user navigates between channels.
@@ -2160,7 +2259,7 @@ export default function CommunityPage() {
                 <Settings2 size={14}/> Actualizar dispositivos
               </button>
               {audioFeedback && <p role="status" className="community-audio-feedback">{audioFeedback}</p>}
-              <p className="community-audio-note">Preferencias guardadas en este dispositivo. La salida se aplicará en funciones de voz compatibles.</p>
+              <p className="community-audio-note">Preferencias guardadas en este dispositivo. La salida seleccionada se aplica a reproductores compatibles del navegador.</p>
             </div>
           )}
         </aside>

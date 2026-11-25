@@ -951,6 +951,7 @@ create policy community_reactions_read
       where message.id = community_reactions.message_id
         and not channel.is_archived
         and private.has_space_permission(channel.space_id,'view_channels')
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   );
 
@@ -968,7 +969,7 @@ create policy community_reactions_insert_as_self
         and not channel.is_archived
         and not channel.is_read_only
         and private.has_space_permission(channel.space_id,'add_reactions')
-
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   );
 
@@ -1007,6 +1008,7 @@ create policy community_comments_read_active
       where message.id = community_message_comments.message_id
         and not channel.is_archived
         and private.has_space_permission(channel.space_id,'view_channels')
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   );
 
@@ -1024,7 +1026,7 @@ create policy community_comments_insert_as_self
         and not channel.is_archived
         and not channel.is_read_only
         and private.has_space_permission(channel.space_id,'send_messages')
-
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
     and (
       parent_comment_id is null
@@ -1051,7 +1053,7 @@ as $function$
     where channel.id = p_channel_id
       and not channel.is_archived
       and private.has_space_permission(channel.space_id,'attach_files')
-
+      and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
   );
 $function$;
 
@@ -1162,21 +1164,7 @@ as $function$
     )
     and (
       channel.is_private = false
-      or private.is_community_founder()
-      or private.is_space_collaborator(channel.space_id)
-      or exists (
-        select 1
-        from public.community_space_member_roles target_role
-        where target_role.space_id = channel.space_id
-          and target_role.user_id = member_profile.user_id
-          and target_role.role_key in ('colaborador','docente','profesor')
-      )
-      or exists (
-        select 1
-        from public.community_member_roles target_role
-        where target_role.user_id = member_profile.user_id
-          and target_role.role_key in ('profesor','moderador','administrador')
-      )
+      or private.can_view_private_community_channel(channel.space_id)
     )
   order by
     (lower(member_profile.display_name) = lower(btrim(p_query))) desc,
@@ -1225,21 +1213,7 @@ as $function$
     )
     and (
       channel.is_private = false
-      or private.is_community_founder()
-      or private.is_space_collaborator(channel.space_id)
-      or exists (
-        select 1
-        from public.community_space_member_roles target_role
-        where target_role.space_id = channel.space_id
-          and target_role.user_id = member_profile.user_id
-          and target_role.role_key in ('colaborador','docente','profesor')
-      )
-      or exists (
-        select 1
-        from public.community_member_roles target_role
-        where target_role.user_id = member_profile.user_id
-          and target_role.role_key in ('profesor','moderador','administrador')
-      )
+      or private.can_view_private_community_channel(channel.space_id)
     )
   order by member_profile.display_name
   limit 80;

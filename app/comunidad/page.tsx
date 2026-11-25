@@ -3254,7 +3254,7 @@ export default function CommunityPage() {
                 "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart),
               } as CSSProperties}>
               <div className="ps-community-editor-banner-anchor">
-                <div className="ps-community-editor-preview-banner"
+                <div className={"ps-community-editor-preview-banner" + (selectedCommunityProfile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")}
                   style={selectedCommunityProfile.bannerUrl
                     ? { backgroundImage: "url(" + selectedCommunityProfile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" }
                     : { backgroundColor: "#20242D" }}>

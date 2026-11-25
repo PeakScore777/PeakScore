@@ -546,7 +546,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
-    return <InklineDisplayName text={value} strokeColor="#B99CFF" fillColor="currentColor" strokeWidth={1.7} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
+    return <InklineDisplayName text={value} strokeColor="var(--name-solid-color, currentColor)" fillColor="currentColor" strokeWidth={1.7} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
     return <HaloSignalDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
@@ -646,7 +646,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
         <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
           colorSplit={fuzzySettings.colorSplit}
-          trigger="always"
+          trigger={fuzzySettings.trigger}
           direction={fuzzySettings.direction}
           fontSize="1em"
           fontWeight="inherit"

@@ -1229,7 +1229,7 @@ export default function CommunityPage() {
           .select("role_key,label,badge_color,display_as_badge");
         compatibleRoles = (legacyRoles.data ?? []).map((role) => ({
           ...role, position: null, hoist: null,
-        })) as typeof roleData;
+        })) as unknown as CommunityRole[];
       }
       if (!alive) return;
       setIsFounder(platformProfile?.role === "admin");

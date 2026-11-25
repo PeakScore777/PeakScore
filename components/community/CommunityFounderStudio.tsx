@@ -5,7 +5,7 @@ import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
   Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip,
-  Smile, Archive, Save, SlidersHorizontal, GraduationCap,
+  Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import CommunitySpacesStudio from "@/components/community/CommunitySpacesStudio";
@@ -51,7 +51,15 @@ type Channel = {
 
 type ChannelForm = Omit<Channel, "id">;
 
-type Tab = "members" | "roles" | "channels" | "spaces";
+type Tab = "branding" | "members" | "roles" | "channels" | "spaces";
+type GlobalBrandingForm = {
+  name: string; description: string; icon_key: string; accent_color: string;
+  icon_path: string | null; banner_path: string | null; icon_url: string | null; banner_url: string | null;
+};
+const EMPTY_GLOBAL_BRANDING: GlobalBrandingForm = {
+  name: "PeakScore Community", description: "Comunidad global de PeakScore.", icon_key: "users",
+  accent_color: "#7FE05C", icon_path: null, banner_path: null, icon_url: null, banner_url: null,
+};
 type Props = { onClose: () => void };
 
 const PROTECTED_ROLE = "fundador";
@@ -141,7 +149,10 @@ function toChannelForm(channel: Channel | null): ChannelForm {
 }
 
 export default function CommunityFounderStudio({ onClose }: Props) {
-  const [tab, setTab] = useState<Tab>("members");
+  const [tab, setTab] = useState<Tab>("branding");
+  const [globalBranding, setGlobalBranding] = useState<GlobalBrandingForm>({ ...EMPTY_GLOBAL_BRANDING });
+  const [brandingSaving, setBrandingSaving] = useState(false);
+  const [brandingAssetPending, setBrandingAssetPending] = useState<"icon" | "banner" | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -163,7 +174,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     setLoading(true);
     setError("");
 
-    const [memberResult, assignmentResult, roleExtended, channelExtended] = await Promise.all([
+    const [memberResult, assignmentResult, roleExtended, channelExtended, globalBrandingExtended] = await Promise.all([
       supabase.from("community_member_profiles")
         .select("user_id,display_name,avatar_path,member_number")
         .order("display_name", { ascending: true })
@@ -180,7 +191,42 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         .eq("is_archived", false)
         .order("category", { ascending: true })
         .order("position", { ascending: true }),
+      supabase.from("community_spaces")
+        .select("id,name,description,icon_key,accent_color,icon_path,banner_path")
+        .eq("id", GLOBAL_COMMUNITY_SPACE_ID)
+        .eq("space_type", "global")
+        .eq("is_enabled", true)
+        .maybeSingle(),
     ]);
+
+    let globalBrandingRow = globalBrandingExtended.data;
+    if (globalBrandingExtended.error && ["42703", "PGRST204", "PGRST205"].includes(globalBrandingExtended.error.code ?? "")) {
+      const legacyBranding = await supabase.from("community_spaces")
+        .select("id,name,description,icon_key,accent_color")
+        .eq("id", GLOBAL_COMMUNITY_SPACE_ID)
+        .eq("space_type", "global")
+        .eq("is_enabled", true)
+        .maybeSingle();
+      globalBrandingRow = legacyBranding.data
+        ? { ...legacyBranding.data, icon_path: null, banner_path: null }
+        : null;
+    }
+    if (globalBrandingRow) {
+      setGlobalBranding({
+        name: globalBrandingRow.name ?? EMPTY_GLOBAL_BRANDING.name,
+        description: globalBrandingRow.description ?? "",
+        icon_key: globalBrandingRow.icon_key ?? "users",
+        accent_color: globalBrandingRow.accent_color ?? "#7FE05C",
+        icon_path: globalBrandingRow.icon_path ?? null,
+        banner_path: globalBrandingRow.banner_path ?? null,
+        icon_url: globalBrandingRow.icon_path
+          ? supabase.storage.from("community-profile-avatars").getPublicUrl(globalBrandingRow.icon_path).data.publicUrl
+          : null,
+        banner_url: globalBrandingRow.banner_path
+          ? supabase.storage.from("community-profile-avatars").getPublicUrl(globalBrandingRow.banner_path).data.publicUrl
+          : null,
+      });
+    }
 
     if (memberResult.error || assignmentResult.error) {
       setError("No se pudo cargar el directorio de miembros. Verifica las políticas de la comunidad.");

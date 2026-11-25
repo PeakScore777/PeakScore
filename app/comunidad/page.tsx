@@ -2362,9 +2362,10 @@ export default function CommunityPage() {
                     aria-label="Abrir ajustes de la comunidad"
                   >
                     {activeSpace?.verification_status === "verified" && (
-                      <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada">
-                        <Check size={10} strokeWidth={3.2}/>
-                      </span>
+                      <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
+                          <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg></span>
                     )}
                     <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
                     <ChevronDown size={15} className={"community-server-menu-chevron" + (communityServerMenuOpen ? " is-open" : "")}/>
@@ -2446,7 +2447,7 @@ export default function CommunityPage() {
                       <button type="button" onClick={() => void selectChannel(channel)}
                         aria-current={active ? "page" : undefined}
                         className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
-                        <Icon size={17} className="community-channel-glyph" style={{ color: channel.accent_color ?? undefined }}/>
+                        <Icon size={17} className="community-channel-glyph"/>
                         <span className="community-channel-name min-w-0 flex-1 truncate">{channel.name}</span>
                         {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
                         {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
@@ -3025,9 +3026,10 @@ export default function CommunityPage() {
                                   } as React.CSSProperties}
                                 />
                                 {member.id === userId && isFounder && (
-                                  <span className="community-member-verified-dot" title="Founder verificado" aria-label="Founder verificado">
-                                    <Check size={9} strokeWidth={3.2}/>
-                                  </span>
+                                  <span className="community-member-verified-dot" title="Founder verificado" aria-label="Founder verificado"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
+                          <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg></span>
                                 )}
                                 {member.status_text && <small>{member.status_text}</small>}
                                 {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (

@@ -6863,11 +6863,11 @@ html:has(.ps-community-picker-overlay) * {
    changing its staggered fall-and-return choreography. */
 @keyframes ps-domino-flow-topple {
   0%,12% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
-  19% { transform:translate3d(.015em,.015em,0) rotateZ(-8deg) rotateX(3deg); }
-  31% { transform:translate3d(.11em,.06em,0) rotateZ(74deg) rotateX(0deg); }
-  38% { transform:translate3d(.145em,.07em,0) rotateZ(84deg) rotateX(0deg); }
-  46% { transform:translate3d(.078em,.038em,0) rotateZ(40deg) rotateX(0deg); }
+  19% { transform:translate3d(.006em,.006em,0) rotateZ(-2deg) rotateX(1deg); }
+  31% { transform:translate3d(.03em,.02em,0) rotateZ(8deg) rotateX(0deg); }
+  38% { transform:translate3d(.052em,.027em,0) rotateZ(12deg) rotateX(0deg); }
+  46% { transform:translate3d(.028em,.014em,0) rotateZ(5deg) rotateX(0deg); }
   54%,65% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
-  72% { transform:translate3d(-.015em,-.015em,0) rotateZ(5deg); }
+  72% { transform:translate3d(-.005em,-.005em,0) rotateZ(2deg); }
   82%,100% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
 }

@@ -19,8 +19,15 @@ export async function POST(request: Request) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
-  const founderId = process.env.COMMUNITY_FOUNDER_USER_ID;
-  if (!founderId || founderId !== user.id) return fail("Solo el fundador puede cambiar el estado de la comunidad.", 403);
+  // Anchor founder authority to the one platform admin, not a Preview-only env var.
+  const { data: platformAdmins, error: adminLookupError } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin")
+    .limit(2);
+  if (adminLookupError || platformAdmins?.length !== 1 || platformAdmins[0]?.id !== user.id) {
+    return fail("Solo el fundador puede cambiar el estado de la comunidad.", 403);
+  }
 
   const body = await readBodyWithinLimit(request, 1_024);
   if (body === null) return fail("La solicitud no es válida.", 400);

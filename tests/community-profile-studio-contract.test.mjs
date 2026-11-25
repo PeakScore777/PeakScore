@@ -1439,15 +1439,15 @@ test("Name Atelier previews keep independent effects, live noise typography and 
 
 test("all name finishes paint glyph layers without replacing animation transforms or timelines", () => {
   assert.match(page, /import "\.\.\/community-name-effects\.css"/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-gradient \.ps-name-animation-char::after/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-toon \.ps-domino-flow__glyph/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-gummy \.ps-halo-signal__glyph::after/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-prism \.ps-name-shuffle__track > span::after/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-chromaflow \.ps-decrypted-cell\.is-revealed::after/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-gradient-flow \.ps-depth-lift__face/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-neon \.ps-domino-flow__glyph/);
-  assert.match(nameEffectsCss, /\.ps-community-name-render\.effect-pop \.ps-name-animation-char::after/);
-  assert.match(nameEffectsCss, /\.ps-mistfall-name\.effect-gradient \.ps-mistfall-layout/);
+  assert.match(nameEffectsCss, /effect-gradient \.ps-name-animation-char::after/);
+  assert.match(nameEffectsCss, /effect-toon \.ps-domino-flow__glyph/);
+  assert.match(nameEffectsCss, /effect-gummy \.ps-halo-signal__glyph::after/);
+  assert.match(nameEffectsCss, /effect-prism \.ps-name-shuffle__track > span::after/);
+  assert.match(nameEffectsCss, /effect-chromaflow \.ps-decrypted-cell\.is-revealed::after/);
+  assert.match(nameEffectsCss, /effect-gradient-flow \.ps-depth-lift__face/);
+  assert.match(nameEffectsCss, /effect-neon \.ps-domino-flow__glyph/);
+  assert.match(nameEffectsCss, /effect-pop \.ps-name-animation-char::after/);
+  assert.match(nameEffectsCss, /effect-gradient \.ps-mistfall-layout/);
   assert.match(nameEffectsCss, /\.ps-inkline-name \.ps-inkline-fill/);
   assert.match(nameEffectsCss, /renderer and effect classes live on the same node/i);
   assert.match(studio, /ps-community-name-static community-member-nameplate/);

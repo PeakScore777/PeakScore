@@ -127,12 +127,12 @@ export default function InklineDisplayName({
     const fillMs = 800;
     const repeatDelayMs = 900;
     const lastStaggerMs = Math.max(0, glyphs.length - 1) * staggerMs;
-    const fillStartMs = drawMs + lastStaggerMs + fillDelayMs;
-    const forwardMs = fillStartMs + fillMs;
+    const fillStartMs = drawMs + fillDelayMs;
+    const forwardMs = Math.max(drawMs + lastStaggerMs, fillStartMs + fillMs);
     const cycleMs = forwardMs * 2 + repeatDelayMs;
     const animations: Animation[] = [];
-    const drawEase = "cubic-bezier(0.2, 0, 0, 1)";
-    const fillEase = "cubic-bezier(0.22, 0.72, 0.22, 1)";
+    const drawEase = "cubic-bezier(0.16, 1, 0.3, 1)";
+    const fillEase = "cubic-bezier(0.455, 0.03, 0.515, 0.955)";
     const percent = (milliseconds: number) => Math.max(0, Math.min(1, milliseconds / cycleMs));
 
     glyphs.forEach((glyph, index) => {

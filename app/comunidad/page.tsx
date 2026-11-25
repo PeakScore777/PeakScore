@@ -36,6 +36,17 @@ type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type CommunityDisplayNameAnimation = "decrypt" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
+
+const COMMUNITY_NAME_ANIMATIONS = new Set<CommunityDisplayNameAnimation>([
+  "decrypt", "shuffle-blur", "shuffle-flip", "shuffle", "inkline",
+  "halo-signal", "domino-flow", "mistfall", "depth-lift",
+]);
+
+function communityNameAnimation(value?: string | null): CommunityDisplayNameAnimation {
+  return COMMUNITY_NAME_ANIMATIONS.has(value as CommunityDisplayNameAnimation)
+    ? value as CommunityDisplayNameAnimation
+    : "decrypt";
+}
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -461,7 +472,7 @@ export default function CommunityPage() {
       themeColorSecondary: member.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member.plate_style ?? "classic",
       displayNameStyle: member.display_name_style ?? "classic",
-      displayNameAnimation: member.display_name_animation ?? "decrypt",
+      displayNameAnimation: communityNameAnimation(member.display_name_animation),
       displayNameFuzzySettings: normalizeFuzzyTextSettings(member.display_name_fuzzy_settings),
       accentColor: member.accent_color ?? "#3987FF",
       avatarFrame: member.avatar_frame ?? "none",
@@ -520,7 +531,7 @@ export default function CommunityPage() {
       themeColorSecondary: member?.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member?.plate_style ?? "classic",
       displayNameStyle: member?.display_name_style ?? "classic",
-      displayNameAnimation: member?.display_name_animation ?? "decrypt",
+      displayNameAnimation: communityNameAnimation(member?.display_name_animation),
       displayNameFuzzySettings: normalizeFuzzyTextSettings(member?.display_name_fuzzy_settings),
       displayNamePrismColors: member?.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
       accentColor: member?.accent_color ?? "#3987FF",
@@ -722,7 +733,7 @@ export default function CommunityPage() {
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         display_name_effect: appearanceByMember.get(member.user_id)?.display_name_effect ?? "plain",
-        display_name_animation: appearanceByMember.get(member.user_id)?.display_name_animation ?? "decrypt",
+        display_name_animation: communityNameAnimation(appearanceByMember.get(member.user_id)?.display_name_animation),
         display_name_fuzzy_settings: appearanceByMember.get(member.user_id)?.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: appearanceByMember.get(member.user_id)?.display_name_color ?? "default",
         display_name_gradient_start: appearanceByMember.get(member.user_id)?.display_name_gradient_start ?? "#B86BFF",
@@ -916,7 +927,7 @@ export default function CommunityPage() {
         status_text: author.status_text ?? "",
         display_name_style: author.display_name_style ?? "classic",
         display_name_effect: author.display_name_effect ?? "plain",
-        display_name_animation: author.display_name_animation ?? "decrypt",
+        display_name_animation: communityNameAnimation(author.display_name_animation),
         display_name_fuzzy_settings: author.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: author.display_name_color ?? "default",
         display_name_gradient_start: author.display_name_gradient_start ?? "#B86BFF",
@@ -1014,7 +1025,7 @@ export default function CommunityPage() {
         status_text: getVisibleCommunityStatus(currentProfile.status_text, currentProfile.status_expires_at),
         display_name_style: currentProfile.display_name_style ?? "classic",
         display_name_effect: currentProfile.display_name_effect ?? "plain",
-        display_name_animation: currentProfile.display_name_animation ?? "decrypt",
+        display_name_animation: communityNameAnimation(currentProfile.display_name_animation),
         display_name_fuzzy_settings: currentProfile.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: currentProfile.display_name_color ?? "default",
         display_name_gradient_start: currentProfile.display_name_gradient_start ?? "#B86BFF",
@@ -2171,7 +2182,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-profile-identity">
                   <div className="ps-community-profile-name-row">
-                    <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title" value={selectedCommunityProfile.displayName} animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"} fuzzySettings={normalizeFuzzyTextSettings(selectedCommunityProfile.displayNameFuzzySettings)} className={"ps-community-name-render ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(selectedCommunityProfile.displayNameEffect, selectedCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")", "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart) } as React.CSSProperties}/>
+                    <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title" value={selectedCommunityProfile.displayName} animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"} className={"ps-community-name-render ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(selectedCommunityProfile.displayNameEffect, selectedCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")", "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart) } as React.CSSProperties}/>
                     <span className="ps-community-profile-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                   </div>
 

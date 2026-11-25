@@ -8461,3 +8461,32 @@ html:has(.ps-community-picker-overlay) * {
   }
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage { gap:12px !important; }
 }
+
+
+/* Canvas fallback for the actual profile renderer as well as gallery tiles:
+   no selected animation may leave an empty name while its canvas boots. */
+.ps-community-name-render.ps-fuzzy-text-wrap > .ps-fuzzy-text-layout {
+  visibility:visible !important;
+  opacity:1 !important;
+  color:inherit !important;
+  -webkit-text-fill-color:currentColor !important;
+}
+.ps-community-name-render.ps-fuzzy-text-wrap:has(> .ps-fuzzy-text-canvas[data-render-ready="true"]) > .ps-fuzzy-text-layout,
+.ps-community-name-animation-option .ps-fuzzy-text-wrap:has(> .ps-fuzzy-text-canvas[data-render-ready="true"]) > .ps-fuzzy-text-layout {
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+.ps-community-name-render.ps-fuzzy-text-wrap > .ps-fuzzy-text-canvas {
+  z-index:2 !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:none !important;
+}
+
+/* Prevent the SVG text sizer from ghosting underneath the StrokeText draw. */
+.ps-community-name-render.ps-inkline-name > .ps-inkline-layout {
+  opacity:0 !important;
+}
+.ps-community-name-render.ps-inkline-name:not(:has(.ps-inkline-svg[style*="visibility: visible"])) > .ps-inkline-layout {
+  opacity:1 !important;
+}

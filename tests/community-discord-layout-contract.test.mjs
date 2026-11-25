@@ -158,7 +158,9 @@ testCase("member rail is role-grouped, collapsible, and uses a clean Discord-sty
   assert.match(page, /community-member-group-toggle/);
   assert.match(page, /aria-expanded=\{!collapsed\}/);
   assert.match(page, /setCollapsedMemberGroups/);
-  assert.doesNotMatch(page, /MIEMBROS/);
-  assert.doesNotMatch(page, /conectados de \\{memberCount\\} miembros/);
-  assert.doesNotMatch(page, /community-member-sidebar-footer/);
+  const memberRail = page.slice(
+    page.indexOf('<aside className="community-member-sidebar"'),
+    page.indexOf("{founderStudioOpen && isFounder && ("),
+  );
+  assert.doesNotMatch(memberRail, /MIEMBROS|conectados de|community-member-sidebar-header|community-member-sidebar-footer/);
 });

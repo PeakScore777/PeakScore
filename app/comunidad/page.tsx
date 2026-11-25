@@ -2352,15 +2352,8 @@ export default function CommunityPage() {
             <div className="community-server-banner-shade pointer-events-none absolute inset-0" aria-hidden="true"/>
             <div className="relative z-20 min-w-0 flex-1">
               {isFounder ? (
-                <div className="relative min-w-0" ref={communityServerMenuRef}>
-                  <button
-                    type="button"
-                    className="community-server-menu-trigger"
-                    onClick={() => setCommunityServerMenuOpen((open) => !open)}
-                    aria-haspopup="menu"
-                    aria-expanded={communityServerMenuOpen}
-                    aria-label="Abrir ajustes de la comunidad"
-                  >
+                <div className="community-server-menu-wrap relative min-w-0" ref={communityServerMenuRef}>
+                  <div className="community-server-menu-trigger">
                     {activeSpace?.verification_status === "verified" && (
                       <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                           <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
@@ -2368,8 +2361,13 @@ export default function CommunityPage() {
                         </svg></span>
                     )}
                     <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
-                    <ChevronDown size={15} className={"community-server-menu-chevron" + (communityServerMenuOpen ? " is-open" : "")}/>
-                  </button>
+                    <button type="button" className="community-server-chevron-button"
+                      onClick={() => setCommunityServerMenuOpen((open) => !open)}
+                      aria-haspopup="menu" aria-expanded={communityServerMenuOpen}
+                      aria-label="Abrir ajustes de la comunidad" title="Ajustes del servidor">
+                      <ChevronDown size={15} className={"community-server-menu-chevron" + (communityServerMenuOpen ? " is-open" : "")}/>
+                    </button>
+                  </div>
                   {communityServerMenuOpen && (
                     <div className="community-server-menu" role="menu" aria-label="Administración del servidor">
                       <div className="community-server-menu-heading">
@@ -2397,7 +2395,10 @@ export default function CommunityPage() {
                 <div className="community-server-member-heading">
                   {activeSpace?.verification_status === "verified" && (
                     <span className="community-verified-dot" title="Comunidad verificada" aria-label="Comunidad verificada">
-                      <Check size={10} strokeWidth={3.2}/>
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
+                        <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                     </span>
                   )}
                   <span className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</span>
@@ -2556,12 +2557,6 @@ export default function CommunityPage() {
                   className="community-user-control-chevron" aria-label="Opciones de salida de audio"
                   aria-expanded={audioPanelMode === "output"}><ChevronDown size={13}/></button>
               </div>
-              <span className="community-user-control-divider" aria-hidden="true"/>
-              <button type="button" className={"community-user-settings" + (appearanceOpen ? " is-active" : "")}
-                onClick={() => { setAudioPanelMode(null); setAppearanceOpen((open) => !open); }}
-                aria-label="Configuración de apariencia" title="Configuración">
-                <Settings size={19}/>
-              </button>
             </div>
         </div>
 
@@ -2574,24 +2569,12 @@ export default function CommunityPage() {
         <section className="community-chat-column">
           <header className="community-chat-header">
             <div className="community-chat-title">
-              <button type="button" className="community-mobile-menu lg:hidden"
-                onClick={() => setMobileChannelsOpen(true)} aria-label="Abrir canales" aria-expanded={mobileChannelsOpen} aria-controls="community-channel-drawer"><Menu size={20}/></button>
               <Hash size={21} className="community-chat-hash"/>
               <h1>{activeChannel?.name ?? "Comunidad"}</h1>
               {activeChannel?.is_private && <LockKeyhole size={14} className="community-channel-lock"/>}
               {activeChannel?.is_read_only && <ShieldCheck size={14} className="community-channel-readonly"/>}
             </div>
             <div className="community-chat-header-actions">
-              {isFounder && (
-                <button type="button"
-                  onClick={() => setFounderStudioOpen(true)}
-                  className="community-chat-tool inline-flex min-w-8 items-center gap-2 border border-[#405c3a] bg-[#172719] px-2.5 text-[#a7e98e] hover:border-[#7fe05c] hover:bg-[#1e3420] hover:text-white"
-                  title="Abrir control central de founder"
-                  aria-label="Abrir control central de founder">
-                  <ShieldCheck size={16}/>
-                  <span className="hidden xl:inline font-semibold text-[11px] uppercase tracking-[.08em]">CONTROL</span>
-                </button>
-              )}
               {searchOpen && (
                 <input autoFocus value={search} onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar en este canal" className="community-search-input"/>
@@ -2599,20 +2582,6 @@ export default function CommunityPage() {
               <button type="button" onClick={() => { setSearchOpen((value) => !value); setSearch(""); }}
                 className={"community-chat-tool " + (searchOpen ? "community-chat-tool-active" : "")}
                 aria-label="Buscar mensajes"><Search size={19}/></button>
-              <span className="community-chat-header-divider"/>
-              <span className="community-chat-member-count" title="Miembros registrados">
-                <Users size={17}/>{memberCount.toLocaleString("es-CO")}
-              </span>
-              <span className="community-chat-online" title="Personas conectadas en este espacio">
-                <i/>{activeSpaceOnlineUsers} en línea
-              </span>
-              <button type="button"
-                className={"community-chat-tool " + (appearanceOpen ? "community-chat-tool-active" : "")}
-                onClick={() => setAppearanceOpen((open) => !open)}
-                aria-label="Personalizar fondo de la comunidad" aria-expanded={appearanceOpen}
-                title="Apariencia de la comunidad">
-                <Palette size={18}/>
-              </button>
               <button type="button"
                 className={"community-chat-tool community-member-toggle " + (memberListOpen ? "community-chat-tool-active" : "")}
                 onClick={() => setMemberListOpen((value) => !value)}

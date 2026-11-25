@@ -893,7 +893,7 @@ test("display-name animation catalogue exposes only supported profile motions", 
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
   assert.doesNotMatch(catalogue, /id: "(?:fuzzy-text|gradient-flow)"/);
-  assert.equal(["id: \\"decrypt\\", label:", "id: \\"shuffle-blur\\", label:", "id: \\"shuffle-flip\\", label:", "id: \\"shuffle\\", label:", "id: \\"inkline\\", label:", "id: \\"halo-signal\\", label:", "id: \\"domino-flow\\", label:", "id: \\"mistfall\\", label:", "id: \\"depth-lift\\", label:"].filter((entry) => catalogue.includes(entry)).length, 9);
+  assert.equal((catalogue.match(/id: "(?:decrypt|shuffle-blur|shuffle-flip|shuffle|inkline|halo-signal|domino-flow|mistfall|depth-lift)", label:/g) ?? []).length, 9);
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
   for (const removed of ["fuzzy-text","gradient-flow","eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));

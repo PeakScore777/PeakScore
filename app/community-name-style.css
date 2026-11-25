@@ -8637,24 +8637,31 @@ html:has(.ps-community-picker-overlay) * {
 }
 
 
-/* Hacking Decode uses nested encrypted glyphs; keep their temporary symbols on the
-   same selected finish instead of the component's legacy fallback scramble colour. */
+/* Hacking Decode uses nested encrypted glyphs; keep temporary symbols on the
+   selected finish instead of the component's legacy fallback scramble colour. */
 .ps-community-name-render.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-member-nameplate.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.community-chat-author.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(100deg,var(--name-gradient-start,#9d83ff),var(--name-gradient-end,#61b8ed),var(--name-gradient-start,#9d83ff)) !important;
+  background-size:220% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
+}
 .ps-community-name-render.effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-member-nameplate.effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-chat-author.effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .ps-community-name-render.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-member-nameplate.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.community-chat-author.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author.effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9ccb,#ffd0a7,#fff0a6,#9de8d3,#9fc8ff)) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
+}
 .ps-community-name-render:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-member-nameplate:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-chat-author:is(.effect-gradient-flow,.effect-chromaflow) :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
   color:transparent !important;-webkit-text-fill-color:transparent !important;
-  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9ccb,#ffd0a7,#fff0a6,#9de8d3,#9fc8ff)) !important;
-  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  text-shadow:none !important;
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
 }
 .ps-community-name-render.effect-neon :is(.ps-decrypted-cell,.ps-decrypted-glyph),
 .community-member-nameplate.effect-neon :is(.ps-decrypted-cell,.ps-decrypted-glyph),
@@ -8670,12 +8677,9 @@ html:has(.ps-community-picker-overlay) * {
   background-image:linear-gradient(105deg,var(--name-solid-color,#f2f3f5) 0%,#fff 48%,var(--name-solid-color,#f2f3f5) 100%) !important;
   background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 2px 0 rgb(25 20 45 / 42%) !important;
 }
-.ps-community-name-render.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.community-member-nameplate.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.community-chat-author.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.ps-community-name-render.effect-plain :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.community-member-nameplate.effect-plain :is(.ps-decrypted-cell,.ps-decrypted-glyph),
-.community-chat-author.effect-plain :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
+.ps-community-name-render:is(.effect-pop,.effect-plain) :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-member-nameplate:is(.effect-pop,.effect-plain) :is(.ps-decrypted-cell,.ps-decrypted-glyph),
+.community-chat-author:is(.effect-pop,.effect-plain) :is(.ps-decrypted-cell,.ps-decrypted-glyph) {
   color:var(--name-solid-color,currentColor) !important;-webkit-text-fill-color:currentColor !important;
   background:none !important;text-shadow:none !important;-webkit-text-stroke:0 transparent !important;
 }

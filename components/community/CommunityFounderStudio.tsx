@@ -352,6 +352,75 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     }
   }
 
+  async function saveGlobalBranding(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (brandingSaving) return;
+    setBrandingSaving(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/community/branding", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: globalBranding.name,
+          description: globalBranding.description,
+          icon_key: globalBranding.icon_key,
+          accent_color: globalBranding.accent_color,
+        }),
+      });
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) {
+        setError(data?.error ?? "No se pudo guardar la identidad global. Comprueba que la migración esté aplicada.");
+        return;
+      }
+      setNotice("Identidad global guardada. Actualizando la comunidad…");
+      window.location.reload();
+    } catch {
+      setError("No se pudo guardar la identidad de la comunidad.");
+    } finally {
+      setBrandingSaving(false);
+    }
+  }
+
+  async function uploadGlobalBrandingAsset(assetType: "icon" | "banner", file: File) {
+    if (brandingAssetPending) return;
+    setBrandingAssetPending(assetType);
+    setError("");
+    setNotice("");
+    try {
+      const form = new FormData();
+      form.set("space_id", GLOBAL_COMMUNITY_SPACE_ID);
+      form.set("asset_type", assetType);
+      form.set("file", file);
+      const response = await fetch("/api/community/spaces/assets", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const data = await response.json().catch(() => null) as {
+        error?: string; assetPath?: string; assetUrl?: string;
+      } | null;
+      if (!response.ok || !data?.assetPath || !data.assetUrl) {
+        setError(data?.error ?? "No se pudo subir la imagen de la comunidad.");
+        return;
+      }
+      setGlobalBranding((current) => ({
+        ...current,
+        [assetType === "icon" ? "icon_path" : "banner_path"]: data.assetPath!,
+        [assetType === "icon" ? "icon_url" : "banner_url"]: data.assetUrl!,
+      }));
+      setNotice(assetType === "icon"
+        ? "Icono actualizado. Guarda la identidad para publicar el cambio."
+        : "Banner actualizado. Guarda la identidad para publicar el cambio.");
+    } catch {
+      setError("No se pudo subir la imagen.");
+    } finally {
+      setBrandingAssetPending(null);
+    }
+  }
+
   async function changeMemberRole(member: Member, roleKey: string, action: "grant" | "revoke") {
     const ok = await postJson("/api/community/roles", {
       target_user_id: member.user_id,

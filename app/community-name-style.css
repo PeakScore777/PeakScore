@@ -3987,35 +3987,29 @@
   paint-order:stroke fill;
 }
 .ps-inkline-outline {
-  stroke-dasharray:1800;
-  stroke-dashoffset:1800;
-  animation:ps-inkline-contour 8.4s cubic-bezier(.65,0,.25,1) infinite;
-  will-change:stroke-dashoffset;
+  stroke-dasharray:var(--ps-inkline-dash-length,1800);
+  stroke-dashoffset:var(--ps-inkline-dash-length,1800);
+  opacity:.96;
+  animation:ps-inkline-contour 6.8s cubic-bezier(.62,0,.24,1) infinite;
+  will-change:stroke-dashoffset,opacity;
 }
 .ps-inkline-fill {
-  opacity:1;
-}
-.ps-inkline-wipe {
-  transform:scaleX(0);
-  transform-box:fill-box;
-  transform-origin:left center;
-  animation:ps-inkline-reveal 8.4s cubic-bezier(.22,1,.36,1) infinite;
-  will-change:transform;
+  opacity:0;
+  animation:ps-inkline-fill-in 6.8s cubic-bezier(.2,.72,.22,1) infinite;
+  will-change:opacity;
 }
 @keyframes ps-inkline-contour {
-  0%, 5% { stroke-dashoffset:1800; }
-  34%, 59% { stroke-dashoffset:0; }
-  78%, 100% { stroke-dashoffset:1800; }
+  0%, 4% { stroke-dashoffset:var(--ps-inkline-dash-length,1800); opacity:.96; }
+  42%, 52% { stroke-dashoffset:0; opacity:.96; }
+  66%, 100% { stroke-dashoffset:0; opacity:0; }
 }
-@keyframes ps-inkline-reveal {
-  0%, 31% { transform:scaleX(0); }
-  48%, 59% { transform:scaleX(1); }
-  76%, 100% { transform:scaleX(0); }
+@keyframes ps-inkline-fill-in {
+  0%, 39% { opacity:0; }
+  55%, 100% { opacity:1; }
 }
 @media (prefers-reduced-motion:reduce) {
-  .ps-inkline-outline, .ps-inkline-wipe { animation:none !important; }
-  .ps-inkline-outline { stroke-dashoffset:0; }
-  .ps-inkline-wipe { transform:scaleX(1); }
+  .ps-inkline-outline { animation:none !important; stroke-dashoffset:0; opacity:.35; }
+  .ps-inkline-fill { animation:none !important; opacity:1; }
 }
 
 
@@ -7591,4 +7585,52 @@ html:has(.ps-community-picker-overlay) * {
   }
   .ps-community-name-render.ps-inkline-name .ps-inkline-outline { stroke-dashoffset:0 !important; }
   .ps-community-name-render.ps-inkline-name .ps-inkline-fill { clip-path:inset(0 0 0 0) !important; }
+}
+
+
+/* Name Atelier: match the compact profile card used by the profile editor. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
+  min-height:166px !important;
+  height:166px !important;
+  padding:130px 12px 10px !important;
+  border-radius:8px !important;
+  background-size:100% 44%,100% 100% !important;
+  background-position:center top,center !important;
+  box-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+  top:27px !important;
+  left:11px !important;
+  width:72px !important;
+  height:72px !important;
+  border-width:5px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+  display:block !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+  display:block !important;
+  width:fit-content !important;
+  max-width:100% !important;
+  margin:0 !important;
+  font-size:16px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  overflow-wrap:anywhere !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta strong,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta strong:hover {
+  text-decoration:none !important;
+  border:0 !important;
+  border-bottom:0 !important;
+  box-shadow:none !important;
+  background-image:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta strong::before,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta strong::after {
+  content:none !important;
+  display:none !important;
 }

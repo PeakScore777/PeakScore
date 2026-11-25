@@ -16,9 +16,9 @@ type Props = {
 };
 
 /**
- * SVG contour animation with a real text sizing layer underneath.
- * The sizing layer prevents the SVG from having to determine its own width,
- * which used to create a circular 100%-width layout and blank previews.
+ * StrokeText-style Inkline: measured SVG glyphs, 1.6s outline draw,
+ * 50ms character stagger, 200ms fill delay, left-to-right wipe and yoyo loop.
+ * Web Animations reproduces the supplied reference without adding a dependency.
  */
 export default function InklineDisplayName({
   text,
@@ -34,17 +34,19 @@ export default function InklineDisplayName({
   const layoutRef = useRef<HTMLSpanElement | null>(null);
   const motionRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<SVGTextElement | null>(null);
+  const wipeRef = useRef<SVGRectElement | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [dash, setDash] = useState(200);
   const clipId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
   const Tag = tag;
-  const effectTokens = className.split(/\\s+/);
+  const effectTokens = className.split(/\s+/);
   const chromaflow = effectTokens.includes("effect-chromaflow");
   const gradientFlow = effectTokens.includes("effect-gradient-flow");
   const gummy = effectTokens.includes("effect-gummy");
-  const chromaflowGradientId = `ps-inkline-${clipId}-chromaflow`;
-  const gradientFlowGradientId = `ps-inkline-${clipId}-gradient-flow`;
-  const gummyGradientId = `ps-inkline-${clipId}-gummy`;
+  const chromaflowGradientId = "ps-inkline-" + clipId + "-chromaflow";
+  const gradientFlowGradientId = "ps-inkline-" + clipId + "-gradient-flow";
+  const gummyGradientId = "ps-inkline-" + clipId + "-gummy";
   const styleTokens = style as (CSSProperties & Record<string, unknown>) | undefined;
   const gummyPalette = typeof styleTokens?.["--name-prism-gradient"] === "string"
     ? (styleTokens["--name-prism-gradient"] as string).match(/#[0-9a-f]{6}/gi) ?? []
@@ -64,45 +66,138 @@ export default function InklineDisplayName({
   }, [forceMotion]);
 
   useLayoutEffect(() => {
-    const root = layoutRef.current;
+    const root = motionRef.current;
     const node = textRef.current;
     if (!root || !node) return;
     let cancelled = false;
     const measure = () => {
-      if (cancelled || !textRef.current) return;
+      if (cancelled || !textRef.current || !motionRef.current) return;
       try {
-        const b = textRef.current.getBBox();
-        if (!b.width || !b.height) return;
+        const bounds = textRef.current.getBBox();
+        if (!bounds.width || !bounds.height) return;
+        const computedSize = Number.parseFloat(getComputedStyle(motionRef.current).fontSize) || 16;
+        const nextDash = Math.max(200, Math.ceil(computedSize * 7));
         const pad = Math.max(3, strokeWidth * 2);
-        const next = { x: b.x - pad, y: b.y - pad, width: b.width + pad * 2, height: b.height + pad * 2 };
-        setBox((prev) => prev && Math.abs(prev.width - next.width) < 0.5 && Math.abs(prev.height - next.height) < 0.5 ? prev : next);
+        const next = {
+          x: bounds.x - pad,
+          y: bounds.y - pad,
+          width: bounds.width + pad * 2,
+          height: bounds.height + pad * 2,
+        };
+        setDash((previous) => previous === nextDash ? previous : nextDash);
+        setBox((previous) =>
+          previous &&
+          Math.abs(previous.x - next.x) < 0.5 &&
+          Math.abs(previous.y - next.y) < 0.5 &&
+          Math.abs(previous.width - next.width) < 0.5 &&
+          Math.abs(previous.height - next.height) < 0.5
+            ? previous
+            : next
+        );
       } catch {
-        // Keep the sizing text visible if SVG text metrics are not ready yet.
+        // Keep the layout text available until SVG metrics load.
       }
     };
     measure();
     document.fonts?.ready?.then(measure).catch(() => {});
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     observer?.observe(root);
-    return () => { cancelled = true; observer?.disconnect(); };
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+    };
   }, [text, fontFamily, fontWeight, strokeWidth]);
 
-  const viewBox = box ? `${box.x} ${box.y} ${box.width} ${box.height}` : "0 -100 800 140";
-  const dashLength = box ? Math.max(240, Math.ceil((box.width + box.height) * 4)) : 1800;
+  useEffect(() => {
+    if (!box || !textRef.current || !wipeRef.current) return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const glyphs = Array.from(textRef.current.querySelectorAll<SVGTSpanElement>("[data-inkline-char]"));
+    const wipe = wipeRef.current;
+    if (!glyphs.length) return;
+
+    if (reduced) {
+      glyphs.forEach((glyph) => { glyph.style.strokeDashoffset = "0px"; });
+      wipe.setAttribute("width", String(box.width));
+      return;
+    }
+
+    const drawMs = 1600;
+    const staggerMs = 50;
+    const fillDelayMs = 200;
+    const fillMs = 800;
+    const repeatDelayMs = 900;
+    const lastStaggerMs = Math.max(0, glyphs.length - 1) * staggerMs;
+    const fillStartMs = drawMs + lastStaggerMs + fillDelayMs;
+    const forwardMs = fillStartMs + fillMs;
+    const cycleMs = forwardMs * 2 + repeatDelayMs;
+    const animations: Animation[] = [];
+    const drawEase = "cubic-bezier(0.2, 0, 0, 1)";
+    const fillEase = "cubic-bezier(0.22, 0.72, 0.22, 1)";
+    const percent = (milliseconds: number) => Math.max(0, Math.min(1, milliseconds / cycleMs));
+
+    glyphs.forEach((glyph, index) => {
+      const startMs = index * staggerMs;
+      const drawEndMs = startMs + drawMs;
+      const reverseStartMs = forwardMs + repeatDelayMs + (forwardMs - drawEndMs);
+      const reverseEndMs = forwardMs + repeatDelayMs + (forwardMs - startMs);
+      const frames: Keyframe[] = [
+        { strokeDashoffset: dash + "px", offset: 0 },
+        { strokeDashoffset: dash + "px", offset: percent(startMs) },
+        { strokeDashoffset: "0px", offset: percent(drawEndMs), easing: drawEase },
+        { strokeDashoffset: "0px", offset: percent(forwardMs) },
+        { strokeDashoffset: "0px", offset: percent(forwardMs + repeatDelayMs) },
+        { strokeDashoffset: "0px", offset: percent(reverseStartMs) },
+        { strokeDashoffset: dash + "px", offset: percent(reverseEndMs), easing: drawEase },
+        { strokeDashoffset: dash + "px", offset: 1 },
+      ];
+      animations.push(glyph.animate(frames, {
+        duration: cycleMs,
+        iterations: Infinity,
+        easing: "linear",
+      }));
+    });
+
+    const reverseFillEndMs = forwardMs + repeatDelayMs + (forwardMs - fillStartMs);
+    const fillFrames: Keyframe[] = [
+      { width: "0px", offset: 0 },
+      { width: "0px", offset: percent(fillStartMs) },
+      { width: box.width + "px", offset: percent(forwardMs), easing: fillEase },
+      { width: box.width + "px", offset: percent(forwardMs + repeatDelayMs) },
+      { width: "0px", offset: percent(reverseFillEndMs), easing: fillEase },
+      { width: "0px", offset: 1 },
+    ];
+    animations.push(wipe.animate(fillFrames, {
+      duration: cycleMs,
+      iterations: Infinity,
+      easing: "linear",
+    }));
+
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [box, dash, chars.length]);
+
+  const viewBox = box
+    ? box.x + " " + box.y + " " + box.width + " " + box.height
+    : "0 -100 800 140";
   const sharedStyle = {
     ...style,
-    "--ps-inkline-dash-length": dashLength,
-    maxWidth: "100%",
+    "--ps-inkline-dash-length": dash + "px",
     position: "relative",
+    display: "inline-block",
+    width: "max-content",
+    maxWidth: "100%",
+    lineHeight: 1.2,
+    verticalAlign: "baseline",
+    overflow: "visible",
   } as CSSProperties;
 
   return (
     <Tag
       ref={motionRef as Ref<HTMLElement>}
-      className={className + " ps-inkline-name"}
+      className={(className + " ps-inkline-name").trim()}
       style={sharedStyle}
       aria-label={text}
       data-motion-visible={forceMotion ? "true" : "false"}
+      data-inkline-ready={box ? "true" : "false"}
     >
       <span ref={layoutRef} className="ps-inkline-layout" aria-hidden="true">{text}</span>
       <span className="ps-inkline-measure" aria-hidden="true">
@@ -147,6 +242,15 @@ export default function InklineDisplayName({
                 <animateTransform attributeName="gradientTransform" attributeType="XML" type="translate" values="-0.35 0;0.35 0;-0.35 0" dur="7.2s" repeatCount="indefinite"/>
               </linearGradient>
             )}
+            <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+              <rect
+                ref={wipeRef}
+                x={box?.x ?? 0}
+                y={box?.y ?? 0}
+                width="0"
+                height={box?.height ?? 0}
+              />
+            </clipPath>
           </defs>
           <text
             ref={textRef}
@@ -163,8 +267,11 @@ export default function InklineDisplayName({
             {chars.map((char, index) => (
               <tspan
                 key={index}
-                className="ps-inkline-char"
-                style={{ animationDelay: `${index * 50}ms` }}
+                data-inkline-char
+                style={{
+                  strokeDasharray: dash + "px",
+                  strokeDashoffset: dash + "px",
+                }}
               >
                 {char === " " ? "\u00a0" : char}
               </tspan>
@@ -173,9 +280,10 @@ export default function InklineDisplayName({
           <text
             x="0"
             y="0"
-            fill={gradientFlow ? `url(#${gradientFlowGradientId})` : chromaflow ? `url(#${chromaflowGradientId})` : gummy ? `url(#${gummyGradientId})` : fillColor}
+            fill={gradientFlow ? "url(#" + gradientFlowGradientId + ")" : chromaflow ? "url(#" + chromaflowGradientId + ")" : gummy ? "url(#" + gummyGradientId + ")" : fillColor}
             stroke="none"
             className="ps-inkline-fill"
+            clipPath={"url(#" + clipId + ")"}
             style={{ fontFamily, fontWeight }}
           >
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}

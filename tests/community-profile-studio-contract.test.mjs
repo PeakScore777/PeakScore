@@ -1061,7 +1061,7 @@ test("founder branch keeps the font gallery and saved profile motions remain sup
 });;
 
 test("member rail keeps the selected name font visible inside the flexible copy column", () => {
-  assert.match(nameStyleCss, /\.community-member-copy \{[\\s\\S]*?width:auto !important/);
+  assert.match(nameStyleCss, /\.community-member-copy \{[\\s\\S]*?width:auto !important/);\n  assert.doesNotMatch(nameStyleCss, /\.community-member-copy\\s*\\{[^}]*width:0 !important/);
   assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
   assert.match(page, /<CommunityStaticName[\\s\\S]*?value=\{member\.full_name\}/);
   assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);

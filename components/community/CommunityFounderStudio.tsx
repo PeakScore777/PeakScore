@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw } from "lucide-react";
+import {
+  Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
+  Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip,
+  Smile, Settings2, ChevronDown, Archive, Save, Users, SlidersHorizontal,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
 type Member = {
@@ -13,25 +17,110 @@ type Member = {
   role_keys: string[];
 };
 
+type PermissionKey = "view_channels" | "send_messages" | "attach_files" | "add_reactions";
+type RolePermissions = Record<PermissionKey, boolean>;
 type Role = {
   role_key: string;
   label: string;
   description: string;
   badge_color: string;
+  display_as_badge: boolean;
+  position: number;
+  mentionable: boolean;
+  hoist: boolean;
+  is_system: boolean;
+  permissions: RolePermissions;
 };
 
-type Props = {
-  onClose: () => void;
+type Channel = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  position: number;
+  is_private: boolean;
+  is_read_only: boolean;
+  channel_type: "text" | "announcement";
+  icon_key: string;
+  accent_color: string;
 };
+
+type Tab = "members" | "roles" | "channels";
+type Props = { onClose: () => void };
 
 const PROTECTED_ROLE = "fundador";
+const DEFAULT_PERMISSIONS: RolePermissions = {
+  view_channels: true,
+  send_messages: true,
+  attach_files: true,
+  add_reactions: true,
+};
+const PERMISSION_LABELS: Array<{ key: PermissionKey; label: string; description: string; icon: typeof Eye }> = [
+  { key: "view_channels", label: "Ver canales", description: "Leer los canales a los que el miembro tenga acceso.", icon: Eye },
+  { key: "send_messages", label: "Enviar mensajes", description: "Publicar mensajes y responder en canales habilitados.", icon: MessageSquare },
+  { key: "attach_files", label: "Adjuntar archivos", description: "Subir imágenes permitidas en el chat.", icon: Paperclip },
+  { key: "add_reactions", label: "Añadir reacciones", description: "Reaccionar a los mensajes de otros miembros.", icon: Smile },
+];
+const CATEGORIES = [
+  { value: "COMUNIDAD", label: "Comunidad" },
+  { value: "MATERIAS", label: "Materias" },
+  { value: "PROFESORES", label: "Profesores" },
+  { value: "AULAS Y EVENTOS", label: "Aulas y eventos" },
+];
+
+const emptyRole = () => ({
+  role_key: "",
+  label: "",
+  description: "",
+  badge_color: "#01C8EF",
+  display_as_badge: true,
+  position: 100,
+  mentionable: false,
+  hoist: false,
+  permissions: { ...DEFAULT_PERMISSIONS },
+});
+
+const emptyChannel = () => ({
+  slug: "",
+  name: "",
+  description: "",
+  category: "COMUNIDAD",
+  position: 10,
+  is_private: false,
+  is_read_only: false,
+  channel_type: "text" as const,
+  icon_key: "hash",
+  accent_color: "#01C8EF",
+});
+
+function normalizePermissions(value: unknown): RolePermissions {
+  const source = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  return {
+    view_channels: source.view_channels !== false,
+    send_messages: source.send_messages !== false,
+    attach_files: source.attach_files !== false,
+    add_reactions: source.add_reactions !== false,
+  };
+}
 
 export default function CommunityFounderStudio({ onClose }: Props) {
+  const [tab, setTab] = useState<Tab>("members");
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [query, setQuery] = useState("");
-  const [selectedRole, setSelectedRole] = useState("administrador");
+  const [selectedRoleKey, setSelectedRoleKey] = useState("administrador");
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [roleForm, setRoleForm] = useState(emptyRole);
+  const [channelForm, setChannelForm] = useState(emptyChannel);
+  const [isCreatingRole, setIsCreatingRole] = useState(false);
+  const [isCreatingChannel, setIsCreatingChannel] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [catalogReady, setCatalogReady] = useState(false);
+  const [channelsReady, setChannelsReady] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pendingKey, setPendingKey] = useState<string | null>(null);
@@ -39,34 +128,90 @@ export default function CommunityFounderStudio({ onClose }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [{ data: memberRows, error: memberError }, { data: roleRows, error: roleError }, { data: assignmentRows, error: assignmentError }] = await Promise.all([
+
+    const [memberResult, assignmentResult, roleExtended, channelExtended] = await Promise.all([
       supabase.from("community_member_profiles")
         .select("user_id,display_name,avatar_path,member_number")
         .order("display_name", { ascending: true })
-        .limit(200),
+        .limit(300),
+      supabase.from("community_member_roles")
+        .select("user_id,role_key")
+        .limit(2_000),
       supabase.from("community_role_catalog")
-        .select("role_key,label,description,badge_color")
-        .order("label", { ascending: true }),
-      supabase.from("community_member_roles").select("user_id,role_key").limit(1000),
+        .select("role_key,label,description,badge_color,display_as_badge,position,mentionable,hoist,is_system,permissions")
+        .order("position", { ascending: true }),
+      supabase.from("community_channels")
+        .select("id,slug,name,description,category,position,is_private,is_read_only,channel_type,icon_key,accent_color")
+        .eq("is_archived", false)
+        .order("category", { ascending: true })
+        .order("position", { ascending: true }),
     ]);
 
-    if (memberError || roleError || assignmentError) {
-      setError("No se pudo cargar el directorio. Comprueba las políticas de lectura de la comunidad.");
+    if (memberResult.error || assignmentResult.error) {
+      setError("No se pudo cargar el directorio de miembros. Verifica las políticas de la comunidad.");
       setLoading(false);
       return;
     }
 
-    const assignments = new Map<string, string[]>();
-    (assignmentRows ?? []).forEach((row: { user_id: string; role_key: string }) => {
-      const list = assignments.get(row.user_id) ?? [];
-      list.push(row.role_key);
-      assignments.set(row.user_id, list);
+    let roleRows = roleExtended.data;
+    let roleIsReady = !roleExtended.error;
+    if (roleExtended.error) {
+      const legacy = await supabase.from("community_role_catalog")
+        .select("role_key,label,description,badge_color,display_as_badge")
+        .order("label", { ascending: true });
+      roleRows = (legacy.data ?? []).map((role) => ({
+        ...role,
+        position: 100,
+        mentionable: false,
+        hoist: false,
+        is_system: ["fundador", "administrador", "moderador", "profesor", "docente", "estudiante"].includes(role.role_key),
+        permissions: { ...DEFAULT_PERMISSIONS },
+      }));
+      roleIsReady = false;
+    }
+
+    let channelRows = channelExtended.data;
+    let channelsAreReady = !channelExtended.error;
+    if (channelExtended.error) {
+      const legacy = await supabase.from("community_channels")
+        .select("id,slug,name,description,category,position,is_private,is_read_only")
+        .eq("is_archived", false)
+        .order("position", { ascending: true });
+      channelRows = (legacy.data ?? []).map((channel) => ({
+        ...channel,
+        channel_type: "text" as const,
+        icon_key: "hash",
+        accent_color: "#01C8EF",
+      }));
+      channelsAreReady = false;
+    }
+
+    const assignmentMap = new Map<string, string[]>();
+    (assignmentResult.data ?? []).forEach((row: { user_id: string; role_key: string }) => {
+      const current = assignmentMap.get(row.user_id) ?? [];
+      current.push(row.role_key);
+      assignmentMap.set(row.user_id, current);
     });
-    setMembers((memberRows ?? []).map((row) => ({
-      ...row,
-      role_keys: assignments.get(row.user_id) ?? [],
+
+    setMembers((memberResult.data ?? []).map((member) => ({
+      ...member,
+      role_keys: assignmentMap.get(member.user_id) ?? [],
     })) as Member[]);
-    setRoles(((roleRows ?? []) as Role[]).filter((role) => role.role_key !== PROTECTED_ROLE));
+    setRoles(((roleRows ?? []) as Array<Record<string, unknown>>).map((role) => ({
+      role_key: String(role.role_key),
+      label: String(role.label),
+      description: String(role.description ?? ""),
+      badge_color: String(role.badge_color ?? "#01C8EF"),
+      display_as_badge: Boolean(role.display_as_badge),
+      position: Number(role.position ?? 100),
+      mentionable: Boolean(role.mentionable),
+      hoist: Boolean(role.hoist),
+      is_system: Boolean(role.is_system),
+      permissions: normalizePermissions(role.permissions),
+    })).sort((a, b) => a.position - b.position || a.label.localeCompare(b.label, "es")));
+    setChannels((channelRows ?? []) as Channel[]);
+    setCatalogReady(roleIsReady);
+    setChannelsReady(channelsAreReady);
     setLoading(false);
   }, []);
 
@@ -82,52 +227,173 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     );
   }, [members, query]);
 
-  async function changeRole(member: Member, roleKey: string, action: "grant" | "revoke") {
-    const key = member.user_id + ":" + roleKey;
-    if (pendingKey) return;
+  const selectedRole = roles.find((role) => role.role_key === selectedRoleKey) ?? null;
+  const selectedChannel = channels.find((channel) => channel.id === selectedChannelId) ?? null;
+
+  useEffect(() => {
+    if (isCreatingRole) return;
+    if (!selectedRole) {
+      setRoleForm(emptyRole());
+      return;
+    }
+    setRoleForm({
+      role_key: selectedRole.role_key,
+      label: selectedRole.label,
+      description: selectedRole.description,
+      badge_color: selectedRole.badge_color,
+      display_as_badge: selectedRole.display_as_badge,
+      position: selectedRole.position,
+      mentionable: selectedRole.mentionable,
+      hoist: selectedRole.hoist,
+      permissions: { ...selectedRole.permissions },
+    });
+  }, [selectedRole, isCreatingRole]);
+
+  useEffect(() => {
+    if (isCreatingChannel) return;
+    setChannelForm(selectedChannel ? {
+      slug: selectedChannel.slug,
+      name: selectedChannel.name,
+      description: selectedChannel.description,
+      category: selectedChannel.category,
+      position: selectedChannel.position,
+      is_private: selectedChannel.is_private,
+      is_read_only: selectedChannel.is_read_only,
+      channel_type: selectedChannel.channel_type,
+      icon_key: selectedChannel.icon_key,
+      accent_color: selectedChannel.accent_color,
+    } : emptyChannel());
+  }, [selectedChannel, isCreatingChannel]);
+
+  async function postJson(url: string, payload: Record<string, unknown>, key: string) {
+    if (pendingKey) return false;
     setPendingKey(key);
     setError("");
     setNotice("");
     try {
-      const response = await fetch("/api/community/roles", {
+      const response = await fetch(url, {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          target_user_id: member.user_id,
-          role_key: roleKey,
-          action,
-        }),
+        body: JSON.stringify(payload),
       });
-      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      const data = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) {
-        setError(payload?.error ?? "No se pudo actualizar el rol.");
-        return;
+        setError(data?.error ?? "No se pudo completar la operación.");
+        return false;
       }
-      setNotice(action === "grant"
-        ? "Rol asignado a " + member.display_name + "."
-        : "Rol retirado de " + member.display_name + ".");
+      setNotice("Cambios guardados correctamente.");
       await load();
+      return true;
     } catch {
       setError("No se pudo completar la solicitud. Inténtalo de nuevo.");
+      return false;
     } finally {
       setPendingKey(null);
     }
   }
 
+  async function changeMemberRole(member: Member, roleKey: string, action: "grant" | "revoke") {
+    const ok = await postJson("/api/community/roles", {
+      target_user_id: member.user_id,
+      role_key: roleKey,
+      action,
+    }, member.user_id + ":" + roleKey);
+    if (ok) setNotice(action === "grant"
+      ? "Rol asignado a " + member.display_name + "."
+      : "Rol retirado de " + member.display_name + ".");
+  }
+
+  async function saveRole(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!catalogReady) {
+      setError("Primero debe aplicarse la migración de roles y permisos en un entorno validado.");
+      return;
+    }
+    const payload = {
+      action: isCreatingRole ? "create" : "update",
+      role_key: roleForm.role_key,
+      label: roleForm.label,
+      description: roleForm.description,
+      badge_color: roleForm.badge_color,
+      display_as_badge: roleForm.display_as_badge,
+      position: roleForm.position,
+      mentionable: roleForm.mentionable,
+      hoist: roleForm.hoist,
+      permissions: roleForm.permissions,
+    };
+    const ok = await postJson("/api/community/roles/catalog", payload, "role-save");
+    if (ok) {
+      setIsCreatingRole(false);
+      setSelectedRoleKey(roleForm.role_key);
+    }
+  }
+
+  async function deleteRole() {
+    if (!selectedRole || selectedRole.is_system) return;
+    const ok = await postJson("/api/community/roles/catalog", {
+      action: "delete",
+      role_key: selectedRole.role_key,
+    }, "role-delete");
+    if (ok) {
+      setSelectedRoleKey("administrador");
+      setIsCreatingRole(false);
+    }
+  }
+
+  async function saveChannel(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!channelsReady) {
+      setError("Primero debe aplicarse la migración de canales en un entorno validado.");
+      return;
+    }
+    const ok = await postJson("/api/community/channels", {
+      action: isCreatingChannel ? "create" : "update",
+      channel_id: selectedChannel?.id ?? null,
+      ...channelForm,
+    }, "channel-save");
+    if (ok) {
+      setIsCreatingChannel(false);
+      setSelectedChannelId(null);
+    }
+  }
+
+  async function archiveChannel(channel: Channel) {
+    const ok = await postJson("/api/community/channels", {
+      action: "archive",
+      channel_id: channel.id,
+    }, "channel-archive");
+    if (ok) {
+      setSelectedChannelId(null);
+      setIsCreatingChannel(false);
+    }
+  }
+
+  const tabButton = (value: Tab, label: string, count?: number) => (
+    <button type="button" onClick={() => { setTab(value); setError(""); setNotice(""); }}
+      className={"inline-flex items-center gap-2 border-b-2 px-3 py-3 text-[11px] font-semibold transition " +
+        (tab === value ? "border-[#01c8ef] text-white" : "border-transparent text-[#8095a5] hover:text-[#dce7ed]")}>
+      {label}
+      {count !== undefined && <span className="rounded-[4px] bg-[#1b2a36] px-1.5 py-0.5 text-[9px] tabular-nums text-[#9bb3c1]">{count}</span>}
+    </button>
+  );
+
+  const fieldClass = "mt-1.5 h-10 w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 text-[11px] text-[#e8eef3] outline-none transition placeholder:text-[#647a89] focus:border-[#01c8ef] focus:ring-2 focus:ring-[#01c8ef]/10";
+  const labelClass = "block text-[10px] font-semibold tracking-wide text-[#a4b5c0]";
+
   return (
     <div className="fixed inset-0 z-[160] flex items-center justify-center bg-[#05080dcc] p-3 backdrop-blur-[5px]"
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section role="dialog" aria-modal="true" aria-labelledby="ps-founder-title"
-        className="flex max-h-[min(790px,94dvh)] w-full max-w-[980px] flex-col overflow-hidden rounded-[10px] border border-[#2b3c4a] bg-[#101720] text-[#e8eef3] shadow-[0_28px_100px_rgba(0,0,0,.55)]">
-        <header className="flex min-h-[74px] items-center justify-between border-b border-[#263744] bg-[#0b121b] px-5 sm:px-7">
+        className="flex max-h-[min(850px,94dvh)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[10px] border border-[#2b3c4a] bg-[#101720] text-[#e8eef3] shadow-[0_28px_100px_rgba(0,0,0,.55)]">
+        <header className="flex min-h-[72px] items-center justify-between border-b border-[#263744] bg-[#0b121b] px-5 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[9px] border border-[#547f42] bg-[#7fe05c] text-[#09140b] shadow-[0_3px_0_#315d28]">
               <ShieldCheck size={19}/>
             </span>
             <div className="min-w-0">
               <p className="font-[var(--font-silkscreen)] text-[7px] tracking-[.12em] text-[#8ca4b5]">PEAKSCORE / CONTROL CENTRAL</p>
-              <h2 id="ps-founder-title" className="mt-1 truncate text-[16px] font-bold text-white">Gestión de miembros y roles</h2>
+              <h2 id="ps-founder-title" className="mt-1 truncate text-[16px] font-bold text-white">Panel de administración</h2>
             </div>
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar panel"
@@ -136,104 +402,330 @@ export default function CommunityFounderStudio({ onClose }: Props) {
           </button>
         </header>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
-            <div className="border-b border-[#253644] p-4">
-              <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">DIRECTORIO</p>
-              <div className="mt-3 flex h-10 items-center gap-2 rounded-[6px] border border-[#2b414f] bg-[#111d28] px-3 focus-within:border-[#01c8ef]">
-                <Search size={15} className="shrink-0 text-[#8098a9]"/>
-                <input value={query} onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar miembro..." aria-label="Buscar miembros"
-                  className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-[#687f90]"/>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-[10px] text-[#8095a5]">
-                <span>{members.length} miembros cargados</span>
-                <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 hover:text-[#01c8ef]">
-                  <RefreshCw size={12}/> Actualizar
-                </button>
-              </div>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto p-2">
-              {loading ? <div className="p-5 text-center text-[12px] text-[#8095a5]">Cargando directorio…</div>
-                : visibleMembers.length === 0 ? <div className="p-5 text-center text-[12px] text-[#8095a5]">No hay miembros que coincidan.</div>
-                : visibleMembers.map((member) => (
-                  <article key={member.user_id} className="mb-1 flex items-center gap-2.5 rounded-[6px] border border-transparent px-2.5 py-2 hover:border-[#263d4b] hover:bg-[#14232d]">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-[#314956] bg-[#172a35] text-[10px] font-bold text-[#01c8ef]">
-                      {member.avatar_path
-                        ? <Image src={supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover"/>
-                        : <UserRound size={15}/>}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[11px] font-semibold text-[#e2ebf0]">{member.display_name}</p>
-                      <p className="text-[9px] text-[#708797]">{member.member_number ? "MIEMBRO " + String(member.member_number).padStart(4, "0") : "MIEMBRO"}</p>
-                    </div>
-                    <span className="text-[9px] tabular-nums text-[#718b9b]">{member.role_keys.length ? member.role_keys.length + " roles" : "—"}</span>
-                  </article>
-                ))}
-            </div>
-          </aside>
+        <nav className="flex min-h-[48px] items-center gap-1 overflow-x-auto border-b border-[#263744] bg-[#101a24] px-4 sm:px-6">
+          {tabButton("members", "Miembros", members.length)}
+          {tabButton("roles", "Roles", roles.length)}
+          {tabButton("channels", "Canales", channels.length)}
+        </nav>
 
-          <div className="flex min-h-0 flex-col">
-            <div className="border-b border-[#263744] px-5 py-5 sm:px-7">
-              <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">ASIGNACIÓN DE AUTORIDAD</p>
-              <h3 className="mt-2 text-[18px] font-bold text-white">Roles de PeakScore</h3>
-              <p className="mt-2 max-w-[570px] text-[12px] leading-6 text-[#9aaebb]">
-                Solo el founder puede conceder o retirar roles. La identidad del founder y cada cambio se validan y registran en el servidor.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {roles.map((role) => (
-                  <button key={role.role_key} type="button" onClick={() => setSelectedRole(role.role_key)}
-                    className={"rounded-[5px] border px-3 py-2 text-left transition " + (selectedRole === role.role_key
-                      ? "border-[#01c8ef] bg-[#112b36] text-white"
-                      : "border-[#2a3b48] bg-[#121d27] text-[#9aafbd] hover:border-[#46616f]")}>
-                    <span className="block text-[10px] font-semibold">{role.label}</span>
-                    <span className="mt-1 block max-w-[155px] text-[9px] leading-4 text-[#738a99]">{role.description}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+        {(error || notice) && (
+          <div className="px-5 pt-3 sm:px-7">
+            {error && <p role="alert" className="rounded-[5px] border border-[#71363b] bg-[#301b20] px-3 py-2 text-[11px] text-[#ffb9bd]">{error}</p>}
+            {notice && <p role="status" className="rounded-[5px] border border-[#3f643b] bg-[#17281b] px-3 py-2 text-[11px] text-[#b8e9aa]">{notice}</p>}
+          </div>
+        )}
 
-            {error && <p role="alert" className="mx-5 mt-4 rounded-[5px] border border-[#71363b] bg-[#301b20] px-3 py-2 text-[11px] text-[#ffb9bd] sm:mx-7">{error}</p>}
-            {notice && <p role="status" className="mx-5 mt-4 rounded-[5px] border border-[#3f643b] bg-[#17281b] px-3 py-2 text-[11px] text-[#b8e9aa] sm:mx-7">{notice}</p>}
-
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7">
-              <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-[#293a47] pb-2 font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#7891a2]">
-                <span>MIEMBRO</span><span>ACCESO AL ROL</span>
-              </div>
-              {visibleMembers.map((member) => {
-                const role = roles.find((item) => item.role_key === selectedRole);
-                const assigned = member.role_keys.includes(selectedRole);
-                const key = member.user_id + ":" + selectedRole;
-                return (
-                  <div key={member.user_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[#202f3b] py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[12px] font-semibold text-[#e2ebf0]">{member.display_name}</p>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {member.role_keys.map((roleKey) => {
-                          const current = roles.find((item) => item.role_key === roleKey);
-                          return current ? <span key={roleKey} className="rounded-[3px] border px-1.5 py-0.5 text-[8px]"
-                            style={{ color: current.badge_color, borderColor: current.badge_color + "66", backgroundColor: current.badge_color + "10" }}>{current.label}</span> : null;
-                        })}
-                      </div>
-                    </div>
-                    <button type="button" disabled={!role || pendingKey !== null || member.role_keys.includes(PROTECTED_ROLE)}
-                      onClick={() => void changeRole(member, selectedRole, assigned ? "revoke" : "grant")}
-                      className={"inline-flex min-w-[104px] items-center justify-center gap-1.5 rounded-[5px] border px-2.5 py-2 text-[10px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 " + (assigned
-                        ? "border-[#5d4545] bg-[#2b1e22] text-[#f2abab] hover:bg-[#392428]"
-                        : "border-[#456d39] bg-[#1b2a1c] text-[#a9e794] hover:border-[#7fe05c] hover:bg-[#223824]")}>
-                      {pendingKey === key ? <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"/>
-                        : assigned ? <><Minus size={12}/> Retirar</> : <><Plus size={12}/> Asignar</>}
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {tab === "members" && (
+            <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[320px_minmax(0,1fr)]">
+              <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
+                <div className="border-b border-[#253644] p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">DIRECTORIO</p>
+                    <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 text-[9px] text-[#8095a5] hover:text-[#01c8ef]">
+                      <RefreshCw size={11}/> Actualizar
                     </button>
                   </div>
-                );
-              })}
+                  <div className="mt-3 flex h-10 items-center gap-2 rounded-[6px] border border-[#2b414f] bg-[#111d28] px-3 focus-within:border-[#01c8ef]">
+                    <Search size={15} className="shrink-0 text-[#8098a9]"/>
+                    <input value={query} onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Buscar miembro..." aria-label="Buscar miembros"
+                      className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-[#687f90]"/>
+                  </div>
+                  <p className="mt-2 text-[9px] text-[#708797]">{members.length} miembros cargados · máximo 300 por vista</p>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                  {loading ? <div className="p-5 text-center text-[12px] text-[#8095a5]">Cargando directorio…</div>
+                    : visibleMembers.length === 0 ? <div className="p-5 text-center text-[12px] text-[#8095a5]">No hay miembros que coincidan.</div>
+                    : visibleMembers.map((member) => (
+                      <article key={member.user_id} className="mb-1 flex items-center gap-2.5 rounded-[6px] border border-transparent px-2.5 py-2 hover:border-[#263d4b] hover:bg-[#14232d]">
+                        <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-[#314956] bg-[#172a35] text-[10px] font-bold text-[#01c8ef]">
+                          {member.avatar_path
+                            ? <Image src={supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover"/>
+                            : <UserRound size={15}/>}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[11px] font-semibold text-[#e2ebf0]">{member.display_name}</p>
+                          <p className="text-[9px] text-[#708797]">{member.member_number ? "MIEMBRO " + String(member.member_number).padStart(4, "0") : "MIEMBRO"}</p>
+                        </div>
+                        <span className="text-[9px] tabular-nums text-[#718b9b]">{member.role_keys.length ? member.role_keys.length + " roles" : "—"}</span>
+                      </article>
+                    ))}
+                </div>
+              </aside>
+              <section className="min-h-0 overflow-y-auto px-5 py-5 sm:px-7">
+                <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">ASIGNACIÓN DE AUTORIDAD</p>
+                <h3 className="mt-2 text-[18px] font-bold text-white">Roles de PeakScore</h3>
+                <p className="mt-2 max-w-[640px] text-[12px] leading-6 text-[#9aaebb]">
+                  Asigna varios roles a cada miembro. Founder es único e intransferible; las asignaciones se validan en PostgreSQL y quedan auditadas.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {roles.filter((role) => role.role_key !== PROTECTED_ROLE).map((role) => (
+                    <button key={role.role_key} type="button" onClick={() => setSelectedRoleKey(role.role_key)}
+                      className={"rounded-[5px] border px-3 py-2 text-left transition " + (selectedRoleKey === role.role_key
+                        ? "border-[#01c8ef] bg-[#112b36] text-white"
+                        : "border-[#2a3b48] bg-[#121d27] text-[#9aafbd] hover:border-[#46616f]")}>
+                      <span className="block text-[10px] font-semibold">{role.label}</span>
+                      <span className="mt-1 block max-w-[155px] text-[9px] leading-4 text-[#738a99]">{role.description}</span>
+                    </button>
+                  ))}
+                </div>
+                {!catalogReady && <p className="mt-4 rounded-[5px] border border-[#6b542e] bg-[#2c2417] px-3 py-2 text-[10px] leading-5 text-[#edcb8d]">El editor avanzado de roles requiere la migración de catálogo y permisos. Las asignaciones existentes siguen visibles, pero las nuevas acciones no se activarán hasta validar la migración.</p>}
+                <div className="mt-5 border-t border-[#263744] pt-3">
+                  <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3 font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#7891a2]">
+                    <span>MIEMBRO</span><span>ACCESO AL ROL</span>
+                  </div>
+                  {visibleMembers.map((member) => {
+                    const role = roles.find((item) => item.role_key === selectedRoleKey);
+                    const assigned = member.role_keys.includes(selectedRoleKey);
+                    const key = member.user_id + ":" + selectedRoleKey;
+                    return (
+                      <div key={member.user_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[#202f3b] py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-[12px] font-semibold text-[#e2ebf0]">{member.display_name}</p>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {member.role_keys.map((roleKey) => {
+                              const current = roles.find((item) => item.role_key === roleKey);
+                              return current ? <span key={roleKey} className="rounded-[3px] border px-1.5 py-0.5 text-[8px]"
+                                style={{ color: current.badge_color, borderColor: current.badge_color + "66", backgroundColor: current.badge_color + "10" }}>{current.label}</span> : null;
+                            })}
+                          </div>
+                        </div>
+                        <button type="button" disabled={!role || !catalogReady || pendingKey !== null || member.role_keys.includes(PROTECTED_ROLE)}
+                          onClick={() => void changeMemberRole(member, selectedRoleKey, assigned ? "revoke" : "grant")}
+                          className={"inline-flex min-w-[104px] items-center justify-center gap-1.5 rounded-[5px] border px-2.5 py-2 text-[10px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 " + (assigned
+                            ? "border-[#5d4545] bg-[#2b1e22] text-[#f2abab] hover:bg-[#392428]"
+                            : "border-[#456d39] bg-[#1b2a1c] text-[#a9e794] hover:border-[#7fe05c] hover:bg-[#223824]")}>
+                          {pendingKey === key ? <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"/>
+                            : assigned ? <><Minus size={12}/> Retirar</> : <><Plus size={12}/> Asignar</>}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             </div>
-            <footer className="flex min-h-[45px] items-center justify-between border-t border-[#263744] bg-[#0c141d] px-5 text-[9px] text-[#728897] sm:px-7">
-              <span>La autoridad de founder no se puede delegar.</span>
-              <span className="inline-flex items-center gap-1.5 text-[#8ea7b5]"><Check size={12} className="text-[#7fe05c]"/> CAMBIOS AUDITADOS</span>
-            </footer>
-          </div>
+          )}
+
+          {tab === "roles" && (
+            <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)]">
+              <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
+                <div className="flex items-center justify-between border-b border-[#253644] p-4">
+                  <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">CATÁLOGO DE ROLES</span>
+                  <button type="button" onClick={() => { setIsCreatingRole(true); setRoleForm(emptyRole()); }}
+                    disabled={!catalogReady} className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear rol">
+                    <Plus size={15}/>
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                  {roles.map((role) => (
+                    <button key={role.role_key} type="button"
+                      onClick={() => { setIsCreatingRole(false); setSelectedRoleKey(role.role_key); }}
+                      className={"mb-1 flex w-full items-center gap-2 rounded-[6px] border px-2.5 py-2 text-left transition " + (!isCreatingRole && selectedRoleKey === role.role_key
+                        ? "border-[#2b5665] bg-[#142a35]"
+                        : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: role.badge_color }}/>
+                      <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[#dce7ed]">{role.label}</span>
+                      {role.is_system && <span className="text-[7px] font-semibold tracking-wide text-[#718b9b]">SISTEMA</span>}
+                    </button>
+                  ))}
+                </div>
+              </aside>
+              <section className="min-h-0 overflow-y-auto p-5 sm:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">{isCreatingRole ? "NUEVA DEFINICIÓN" : "CONFIGURACIÓN DEL ROL"}</p>
+                    <h3 className="mt-2 text-[18px] font-bold text-white">{isCreatingRole ? "Crear rol personalizado" : selectedRole?.label ?? "Selecciona un rol"}</h3>
+                    <p className="mt-1 text-[11px] text-[#849aa9]">Jerarquía, identidad visual y capacidades de participación.</p>
+                  </div>
+                  {selectedRole?.is_system && !isCreatingRole && <span className="rounded-[4px] border border-[#3a4d5b] bg-[#17232d] px-2 py-1 text-[8px] font-semibold tracking-wide text-[#a7bac6]">ROL PROTEGIDO</span>}
+                </div>
+
+                {!catalogReady && <p className="mt-4 rounded-[5px] border border-[#6b542e] bg-[#2c2417] px-3 py-2 text-[10px] leading-5 text-[#edcb8d]">La migración del catálogo aún no está aplicada. El editor queda en modo lectura hasta que se valide el esquema.</p>}
+
+                {(isCreatingRole || selectedRole) && (
+                  <form onSubmit={(event) => void saveRole(event)} className="mt-5 space-y-5">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <label className={labelClass}>Nombre visible
+                        <input className={fieldClass} value={roleForm.label} maxLength={40} required disabled={!isCreatingRole && selectedRole?.is_system && !catalogReady}
+                          onChange={(event) => setRoleForm((current) => ({ ...current, label: event.target.value }))} placeholder="Ej. Colaborador"/>
+                      </label>
+                      <label className={labelClass}>Clave del rol
+                        <input className={fieldClass} value={roleForm.role_key} maxLength={32} required pattern="[a-z][a-z0-9_]{1,31}" disabled={!isCreatingRole}
+                          onChange={(event) => setRoleForm((current) => ({ ...current, role_key: event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))} placeholder="colaborador"/>
+                      </label>
+                    </div>
+                    <label className={labelClass}>Descripción
+                      <textarea className="mt-1.5 min-h-[66px] w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 py-2 text-[11px] text-[#e8eef3] outline-none focus:border-[#01c8ef]" value={roleForm.description} maxLength={240} disabled={!catalogReady}
+                        onChange={(event) => setRoleForm((current) => ({ ...current, description: event.target.value }))} placeholder="Para qué existe este rol y qué puede hacer."/>
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <label className={labelClass}>Color de insignia
+                        <div className="mt-1.5 flex h-10 items-center gap-2 rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-2">
+                          <input type="color" value={roleForm.badge_color} disabled={!catalogReady} onChange={(event) => setRoleForm((current) => ({ ...current, badge_color: event.target.value }))} className="h-7 w-8 cursor-pointer bg-transparent"/>
+                          <span className="text-[10px] text-[#a2b4c0]">{roleForm.badge_color.toUpperCase()}</span>
+                        </div>
+                      </label>
+                      <label className={labelClass}>Posición
+                        <input className={fieldClass} type="number" min={0} max={1000} value={roleForm.position} disabled={!catalogReady}
+                          onChange={(event) => setRoleForm((current) => ({ ...current, position: Number(event.target.value) }))}/>
+                      </label>
+                      <label className="flex items-center gap-2 self-end rounded-[6px] border border-[#2b414f] bg-[#0d1721] p-2.5 text-[10px] text-[#9cafbb]">
+                        <input type="checkbox" checked={roleForm.display_as_badge} disabled={!catalogReady} onChange={(event) => setRoleForm((current) => ({ ...current, display_as_badge: event.target.checked }))}/> Insignia
+                      </label>
+                      <label className="flex items-center gap-2 self-end rounded-[6px] border border-[#2b414f] bg-[#0d1721] p-2.5 text-[10px] text-[#9cafbb]">
+                        <input type="checkbox" checked={roleForm.hoist} disabled={!catalogReady} onChange={(event) => setRoleForm((current) => ({ ...current, hoist: event.target.checked }))}/> Separar lista
+                      </label>
+                    </div>
+
+                    <div className="rounded-[8px] border border-[#293c49] bg-[#0d161f] p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <SlidersHorizontal size={15} className="text-[#01c8ef}"/>
+                        <h4 className="text-[11px] font-bold text-[#e2ebf0]">Permisos de participación</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {PERMISSION_LABELS.map(({ key, label, description, icon: Icon }) => (
+                          <label key={key} className="flex cursor-pointer items-start gap-2.5 rounded-[6px] border border-[#253845] bg-[#111d27] p-3 transition hover:border-[#3c5868]">
+                            <input type="checkbox" className="mt-0.5 accent-[#7fe05c]" checked={roleForm.permissions[key]} disabled={!catalogReady || Boolean(selectedRole?.is_system && !isCreatingRole)}
+                              onChange={(event) => setRoleForm((current) => ({ ...current, permissions: { ...current.permissions, [key]: event.target.checked } }))}/>
+                            <span className="min-w-0">
+                              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[#d8e3e9]"><Icon size={12} className="text-[#8ea7b5}"/>{label}</span>
+                              <span className="mt-1 block text-[9px] leading-4 text-[#718796]">{description}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {selectedRole?.is_system && !isCreatingRole && <p className="mt-3 text-[9px] text-[#8299a8]">Las capacidades de los roles de sistema no se pueden cambiar desde el editor.</p>}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#293a47] pt-4">
+                      <label className="inline-flex items-center gap-2 text-[10px] text-[#9dafbb]">
+                        <input type="checkbox" checked={roleForm.mentionable} disabled={!catalogReady} onChange={(event) => setRoleForm((current) => ({ ...current, mentionable: event.target.checked }))}/> Permitir menciones al rol
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {selectedRole && !selectedRole.is_system && !isCreatingRole && <button type="button" onClick={() => void deleteRole()} disabled={!catalogReady || pendingKey !== null}
+                          className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#624044] px-3 py-2 text-[10px] text-[#efb1b2] hover:bg-[#321f24] disabled:opacity-40"><Trash2 size={12}/> Eliminar</button>}
+                        <button type="submit" disabled={!catalogReady || pendingKey !== null || !roleForm.label.trim() || !roleForm.role_key.trim()}
+                          className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#5eaa45] bg-[#7fe05c] px-4 py-2 text-[10px] font-bold text-[#0b160c] shadow-[0_2px_0_#3c762e] hover:bg-[#91ed6b] disabled:opacity-40"><Save size={12}/> {pendingKey === "role-save" ? "Guardando…" : isCreatingRole ? "Crear rol" : "Guardar cambios"}</button>
+                      </div>
+                    </div>
+                  </form>
+                )}
+              </section>
+            </div>
+          )}
+
+          {tab === "channels" && (
+            <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
+              <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
+                <div className="flex items-center justify-between border-b border-[#253644] p-4">
+                  <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">CANALES ACTIVOS</span>
+                  <button type="button" onClick={() => { setIsCreatingChannel(true); setChannelForm(emptyChannel()); setSelectedChannelId(null); }}
+                    disabled={!channelsReady} className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear canal">
+                    <Plus size={15}/>
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                  {CATEGORIES.map((category) => {
+                    const group = channels.filter((channel) => channel.category === category.value);
+                    if (!group.length) return null;
+                    return <section key={category.value} className="mb-4">
+                      <p className="mb-2 px-1 font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#718b9b]">{category.label}</p>
+                      {group.map((channel) => (
+                        <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setIsCreatingChannel(false); }}
+                          className={"mb-1 flex w-full items-center gap-2 rounded-[5px] border px-2.5 py-2 text-left " + (!isCreatingChannel && selectedChannelId === channel.id
+                            ? "border-[#2b5665] bg-[#142a35]" : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
+                          {channel.channel_type === "announcement" ? <Megaphone size={14} style={{ color: channel.accent_color }}/> : <Hash size={14} style={{ color: channel.accent_color }}/>}
+                          <span className="min-w-0 flex-1 truncate text-[10px] text-[#cbd9e0]">{channel.name}</span>
+                          {channel.is_private && <Lock size={11} className="text-[#d5af67}"/>}
+                          {channel.is_read_only && <EyeOff size={11} className="text-[#8298a7}"/>}
+                        </button>
+                      ))}
+                    </section>;
+                  })}
+                  {channels.length === 0 && <p className="p-3 text-[11px] text-[#8095a5]">No hay canales visibles.</p>}
+                </div>
+              </aside>
+              <section className="min-h-0 overflow-y-auto p-5 sm:p-7">
+                <div>
+                  <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">{isCreatingChannel ? "NUEVO ESPACIO" : "CONFIGURACIÓN DEL CANAL"}</p>
+                  <h3 className="mt-2 text-[18px] font-bold text-white">{isCreatingChannel ? "Crear canal" : selectedChannel?.name ?? "Selecciona un canal"}</h3>
+                  <p className="mt-1 text-[11px] leading-5 text-[#849aa9]">Orden, categoría, acceso, tipo y acento de cada canal.</p>
+                </div>
+                {!channelsReady && <p className="mt-4 rounded-[5px] border border-[#6b542e] bg-[#2c2417] px-3 py-2 text-[10px] leading-5 text-[#edcb8d]">La migración de configuración de canales aún no está aplicada. El listado sigue disponible en modo lectura.</p>}
+                {(isCreatingChannel || selectedChannel) && (
+                  <form onSubmit={(event) => void saveChannel(event)} className="mt-5 space-y-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <label className={labelClass}>Nombre del canal
+                        <input className={fieldClass} required maxLength={60} value={channelForm.name} disabled={!channelsReady}
+                          onChange={(event) => setChannelForm((current) => ({ ...current, name: event.target.value }))} placeholder="general"/>
+                      </label>
+                      <label className={labelClass}>Identificador URL
+                        <input className={fieldClass} required maxLength={49} pattern="[a-z0-9][a-z0-9-]{1,48}" value={channelForm.slug} disabled={!isCreatingChannel || !channelsReady}
+                          onChange={(event) => setChannelForm((current) => ({ ...current, slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))} placeholder="general"/>
+                      </label>
+                    </div>
+                    <label className={labelClass}>Descripción
+                      <textarea className="mt-1.5 min-h-[62px] w-full rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3 py-2 text-[11px] text-[#e8eef3] outline-none focus:border-[#01c8ef]" maxLength={240} value={channelForm.description} disabled={!channelsReady}
+                        onChange={(event) => setChannelForm((current) => ({ ...current, description: event.target.value }))} placeholder="Describe qué se publica aquí."/>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <label className={labelClass}>Categoría
+                        <select className={fieldClass} value={channelForm.category} disabled={!channelsReady} onChange={(event) => setChannelForm((current) => ({ ...current, category: event.target.value }))}>
+                          {CATEGORIES.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
+                        </select>
+                      </label>
+                      <label className={labelClass}>Orden
+                        <input className={fieldClass} type="number" min={0} max={1000} value={channelForm.position} disabled={!channelsReady}
+                          onChange={(event) => setChannelForm((current) => ({ ...current, position: Number(event.target.value) }))}/>
+                      </label>
+                      <label className={labelClass}>Tipo
+                        <select className={fieldClass} value={channelForm.channel_type} disabled={!channelsReady}
+                          onChange={(event) => setChannelForm((current) => ({ ...current, channel_type: event.target.value as "text" | "announcement" }))}>
+                          <option value="text">Texto</option><option value="announcement">Anuncios</option>
+                        </select>
+                      </label>
+                      <label className={labelClass}>Icono
+                        <select className={fieldClass} value={channelForm.icon_key} disabled={!channelsReady} onChange={(event) => setChannelForm((current) => ({ ...current, icon_key: event.target.value }))}>
+                          <option value="hash">Hash</option><option value="megaphone">Megáfono</option><option value="book-open">Libro</option><option value="graduation-cap">Graduación</option><option value="calendar">Calendario</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_2fr]">
+                      <label className={labelClass}>Color de acento
+                        <div className="mt-1.5 flex h-10 items-center gap-2 rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-2">
+                          <input type="color" value={channelForm.accent_color} disabled={!channelsReady} onChange={(event) => setChannelForm((current) => ({ ...current, accent_color: event.target.value }))} className="h-7 w-8 cursor-pointer bg-transparent"/>
+                          <span className="text-[10px] text-[#a2b4c0]">{channelForm.accent_color.toUpperCase()}</span>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-2 self-end rounded-[6px] border border-[#2b414f] bg-[#0d1721] p-2.5 text-[10px] text-[#9cafbb]">
+                        <input type="checkbox" checked={channelForm.is_private} disabled={!channelsReady} onChange={(event) => setChannelForm((current) => ({ ...current, is_private: event.target.checked }))}/> Privado
+                      </label>
+                      <label className="flex items-center gap-2 self-end rounded-[6px] border border-[#2b414f] bg-[#0d1721] p-2.5 text-[10px] text-[#9cafbb]">
+                        <input type="checkbox" checked={channelForm.is_read_only} disabled={!channelsReady} onChange={(event) => setChannelForm((current) => ({ ...current, is_read_only: event.target.checked }))}/> Solo lectura
+                      </label>
+                    </div>
+                    {selectedChannel && !isCreatingChannel && <div className="flex flex-wrap justify-between gap-3 border-t border-[#293a47] pt-4">
+                      <p className="text-[9px] leading-5 text-[#708797]">Archivar oculta el canal a los miembros; no elimina mensajes ni archivos.</p>
+                      <button type="button" onClick={() => void archiveChannel(selectedChannel)} disabled={!channelsReady || pendingKey !== null}
+                        className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#624044] px-3 py-2 text-[10px] text-[#efb1b2] hover:bg-[#321f24] disabled:opacity-40"><Archive size={12}/> Archivar canal</button>
+                    </div>}
+                    <div className="flex justify-end border-t border-[#293a47] pt-4">
+                      <button type="submit" disabled={!channelsReady || pendingKey !== null || !channelForm.name.trim() || !channelForm.slug.trim()}
+                        className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#5eaa45] bg-[#7fe05c] px-4 py-2 text-[10px] font-bold text-[#0b160c] shadow-[0_2px_0_#3c762e] hover:bg-[#91ed6b] disabled:opacity-40"><Save size={12}/> {pendingKey === "channel-save" ? "Guardando…" : isCreatingChannel ? "Crear canal" : "Guardar cambios"}</button>
+                    </div>
+                  </form>
+                )}
+              </section>
+            </div>
+          )}
         </div>
+
+        <footer className="flex min-h-[42px] items-center justify-between border-t border-[#263744] bg-[#0c141d] px-5 text-[9px] text-[#728897] sm:px-7">
+          <span>Founder conserva el control global. Las sanciones y cambios quedan auditados.</span>
+          <span className="inline-flex items-center gap-1.5 text-[#8ea7b5]"><Check size={12} className="text-[#7fe05c}"/> PROTECCIÓN ACTIVA</span>
+        </footer>
       </section>
     </div>
   );

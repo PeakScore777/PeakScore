@@ -492,6 +492,8 @@ export default function CommunityPage() {
   const [audioInputDeviceId, setAudioInputDeviceId] = useState("");
   const [audioOutputDeviceId, setAudioOutputDeviceId] = useState("");
   const [audioFeedback, setAudioFeedback] = useState("");
+  const [verificationFeedback, setVerificationFeedback] = useState("");
+  const [verificationRequestBusy, setVerificationRequestBusy] = useState(false);
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const editComposerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -1043,6 +1045,29 @@ export default function CommunityPage() {
     if (!audioPanelMode) return;
     void refreshAudioDevices();
   }, [audioPanelMode, refreshAudioDevices]);
+
+  async function requestCommunityVerification() {
+    if (!activeSpace || activeSpace.space_type !== "preicfes" || verificationRequestBusy) return;
+    setVerificationRequestBusy(true);
+    setVerificationFeedback("");
+    const { error: requestError } = await supabase.rpc("request_community_space_verification", {
+      p_space_id: activeSpace.id,
+    });
+    if (requestError) {
+      setVerificationFeedback(requestError.code === "42501"
+        ? "Debes formar parte de esta comunidad para solicitar su verificación."
+        : "No se pudo enviar la solicitud. Comprueba que la verificación esté habilitada.");
+    } else {
+      setCommunitySpaces((current) => current.map((space) => space.id === activeSpace.id
+        ? { ...space, verification_status: "pending" }
+        : space));
+      setActiveSpace((current) => current?.id === activeSpace.id
+        ? { ...current, verification_status: "pending" }
+        : current);
+      setVerificationFeedback("Solicitud enviada a revisión de PeakScore.");
+    }
+    setVerificationRequestBusy(false);
+  }
 
   async function verifyMicrophoneDevice() {
     if (!canUseMicrophone) return;
@@ -2006,6 +2031,20 @@ export default function CommunityPage() {
             <div className="relative z-10 min-w-0">
               <p className="community-server-eyebrow">COMUNIDAD</p>
               <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={26} height={26} unoptimized className="h-[26px] w-[26px] shrink-0 rounded-[8px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>{activeSpace?.verification_status === "verified" && <span className="community-verified-badge" title="Comunidad verificada por PeakScore" aria-label="Comunidad verificada"><ShieldCheck size={13}/><span>VERIFICADA</span></span>}</div>
+              {activeSpace?.space_type === "preicfes" && activeSpace.verification_status !== "verified" && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {activeSpace.verification_status === "pending" ? (
+                    <span className="community-verification-pending"><ShieldCheck size={12}/> Solicitud en revisión</span>
+                  ) : (
+                    <button type="button" disabled={verificationRequestBusy}
+                      onClick={() => void requestCommunityVerification()}
+                      className="community-verification-request">
+                      <ShieldCheck size={12}/> {verificationRequestBusy ? "Enviando…" : "Solicitar verificación"}
+                    </button>
+                  )}
+                  {verificationFeedback && <span role="status" className="community-verification-feedback">{verificationFeedback}</span>}
+                </div>
+              )}
             </div>
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>

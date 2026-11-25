@@ -3262,6 +3262,7 @@ export default function CommunityPage() {
                   <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                 </div>
               </div>
+
               <button type="button" className="ps-community-profile-close" ref={communityProfileCloseRef}
                 onClick={() => {
                   communityProfileRequestRef.current += 1;
@@ -3272,26 +3273,26 @@ export default function CommunityPage() {
                   clearCommunityMemberProfileUrl();
                 }} aria-label="Cerrar perfil"><X size={19}/></button>
 
-              <div className="ps-community-editor-preview-body ps-community-profile-live-body">
+              <div className="ps-community-editor-preview-body ps-community-profile-live-readonly-body">
                 <div className="ps-community-editor-preview-avatar-row">
                   <div className="ps-community-editor-preview-avatar-anchor">
                     <span className="ps-community-editor-preview-avatar-trigger" aria-hidden="true">
                       <span className={"ps-community-editor-preview-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none") + " is-decoration-" + (selectedCommunityProfile.avatarDecorationId ?? "none")}>
                         {selectedCommunityProfile.avatarUrl
-                          ? <Image src={selectedCommunityProfile.avatarUrl} alt="" fill unoptimized sizes="112px"/>
-                          : <span>{initials(selectedCommunityProfile.displayName)}</span>}
+                          ? <Image src={selectedCommunityProfile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
+                          : <span>{initials(selectedCommunityProfile.displayName || "PeakScore")}</span>}
                         <i className={"ps-community-editor-presence-dot " + (onlineMemberIds.includes(selectedCommunityProfile.userId) ? "is-online" : "is-offline")} role="img" aria-label={onlineMemberIds.includes(selectedCommunityProfile.userId) ? "En línea" : "Desconectado"}/>
                       </span>
                     </span>
                   </div>
-                  <div className={"ps-community-note-bubble" + (selectedCommunityProfile.statusText ? " has-status" : " is-empty")} aria-label="Estado personalizado">
+                  <span className={"ps-community-note-bubble" + (selectedCommunityProfile.statusText ? " has-status" : " is-empty")} aria-label="Estado personalizado">
                     {!selectedCommunityProfile.statusText && <Plus size={13} aria-hidden="true"/>}
                     <span className="ps-community-note-bubble-text">{selectedCommunityProfile.statusText || "Añadir estado"}</span>
-                  </div>
+                  </span>
                 </div>
 
                 <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title"
-                  value={selectedCommunityProfile.displayName || "Miembro"}
+                  value={selectedCommunityProfile.displayName || "Tu nombre"}
                   animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"}
                   previewMode={true}
                   className={"ps-community-editor-preview-name-static is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(selectedCommunityProfile.displayNameEffect, selectedCommunityProfile.displayNameColor)}
@@ -3304,7 +3305,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-editor-preview-identity-line">
                   <span className="ps-community-editor-preview-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
-                  <span className={"ps-community-editor-preview-pronouns" + (!selectedCommunityProfile.pronouns ? " is-empty" : "")}>{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
+                  <span className="ps-community-editor-preview-pronouns" aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
                 </div>
 
                 <div className="ps-community-editor-preview-role-row">
@@ -3318,11 +3319,11 @@ export default function CommunityPage() {
                   <p className="ps-community-editor-bio-display">{selectedCommunityProfile.about || "Cuéntanos un poco sobre ti…"}</p>
                 </section>
 
-                <section className="ps-community-editor-preview-meta ps-community-profile-live-member-since">
+                <section className="ps-community-editor-preview-meta">
                   <span>MIEMBRO DESDE</span>
                   <strong>{selectedCommunityProfile.joinedAt ? new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Fecha no disponible"}</strong>
                   {selectedCommunityProfile.isOwnProfile && (
-                    <button type="button" onClick={() => setCommunityProfileStudioOpen(true)}>
+                    <button type="button" className="ps-community-profile-editor-button" onClick={() => setCommunityProfileStudioOpen(true)}>
                       <Pencil size={15}/> Abrir editor de perfil
                     </button>
                   )}

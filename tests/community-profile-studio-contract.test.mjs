@@ -812,10 +812,12 @@ test("default display-name typeface is self-hosted and applied consistently", ()
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
 
-test("display-name animation picker includes the original catalogue plus Shuffle and keeps adaptive typography", () => {
-  for (const preset of ["decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal"]) {
-    assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
+test("display-name animation picker exposes the supported catalogue and keeps adaptive typography", () => {
+  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
+  for (const preset of ["decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"]) {
+    assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
+  assert.doesNotMatch(catalogue, /id: "(?:fuzzy-text|gradient-flow)"/);
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
   assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(studio, /tag === "h2"/);
@@ -833,11 +835,10 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(page, /revealDirection="random"/);
   assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
-  assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
-  assert.match(studio, /if \(animation === "fuzzy-text"\)/);
+  assert.match(studio, /if \(animation === "fuzzy-text"\)/); // Legacy-only component, excluded from picker and API.
   assert.match(studio, /if \(animation === "shuffle"\)/);
   assert.match(studio, /if \(animation === "inkline"\)/);
   assert.match(studio, /if \(animation === "halo-signal"\)/);
@@ -848,8 +849,6 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(mistfallName, /respectReducedMotion = true/);
   assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow\.ps-name-plain:not\(\.ps-community-name-preview-live\)/);
 });
-
-
 
 test("name entrance gallery renders as a uniform three-column card grid with separated labels and timings", () => {
   assert.match(nameStyleCss, /\.ps-community-name-style-group > \.ps-community-name-animation-grid\s*\{[\s\S]*?display:grid !important/);
@@ -862,26 +861,24 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 });
 
 
-test("motion gallery previews use the exact renderer for each selected animation", () => {
+test("motion gallery previews use the exact renderer for each selectable animation", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(studio, /const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample/);
   assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag = "span"/);
-  assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  for (const preset of ["decrypt", "fuzzy-text", "shuffle-blur", "shuffle-flip", "shuffle", "inkline", "halo-signal"]) {
+  assert.doesNotMatch(catalogue, /id: "(?:fuzzy-text|gradient-flow)"/);
+  for (const preset of ["decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.equal(['id: "decrypt", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:', 'id: "inkline", label:', 'id: "halo-signal", label:'].filter((entry) => catalogue.includes(entry)).length, 7);
   assert.ok(studio.includes("<DecryptedDisplayName"));
-  assert.ok(studio.includes("<FuzzyText"));
+  assert.ok(studio.includes("<FuzzyText")); // Guarded renderer retained for stale persisted values.
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}[\s\S]*?animation=\{selectedCommunityProfile\.displayNameAnimation \?\? "decrypt"\}/);
   assert.ok(fuzzyText.includes("getContext('2d'"));
 });
-
 
 test("Signal Break is retired from selectable display-name animations and legacy profiles fall back safely", () => {
   assert.doesNotMatch(studio, /signal-break|SignalBreakDisplayName/);
@@ -890,18 +887,19 @@ test("Signal Break is retired from selectable display-name animations and legacy
   assert.match(route, /displayNameAnimation: appearanceReady && DISPLAY_NAME_ANIMATIONS\.has\(appearance\?\.display_name_animation \?\? ""\) \? appearance\?\.display_name_animation : "decrypt"/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS\.has\(data\.display_name_animation \?\? ""\) \? data\.display_name_animation : "decrypt"/);
 });
-test("display-name animation catalogue includes Hacking Decode, Noise Reveal and three Shuffle styles", () => {
-  const expected = ["decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift","gradient-flow"];
+test("display-name animation catalogue exposes only supported profile motions", () => {
+  const expected = ["decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal(["id: \"decrypt\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:", "id: \"depth-lift\", label:", "id: \"gradient-flow\", label:"].filter((entry) => catalogue.includes(entry)).length, 11);
+  assert.doesNotMatch(catalogue, /id: "(?:fuzzy-text|gradient-flow)"/);
+  assert.equal(["id: \\"decrypt\\", label:", "id: \\"shuffle-blur\\", label:", "id: \\"shuffle-flip\\", label:", "id: \\"shuffle\\", label:", "id: \\"inkline\\", label:", "id: \\"halo-signal\\", label:", "id: \\"domino-flow\\", label:", "id: \\"mistfall\\", label:", "id: \\"depth-lift\\", label:"].filter((entry) => catalogue.includes(entry)).length, 9);
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
-  for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
+  for (const removed of ["fuzzy-text","gradient-flow","eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!animationWhitelist.includes('"' + removed + '"'));
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /"decrypt","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift","gradient-flow"/);
+  assert.match(route, /"decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
@@ -980,12 +978,15 @@ test("display-name animation storage exists before later catalogue migrations", 
   assert.match(mistfallName, /effectName/);
 });
 
-test("Gradient Flow is a lightweight animated text fill and is accepted by the profile API and database", () => {
+test("Gradient Flow is a name finish and not a selectable profile animation", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(catalogue, /id: "gradient-flow", label: "Gradient Flow"/);
-  assert.match(studio, /animation === "gradient-flow"/);
-  assert.match(page, /animation === "gradient-flow"/);
-  assert.match(route, /"depth-lift","gradient-flow"/);
+  const effects = studio.slice(studio.indexOf("const DISPLAY_NAME_EFFECTS:"), studio.indexOf("type DisplayNameColorMode:"));
+  assert.match(effects, /id: "gradient-flow", label: "Gradient Flow"/);
+  assert.doesNotMatch(catalogue, /id: "gradient-flow"/);
+  assert.match(studio, /"gradient-flow": "automatic"/);
+  assert.match(page, /"gradient-flow"/);
+  assert.match(route, /const DISPLAY_NAME_EFFECTS = new Set\([^\n]*"gradient-flow"/);
+  assert.doesNotMatch(route, /DISPLAY_NAME_ANIMATIONS = new Set\(\[[^\]]*"gradient-flow"/);
   assert.match(nameStyleCss, /\.ps-gradient-flow-name[\s\S]*?animation:ps-gradient-flow-text 5\.2s ease-in-out infinite/);
   assert.match(nameStyleCss, /@media \(prefers-reduced-motion:reduce\)[\s\S]*?\.ps-gradient-flow-name \{ animation:none/);
   assert.match(gradientFlowMigration, /'gradient-flow'/);
@@ -1043,49 +1044,21 @@ test("Hacking Decode uses a real sequential hexadecimal decrypt component", () =
 });
 
 
-test("Noise Reveal uses the React Bits canvas renderer with its curated motion preset", () => {
+test("Noise Reveal is excluded from selectable profile animations", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  assert.equal(["id: \"decrypt\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 5);
+  const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
+  assert.doesNotMatch(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
+  assert.ok(!animationWhitelist.includes('"fuzzy-text"'));
+  assert.match(studio, /if \(animation === "fuzzy-text"\)/); // Guarded legacy renderer only.
+  assert.match(page, /if \(animation === "fuzzy-text"\)/);
   assert.match(studio, /<FuzzyText/);
   assert.match(page, /<FuzzyText/);
-  assert.match(route, /"decrypt","fuzzy-text"/);
-  const expectedProps = [
-    'direction={fuzzySettings.direction}', 'sliceSize={fuzzySettings.sliceSize}',
-    'transitionDuration={fuzzySettings.transitionDuration}', 'letterSpacing={fuzzySettings.letterSpacing}',
-    'enableHover={fuzzySettings.enableHover}', 'clickEffect={fuzzySettings.clickEffect}',
-    'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
-    'glitchDuration={fuzzySettings.glitchDuration}'
-  ];
   assert.ok(studio.includes("trigger={fuzzySettings.trigger}"));
   assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
-  assert.match(studio, /baseIntensity=\{fuzzySettings\.baseIntensity\}/);
-  assert.match(studio, /hoverIntensity=\{fuzzySettings\.hoverIntensity\}/);
-  assert.match(studio, /fuzzRange=\{fuzzySettings\.fuzzRange\}/);
-  assert.match(studio, /fps=\{fuzzySettings\.fps\}/);
-  assert.ok(studio.includes('colorSplit={fuzzySettings.colorSplit}'));
-  assert.ok(studio.includes('intro={true}'));
-  assert.ok(studio.includes('introDuration={fuzzySettings.introDuration}'));
-  assert.ok(page.includes('colorSplit={fuzzySettings.colorSplit}'));
-  assert.ok(page.includes('intro={fuzzySettings.intro}'));
-  assert.ok(page.includes('introDuration={fuzzySettings.introDuration}'));
-  assert.ok(page.includes('baseIntensity={fuzzySettings.baseIntensity}'));
-  assert.ok(page.includes('hoverIntensity={fuzzySettings.hoverIntensity}'));
-  assert.ok(page.includes('fuzzRange={fuzzySettings.fuzzRange}'));
-  assert.match(page, /fps=\{fuzzySettings\.fps\}/);
-  for (const prop of expectedProps) {
-    assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);
-    assert.ok(page.includes(prop), 'Missing FuzzyText setting in community renderer: ' + prop);
-  }
   assert.match(fuzzyText, /getContext\('2d'/);
   assert.match(fuzzyText, /requestAnimationFrame\(tick\)/);
   assert.match(fuzzyText, /prefers-reduced-motion/);
-  assert.match(fuzzyText, /IntersectionObserver/);
-  assert.match(fuzzyAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text'/);
-  assert.match(fuzzyAnimationMigration, /drop constraint if exists community_member_profiles_display_name_animation_check/);
-  assert.doesNotMatch(studio + page + route + nameStyleCss, /glyph-storm|GlyphStorm/);
 });
-
 
 test("Noise Reveal is continuous, preset-driven and has no user-facing technical controls", () => {
   assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration|Fuzzy Text/);

@@ -185,7 +185,7 @@ export default function ParticleDriftDisplayName({
   const Tag = tag as ElementType;
   return (
     <Tag
-      ref={(node) => { hostRef.current = node as HTMLElement | null; }}
+      ref={(node: HTMLElement | null) => { hostRef.current = node; }}
       className={className + " ps-particle-drift"}
       style={{ ...style, display: "inline-block", position: "relative", verticalAlign: "baseline", width: "max-content", maxWidth: "100%" }}
       aria-label={text}

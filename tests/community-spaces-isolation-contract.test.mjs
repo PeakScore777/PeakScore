@@ -79,8 +79,8 @@ testCase("SECURITY DEFINER edit and mention functions cannot bypass PreICFES sco
   assert.match(migration, /and private\.has_space_permission\(channel\.space_id,'send_messages'\)/);
   assert.match(migration, /and private\.can_access_community_space\(channel\.space_id\)/);
   const editRpc = migration.slice(migration.indexOf("create or replace function public.edit_community_message("), migration.indexOf("create or replace function public.search_community_member_profiles("));
-  assert.match(editRpc, /private\\.has_space_permission\\(channel\\.space_id,'send_messages'\\)/);
-  assert.doesNotMatch(editRpc, /private\\.is_community_timed_out\\(\\)/);
+  assert.match(editRpc, /private\.has_space_permission\(channel\.space_id,'send_messages'\)/);
+  assert.doesNotMatch(editRpc, /private\.is_community_timed_out\(\)/);
   assert.match(migration, /create or replace function public\.search_community_member_profiles\([\s\S]*?community_space_members/);
   assert.match(migration, /create or replace function public\.resolve_community_mention_members\([\s\S]*?community_space_members/);
 });
@@ -121,25 +121,25 @@ testCase("global chat queries explicitly remain inside the PeakScore global comm
 
 testCase("PreICFES migration has one atomic channel/RLS definition set", () => {
   const count = (pattern) => (migration.match(pattern) ?? []).length;
-  assert.equal(count(/^\\s*begin;\\s*$/gim), 1);
-  assert.equal(count(/^\\s*commit;\\s*$/gim), 1);
-  assert.equal(count(/create or replace function public\\.manage_community_space_channel\\(/gi), 1);
-  assert.equal(count(/create or replace function public\\.can_attach_community_files\\(p_channel_id uuid\\)/gi), 1);
+  assert.equal(count(/^\s*begin;\s*$/gim), 1);
+  assert.equal(count(/^\s*commit;\s*$/gim), 1);
+  assert.equal(count(/create or replace function public\.manage_community_space_channel\(/gi), 1);
+  assert.equal(count(/create or replace function public\.can_attach_community_files\(p_channel_id uuid\)/gi), 1);
   assert.equal(count(/create policy community_space_guard_channels/gi), 1);
   assert.equal(count(/create policy community_space_guard_messages/gi), 1);
   assert.equal(count(/create policy community_space_guard_reactions/gi), 1);
   assert.equal(count(/create policy community_space_guard_comments/gi), 1);
-  assert.doesNotMatch(migration, /p_slug !~ '[^\\n]*drop policy/i);
+  assert.doesNotMatch(migration, /p_slug !~ '[^\n]*drop policy/i);
 });
 
 testCase("global and PreICFES timeouts do not leak across community boundaries", () => {
-  assert.match(migration, /v_space_type = 'global'[\\s\\S]*?private\\.is_community_timed_out\\(\\)/);
-  assert.match(migration, /private\\.is_space_timed_out\\(p_space_id\\)/);
-  assert.equal((migration.match(/^\\s*and not private\\.is_community_timed_out\\(\\)\\s*$/gm) ?? []).length, 0);
+  assert.match(migration, /v_space_type = 'global'[\s\S]*?private\.is_community_timed_out\(\)/);
+  assert.match(migration, /private\.is_space_timed_out\(p_space_id\)/);
+  assert.equal((migration.match(/^\s*and not private\.is_community_timed_out\(\)\s*$/gm) ?? []).length, 0);
   const editRpc = migration.slice(
     migration.indexOf("create or replace function public.edit_community_message("),
     migration.indexOf("create or replace function public.search_community_member_profiles("),
   );
-  assert.match(editRpc, /private\\.has_space_permission\\(channel\\.space_id,'send_messages'\\)/);
-  assert.doesNotMatch(editRpc, /private\\.is_community_timed_out\\(\\)/);
+  assert.match(editRpc, /private\.has_space_permission\(channel\.space_id,'send_messages'\)/);
+  assert.doesNotMatch(editRpc, /private\.is_community_timed_out\(\)/);
 });

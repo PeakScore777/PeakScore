@@ -1131,7 +1131,7 @@ export default function CommunityPage() {
       ...current.filter((item) => item.pending && item.channel_id === channelId),
     ]);
     setError("");
-  }, [channels]);
+  }, [channels, activeSpace?.id, activeSpace?.space_type]);
 
   useEffect(() => {
     let alive = true;
@@ -1746,7 +1746,7 @@ export default function CommunityPage() {
           <span className="community-server-divider"/>
           <button type="button"
             className={"community-server-icon " + (activeSpace?.space_type === "global" ? "community-server-icon-active" : "")}
-            onClick={() => { window.location.href = "/comunidad"; }}
+            onClick={() => router.push("/comunidad")}
             aria-label="PeakScore Community" aria-current={activeSpace?.space_type === "global" ? "page" : undefined}>
             <Users size={22}/>
           </button>
@@ -1757,7 +1757,7 @@ export default function CommunityPage() {
               title={space.name}
               aria-label={"Entrar a " + space.name}
               aria-current={activeSpace?.id === space.id ? "page" : undefined}
-              onClick={() => { window.location.href = "/comunidad?space=" + encodeURIComponent(space.slug); }}>
+              onClick={() => router.push("/comunidad?space=" + encodeURIComponent(space.slug))}>
               <GraduationCap size={19}/>
             </button>
           ))}

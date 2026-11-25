@@ -46,10 +46,10 @@ testCase("reply action sends a quoted first-class message instead of nesting a c
   assert.match(page, /onClick=\{\(\) => beginReply\(message\)\}/);
 });
 
-testCase("composer supports Enter, Shift+Enter, image picker and drag-and-drop", () => {
+testCase("composer supports Enter, Shift+Enter, image picker and drag-and-drop without helper copy", () => {
   assert.match(page, /event\.key === "Enter" && !event\.shiftKey/);
   assert.match(page, /event\.nativeEvent\.isComposing/);
-  assert.match(page, /Shift \+ Enter para nueva línea/);
+  assert.doesNotMatch(page, /community-chat-hint|Shift \+ Enter para nueva línea/);
   assert.match(page, /accept="image\/png,image\/jpeg,image\/webp"/);
   assert.match(page, /onDrop=\{\(event\) =>/);
   assert.match(page, /fetch\("\/api\/community\/attachments"/);
@@ -83,29 +83,30 @@ testCase("community visual system uses Discord charcoal surfaces with GameCode t
 });
 
 
-testCase("community member profile uses a Discord-style popout and complete data-backed profile card", () => {
+testCase("community member profile reuses the editor preview as a read-only social card", () => {
   assert.match(page, /openCommunityProfile\(memberId: string\)/);
   assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(member\.id\)\}/);
   assert.match(page, /onClick=\{\(\) => message\.author && void openCommunityProfile\(message\.author\.id\)\}/);
   assert.match(page, /ps-community-member-popout/);
   assert.match(page, /ps-community-profile-dialog/);
-  assert.match(page, /className="ps-community-profile-banner"/);
-  assert.match(page, /className="ps-community-profile-banner" style=\{\{ backgroundColor: "#20242D" \}\}/);
-  assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
-  assert.match(page, /ps-community-profile-name-row/);
-  assert.match(page, /ps-community-profile-about/);
-  assert.match(page, /ps-community-profile-facts/);
+  assert.match(page, /ps-community-editor-preview-card/);
+  assert.match(page, /className="ps-community-editor-preview-banner"/);
+  assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
+  assert.match(page, /ps-community-editor-preview-avatar/);
+  assert.match(page, /ps-community-editor-presence-dot/);
+  assert.match(page, /ps-community-editor-preview-name-static/);
+  assert.match(page, /ps-community-editor-preview-about/);
+  assert.match(page, /ps-community-profile-bio-readonly/);
+  assert.match(page, /--editor-theme-body-text/);
+  assert.match(page, /ps-community-editor-preview-meta/);
   assert.match(page, /MIEMBRO DESDE/);
-  assert.match(page, /Editar perfil/);
-  assert.match(page, /Copiar identificador/);
-  assert.match(page, /onlineMemberIds\.includes\(selectedCommunityProfile\.userId\)/);
+  assert.match(page, /Abrir editor de perfil/);
   assert.match(page, /CommunityProfileStudio/);
   assert.doesNotMatch(page, /community-profile-tabs|Actividad|Mutuales|Lista de deseos/);
   assert.match(styles, /ps-community-member-popout__card/);
-  assert.match(styles, /width: min\(820px, calc\(100vw - 40px\)\)/);
-  assert.match(styles, /font: 12px\/1\.7 var\(--font-geist-sans\)/);
-  assert.match(styles, /ps-community-profile-banner__fallback::before/);
-  assert.match(styles, /ps-community-profile-avatar/);
+  assert.match(styles, /ps-community-profile-live-readonly-body/);
+  assert.match(styles, /ps-community-profile-bio-readonly/);
+  assert.match(styles, /width: min\(458px, calc\(100vw - 24px\)\)/);
 });
 
 
@@ -119,11 +120,13 @@ testCase("member profiles open instantly from cached community data and enrich i
   assert.match(page, /CommunityProfileStudio/);
 });
 
-testCase("new community profiles have a designed cover and safe avatar fallback", () => {
-  assert.match(page, /ps-community-profile-banner__fallback/);
-  assert.match(page, /initials\(selectedCommunityProfile\.displayName\)/);
-  assert.match(styles, /ps-community-profile-banner__fallback/);
-  assert.match(styles, /ps-community-profile-banner__fallback::before/);
+testCase("new community profiles use the same editor cover and a safe avatar fallback", () => {
+  assert.match(page, /ps-community-editor-preview-banner/);
+  assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
+  assert.match(page, /backgroundColor: "#20242D"/);
+  assert.match(page, /initials\(selectedCommunityProfile\.displayName \|\| "PeakScore"\)/);
+  assert.match(styles, /ps-community-profile-live-card/);
+  assert.match(styles, /ps-community-editor-preview-avatar/);
 });
 
 testCase("PeakStyle categories open a collection and live-preview modal with PeakCoins actions", () => {
@@ -140,21 +143,21 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
   assert.match(styles, /peakstyle-picker-preview-card/);
 });
 
-testCase("community profile popout uses real controls and contains no platform-profile shortcuts", () => {
+testCase("community profile popout keeps member actions separate from the owner's editor action", () => {
   const profileMarkup = page.slice(page.indexOf("ps-community-member-popout"));
   assert.doesNotMatch(profileMarkup, /[🌟✨⭐]/u);
   assert.doesNotMatch(profileMarkup, /\/perfil\/estilo/);
   assert.doesNotMatch(profileMarkup, /PeakStyle|Tablero|Actividad|Lista de deseos/);
   assert.match(profileMarkup, /ps-community-member-popout__actions/);
-  assert.match(profileMarkup, /ps-community-profile-actions/);
   assert.match(profileMarkup, /Mencionar/);
-  assert.match(profileMarkup, /Copiar identificador/);
+  assert.match(profileMarkup, /Abrir editor de perfil/);
+  assert.match(profileMarkup, /ps-community-profile-editor-button/);
   assert.doesNotMatch(profileMarkup, /community-profile-tabs/);
 });
 
 
 testCase("member rail is role-grouped, collapsible, and uses a clean Discord-style online heading", () => {
-  assert.match(page, /community-member-online-heading/);
+  assert.match(page, /community-member-group-label/);
   assert.match(page, /community-member-group-toggle/);
   assert.match(page, /aria-expanded=\{!collapsed\}/);
   assert.match(page, /setCollapsedMemberGroups/);

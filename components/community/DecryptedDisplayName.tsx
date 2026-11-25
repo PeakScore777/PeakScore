@@ -247,7 +247,7 @@ export default function DecryptedDisplayName({
       if (ticker) clearInterval(ticker);
       if (restartTimer) clearTimeout(restartTimer);
     };
-  }, [graphemes, pool, safeSpeed, safeDuration, maxIterations, sequential, revealDirection, loop, loopDelay, animateOn, forceMotion]);
+  }, [graphemes, pool, safeSpeed, safeDuration, maxIterations, sequential, revealDirection, loop, loopDelay, animateOn, forceMotion, className, style?.fontFamily, style?.fontSize, style?.fontWeight, style?.letterSpacing]);
 
   const safeStyle = {
     ...style,

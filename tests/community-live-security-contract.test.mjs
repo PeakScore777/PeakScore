@@ -43,7 +43,8 @@ testCase("live session hosts use the independent community identity, not the gam
   assert.match(livePage, /from\("community_member_profiles"\)/);
   assert.match(livePage, /display_name,avatar_path/);
   assert.match(livePage, /community-profile-avatars/);
-  assert.doesNotMatch(livePage, /community_public_profiles|from\("profiles"\)/);
+  assert.doesNotMatch(livePage, /community_public_profiles/);
+  assert.match(livePage, /from\("profiles"\)\s*\.select\("role"\)\.eq\("id", user\.id\)/);
   assert.match(socialProfiles, /create table if not exists public\.community_member_profiles/);
 });
 

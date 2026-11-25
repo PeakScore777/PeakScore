@@ -8434,3 +8434,18 @@ html:has(.ps-community-picker-overlay) * {
   clip-path:none !important;
   will-change:auto !important;
 }
+
+
+/* Keep the real text visible until the FuzzyText canvas has completed its first draw. */
+.ps-community-name-render.ps-fuzzy-text-wrap > .ps-fuzzy-text-layout,
+.ps-community-name-animation-option .ps-fuzzy-text-wrap > .ps-fuzzy-text-layout {
+  visibility:visible !important;
+  opacity:1 !important;
+  color:inherit !important;
+  -webkit-text-fill-color:currentColor !important;
+}
+.ps-community-name-render.ps-fuzzy-text-wrap:has(> .ps-fuzzy-text-canvas[data-render-ready="true"]) > .ps-fuzzy-text-layout,
+.ps-community-name-animation-option .ps-fuzzy-text-wrap:has(> .ps-fuzzy-text-canvas[data-render-ready="true"]) > .ps-fuzzy-text-layout {
+  visibility:hidden !important;
+  opacity:0 !important;
+}

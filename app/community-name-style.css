@@ -8526,3 +8526,20 @@ html:has(.ps-community-picker-overlay) * {
     opacity:1 !important;
   }
 }
+
+/* Final StrokeText timing: 1.6s contour draw plus a short fill delay, then
+   keep the completed lettering visible before the next loop. */
+.ps-community-name-render.ps-inkline-name .ps-inkline-outline .ps-inkline-char {
+  stroke-dasharray:max(7em,200px) !important;
+  stroke-dashoffset:max(7em,200px) !important;
+}
+@keyframes ps-inkline-letter-draw {
+  0%,4% { stroke-dashoffset:max(7em,200px); opacity:1; }
+  35%,70% { stroke-dashoffset:0; opacity:1; }
+  84%,100% { stroke-dashoffset:max(7em,200px); opacity:0; }
+}
+@keyframes ps-inkline-stroketext-fill {
+  0%,42% { clip-path:inset(0 100% 0 0); }
+  54%,78% { clip-path:inset(0 0 0 0); }
+  92%,100% { clip-path:inset(0 100% 0 0); }
+}

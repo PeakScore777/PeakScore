@@ -160,7 +160,15 @@ export default function InklineDisplayName({
             className="ps-inkline-outline"
             style={{ fontFamily, fontWeight }}
           >
-            {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
+            {chars.map((char, index) => (
+              <tspan
+                key={index}
+                className="ps-inkline-char"
+                style={{ animationDelay: `${index * 45}ms` }}
+              >
+                {char === " " ? "\u00a0" : char}
+              </tspan>
+            ))}
           </text>
           <text
             x="0"

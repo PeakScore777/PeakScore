@@ -678,7 +678,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     if (animation === "none") return <Tag className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
-      <span className="ps-name-animation-char" style={{
+      <span className="ps-name-animation-char" data-glyph={character === " " ? "\u00A0" : character} style={{
         "--char-index": index,
         "--char-delay": displayNameCharacterDelay(index, characters.length, animation),
         "--char-direction": index % 2 === 0 ? "-1" : "1",

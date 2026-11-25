@@ -1162,8 +1162,8 @@ test("selected effects are preserved on the animated glyph layer", () => {
 
 test("Mistfall and animated list names respect visibility and preview performance budgets", () => {
   assert.match(mistfallName, /new IntersectionObserver/);
-  assert.match(mistfallName, /maxParticles = previewMode \? 120 : 360/);
-  assert.match(mistfallName, /fps = previewMode \? 60 : 30/);
+  assert.match(mistfallName, /maxParticles = previewMode \? 120 : 520/);
+  assert.match(mistfallName, /fps = previewMode \? 60 : 24/);
   assert.match(mistfallName, /window\.setTimeout\(\(\) => \{/);
   assert.match(mistfallName, /finished = false/);
   assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);

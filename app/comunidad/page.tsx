@@ -3295,7 +3295,7 @@ export default function CommunityPage() {
                   <div className="ps-community-profile-actions">
                     {selectedCommunityProfile.isOwnProfile ? (
                       <button type="button" className="is-primary" onClick={() => setCommunityProfileStudioOpen(true)}>
-                        <Pencil size={15}/> Editar perfil
+                        <Pencil size={15}/> Abrir editor de perfil
                       </button>
                     ) : (
                       <button type="button" className="is-primary" onClick={() => {

@@ -8519,8 +8519,44 @@ html:has(.ps-community-picker-overlay) * {
 .ps-community-name-animation-sample.effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
   color:var(--name-solid-color,#55cfa3) !important;-webkit-text-fill-color:var(--name-solid-color,#55cfa3) !important;text-shadow:0 1px 0 rgb(255 255 255 / 36%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111) !important;background:none !important;
 }
-/* Inkline SVG fill receives the same Aurora/Cromo paint as the other renderers. */
-.ps-community-name-render.effect-gradient .ps-inkline-fill,
-.ps-community-name-animation-sample.effect-gradient .ps-inkline-fill { fill:url(#ps-inkline-aurora) !important; }
-.ps-community-name-render.effect-toon .ps-inkline-fill,
-.ps-community-name-animation-sample.effect-toon .ps-inkline-fill { fill:url(#ps-inkline-chrome) !important; }
+
+/* Shared production roots use the same finish contract as the editor's live preview. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#9d83ff),var(--name-gradient-end,#61b8ed),#fff,var(--name-gradient-start,#9d83ff)) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(180deg,#fff 0%,#dce2eb 22%,#8995a8 43%,#fff 52%,#9aa6b8 76%,#f8fafc 100%) !important;
+  background-size:100% 220% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 1px 1px rgb(0 0 0 / 18%) !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(110deg,#f6a8cf 0%,#ffe2b8 18%,#fff 34%,#b7f1e0 52%,#a9c8ff 70%,#d5a6ff 86%,#f6a8cf 100%) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 5px rgb(255 255 255 / 24%) !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff)) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#ffb52e,#f5e84a,#43df9a,#35c9dc,#4d8cff,#a66cff,#f05bc8,#ff665e,#ffb52e) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:#f4eaff !important;-webkit-text-fill-color:#f4eaff !important;
+  text-shadow:0 0 5px var(--name-solid-color,#a88af2),0 0 12px var(--name-solid-color,#a88af2) !important;background:none !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop :is(.ps-decrypted-cell,.ps-decrypted-glyph,.ps-name-shuffle__track > span,.ps-halo-signal__glyph,.ps-domino-flow__glyph,.ps-name-animation-char,.ps-depth-lift__face) {
+  color:var(--name-solid-color,#55cfa3) !important;-webkit-text-fill-color:var(--name-solid-color,#55cfa3) !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 36%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111) !important;background:none !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-inkline-fill,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-inkline-fill,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-inkline-fill,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-inkline-fill {
+  fill:currentColor !important;
+}

@@ -2781,3 +2781,228 @@
 .root :global(.community-user-panel-dock .community-user-settings) {
   display: none !important;
 }
+
+
+/* Composer: remove the cyan focus rectangle and the framed attachment plus. */
+.root :global(.community-chat-composer:focus-within) {
+  border-color: #454a52 !important;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 3%) !important;
+}
+.root :global(.community-chat-input:focus),
+.root :global(.community-chat-input:focus-visible) {
+  outline: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.root :global(.community-chat-add) {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: 0 !important;
+  border-color: transparent !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #b5bac1 !important;
+  font-size: 25px;
+  transition: color .14s ease, background .14s ease, transform .14s ease;
+}
+.root :global(.community-chat-add:hover:not(:disabled)) {
+  background: #292c32 !important;
+  color: #fff !important;
+}
+.root :global(.community-chat-add:active:not(:disabled)) {
+  transform: scale(.92);
+}
+
+/* Channel rail scrollbar appears only while the pointer is over the rail. */
+.root :global(.community-channel-list) {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.root :global(.community-channel-list:hover) {
+  scrollbar-color: #555b65 transparent;
+}
+.root :global(.community-channel-list::-webkit-scrollbar) {
+  width: 8px;
+}
+.root :global(.community-channel-list::-webkit-scrollbar-track) {
+  background: transparent;
+}
+.root :global(.community-channel-list::-webkit-scrollbar-thumb) {
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  background-clip: padding-box;
+}
+.root :global(.community-channel-list:hover::-webkit-scrollbar-thumb) {
+  background: #555b65;
+  background-clip: padding-box;
+}
+.root :global(.community-channel-list::-webkit-scrollbar-thumb:hover) {
+  background: #737b87;
+  background-clip: padding-box;
+}
+
+/* Modern, readable channel labels; pixel styling stays in section headings only. */
+.root :global(.community-channel-name) {
+  font-family: var(--font-geist-sans), Inter, "Segoe UI", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  line-height: 1.35;
+}
+.root :global(.community-private-channel-glyph) {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  color: #929aa6;
+}
+.root :global(.community-private-channel-glyph > svg:first-child) {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.6;
+}
+.root :global(.community-private-channel-glyph > svg:last-child) {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  padding: 1px;
+  border-radius: 3px;
+  background: #292c32;
+  color: #b5bac1;
+  stroke-width: 2.8;
+}
+
+/* WhatsApp-like mention treatment: soft lime tint, no bright blue pill. */
+.root :global(.community-chat-mention),
+.root :global(.community-chat-mention-self) {
+  display: inline;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgb(127 224 92 / 13%) !important;
+  color: #b7ed9e !important;
+  font-weight: 650;
+  text-decoration: none;
+}
+.root :global(.community-chat-message-mentioned) {
+  border-left: 2px solid #d8b45b;
+  background: linear-gradient(90deg, rgb(216 180 91 / 8%), transparent 72%);
+}
+.root :global(.community-chat-reply-reference) {
+  border-left: 2px solid #8b929d;
+  border-radius: 0 6px 6px 0;
+  background: rgb(255 255 255 / 4%);
+  color: #b5bac1;
+  transition: background .14s ease, color .14s ease;
+}
+.root :global(.community-chat-reply-reference:hover) {
+  background: rgb(255 255 255 / 7%);
+  color: #f2f3f5;
+}
+
+/* Message overflow menu: actions are explicit; the ellipsis never deletes. */
+.root :global(.community-message-more-wrap) {
+  position: relative;
+  display: inline-flex;
+}
+.root :global(.community-message-more-trigger) {
+  min-width: 30px;
+  justify-content: center;
+  border-radius: 6px;
+}
+.root :global(.community-message-more-trigger.is-open),
+.root :global(.community-message-more-trigger:hover) {
+  background: #343840;
+  color: #fff;
+}
+.root :global(.community-message-context-menu) {
+  position: absolute;
+  z-index: 300;
+  right: 0;
+  bottom: calc(100% + 7px);
+  display: flex;
+  width: 224px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid #353941;
+  border-radius: 10px;
+  background: #181a1f;
+  box-shadow: 0 14px 38px rgb(0 0 0 / 48%);
+  color: #dbdee1;
+}
+.root :global(.community-message-context-menu > button) {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #dbdee1;
+  font: 500 13px/1.2 var(--font-geist-sans), Inter, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.root :global(.community-message-context-menu > button:hover) {
+  background: #30343b;
+  color: #fff;
+}
+.root :global(.community-message-context-menu > button.is-danger) {
+  color: #f28b82;
+}
+.root :global(.community-message-context-menu > button.is-danger:hover) {
+  background: rgb(242 93 93 / 13%);
+  color: #ffaaa4;
+}
+.root :global(.community-message-menu-divider) {
+  height: 1px;
+  margin: 4px 5px;
+  background: #343840;
+}
+
+/* Remove the gray inset card around the social profile; retain the dock itself. */
+.root :global(.community-user-panel-dock .community-user-panel-button),
+.root :global(.community-user-panel-dock .community-user-panel-button:hover) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.root :global(.community-user-panel-dock .community-user-panel-button::before) {
+  display: none !important;
+}
+
+/* Premium verification mark: crisp scallop, controlled violet depth and white tick. */
+.root :global(.community-verified-dot) {
+  width: 21px;
+  height: 21px;
+  flex-basis: 21px;
+  color: #8b5cf6;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 30%)) drop-shadow(0 0 5px rgb(139 92 246 / 24%));
+}
+.root :global(.community-member-verified-dot) {
+  width: 17px;
+  height: 17px;
+  flex-basis: 17px;
+  color: #8b5cf6;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 30%));
+}
+.root :global(.community-verified-dot svg),
+.root :global(.community-member-verified-dot svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .root :global(.community-chat-add),
+  .root :global(.community-message-context-menu > button) {
+    transition: none;
+  }
+}

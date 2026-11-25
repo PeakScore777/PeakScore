@@ -110,7 +110,7 @@ export default function InklineDisplayName({
       cancelled = true;
       observer?.disconnect();
     };
-  }, [text, fontFamily, fontWeight, strokeWidth]);
+  }, [text, fontFamily, fontWeight, strokeWidth, className, style?.fontFamily, style?.fontSize, style?.fontWeight, style?.letterSpacing]);
 
   useEffect(() => {
     if (!box || !textRef.current || !wipeRef.current) return;

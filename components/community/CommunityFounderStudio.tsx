@@ -49,6 +49,8 @@ type Channel = {
   accent_color: string;
 };
 
+type ChannelForm = Omit<Channel, "id">;
+
 type Tab = "members" | "roles" | "channels" | "spaces";
 type Props = { onClose: () => void };
 
@@ -84,7 +86,7 @@ const emptyRole = () => ({
   permissions: { ...DEFAULT_PERMISSIONS },
 });
 
-const emptyChannel = () => ({
+const emptyChannel = (): ChannelForm => ({
   slug: "",
   name: "",
   description: "",
@@ -92,7 +94,7 @@ const emptyChannel = () => ({
   position: 10,
   is_private: false,
   is_read_only: false,
-  channel_type: "text" as const,
+  channel_type: "text",
   icon_key: "hash",
   accent_color: "#01C8EF",
 });
@@ -123,7 +125,7 @@ function toRoleForm(role: Role | null) {
   } : emptyRole();
 }
 
-function toChannelForm(channel: Channel | null) {
+function toChannelForm(channel: Channel | null): ChannelForm {
   return channel ? {
     slug: channel.slug,
     name: channel.name,
@@ -147,7 +149,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
   const [selectedRoleKey, setSelectedRoleKey] = useState("administrador");
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [roleForm, setRoleForm] = useState(emptyRole);
-  const [channelForm, setChannelForm] = useState(emptyChannel);
+  const [channelForm, setChannelForm] = useState<ChannelForm>(() => emptyChannel());
   const [isCreatingRole, setIsCreatingRole] = useState(false);
   const [isCreatingChannel, setIsCreatingChannel] = useState(false);
   const [loading, setLoading] = useState(true);

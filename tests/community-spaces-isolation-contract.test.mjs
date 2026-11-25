@@ -72,6 +72,15 @@ testCase("a PreICFES collaborator can use private staff channels only in assigne
   assert.match(migration, /p_permission in \('send_messages','attach_files','add_reactions'\)[\s\S]*?private\.is_space_timed_out\(p_space_id\)/);
 });
 
+testCase("SECURITY DEFINER edit and mention functions cannot bypass PreICFES scope or timeout", () => {
+  assert.match(migration, /create or replace function public\.edit_community_message\([\s\S]*?security definer/);
+  assert.match(migration, /and private\.has_space_permission\(channel\.space_id,'send_messages'\)/);
+  assert.match(migration, /and private\.can_access_community_space\(channel\.space_id\)/);
+  assert.match(migration, /and not private\.is_community_timed_out\(\)/);
+  assert.match(migration, /create or replace function public\.search_community_mention_members\([\s\S]*?community_space_members/);
+  assert.match(migration, /create or replace function public\.resolve_community_mention_members\([\s\S]*?community_space_members/);
+});
+
 testCase("attachments are checked against their target channel space before Storage upload", () => {
   assert.match(migration, /create or replace function public\.can_attach_community_files\(p_channel_id uuid\)/);
   assert.match(attachmentApi, /can_attach_community_files/);

@@ -1051,9 +1051,9 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","fuzzy-text"/);
   const expectedProps = [
-    'colorSplit={previewMode ? Math.max(fuzzySettings.colorSplit, 0.12) : fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
+    'colorSplit={fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
     'sliceSize={fuzzySettings.sliceSize}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
-    'intro={previewMode ? true : fuzzySettings.intro}', 'introDuration={previewMode ? 950 : fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
+    'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
     'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
     'glitchDuration={fuzzySettings.glitchDuration}'
   ];
@@ -1063,6 +1063,9 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(studio, /hoverIntensity=\{previewMode \? Math\.max\(fuzzySettings\.hoverIntensity, 0\.32\) : fuzzySettings\.hoverIntensity\}/);
   assert.match(studio, /fuzzRange=\{previewMode \? Math\.max\(fuzzySettings\.fuzzRange, 18\) : fuzzySettings\.fuzzRange\}/);
   assert.match(studio, /fps=\{previewMode \? 45 : fuzzySettings\.fps\}/);
+  assert.match(studio, /colorSplit=\\{previewMode \\? Math\\.max\\(fuzzySettings\\.colorSplit, 0\\.12\\) : fuzzySettings\\.colorSplit\\}/);
+  assert.match(studio, /intro=\\{previewMode \\? true : fuzzySettings\\.intro\\}/);
+  assert.match(studio, /loopIntro=\\{previewMode\\}/);
   assert.ok(page.includes('baseIntensity={fuzzySettings.baseIntensity}'));
   assert.ok(page.includes('hoverIntensity={fuzzySettings.hoverIntensity}'));
   assert.ok(page.includes('fuzzRange={fuzzySettings.fuzzRange}'));

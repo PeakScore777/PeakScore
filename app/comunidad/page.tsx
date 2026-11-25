@@ -131,6 +131,9 @@ type PublicRoleBadge = {
   role_key: string;
   label: string;
   badge_color: string;
+  position?: number | null;
+  mentionable?: boolean | null;
+  hoist?: boolean | null;
 };
 type Message = {
   id: string; channel_id: string; author_id: string; body: string;
@@ -710,7 +713,8 @@ export default function CommunityPage() {
       if (ids.length) {
         const extendedRoles = await supabase.from("community_public_role_badges")
           .select("user_id,role_key,label,badge_color,position,mentionable,hoist")
-          .in("user_id", ids);
+          .in("user_id", ids)
+          .order("position", { ascending: true });
         if (!extendedRoles.error) {
           roleRows = extendedRoles.data ?? [];
         } else {
@@ -910,8 +914,9 @@ export default function CommunityPage() {
         .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors")
         .in("user_id", authorIds),
       supabase.from("community_public_role_badges")
-        .select("user_id,role_key,label,badge_color")
-        .in("user_id", authorIds),
+        .select("user_id,role_key,label,badge_color,position,mentionable,hoist")
+        .in("user_id", authorIds)
+        .order("position", { ascending: true }),
       supabase.rpc("get_community_message_metrics", { p_message_ids: messageIds }),
       attachmentPaths.length
         ? supabase.storage.from("community-attachments").createSignedUrls(attachmentPaths, 3600)
@@ -924,9 +929,16 @@ export default function CommunityPage() {
         : Promise.resolve({ data: [], error: null }),
     ]);
 
-    // Message delivery must not depend on optional schema additions. The public
-    // badge projection, aggregate metrics and attachment bucket may be deployed
-    // separately; omit enhancements until their migration is present.
+    // Message delivery must not depend on optional schema additions. Role hierarchy
+    // is read from the secure projection; retain legacy badges when newer fields
+    // are not present yet.
+    let compatiblePublicRoleBadges = (publicRoleBadges ?? []) as PublicRoleBadge[];
+    if (badgeError && authorIds.length) {
+      const legacyBadges = await supabase.from("community_public_role_badges")
+        .select("user_id,role_key,label,badge_color")
+        .in("user_id", authorIds);
+      compatiblePublicRoleBadges = (legacyBadges.data ?? []) as PublicRoleBadge[];
+    }
     if (authorsError || badgeError || metricsError || signedImagesResult.error || mentionProfilesResult.error) {
       console.warn("[PeakScore Community] Optional profile/badge/metrics/attachment/mention data is unavailable.", {
         profiles: authorsError?.code ?? null,
@@ -970,13 +982,16 @@ export default function CommunityPage() {
       }]),
     );
     const roleMap = new Map<string, CommunityRole[]>();
-    ((badgeError ? [] : publicRoleBadges ?? []) as PublicRoleBadge[]).forEach((badge) => {
+    compatiblePublicRoleBadges.forEach((badge) => {
       const current = roleMap.get(badge.user_id) ?? [];
       current.push({
         role_key: badge.role_key,
         label: badge.label,
         badge_color: badge.badge_color,
         display_as_badge: true,
+        position: badge.position ?? undefined,
+        mentionable: badge.mentionable ?? false,
+        hoist: badge.hoist ?? false,
       });
       roleMap.set(badge.user_id, current);
     });

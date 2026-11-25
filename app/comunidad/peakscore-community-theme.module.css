@@ -2074,3 +2074,105 @@
     padding-left: 7px;
   }
 }
+
+
+/* Discord-like community identity header: the banner is the visual backdrop,
+   while the name, verification state and Founder edit control remain readable. */
+.root :global(.community-server-header) {
+  position: relative;
+  isolation: isolate;
+  min-height: 96px;
+  padding: 13px 14px;
+  border-bottom: 1px solid #252d38;
+  background:
+    radial-gradient(ellipse at 10% 100%, rgb(1 200 239 / 15%), transparent 52%),
+    radial-gradient(ellipse at 100% 0%, rgb(127 224 92 / 10%), transparent 50%),
+    #111820;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 25%);
+}
+.root :global(.community-server-banner-image) {
+  position: absolute !important;
+  z-index: -2 !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  opacity: 1 !important;
+  object-fit: cover !important;
+  object-position: center 44% !important;
+  filter: saturate(1.08) contrast(1.04);
+  transform: scale(1.015);
+}
+.root :global(.community-server-banner-shade) {
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgb(8 12 18 / 88%) 0%, rgb(8 12 18 / 62%) 48%, rgb(8 12 18 / 34%) 100%),
+    linear-gradient(0deg, rgb(8 12 18 / 54%) 0%, transparent 70%);
+}
+.root :global(.community-server-eyebrow) {
+  margin: 0 0 4px;
+  color: rgb(224 231 239 / 70%);
+  font: 750 8px/1.2 Inter, "DM Sans", system-ui, sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 5px rgb(0 0 0 / 70%);
+}
+.root :global(.community-server-name) {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #f6f8fb;
+  font: 780 14px/1.2 Inter, "DM Sans", system-ui, sans-serif;
+  letter-spacing: -.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 80%);
+}
+.root :global(.community-server-header .community-verified-badge) {
+  border-color: rgb(139 234 69 / 55%);
+  background: rgb(10 23 13 / 78%);
+  color: #b5f27c;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+  text-shadow: 0 1px 5px rgb(0 0 0 / 60%);
+}
+.root :global(.community-server-branding-edit) {
+  position: absolute;
+  z-index: 15;
+  top: 12px;
+  right: 48px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 8px;
+  background: rgb(15 19 25 / 68%);
+  color: #e7eef6;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 24%);
+  cursor: pointer;
+  opacity: .86;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background .14s ease, border-color .14s ease, color .14s ease, opacity .14s ease, transform .14s ease;
+}
+.root :global(.community-server-branding-edit:hover) {
+  border-color: rgb(139 234 69 / 58%);
+  background: rgb(25 43 28 / 88%);
+  color: #b8f58c;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+.root :global(.community-server-branding-edit:focus-visible) {
+  outline: 2px solid #8bea45;
+  outline-offset: 2px;
+}
+@media (max-width: 680px) {
+  .root :global(.community-server-header) {
+    min-height: 90px;
+    padding: 11px 12px;
+  }
+  .root :global(.community-server-name) {
+    font-size: 13px;
+  }
+}

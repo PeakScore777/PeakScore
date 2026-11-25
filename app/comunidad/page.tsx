@@ -2126,11 +2126,15 @@ export default function CommunityPage() {
           .select("id,channel_id,author_id,body,created_at,edited_at")
           .single();
         if (insertError || !row) {
+          const databaseMessage = insertError?.message ?? "";
+          const phoneVerificationRequired = /tel[eé]fono|phone verification|verify your phone/i.test(databaseMessage);
           throw new Error(submittedReply && ["42703", "PGRST204"].includes(insertError?.code ?? "")
             ? "Las respuestas directas estarán disponibles cuando se aplique la migración de chat."
-            : insertError?.message.includes("row-level security")
-              ? "Este canal no permite publicar con tu cuenta."
-              : "No se pudo enviar el mensaje. Inténtalo de nuevo.");
+            : phoneVerificationRequired
+              ? "Debes verificar tu identidad por teléfono antes de poder enviar mensajes en este servidor."
+              : insertError?.code === "42501" || /row-level security/i.test(databaseMessage)
+                ? "No tienes permiso para publicar en este canal. Comprueba los requisitos de acceso del servidor."
+                : "No se pudo enviar el mensaje. Inténtalo de nuevo.");
         }
         savedMessage = {
           ...row,
@@ -2996,7 +3000,6 @@ export default function CommunityPage() {
                 disabled={(!draft.trim() && !attachmentFile) || sending || uploadingAttachment || activeChannel?.is_read_only}
                 aria-label="Enviar mensaje">{uploadingAttachment ? <span className="community-chat-spinner"/> : <Send size={17}/>}</button>
             </form>
-            <p className="community-chat-hint">Enter para enviar · Shift + Enter para nueva línea</p>
           </div>
         </section>
 

@@ -1415,10 +1415,22 @@ export default function CommunityPage() {
         accent_color: "#7FE05C",
         icon_path: null, banner_path: null, icon_url: null, banner_url: null,
       };
-      const spacesAvailable = !spaceResult.error;
+      let spacesRows = (spaceResult.data ?? []) as CommunitySpace[];
+      let spacesQueryError = spaceResult.error;
+      if (spacesQueryError && ["42703", "PGRST204", "PGRST205"].includes(spacesQueryError.code ?? "")) {
+        const legacySpaces = await supabase.from("community_spaces")
+          .select("id,slug,name,space_type,visibility,icon_key,accent_color,icon_path,banner_path")
+          .eq("is_enabled", true)
+          .order("created_at", { ascending: false });
+        spacesQueryError = legacySpaces.error;
+        spacesRows = ((legacySpaces.data ?? []) as Omit<CommunitySpace, "verification_status">[])
+          .map((space) => ({ ...space, verification_status: space.space_type === "global" ? "verified" : "unverified" }));
+      }
+      const spacesAvailable = !spacesQueryError;
       const accessibleSpaces = spacesAvailable
-        ? ((spaceResult.data ?? []) as CommunitySpace[]).map((space) => ({
+        ? spacesRows.map((space) => ({
             ...space,
+            verification_status: space.verification_status ?? (space.space_type === "global" ? "verified" : "unverified"),
             icon_url: space.icon_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.icon_path).data.publicUrl : null,
             banner_url: space.banner_path ? supabase.storage.from("community-profile-avatars").getPublicUrl(space.banner_path).data.publicUrl : null,
           }))

@@ -994,8 +994,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           return;
         }
         const cropped = new File([blob], "peakscore-avatar.png", { type: "image/png", lastModified: Date.now() });
-        closeAvatarCrop();
-        void uploadAsset("avatar", cropped);
+        void uploadAsset("avatar", cropped).then((saved) => { if (saved) closeAvatarCrop(); });
       }, "image/png");
     };
     image.onerror = () => setError("No se pudo abrir la imagen para recortarla.");
@@ -1189,8 +1188,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   }
 
-  async function uploadAsset(kind: "avatar" | "banner", file: File | null) {
-    if (!file || !profile.isOwnProfile || busy || uploading || deleting) return;
+  async function uploadAsset(kind: "avatar" | "banner", file: File | null): Promise<boolean> {
+    if (!file || !profile.isOwnProfile || busy || uploading || deleting) return false;
     const maxBytes = kind === "avatar" ? 5 * 1024 * 1024 : 8 * 1024 * 1024;
     const allowedType = ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type);
     if (!allowedType || file.size <= 0 || file.size > maxBytes) {
@@ -1230,8 +1229,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         : (payload?.animated ? "GIF del cartel actualizado." : "Cartel actualizado."));
       setAvatarPickerOpen(false);
       onSaved();
+      return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar la imagen.");
+      return false;
     } finally {
       setUploading(null);
       clearAssetInputs(kind);

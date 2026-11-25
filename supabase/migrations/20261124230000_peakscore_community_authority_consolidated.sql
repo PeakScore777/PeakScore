@@ -310,6 +310,9 @@ begin
   if p_target_user_id is null or p_target_user_id = v_actor then
     raise exception 'Invalid moderation target' using errcode = '22023';
   end if;
+  if p_action is null or p_action not in ('kick', 'timeout') then
+    raise exception 'Unsupported moderation action' using errcode = '42501';
+  end if;
   if exists (
     select 1
     from private.community_founder_control founder
@@ -562,6 +565,7 @@ create policy community_founder_insert_comments
     )
   );
 
+-- Community disable is a reversible soft stop; it never deletes messages, channels or evidence.
 -- A kicked account cannot inspect the community. A timed-out account can still
 -- read, but cannot publish, react, or comment until the timeout expires.
 drop policy if exists community_founder_guard_channels on public.community_channels;

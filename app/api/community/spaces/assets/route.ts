@@ -59,8 +59,10 @@ export async function POST(request: Request) {
   // Read the target community with the authenticated Founder session so RLS
   // and the same Supabase project used by the browser govern this lookup.
   // The service-role client is reserved for the actual Storage object upload.
+  // Keep icon changes independent from the optional banner_path migration.
+  // Older remote schemas may have icon_path but not banner_path yet.
   const { data: space, error: spaceError } = await supabase.from("community_spaces")
-    .select("id,slug,space_type,icon_path,banner_path")
+    .select("id,slug,space_type,icon_path")
     .eq("id", spaceId)
     .eq("is_enabled", true)
     .maybeSingle();
@@ -97,7 +99,24 @@ export async function POST(request: Request) {
     return fail("No se pudo guardar la imagen.", 503);
   }
 
-  const previousPath = ownedSpaceAssetPath(assetType === "icon" ? space.icon_path : space.banner_path, spaceId, assetType);
+  let previousAssetPath: string | null = space.icon_path;
+  if (assetType === "banner") {
+    const { data: bannerRow, error: bannerLookupError } = await supabase.from("community_spaces")
+      .select("banner_path")
+      .eq("id", spaceId)
+      .eq("is_enabled", true)
+      .maybeSingle();
+    if (bannerLookupError) {
+      await supabaseAdmin.storage.from(BUCKET).remove([assetPath]);
+      console.error("[PeakScore Community] Banner column is unavailable for this upload.", {
+        code: bannerLookupError.code,
+        spaceId,
+      });
+      return fail("La portada todavía no está habilitada en la base de datos remota. El icono sí puede actualizarse; primero debe aplicarse la migración de portada en un entorno validado.", 503);
+    }
+    previousAssetPath = bannerRow?.banner_path ?? null;
+  }
+  const previousPath = ownedSpaceAssetPath(previousAssetPath, spaceId, assetType);
   const { data: updated, error: updateError } = await supabase.rpc("update_community_space_asset", {
     p_space_id: spaceId, p_asset_type: assetType, p_asset_path: assetPath,
   });

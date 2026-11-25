@@ -56,8 +56,14 @@ export async function POST(request: Request) {
     415);
   }
 
-  const { data: space, error: spaceError } = await supabaseAdmin.from("community_spaces")
-    .select("id,slug,space_type,icon_path,banner_path").eq("id", spaceId).eq("is_enabled", true).maybeSingle();
+  // Read the target community with the authenticated Founder session so RLS
+  // and the same Supabase project used by the browser govern this lookup.
+  // The service-role client is reserved for the actual Storage object upload.
+  const { data: space, error: spaceError } = await supabase.from("community_spaces")
+    .select("id,slug,space_type,icon_path,banner_path")
+    .eq("id", spaceId)
+    .eq("is_enabled", true)
+    .maybeSingle();
   if (spaceError) {
     console.error("[PeakScore Community] Branding space lookup failed.", {
       code: spaceError.code,

@@ -1643,3 +1643,50 @@
   cursor: default !important;
   pointer-events: none !important;
 }
+
+
+/* Original PeakScore banner artwork, composed entirely with first-party CSS. */
+.ps-community-editor-preview-banner.is-peakscore-banner {
+  position:relative!important;
+  overflow:hidden!important;
+  background-color:#0d1d22!important;
+  background-image:
+    radial-gradient(ellipse at 78% 18%,rgb(36 206 175 / 17%),transparent 37%),
+    radial-gradient(ellipse at 22% 82%,rgb(0 197 225 / 14%),transparent 43%),
+    linear-gradient(125deg,#0a1119 0%,#10262a 52%,#101b20 100%)!important;
+}
+.ps-community-editor-preview-banner.is-peakscore-banner::before {
+  content:""!important;
+  position:absolute!important;
+  inset:-30%!important;
+  background:
+    repeating-linear-gradient(135deg,transparent 0 26px,rgb(99 231 213 / 5%) 27px 28px,transparent 29px 52px),
+    radial-gradient(ellipse at center,transparent 20%,rgb(0 0 0 / 30%) 100%)!important;
+  transform:rotate(-7deg)!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-preview-banner.is-peakscore-banner::after {
+  content:""!important;
+  position:absolute!important;
+  top:-90%!important;
+  left:-40%!important;
+  width:58%!important;
+  height:280%!important;
+  background:linear-gradient(90deg,transparent,rgb(71 221 191 / 10%),transparent)!important;
+  transform:rotate(23deg)!important;
+  animation:ps-community-banner-sweep 11s ease-in-out infinite alternate!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-banner-current-preview.is-peakscore-banner {
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(ellipse at 78% 18%,rgb(36 206 175 / 17%),transparent 37%),
+    radial-gradient(ellipse at 22% 82%,rgb(0 197 225 / 14%),transparent 43%),
+    linear-gradient(125deg,#0a1119 0%,#10262a 52%,#101b20 100%)!important;
+}
+@keyframes ps-community-banner-sweep {
+  from{transform:translateX(-10%) rotate(23deg);opacity:.45}
+  to{transform:translateX(150%) rotate(23deg);opacity:.9}
+}
+@media(prefers-reduced-motion:reduce){.ps-community-editor-preview-banner.is-peakscore-banner::after{animation:none!important}}

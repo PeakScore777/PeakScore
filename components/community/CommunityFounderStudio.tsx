@@ -67,6 +67,7 @@ type Props = {
   onClose: () => void;
   initialTab?: Tab;
   initialAction?: "create-channel" | "create-category" | null;
+  initialChannelId?: string | null;
   onAssetUpdated?: (assetType: "icon" | "banner", path: string, url: string) => void;
 };
 
@@ -160,6 +161,7 @@ export default function CommunityFounderStudio({
   onClose,
   initialTab = "branding",
   initialAction = null,
+  initialChannelId = null,
   onAssetUpdated,
 }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -176,7 +178,7 @@ export default function CommunityFounderStudio({
   const [isCreatingCategory, setIsCreatingCategory] = useState(initialAction === "create-category");
   const [query, setQuery] = useState("");
   const [selectedRoleKey, setSelectedRoleKey] = useState("administrador");
-  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(initialChannelId);
   const [roleForm, setRoleForm] = useState(emptyRole);
   const [channelForm, setChannelForm] = useState<ChannelForm>(() => emptyChannel());
   const [isCreatingRole, setIsCreatingRole] = useState(false);
@@ -343,6 +345,18 @@ export default function CommunityFounderStudio({
     })();
     return () => { active = false; };
   }, [load]);
+
+  useEffect(() => {
+    if (!initialChannelId || channels.length === 0) return;
+    const target = channels.find((channel) => channel.id === initialChannelId);
+    if (!target) return;
+    setTab("channels");
+    setIsCreatingCategory(false);
+    setIsCreatingChannel(false);
+    setSelectedCategoryId(null);
+    setSelectedChannelId(target.id);
+    setChannelForm(toChannelForm(target));
+  }, [channels, initialChannelId]);
 
   const visibleMembers = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("es");

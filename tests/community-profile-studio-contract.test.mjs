@@ -878,7 +878,7 @@ test("motion gallery previews use the exact renderer for each selectable animati
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}[\s\S]*?animation=\{selectedCommunityProfile\.displayNameAnimation \?\? "decrypt"\}/);
-  assert.doesNotMatch(studio, /<FuzzyText|resolveFuzzyTextAppearance/);
+  assert.doesNotMatch(studio, /<FuzzyText\s|resolveFuzzyTextAppearance/);
 });
 
 test("Signal Break is retired from selectable display-name animations and legacy profiles fall back safely", () => {
@@ -1181,8 +1181,9 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(page, /--ps-chroma-shift-end/);
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-canvas-hue/);
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-word-hue/);
-  assert.match(studio, /ps-name-plain/);
-  assert.match(page, /ps-name-plain/);
+  assert.match(studio, /ps-name-animation-char/);
+  assert.match(page, /ps-name-animation-char/);
+  assert.match(nameEffectsCss, /\.ps-name-animation-char::after/);
   const dominoKeyframes = nameStyleCss.slice(nameStyleCss.lastIndexOf("@keyframes ps-domino-flow-topple"));
   assert.match(dominoKeyframes, /rotateZ\(12deg\)/);
   assert.doesNotMatch(dominoKeyframes, /rotateZ\(82deg\)/);
@@ -1404,9 +1405,10 @@ test("Name Atelier previews keep independent finishes, profile motion and the bo
   assert.ok(motionGrid.includes("ps-community-name-animation-option"));
   assert.ok(motionGrid.includes("ps-community-name-animation-sample"));
   assert.ok(studio.includes("draftDisplayNameAnimation"));
-  assert.doesNotMatch(studio, /loopIntro=|loopDelay=|colorSplit=|resolveFuzzyTextAppearance|<FuzzyText\\s/);
+  assert.doesNotMatch(studio, /loopIntro=|colorSplit=|resolveFuzzyTextAppearance|<FuzzyText\\s/);
   assert.doesNotMatch(page, /resolveFuzzyTextAppearance|<FuzzyText\\s/);
   assert.match(studio, /displayNameFuzzySettings/); // Legacy persisted settings remain data-only.
+  assert.match(studio, /loopDelay=\{3400\}/); // Hacking Decode's intentional repeat pause.
 
   const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));

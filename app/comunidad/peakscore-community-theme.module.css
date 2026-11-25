@@ -1832,3 +1832,65 @@
   .root :global(.community-user-audio-controls .community-user-control-group .community-user-control-chevron) { flex-basis: 18px; width: 18px; }
   .root :global(.community-user-audio-controls .community-user-settings) { width: 30px; }
 }
+
+
+/* One continuous Discord-like user dock across server rail + channel rail. */
+.root :global(.community-user-panel-dock) {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  align-self: end;
+  z-index: 45;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  min-height: 68px;
+  padding: 8px 12px;
+  border-top: 1px solid #30343b;
+  background: #17191e;
+  box-shadow: 0 -8px 22px rgb(0 0 0 / 20%);
+}
+.root :global(.community-sidebar) {
+  min-height: 0;
+}
+.root :global(.community-channel-list) {
+  min-height: 0;
+  padding-bottom: 82px;
+}
+.root :global(.community-server-rail) {
+  padding-bottom: 84px;
+}
+.root :global(.community-user-panel-dock .community-user-panel-button) {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 320px;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls) {
+  flex: 0 0 auto;
+  padding: 0 0 0 12px;
+}
+@media (max-width: 680px) {
+  .root :global(.community-user-panel-dock) {
+    display: none;
+  }
+  .root :global(.community-sidebar.community-sidebar-open + .community-user-panel-dock) {
+    position: absolute;
+    display: flex;
+    left: 54px;
+    bottom: 0;
+    z-index: 45;
+    width: min(280px, calc(100vw - 54px));
+    min-height: 62px;
+    padding: 6px 8px;
+  }
+  .root :global(.community-sidebar.community-sidebar-open + .community-user-panel-dock .community-user-panel-button) {
+    max-width: none;
+  }
+  .root :global(.community-sidebar.community-sidebar-open + .community-user-panel-dock .community-user-audio-controls) {
+    gap: 1px;
+    padding-left: 3px;
+  }
+}

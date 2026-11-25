@@ -2705,9 +2705,7 @@ export default function CommunityPage() {
                         onMouseEnter={() => setMessageMenuFor((current) => current && current !== message.id ? null : current)}
                         className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "") + (message.pending ? " community-chat-message-pending" : "") + (userId && message.body.includes("@{" + userId + "|") ? " community-chat-message-mentioned" : "")}>
                         <div className="community-chat-avatar-column">
-                          {groupedWithPrevious ? (
-                            <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
-                          ) : (
+                          {groupedWithPrevious ? null : (
                             <div className="community-chat-avatar-wrap">
                               <button type="button" className="community-chat-avatar-trigger"
                                 disabled={!message.author}
@@ -3293,11 +3291,7 @@ export default function CommunityPage() {
                   )}
 
                   <div className="ps-community-profile-actions">
-                    {selectedCommunityProfile.isOwnProfile ? (
-                      <button type="button" className="is-primary" onClick={() => setCommunityProfileStudioOpen(true)}>
-                        <Pencil size={15}/> Abrir editor de perfil
-                      </button>
-                    ) : (
+                    {!selectedCommunityProfile.isOwnProfile && (
                       <button type="button" className="is-primary" onClick={() => {
                         insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
                         communityProfileRequestRef.current += 1;
@@ -3366,9 +3360,14 @@ export default function CommunityPage() {
                   </section>
 
                   <aside className="ps-community-profile-facts">
-                    <div>
+                    <div className="ps-community-profile-joined">
                       <span>MIEMBRO DESDE</span>
                       <strong>{selectedCommunityProfile.joinedAt ? new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Fecha no disponible"}</strong>
+                      {selectedCommunityProfile.isOwnProfile && (
+                        <button type="button" className="ps-community-profile-editor-button" onClick={() => setCommunityProfileStudioOpen(true)}>
+                          <Pencil size={15}/> Abrir editor de perfil
+                        </button>
+                      )}
                     </div>
                     <div>
                       <span>IDENTIFICADOR</span>

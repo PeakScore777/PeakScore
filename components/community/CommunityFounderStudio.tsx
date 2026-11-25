@@ -5,7 +5,7 @@ import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
   Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip, BadgeCheck,
-  Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus,
+  Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus, Folder, FolderPlus, Pencil,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import CommunitySpacesStudio from "@/components/community/CommunitySpacesStudio";
@@ -50,17 +50,24 @@ type Channel = {
 };
 
 type ChannelForm = Omit<Channel, "id">;
+type Category = { id: string; name: string; position: number; is_archived: boolean };
+type CategoryForm = { name: string; position: number };
 
 type Tab = "branding" | "members" | "roles" | "channels" | "spaces";
 type GlobalBrandingForm = {
-  name: string; description: string; icon_key: string; accent_color: string;
+  name: string; description: string; icon_key: string; accent_color: string; background_color: string;
   icon_path: string | null; banner_path: string | null; icon_url: string | null; banner_url: string | null;
 };
 const EMPTY_GLOBAL_BRANDING: GlobalBrandingForm = {
   name: "PeakScore Community", description: "Comunidad global de PeakScore.", icon_key: "users",
-  accent_color: "#7FE05C", icon_path: null, banner_path: null, icon_url: null, banner_url: null,
+  accent_color: "#7FE05C", background_color: "#171C24",
+  icon_path: null, banner_path: null, icon_url: null, banner_url: null,
 };
-type Props = { onClose: () => void };
+type Props = {
+  onClose: () => void;
+  initialTab?: Tab;
+  initialAction?: "create-channel" | "create-category" | null;
+};
 
 const PROTECTED_ROLE = "fundador";
 const DEFAULT_PERMISSIONS: RolePermissions = {
@@ -148,21 +155,30 @@ function toChannelForm(channel: Channel | null): ChannelForm {
   } : emptyChannel();
 }
 
-export default function CommunityFounderStudio({ onClose }: Props) {
-  const [tab, setTab] = useState<Tab>("branding");
+export default function CommunityFounderStudio({
+  onClose,
+  initialTab = "branding",
+  initialAction = null,
+}: Props) {
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [globalBranding, setGlobalBranding] = useState<GlobalBrandingForm>({ ...EMPTY_GLOBAL_BRANDING });
   const [brandingSaving, setBrandingSaving] = useState(false);
   const [brandingAssetPending, setBrandingAssetPending] = useState<"icon" | "banner" | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesReady, setCategoriesReady] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [categoryForm, setCategoryForm] = useState<CategoryForm>({ name: "", position: 100 });
+  const [isCreatingCategory, setIsCreatingCategory] = useState(initialAction === "create-category");
   const [query, setQuery] = useState("");
   const [selectedRoleKey, setSelectedRoleKey] = useState("administrador");
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [roleForm, setRoleForm] = useState(emptyRole);
   const [channelForm, setChannelForm] = useState<ChannelForm>(() => emptyChannel());
   const [isCreatingRole, setIsCreatingRole] = useState(false);
-  const [isCreatingChannel, setIsCreatingChannel] = useState(false);
+  const [isCreatingChannel, setIsCreatingChannel] = useState(initialAction === "create-channel");
   const [loading, setLoading] = useState(true);
   const [catalogReady, setCatalogReady] = useState(false);
   const [channelsReady, setChannelsReady] = useState(false);
@@ -174,7 +190,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
     setLoading(true);
     setError("");
 
-    const [memberResult, assignmentResult, roleExtended, channelExtended, globalBrandingExtended] = await Promise.all([
+    const [memberResult, assignmentResult, roleExtended, channelExtended, globalBrandingExtended, categoryExtended] = await Promise.all([
       supabase.from("community_member_profiles")
         .select("user_id,display_name,avatar_path,member_number")
         .order("display_name", { ascending: true })
@@ -192,11 +208,17 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         .order("category", { ascending: true })
         .order("position", { ascending: true }),
       supabase.from("community_spaces")
-        .select("id,name,description,icon_key,accent_color,icon_path,banner_path")
+        .select("id,name,description,icon_key,accent_color,background_color,icon_path,banner_path")
         .eq("id", GLOBAL_COMMUNITY_SPACE_ID)
         .eq("space_type", "global")
         .eq("is_enabled", true)
         .maybeSingle(),
+      supabase.from("community_channel_categories")
+        .select("id,name,position,is_archived")
+        .eq("space_id", GLOBAL_COMMUNITY_SPACE_ID)
+        .eq("is_archived", false)
+        .order("position", { ascending: true })
+        .order("name", { ascending: true }),
     ]);
 
     let globalBrandingRow = globalBrandingExtended.data;
@@ -217,6 +239,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         description: globalBrandingRow.description ?? "",
         icon_key: globalBrandingRow.icon_key ?? "users",
         accent_color: globalBrandingRow.accent_color ?? "#7FE05C",
+        background_color: globalBrandingRow.background_color ?? EMPTY_GLOBAL_BRANDING.background_color,
         icon_path: globalBrandingRow.icon_path ?? null,
         banner_path: globalBrandingRow.banner_path ?? null,
         icon_url: globalBrandingRow.icon_path
@@ -297,6 +320,14 @@ export default function CommunityFounderStudio({ onClose }: Props) {
       : defaultRole?.role_key ?? "administrador");
     setRoleForm((current) => current.role_key ? current : toRoleForm(defaultRole));
     setChannels((channelRows ?? []) as Channel[]);
+    const categoryRows = categoryExtended.data ?? [];
+    setCategories(categoryRows.map((category) => ({
+      id: String(category.id),
+      name: String(category.name),
+      position: Number(category.position ?? 100),
+      is_archived: Boolean(category.is_archived),
+    })));
+    setCategoriesReady(!categoryExtended.error);
     setCatalogReady(roleIsReady);
     setChannelsReady(channelsAreReady);
     setLoading(false);

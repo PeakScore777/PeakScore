@@ -860,6 +860,7 @@ create policy community_space_guard_messages
       select 1 from public.community_channels channel
       where channel.id = community_messages.channel_id
         and private.can_access_community_space(channel.space_id)
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   )
   with check (
@@ -867,6 +868,7 @@ create policy community_space_guard_messages
       select 1 from public.community_channels channel
       where channel.id = community_messages.channel_id
         and private.can_access_community_space(channel.space_id)
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   );
 
@@ -927,6 +929,7 @@ create policy community_space_guard_reactions
       join public.community_channels channel on channel.id = message.channel_id
       where message.id = community_reactions.message_id
         and private.can_access_community_space(channel.space_id)
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   )
   with check (
@@ -936,6 +939,7 @@ create policy community_space_guard_reactions
       join public.community_channels channel on channel.id = message.channel_id
       where message.id = community_reactions.message_id
         and private.can_access_community_space(channel.space_id)
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   );
 
@@ -984,6 +988,7 @@ create policy community_space_guard_comments
       join public.community_channels channel on channel.id = message.channel_id
       where message.id = community_message_comments.message_id
         and private.can_access_community_space(channel.space_id)
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   )
   with check (
@@ -993,6 +998,7 @@ create policy community_space_guard_comments
       join public.community_channels channel on channel.id = message.channel_id
       where message.id = community_message_comments.message_id
         and private.can_access_community_space(channel.space_id)
+        and (channel.is_private = false or private.can_view_private_community_channel(channel.space_id))
     )
   );
 

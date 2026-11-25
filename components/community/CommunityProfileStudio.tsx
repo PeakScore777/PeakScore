@@ -1837,38 +1837,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               onClick={() => setDraftDisplayNameAnimation(item.id)}
                               aria-pressed={draftDisplayNameAnimation === item.id}
                               title={item.description}>
-                              {draftDisplayNameAnimation === item.id ? (
-                                <DisplayNameMotionPreview
-                                  value={displayName || "OMEGA"}
-                                  animation={item.id}
-                                  fuzzySettings={draftDisplayNameFuzzySettings}
-                                  className={previewClass}
-                                  style={previewStyle}
-                                />
-                              ) : (
-                                <span
-                                  aria-hidden="true"
-                                  className={"ps-name-preview-motion name-preview-" + item.id}
-                                >
-                                  <span
-                                    className={previewClass + " ps-name-preview-face"}
-                                    data-preview-text={displayName || "OMEGA"}
-                                    style={previewStyle}
-                                  >
-                                    {displayNameCharacters(displayName || "OMEGA").map((character, index, all) => (
-                                      <span
-                                        className="ps-name-preview-glyph"
-                                        key={index}
-                                        style={{
-                                          "--preview-index": index,
-                                          "--preview-direction": index % 2 === 0 ? -1 : 1,
-                                          "--ps-chroma-position": (all.length <= 1 ? 50 : index / (all.length - 1) * 100) + "%",
-                                        } as CSSProperties}
-                                      >{character === " " ? "\u00a0" : character}</span>
-                                    ))}
-                                  </span>
-                                </span>
-                              )}
+                              <DisplayNameMotionPreview
+                                value={displayName || "OMEGA"}
+                                animation={item.id}
+                                fuzzySettings={draftDisplayNameFuzzySettings}
+                                className={previewClass}
+                                style={previewStyle}
+                              />
                               <strong>{item.label}</strong>
                             </button>
                           );

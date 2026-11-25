@@ -67,7 +67,8 @@ export async function POST(request: Request) {
   }
 
   const isPreIcfesCommunity = space?.space_type === "preicfes";
-  const isGlobalCommunity = space?.space_type === "global" && space.slug === "peakscore";
+  const isGlobalCommunity = space?.space_type === "global"
+    && space.id === "00000000-0000-4000-8000-000000000001";
   if (!space || (!isPreIcfesCommunity && !isGlobalCommunity)) {
     console.warn("[PeakScore Community] Unsupported or missing branding space.", {
       spaceId,

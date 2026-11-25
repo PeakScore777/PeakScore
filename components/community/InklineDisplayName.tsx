@@ -164,7 +164,7 @@ export default function InklineDisplayName({
               <tspan
                 key={index}
                 className="ps-inkline-char"
-                style={{ animationDelay: `${index * 45}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 {char === " " ? "\u00a0" : char}
               </tspan>

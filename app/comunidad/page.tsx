@@ -155,6 +155,7 @@ type MentionMember = {
 
 const CHAT_REACTIONS = ["👍", "❤️", "😂", "😮", "🙏", "🔥", "🎉", "💯", "😭", "👀", "🧠", "🚀", "👏", "🤝", "💡"];
 const CATEGORIES = ["COMUNIDAD", "MATERIAS", "PROFESORES", "AULAS Y EVENTOS"];
+const GLOBAL_COMMUNITY_SPACE_ID = "00000000-0000-4000-8000-000000000001";
 const CATEGORY_LABELS: Record<string, string> = {
   COMUNIDAD: "Canales",
   MATERIAS: "Áreas ICFES",
@@ -1038,7 +1039,9 @@ export default function CommunityPage() {
         supabase.from("community_member_profiles")
           .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
-          .select("id,slug,name,description,category,position,is_read_only,is_private,channel_type,icon_key,accent_color").order("position"),
+          .select("id,slug,name,description,category,position,is_read_only,is_private,channel_type,icon_key,accent_color")
+          .eq("space_id", GLOBAL_COMMUNITY_SPACE_ID)
+          .order("position"),
         supabase.from("community_role_catalog")
           .select("role_key,label,badge_color,display_as_badge,position,hoist"),
         supabase.from("community_member_roles")

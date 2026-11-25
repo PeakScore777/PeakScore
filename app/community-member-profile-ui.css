@@ -804,3 +804,43 @@
   .ps-community-profile-body { padding: 0 15px 17px; }
   .ps-community-profile-banner { flex-basis: 122px; height: 122px; min-height: 122px; }
 }
+
+
+/* Own-profile editor action belongs directly beneath the member-since date. */
+.ps-community-profile-facts > .ps-community-profile-joined {
+  align-items: flex-start;
+}
+.ps-community-profile-joined > strong {
+  display: block;
+}
+.ps-community-profile-editor-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  margin-top: 11px;
+  padding: 0 11px;
+  border: 1px solid #168f9d;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #19c4cf, #0da9b9);
+  color: #071619;
+  font: 700 10px/1 Inter, "DM Sans", sans-serif;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, transform .14s ease;
+}
+.ps-community-profile-editor-button:hover {
+  border-color: #48dbe2;
+  background: linear-gradient(135deg, #43d7dc, #19bdc9);
+  transform: translateY(-1px);
+}
+.ps-community-profile-editor-button:focus-visible {
+  outline: 2px solid #7ce8ee;
+  outline-offset: 2px;
+}
+@media (max-width: 560px) {
+  .ps-community-profile-editor-button {
+    min-height: 33px;
+    font-size: 10px;
+  }
+}

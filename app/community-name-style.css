@@ -7041,7 +7041,7 @@ html:has(.ps-community-picker-overlay) * {
   line-height:1.12 !important;
   white-space:nowrap !important;
   overflow:visible !important;
-  contain:layout paint !important;
+  contain:layout style !important;
 }
 .ps-community-name-animation-option .ps-depth-lift__face {
   animation:ps-preview-depth-lift 3.6s cubic-bezier(.2,.72,.24,1) infinite !important;

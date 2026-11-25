@@ -1754,7 +1754,7 @@ export default function CommunityPage() {
               <GraduationCap size={19}/>
             </button>
           ))}
-          <Link href="/comunidad/en-vivo" className="community-server-icon" aria-label="Sesiones en vivo">
+          <Link href={activeSpace?.space_type === "preicfes" ? "/comunidad/en-vivo?space=" + encodeURIComponent(activeSpace.slug) : "/comunidad/en-vivo"} className="community-server-icon" aria-label="Sesiones en vivo">
             <Radio size={20}/>
           </Link>
         </nav>
@@ -1772,7 +1772,7 @@ export default function CommunityPage() {
           <nav className="community-channel-list" aria-label="Canales de PeakScore">
             <div className="community-nav-section">
               <p className="community-nav-heading">COMUNIDAD</p>
-              <Link href="/comunidad/en-vivo" className="community-nav-item">
+              <Link href={activeSpace?.space_type === "preicfes" ? "/comunidad/en-vivo?space=" + encodeURIComponent(activeSpace.slug) : "/comunidad/en-vivo"} className="community-nav-item">
                 <Radio size={17}/><span>En vivo</span><span className="community-live-nav-pill">LIVE</span>
               </Link>
               <Link href="/comunidad/ser-profesor" className="community-nav-item">

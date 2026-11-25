@@ -355,10 +355,9 @@ export default function CommunityFounderStudio({
   const selectedRole = roles.find((role) => role.role_key === selectedRoleKey) ?? null;
   const selectedChannel = channels.find((channel) => channel.id === selectedChannelId) ?? null;
   const selectedCategory = categories.find((category) => category.id === selectedCategoryId) ?? null;
-  const categoryOptions = [
-    ...CATEGORIES.map((category) => category.value),
-    ...categories.map((category) => category.name).filter((name) => !CATEGORIES.some((item) => item.value.toLowerCase() === name.toLowerCase())),
-  ];
+  const categoryOptions = categoriesReady && categories.length > 0
+    ? categories.map((category) => category.name)
+    : CATEGORIES.map((category) => category.value);
 
   async function postJson(url: string, payload: Record<string, unknown>, key: string) {
     if (pendingKey) return false;
@@ -647,7 +646,7 @@ export default function CommunityFounderStudio({
                     <p className="text-center text-[9px] leading-4 text-[#788591]">PNG, JPG o WebP · máximo 5 MB</p>
                   </div>
                   <div className="min-w-0 space-y-3">
-                    <div className="relative flex h-[150px] items-center overflow-hidden rounded-[9px] border border-[#333d49] bg-[#101720]">
+                    <div className="relative flex h-[150px] items-center overflow-hidden rounded-[9px] border border-[#333d49] bg-[#101720]" style={{ backgroundColor: globalBranding.background_color }}>
                       {globalBranding.banner_url
                         ? <Image src={globalBranding.banner_url} alt="Portada de la comunidad" fill unoptimized className="object-cover"/>
                         : <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_30%,rgba(0,213,232,.24),transparent_40%),radial-gradient(ellipse_at_90%_80%,rgba(139,234,69,.20),transparent_38%),linear-gradient(110deg,#080b10,#1a2028)]"/>}
@@ -680,6 +679,15 @@ export default function CommunityFounderStudio({
                         className="h-7 w-9 cursor-pointer bg-transparent"/>
                       <span className="text-[10px] font-mono text-[#c6d0d9]">{globalBranding.accent_color.toUpperCase()}</span>
                     </div>
+                  </label>
+                  <label className={labelClass}>Fondo predeterminado del servidor
+                    <div className="mt-1.5 flex h-10 items-center gap-3 rounded-[6px] border border-[#2b414f] bg-[#0d1721] px-3">
+                      <input type="color" value={globalBranding.background_color}
+                        onChange={(event) => setGlobalBranding((current) => ({ ...current, background_color: event.target.value }))}
+                        className="h-7 w-9 cursor-pointer bg-transparent"/>
+                      <span className="text-[10px] font-mono text-[#c6d0d9]">{globalBranding.background_color.toUpperCase()}</span>
+                    </div>
+                    <span className="mt-1 block text-[9px] font-normal text-[#718796]">Se usa como apariencia inicial para quienes eligen “Servidor”.</span>
                   </label>
                   <label className={labelClass}>Identificador del icono
                     <select className={fieldClass} value={globalBranding.icon_key}
@@ -906,21 +914,57 @@ export default function CommunityFounderStudio({
             <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
               <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
                 <div className="flex items-center justify-between border-b border-[#253644] p-4">
-                  <span className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">CANALES ACTIVOS</span>
-                  <button type="button" onClick={() => { setIsCreatingChannel(true); setChannelForm(emptyChannel()); setSelectedChannelId(null); }}
-                    disabled={!channelsReady} className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear canal">
-                    <Plus size={15}/>
-                  </button>
+                  <span className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">CANALES Y CATEGORÍAS</span>
+                  <div className="flex items-center gap-1.5">
+                    <button type="button"
+                      onClick={() => { setIsCreatingCategory(true); setIsCreatingChannel(false); setSelectedCategoryId(null); setSelectedChannelId(null); setCategoryForm({ name: "", position: 100 }); }}
+                      disabled={!categoriesReady || pendingKey !== null}
+                      className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40"
+                      aria-label="Crear categoría" title="Crear categoría"><FolderPlus size={15}/></button>
+                    <button type="button"
+                      onClick={() => { setIsCreatingChannel(true); setIsCreatingCategory(false); setSelectedCategoryId(null); setChannelForm(emptyChannel()); setSelectedChannelId(null); }}
+                      disabled={!channelsReady || pendingKey !== null}
+                      className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40"
+                      aria-label="Crear canal" title="Crear canal"><Plus size={15}/></button>
+                  </div>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-3">
-                  {CATEGORIES.map((category) => {
-                    const group = channels.filter((channel) => channel.category === category.value);
-                    if (!group.length) return null;
-                    return <section key={category.value} className="mb-4">
-                      <p className="mb-2 px-1 font-sans text-[9px] tracking-[.1em] text-[#718b9b]">{category.label}</p>
+                  {(categories.length ? categories : CATEGORIES.map((item, index) => ({
+                    id: item.value, name: item.value, position: (index + 1) * 10, is_archived: false,
+                  }))).map((category) => {
+                    const group = channels.filter((channel) => channel.category.toLowerCase() === category.name.toLowerCase());
+                    return <section key={category.id} className="mb-4">
+                      <div className="mb-1 flex items-center gap-1 rounded-[5px] px-1 py-1">
+                        <button type="button"
+                          onClick={() => {
+                            setIsCreatingCategory(false);
+                            setIsCreatingChannel(false);
+                            setSelectedChannelId(null);
+                            setSelectedCategoryId(category.id);
+                            setCategoryForm({ name: category.name, position: category.position });
+                          }}
+                          className={"min-w-0 flex-1 truncate text-left font-sans text-[9px] font-bold tracking-[.1em] transition hover:text-white " + (selectedCategoryId === category.id ? "text-[#b6ed9a]" : "text-[#8298a8]")}>
+                          {category.name.toUpperCase()}
+                        </button>
+                        <span className="text-[9px] tabular-nums text-[#62798a]">{group.length}</span>
+                        <button type="button" onClick={() => {
+                          setIsCreatingCategory(false);
+                          setIsCreatingChannel(false);
+                          setSelectedChannelId(null);
+                          setSelectedCategoryId(category.id);
+                          setCategoryForm({ name: category.name, position: category.position });
+                        }} aria-label={"Editar categoría " + category.name} title="Editar categoría"
+                          className="grid h-6 w-6 place-items-center rounded text-[#71899a] hover:bg-[#1a2a36] hover:text-white"><Pencil size={11}/></button>
+                      </div>
                       {group.map((channel) => (
-                        <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setChannelForm(toChannelForm(channel)); setIsCreatingChannel(false); }}
-                          className={"mb-1 flex w-full items-center gap-2 rounded-[5px] border px-2.5 py-2 text-left " + (!isCreatingChannel && selectedChannelId === channel.id
+                        <button key={channel.id} type="button" onClick={() => {
+                          setIsCreatingCategory(false);
+                          setSelectedCategoryId(null);
+                          setSelectedChannelId(channel.id);
+                          setChannelForm(toChannelForm(channel));
+                          setIsCreatingChannel(false);
+                        }}
+                          className={"mb-1 flex w-full items-center gap-2 rounded-[5px] border px-2.5 py-2 text-left " + (!isCreatingCategory && !isCreatingChannel && selectedChannelId === channel.id
                             ? "border-[#2b5665] bg-[#142a35]" : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
                           {channel.channel_type === "announcement" ? <Megaphone size={14} style={{ color: channel.accent_color }}/> : <Hash size={14} style={{ color: channel.accent_color }}/>}
                           <span className="min-w-0 flex-1 truncate text-[10px] text-[#cbd9e0]">{channel.name}</span>
@@ -930,9 +974,41 @@ export default function CommunityFounderStudio({
                       ))}
                     </section>;
                   })}
-                  {channels.length === 0 && <p className="p-3 text-[11px] text-[#8095a5]">No hay canales visibles.</p>}
+                  {channels.length === 0 && categories.length === 0 && <p className="p-3 text-[11px] text-[#8095a5]">No hay categorías ni canales todavía.</p>}
                 </div>
               </aside>
+              {(isCreatingCategory || selectedCategory) ? (
+                <section className="min-h-0 overflow-y-auto p-5 sm:p-7">
+                  <div className="max-w-[650px]">
+                    <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">{isCreatingCategory ? "NUEVA CATEGORÍA" : "CONFIGURACIÓN DE CATEGORÍA"}</p>
+                    <h3 className="mt-2 text-[18px] font-bold text-white">{isCreatingCategory ? "Crear categoría" : selectedCategory?.name}</h3>
+                    <p className="mt-1 text-[11px] leading-5 text-[#849aa9]">Las categorías vacías también se guardan y aparecen en la lista del servidor.</p>
+                    {!categoriesReady && <p className="mt-4 rounded-[5px] border border-[#6b542e] bg-[#2c2417] px-3 py-2 text-[10px] text-[#edcb8d]">La administración de categorías todavía no está disponible.</p>}
+                    <form onSubmit={(event) => void saveCategory(event)} className="mt-5 space-y-4">
+                      <label className={labelClass}>Nombre de la categoría
+                        <input className={fieldClass} required minLength={2} maxLength={40} value={categoryForm.name} disabled={!categoriesReady}
+                          onChange={(event) => setCategoryForm((current) => ({ ...current, name: event.target.value }))} placeholder="Ej. Comunidad"/>
+                      </label>
+                      <label className={labelClass}>Orden en la lista
+                        <input className={fieldClass} type="number" min={0} max={1000} value={categoryForm.position} disabled={!categoriesReady}
+                          onChange={(event) => setCategoryForm((current) => ({ ...current, position: Number(event.target.value) }))}/>
+                      </label>
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#293a47] pt-4">
+                        {selectedCategory && !isCreatingCategory ? (
+                          <button type="button" onClick={() => void archiveCategory(selectedCategory)} disabled={!categoriesReady || pendingKey !== null}
+                            className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#624044] px-3 py-2 text-[10px] text-[#efb1b2] hover:bg-[#321f24] disabled:opacity-40">
+                            <Archive size={12}/> Archivar categoría
+                          </button>
+                        ) : <span className="text-[9px] text-[#718796]">Solo el Founder puede crear categorías.</span>}
+                        <button type="submit" disabled={!categoriesReady || pendingKey !== null || categoryForm.name.trim().length < 2}
+                          className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#5eaa45] bg-[#7fe05c] px-4 py-2 text-[10px] font-bold text-[#0b160c] shadow-[0_2px_0_#3c762e] hover:bg-[#91ed6b] disabled:opacity-40">
+                          <Save size={12}/> {pendingKey === "category-save" ? "Guardando…" : isCreatingCategory ? "Crear categoría" : "Guardar cambios"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </section>
+              ) : (
               <section className="min-h-0 overflow-y-auto p-5 sm:p-7">
                 <div>
                   <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">{isCreatingChannel ? "NUEVO ESPACIO" : "CONFIGURACIÓN DEL CANAL"}</p>
@@ -959,7 +1035,7 @@ export default function CommunityFounderStudio({
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       <label className={labelClass}>Categoría
                         <select className={fieldClass} value={channelForm.category} disabled={!channelsReady} onChange={(event) => setChannelForm((current) => ({ ...current, category: event.target.value }))}>
-                          {CATEGORIES.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
+                          {categoryOptions.map((category) => <option key={category} value={category}>{CATEGORIES.find((item) => item.value === category)?.label ?? category}</option>)}
                         </select>
                       </label>
                       <label className={labelClass}>Orden
@@ -1004,6 +1080,7 @@ export default function CommunityFounderStudio({
                   </form>
                 )}
               </section>
+              )}
             </div>
           )}
 

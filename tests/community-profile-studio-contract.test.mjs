@@ -305,31 +305,30 @@ test("profile update is atomic and owner-scoped", () => {
   assert.doesNotMatch(patch, /appearanceUpdate|appearanceSaved =/);
 });
 
-test("avatar decoration is the only visible avatar cosmetic control; the duplicate frame option is removed", () => {
-  assert.doesNotMatch(studio, /openAppearancePicker\("avatarFrame"\)/);
-  assert.doesNotMatch(studio, /openAppearancePicker\("avatarFrame"\)/);
-  assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
-  assert.match(studio, /Cambiar decoración de avatar/);
-  assert.match(studio, /ps-community-editor-decoration-tile/);
-});
+test("avatar editor offers separate image and GIF uploads and no decoration control on founder branch", () => {
+  assert.match(studio, /ps-community-avatar-picker-modal/);
+  assert.match(studio, /Subir imagen/);
+  assert.match(studio, /Subir GIF/);
+  assert.match(studio, /avatarGifInput/);
+  assert.doesNotMatch(studio, /openAppearancePicker\("avatarDecoration"\)/);
+  assert.doesNotMatch(studio, /Cambiar decoración de avatar/);
+  assert.doesNotMatch(studio, /ps-community-editor-decoration-tile/);
+  assert.doesNotMatch(studio, /Marcos y efectos de perfil/);
+});;
 
-test("appearance selectors open focused collection dialogs for each identity layer", () => {
+test("founder branch keeps font and plate selectors while name effects stay in the backup branch", () => {
   assert.match(studio, /ps-community-picker-modal/);
-  for (const kind of ["avatarDecoration", "profileFrame", "profileEffect", "plate", "nameStyle"]) {
-    assert.match(studio, new RegExp('openAppearancePicker\\("' + kind + '"\\)'));
-  }
-  assert.match(studio, /confirmAvatarCrop/);
-  assert.match(studio, /statusExpiresAt/);
-  assert.match(studio, /statusDuration/);
+  assert.match(studio, /openAppearancePicker\("plate"\)/);
+  assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
+  assert.doesNotMatch(studio, /openAppearancePicker\("avatarDecoration"\)|openAppearancePicker\("profileFrame"\)|openAppearancePicker\("profileEffect"\)/);
+  assert.doesNotMatch(studio, /Acabado del nombre|Animación de perfil|Color del nombre/);
   assert.match(studio, /ps-community-color-picker-plane/);
   assert.match(studio, /ps-community-color-picker-hue/);
   assert.match(studio, /ps-community-color-picker-hex/);
   assert.match(studio, /VISTA PREVIA/);
-  assert.match(studio, /Opciones disponibles/);
   assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
-  assert.doesNotMatch(studio, /ps-community-editor-community-column|aria-label="Tablero del perfil"/);
   assert.match(css, /ps-community-picker-modal/);
-});
+});;
 
 
 test("final modal override keeps a Discord-like dark centered workspace", () => {
@@ -349,44 +348,48 @@ test("identity studio uses a left appearance rail and a central live profile can
   assert.doesNotMatch(studio, /Tu identidad social es independiente de tu progreso académico y de PeakStyle/);
 });
 
-test("profile image uploads are avatar-only; the card banner is a color setting", () => {
-  assert.match(studio, /Tema de perfil/);
+test("avatar and banner uploads support sanitized user-owned images and GIFs", () => {
   assert.match(studio, /handleAvatarFileSelection/);
-  assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
-  assert.doesNotMatch(studio, /Las fotografías se utilizan únicamente para tu avatar/);
-  assert.doesNotMatch(studio, /uploadAsset\("banner"/);
-  assert.match(route, /if \(kind !== "avatar"\)/);
-  assert.match(route, /Solo puedes subir una imagen para tu avatar/);
-  assert.match(route, /El banner se personaliza con color/);
-  assert.match(route, /Solo puedes retirar la imagen de tu avatar/);
-});
+  assert.match(studio, /handleBannerFileSelection/);
+  assert.match(studio, /uploadAsset\("avatar", file\)/);
+  assert.match(studio, /uploadAsset\("banner", file\)/);
+  assert.match(studio, /bannerImageInput/);
+  assert.match(studio, /bannerGifInput/);
+  assert.match(route, /kind !== "avatar" && kind !== "banner"/);
+  assert.match(route, /MAX_BANNER_BYTES/);
+  assert.match(route, /image\/gif/);
+  assert.match(route, /sanitizeRasterImage/);
+  assert.match(route, /community-profile-banners/);
+});;
 
-test("community profile banners render from the saved color, never from an uploaded image", () => {
-  assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);
-  assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
-  assert.match(page, /backgroundColor: "#20242D"/);
+test("community profile banners show the first-party fallback or the saved user image/GIF", () => {
+  assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
+  assert.match(studio, /profile\.bannerUrl \?/);
+  assert.match(studio, /is-peakscore-banner/);
+  assert.match(css, /Original PeakScore banner backdrop/);
   assert.match(studio, /ps-community-editor-theme-picker-anchor/);
-  assert.match(route, /Solo puedes subir una imagen para tu avatar/);
-});
+  assert.match(route, /community-profile-banners/);
+});;
 
 
-test("profile status is an editable Discord-style bubble and cosmetics use meaningful icons", () => {
+test("profile status is an editable Discord-style bubble and upload actions use semantic icons", () => {
   assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-status-emoji-group|EMOJI DE ESTADO/);
   assert.match(studio, /ps-community-status-bubble/);
   assert.match(studio, /statusDraft\.trim\(\) \?/);
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
   assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
-  assert.match(studio, /<ImagePlus size=\{15\}\/> Cambiar decoración de avatar/);
+  assert.match(studio, /<ImagePlus size=\{15\}\/> Subir imagen/);
+  assert.match(studio, /<Film size=\{15\}\/> Subir GIF/);
   assert.doesNotMatch(studio, /<Frame size=\{13\}\/> Marco/);
-});
+});;
 
 
-test("profile editor has no dead mobile preview or banner upload state", () => {
+test("profile editor uses one shared upload state for avatar and banner assets", () => {
   assert.doesNotMatch(studio, /setPreviewMode|Smartphone/);
-  assert.doesNotMatch(studio, /useState<"avatar" \| "banner"/);
-  assert.match(studio, /useState<"avatar" \| null>/);
-  assert.doesNotMatch(studio, /uploadAsset\("banner"|removeAsset\("banner"/);
-});
+  assert.match(studio, /useState<"avatar" \| "banner" \| null>/);
+  assert.match(studio, /uploadAsset\("banner"|removeAsset\("banner"/);
+  assert.match(studio, /ps-community-editor-banner-upload-actions/);
+});;
 
 
 test("Escape closes the topmost profile editor surface before the editor itself", () => {
@@ -409,23 +412,24 @@ test("banner color picker is attached to the appearance rail and updates the cen
 });
 
 
-test("profile frame and effect controls live in the left rail, not a banner popover", () => {
-  assert.doesNotMatch(studio, /bannerMenuOpen|ps-community-editor-live-banner-actions|Opciones del cartel/);
-  assert.match(studio, /openAppearancePicker\("profileEffect"\)/);
-  assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
-  assert.match(studio, /ps-community-editor-cosmetic-tiles/);
-});
+test("founder branch removes profile frame/effect controls while keeping the themed card", () => {
+  assert.doesNotMatch(studio, /Marcos y efectos de perfil|openAppearancePicker\("profileEffect"\)|openAppearancePicker\("profileFrame"\)/);
+  assert.match(studio, /Tema de perfil/);
+  assert.match(studio, /ps-community-editor-banner-decoration-section/);
+  assert.match(studio, /ps-community-editor-preview-card/);
+});;
 
-test("clicking the live avatar opens its own change, decoration and remove actions", () => {
+test("clicking the live avatar opens image/GIF choices and owner-only removal", () => {
   assert.match(studio, /ps-community-editor-preview-avatar-trigger/);
-  assert.match(studio, /aria-label="Cambiar avatar o decoración"/);
+  assert.match(studio, /aria-label="Cambiar avatar"/);
   assert.match(studio, /ps-community-editor-avatar-menu-preview/);
   assert.match(studio, /Cambiar avatar/);
-  assert.match(studio, /Cambiar decoración de avatar/);
+  assert.match(studio, /avatarPickerOpen/);
   assert.match(studio, /Eliminar avatar/);
+  assert.doesNotMatch(studio, /Cambiar decoración de avatar/);
   assert.match(css, /\.ps-community-editor-preview-avatar-trigger:hover/);
   assert.match(css, /\.ps-community-editor-avatar-menu-preview button:hover/);
-});
+});;
 
 test("profile theme colors the lower card, leaves the banner separate and tints the avatar ring", () => {
   const latest = css.slice(css.lastIndexOf("Theme belongs to the profile card body"));
@@ -770,18 +774,16 @@ test("display-name style picker uses one live profile surface, synchronized memb
   assert.match(nameStyleCss, /effect-toon/);
 });
 
-test("display-name effects match Discord video with seven animated finishes", () => {
-  assert.match(studio, /label: "Gloss"/);
-  assert.match(studio, /label: "Cromo"/);
-  assert.match(studio, /"Prisma"/);
-  assert.match(route, /"gummy"/);
-  assert.match(route, /"toon"/);
-  assert.match(route, /"prism"/);
+test("name finishes remain implemented and persisted, but their controls are absent from founder-intro", () => {
   assert.match(nameStyleCss, /effect-gummy/);
   assert.match(nameStyleCss, /effect-toon/);
   assert.match(nameStyleCss, /effect-prism/);
-  assert.match(studio, /Acabado del nombre/);
-});
+  assert.match(route, /"gummy"/);
+  assert.match(route, /"toon"/);
+  assert.match(route, /"prism"/);
+  assert.doesNotMatch(studio, /Acabado del nombre|Animación de perfil|Color del nombre/);
+  assert.match(studio, /is-name-style-\\" \+ displayNameStyle \+ \\" effect-\\" \+ displayNameEffect/);
+});;
 
 test("effect samples inherit the custom gradient and prism colors selected in the editor", () => {
   assert.match(studio, /ps-community-name-effect-sample is-name-style-" \+ draftDisplayNameStyle \+ " effect-/);
@@ -1083,23 +1085,23 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
 });
 
 
-test("animation gallery mounts its real motion renderer in every preview tile", () => {
-  assert.ok(studio.includes("function DisplayNameMotionPreview"));
-  assert.ok(studio.includes("<AnimatedDisplayName"));
-  assert.ok(studio.includes("previewMode"));
-  assert.ok(studio.includes('className="ps-community-name-effect-grid ps-community-name-animation-grid"'));
-  assert.ok(studio.includes("ps-community-name-effect-option ps-community-name-animation-option"));
-  assert.ok(studio.includes("DISPLAY_NAME_ANIMATIONS.map((item) =>"));
-  assert.ok(studio.includes("<DisplayNameMotionPreview"));
-  assert.ok(studio.includes("animation={item.id}"));
-  assert.ok(!studio.includes("ps-name-preview-motion"));
-  assert.ok(!studio.includes("ps-name-preview-face"));
-  assert.ok(studio.includes('<small className="ps-community-name-font-label">{item.label}</small>'));
-  assert.ok(nameStyleCss.includes(".ps-community-name-font-option > .ps-community-name-font-label"));
-  assert.ok(!studio.includes("autoPreviewNameAnimation"));
-  assert.ok(!studio.includes("previewedNameAnimation"));
-  assert.ok(!studio.includes("window.setInterval"));
-  assert.ok(nameStyleCss.includes(".ps-community-name-animation-option > .ps-community-name-preview-live"));
+test("founder branch keeps the font gallery and saved profile motions remain supported", () => {
+  assert.doesNotMatch(studio, /ps-community-name-animation-grid|DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.match(studio, /ps-community-name-font-grid/);
+  assert.match(page, /function CommunityAnimatedName/);
+  assert.match(page, /if \(animation === "inkline"\)/);
+  assert.match(page, /if \(animation === "halo-signal"\)/);
+  assert.match(page, /if \(animation === "domino-flow"\)/);
+  assert.match(page, /if \(animation === "mistfall"\)/);
+  assert.match(page, /if \(animation === "depth-lift"\)/);
+  assert.match(page, /if \(animation === "decrypt"\)/);
+});;
+
+test("member rail keeps the selected name font visible inside the flexible copy column", () => {
+  assert.match(nameStyleCss, /\.community-member-copy \{[\\s\\S]*?width:auto !important/);
+  assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
+  assert.match(page, /<CommunityStaticName[\\s\\S]*?value=\{member\.full_name\}/);
+  assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);
 });
 
 test("only the profile runs the selected entrance animation; member and chat names stay static but styled", () => {

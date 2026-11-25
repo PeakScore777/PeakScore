@@ -17,7 +17,8 @@ export const dynamic = "force-dynamic";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const OWNED_OBJECT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
-const MAX_REQUEST_BYTES = MAX_AVATAR_BYTES + 128 * 1024;
+const MAX_BANNER_BYTES = 8 * 1024 * 1024;
+const MAX_REQUEST_BYTES = MAX_BANNER_BYTES + 128 * 1024;
 const DEFAULT_CARD_COLOR = "#B7D7C3";
 const DEFAULT_THEME_SECONDARY = "#8FB9A6";
 const DEFAULT_ACCENT_COLOR = "#3987FF";
@@ -312,27 +313,30 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   }
 
   const kind = parsed.formData.get("kind");
-  // Discord-style identity: uploaded images belong to the avatar only.
-  // The profile banner is a color surface persisted through PATCH.cardColor.
-  if (kind !== "avatar") return fail("Solo puedes subir una imagen para tu avatar. El banner se personaliza con color.", 400);
-  const maxBytes = MAX_AVATAR_BYTES;
-  const bucket = "community-profile-avatars";
-  const pathColumn = "avatar_path";
-  const responseField = "avatarUrl";
+  if (kind !== "avatar" && kind !== "banner") {
+    return fail("Selecciona si vas a cambiar el avatar o el cartel del perfil.", 400);
+  }
+
+  const isAvatar = kind === "avatar";
+  const maxBytes = isAvatar ? MAX_AVATAR_BYTES : MAX_BANNER_BYTES;
+  const bucket = isAvatar ? "community-profile-avatars" : "community-profile-banners";
+  const pathColumn = isAvatar ? "avatar_path" : "banner_path";
+  const responseField = isAvatar ? "avatarUrl" : "bannerUrl";
   const file = parsed.formData.get("file");
 
   if (!(file instanceof File) || file.size <= 0 || file.size > maxBytes) {
-    return fail("Selecciona una imagen válida de máximo 5 MB.", 413);
+    return fail(isAvatar
+      ? "Selecciona una imagen válida de máximo 5 MB."
+      : "Selecciona una imagen o GIF válido de máximo 8 MB.", 413);
   }
-  const allowedImageType = ["image/png", "image/jpeg", "image/webp"].includes(file.type) || (kind === "avatar" && file.type === "image/gif");
-  if (!allowedImageType) {
-    return fail("El avatar debe ser PNG, JPG, WebP o GIF.", 415);
+  if (![ "image/png", "image/jpeg", "image/webp", "image/gif" ].includes(file.type)) {
+    return fail("Solo se permiten PNG, JPG, WebP o GIF.", 415);
   }
 
   const { data: withinLimit, error: limitError } = await supabase.rpc("consume_community_attachment_rate_limit");
   if (limitError) {
     console.error("[Community] Profile image rate limit unavailable.", { code: limitError.code });
-    return fail("La protección de carga no está disponible. Inténtalo de nuevo.", 503);
+    return fail("No se pudo validar la subida. Inténtalo de nuevo.", 503);
   }
   if (withinLimit !== true) {
     return NextResponse.json({ error: "Has subido demasiadas imágenes. Inténtalo más tarde." }, {
@@ -344,8 +348,9 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   let sanitized: Awaited<ReturnType<typeof sanitizeRasterImage>>;
   try {
     sanitized = await sanitizeRasterImage(new Uint8Array(await file.arrayBuffer()), file.type, maxBytes);
-  } catch {
-    return fail("La imagen no es válida o contiene un formato no permitido.", 415);
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message : "El archivo no es válido.";
+    return fail(detail, 415);
   }
 
   const { data: previous, error: previousError } = await supabaseAdmin.from("community_member_profiles")
@@ -354,7 +359,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     .maybeSingle();
 
   if (previousError) {
-    return fail("No se pudo preparar la actualización del avatar.", 503);
+    return fail("No se pudo preparar la actualización de la imagen.", 503);
   }
 
   const storagePath = user.id + "/" + randomUUID() + "." + sanitized.extension;
@@ -365,8 +370,8 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   });
 
   if (uploadError) {
-    console.error("[Community] Profile image upload failed.", { bucket, code: uploadError.name });
-    return fail("No se pudo guardar el avatar. Inténtalo de nuevo.", 503);
+    console.error("[Community] Profile asset upload failed.", { bucket, code: uploadError.name });
+    return fail("No se pudo guardar la imagen. Inténtalo de nuevo.", 503);
   }
 
   const { data: updatedProfile, error: updateError } = await supabaseAdmin.from("community_member_profiles")
@@ -377,15 +382,15 @@ export async function POST(request: Request, context: { params: Promise<{ userId
 
   if (updateError || !updatedProfile) {
     await supabaseAdmin.storage.from(bucket).remove([storagePath]);
-    console.error("[Community] Profile image reference update failed.", { code: updateError?.code });
-    return fail("No se pudo actualizar el avatar.", 503);
+    console.error("[Community] Profile asset reference update failed.", { code: updateError?.code, asset: kind });
+    return fail("No se pudo actualizar la imagen del perfil.", 503);
   }
 
-  const previousRecord = previous as { avatar_path?: string | null } | null;
-  const previousPath = previousRecord?.[pathColumn];
+  const previousRecord = previous as Record<string, string | null> | null;
+  const previousPath = previousRecord?.[pathColumn] ?? null;
   if (previousPath && OWNED_OBJECT_PATH.test(previousPath) && previousPath.startsWith(user.id + "/")) {
     const { error: cleanupError } = await supabaseAdmin.storage.from(bucket).remove([previousPath]);
-    if (cleanupError) console.warn("[Community] Previous image cleanup failed.", { code: cleanupError.name });
+    if (cleanupError) console.warn("[Community] Previous profile asset cleanup failed.", { bucket, code: cleanupError.name });
   }
 
   return NextResponse.json({
@@ -393,6 +398,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     [responseField]: publicAssetUrl(bucket, storagePath),
     sanitized: true,
     metadataRemoved: true,
+    animated: sanitized.contentType === "image/gif",
   }, { headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
@@ -415,11 +421,12 @@ export async function DELETE(request: Request, context: { params: Promise<{ user
   } catch {
     return fail("El formato de la solicitud no es válido.", 400);
   }
-  const kind = payload.kind;
-  if (kind !== "avatar") return fail("Solo puedes retirar la imagen de tu avatar. El banner se personaliza con color.", 400);
 
-  const bucket = "community-profile-avatars";
-  const pathColumn = "avatar_path";
+  const kind = payload.kind;
+  if (kind !== "avatar" && kind !== "banner") return fail("El tipo de imagen no es válido.", 400);
+
+  const bucket = kind === "avatar" ? "community-profile-avatars" : "community-profile-banners";
+  const pathColumn = kind === "avatar" ? "avatar_path" : "banner_path";
   const { data: current, error: readError } = await supabaseAdmin.from("community_member_profiles")
     .select(pathColumn)
     .eq("user_id", user.id)
@@ -429,8 +436,8 @@ export async function DELETE(request: Request, context: { params: Promise<{ user
     return fail("No se pudo leer la imagen actual.", 503);
   }
 
-  const currentRecord = current as { avatar_path?: string | null; banner_path?: string | null } | null;
-  const previousPath = currentRecord?.[pathColumn];
+  const currentRecord = current as Record<string, string | null> | null;
+  const previousPath = currentRecord?.[pathColumn] ?? null;
   if (!previousPath) return NextResponse.json({ success: true, removed: false }, { headers: { "Cache-Control": "no-store" } });
   if (!OWNED_OBJECT_PATH.test(previousPath) || !previousPath.startsWith(user.id + "/")) {
     console.error("[Community] Refusing to remove an image with an unexpected storage path.");

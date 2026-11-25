@@ -116,7 +116,8 @@ testCase("founder console exposes isolated PreICFES settings, members, scoped ro
 
 testCase("global chat queries explicitly remain inside the PeakScore global community", () => {
   assert.match(mainPage, /GLOBAL_COMMUNITY_SPACE_ID/);
-  assert.match(mainPage, /\.eq\("space_id", GLOBAL_COMMUNITY_SPACE_ID\)/);
+  assert.match(mainPage, /\.eq\("space_id", resolvedSpace\.id\)/);
+  assert.match(mainPage, /id: GLOBAL_COMMUNITY_SPACE_ID/);
   assert.match(founderStudio, /\.eq\("space_id", GLOBAL_COMMUNITY_SPACE_ID\)/);
   assert.match(mainPage, /resolvedSpace\.space_type === "global"[\s\S]*?Never fall back to global channels from inside a private PreICFES route/);
 });

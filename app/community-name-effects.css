@@ -290,3 +290,172 @@
   .ps-name-shuffle__track > span::after,.ps-decrypted-cell::after,.ps-decrypted-glyph::after,
   .ps-depth-lift__face { animation:none !important; }
 }
+
+
+/* Final renderer corrections: text effects are applied to the visible glyph,
+   while each animation keeps its own transform, timing and visibility cycle. */
+
+/* Halo Signal: the component's native glyph becomes a transparent carrier.
+   The glow/pulse lives on ::before; the selected finish paints on ::after. */
+.ps-halo-signal__glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background:none !important;
+  -webkit-text-stroke:0 transparent !important;
+  text-shadow:none !important;
+  animation:none !important;
+  opacity:1 !important;
+  filter:none !important;
+}
+.ps-halo-signal__glyph::before {
+  content:attr(data-glyph);
+  position:absolute;
+  inset:0;
+  display:inline-block;
+  color:#F7F3FF;
+  -webkit-text-fill-color:#F7F3FF;
+  text-shadow:0 0 2px #FFFFFF,0 0 7px #A88AF2,0 0 16px #A88AF2;
+  pointer-events:none;
+  white-space:pre;
+  animation:ps-halo-signal-ignite var(--halo-cycle,10.8s) cubic-bezier(.2,.65,.25,1) infinite;
+  animation-delay:calc(var(--halo-order,0) * var(--halo-step,55ms));
+}
+.ps-halo-signal__glyph::after {
+  content:attr(data-glyph) !important;
+  position:absolute;
+  inset:0;
+  display:inline-block;
+  color:currentColor;
+  -webkit-text-fill-color:currentColor;
+  background:none;
+  pointer-events:none;
+  white-space:pre;
+  animation:none;
+}
+.ps-halo-signal__glyph { isolation:isolate; }
+.ps-halo-signal__glyph::before { z-index:0; }
+.ps-halo-signal__glyph::after { z-index:1; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-halo-signal__glyph::after {
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFF,var(--name-gradient-start,#9D83FF));
+  background-size:240% 100%;background-clip:text;-webkit-background-clip:text;
+  animation:ps-name-finish-aurora 5.2s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-halo-signal__glyph::after {
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC);
+  background-size:100% 220%;background-clip:text;-webkit-background-clip:text;
+  animation:ps-name-finish-chrome 3.8s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-halo-signal__glyph::after {
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF));
+  background-size:240% 100%;background-clip:text;-webkit-background-clip:text;
+  animation:ps-name-finish-gloss 5.6s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-halo-signal__glyph::after {
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF));
+  background-size:260% 100%;background-clip:text;-webkit-background-clip:text;
+  animation:ps-name-finish-spectrum 4.4s linear infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-halo-signal__glyph::after {
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E);
+  background-size:260% 100%;background-clip:text;-webkit-background-clip:text;
+  animation:ps-name-finish-spectrum 3.8s linear infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-halo-signal__glyph::after {
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8);
+  background-size:300% 100%;background-clip:text;-webkit-background-clip:text;
+  animation:ps-name-finish-spectrum 5.2s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-halo-signal__glyph::after {
+  color:#F4EAFF;-webkit-text-fill-color:#F4EAFF;
+  text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2);
+  animation:none;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-halo-signal__glyph::after {
+  color:var(--name-solid-color,#55CFA3);-webkit-text-fill-color:var(--name-solid-color,#55CFA3);
+  text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820);
+  animation:none;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-plain .ps-halo-signal__glyph::after {
+  color:var(--name-solid-color,currentColor);-webkit-text-fill-color:currentColor;
+  text-shadow:none;animation:none;
+}
+
+/* Shuffle: the track/character transforms stay on the original spans.
+   Hide the unstyled glyph before drawing one finish-aware overlay. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name):is(.effect-gradient,.effect-toon,.effect-gummy,.effect-prism,.effect-chromaflow,.effect-gradient-flow,.effect-neon,.effect-pop) .ps-name-shuffle__track > span {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background:none !important;
+  text-shadow:none !important;
+  -webkit-text-stroke:0 transparent !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-plain .ps-name-shuffle__track > span {
+  color:var(--name-solid-color,currentColor) !important;
+  -webkit-text-fill-color:currentColor !important;
+  background:none !important;
+  text-shadow:none !important;
+}
+.ps-name-shuffle__track > span::after {
+  z-index:1;
+  font:inherit;
+  line-height:inherit;
+  pointer-events:none;
+}
+
+/* Hacking Decode: hide the component's legacy green/white text and paint both
+   the scrambling glyph and final glyph using exactly the selected finish. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name):is(.effect-plain,.effect-gradient,.effect-toon,.effect-gummy,.effect-prism,.effect-chromaflow,.effect-gradient-flow,.effect-neon,.effect-pop) .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name):is(.effect-plain,.effect-gradient,.effect-toon,.effect-gummy,.effect-prism,.effect-chromaflow,.effect-gradient-flow,.effect-neon,.effect-pop) .ps-decrypted-glyph {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background:none !important;
+  text-shadow:none !important;
+  -webkit-text-stroke:0 transparent !important;
+}
+.ps-decrypted-cell.is-revealed::after,
+.ps-decrypted-glyph::after {
+  z-index:1;
+  font:inherit;
+  line-height:inherit;
+  pointer-events:none;
+}
+.ps-decrypted-glyph::after {
+  display:inline-block;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-plain .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-plain .ps-decrypted-glyph::after {
+  color:var(--name-solid-color,currentColor);
+  -webkit-text-fill-color:currentColor;
+  background:none;
+  text-shadow:none;
+  animation:none;
+}
+
+/* Depth Lift: its face retains the hover extrusion while finish colours live on
+   the face, never the outer wrapper. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-depth-lift__face {
+  color:#F4EAFF !important;-webkit-text-fill-color:#F4EAFF !important;
+  text-shadow:0 1px 0 #4B356E,0 2px 0 #34234F,0 0 4px #FFFFFF,0 0 10px var(--name-solid-color,#A88AF2) !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-depth-lift__face {
+  color:var(--name-solid-color,#55CFA3) !important;-webkit-text-fill-color:currentColor !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 38%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820),0 5px 7px rgb(0 0 0 / 25%) !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-plain .ps-depth-lift__face {
+  color:var(--name-solid-color,currentColor) !important;-webkit-text-fill-color:currentColor !important;
+}
+
+/* Inkline is an SVG text painter. Its SVG fill must carry the same glow/volume
+   as the other text renderers instead of falling back to browser text-shadow. */
+.ps-inkline-name.effect-neon .ps-inkline-fill {
+  filter:drop-shadow(0 0 2px #FFF) drop-shadow(0 0 5px var(--name-solid-color,#A88AF2)) drop-shadow(0 0 12px var(--name-solid-color,#A88AF2));
+}
+.ps-inkline-name.effect-pop .ps-inkline-fill {
+  filter:drop-shadow(0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820));
+}

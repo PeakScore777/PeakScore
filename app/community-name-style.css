@@ -6871,3 +6871,161 @@ html:has(.ps-community-picker-overlay) * {
   72% { transform:translate3d(-.005em,-.005em,0) rotateZ(2deg); }
   82%,100% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
 }
+
+
+/* Name Atelier: show the real renderer in every gallery tile, not a CSS imitation.
+   Keep each sample in its own clipped stage so glyphs, particles and SVG strokes
+   remain visible without changing the animation's actual choreography. */
+.ps-community-name-animation-option {
+  overflow:hidden !important;
+}
+.ps-community-name-animation-option > .ps-community-name-preview-live {
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex:0 1 auto !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  min-height:26px !important;
+  margin:0 auto !important;
+  padding:0 2px !important;
+  overflow:visible !important;
+  line-height:1.15 !important;
+  white-space:nowrap !important;
+  animation-play-state:running !important;
+}
+.ps-community-name-animation-option > .ps-community-name-preview-live > *,
+.ps-community-name-animation-option > .ps-community-name-preview-live .ps-name-animation-text,
+.ps-community-name-animation-option > .ps-community-name-preview-live .ps-inkline-svg,
+.ps-community-name-animation-option > .ps-community-name-preview-live .ps-mistfall-layout,
+.ps-community-name-animation-option > .ps-community-name-preview-live .ps-domino-flow__track {
+  max-width:100% !important;
+}
+.ps-community-name-animation-option .ps-fuzzy-text-wrap {
+  position:relative !important;
+  display:inline-grid !important;
+  place-items:center !important;
+  min-width:0 !important;
+}
+.ps-community-name-animation-option .ps-fuzzy-text-canvas {
+  max-width:100% !important;
+}
+
+/* Right-side name preview: match the compact profile/member/chat composition
+   in the supplied reference instead of the oversized default profile header. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
+  position:relative !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:166px !important;
+  min-height:166px !important;
+  max-height:166px !important;
+  overflow:hidden !important;
+  border-radius:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-status-preview-avatar {
+  top:28px !important;
+  left:12px !important;
+  width:72px !important;
+  height:72px !important;
+  border-width:5px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+  position:absolute !important;
+  left:9px !important;
+  right:10px !important;
+  bottom:35px !important;
+  display:block !important;
+  width:auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+  display:block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  font-size:16px !important;
+  font-weight:650 !important;
+  line-height:1.2 !important;
+  letter-spacing:-.015em !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.color-default.effect-plain {
+  color:rgba(224,241,232,.76) !important;
+  -webkit-text-fill-color:rgba(224,241,232,.76) !important;
+  text-shadow:0 1px 5px rgb(22 48 37 / 22%) !important;
+}
+
+/* The member list and chat sample use the restrained purple name treatment
+   from the reference; the active animation remains demonstrated above. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  min-height:43px !important;
+  margin:4px 6px 6px !important;
+  padding:5px 8px !important;
+  gap:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-avatar {
+  width:27px !important;
+  height:27px !important;
+  flex-basis:27px !important;
+  font-size:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar > i {
+  width:9px !important;
+  height:9px !important;
+  border-width:2px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > strong.community-member-nameplate {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  padding:3px 6px !important;
+  border:1px solid rgb(151 91 207 / 28%) !important;
+  border-radius:5px !important;
+  background:rgb(119 67 166 / 8%) !important;
+  color:#a96bd2 !important;
+  -webkit-text-fill-color:#a96bd2 !important;
+  font-size:9px !important;
+  font-weight:650 !important;
+  line-height:1.2 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-message {
+  min-height:65px !important;
+  gap:9px !important;
+  padding:9px 10px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author {
+  color:#a96bd2 !important;
+  -webkit-text-fill-color:#a96bd2 !important;
+  font-size:9px !important;
+  font-weight:650 !important;
+  text-decoration:underline !important;
+  text-decoration-color:rgb(169 107 210 / 48%) !important;
+  text-underline-offset:2px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta time {
+  font-size:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-content p {
+  margin-top:4px !important;
+  font-size:9px !important;
+  line-height:1.4 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
+  gap:10px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-context-label {
+  margin-bottom:2px !important;
+  font-size:8px !important;
+  letter-spacing:.13em !important;
+}
+@media (max-width:780px) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+    display:flex !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
+    min-height:0 !important;
+  }
+}

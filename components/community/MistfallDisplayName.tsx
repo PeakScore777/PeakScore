@@ -46,13 +46,13 @@ export default function MistfallDisplayName({
     const reduced = respectReducedMotion && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     if (reduced) { setFormed(true); return; }
 
-    let raf = 0, resizeRaf = 0, lastFrame = 0, startedAt = 0;
+    let raf = 0, resizeRaf = 0, loopTimer = 0, lastFrame = 0, startedAt = 0;
     let width = 1, height = 1, dpr = 1, particles: Particle[] = [];
     let particleFill: string | CanvasGradient = "#f8f6ff";
     let particleShadow = "transparent";
     let disposed = false, started = false, finished = false, visible = false, pausedAt = 0;
     const duration = previewMode ? 2.05 : 2.45;
-    const fps = previewMode ? 30 : 30;
+    const fps = previewMode ? 60 : 30;
     const maxParticles = previewMode ? 120 : 360;
     let seed = 0x4d495354;
     const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
@@ -137,6 +137,17 @@ export default function MistfallDisplayName({
       raf = 0;
       ctx.clearRect(0, 0, width, height);
       setFormed(true);
+      if (previewMode) {
+        window.clearTimeout(loopTimer);
+        loopTimer = window.setTimeout(() => {
+          if (disposed) return;
+          started = false;
+          finished = false;
+          pausedAt = 0;
+          lastFrame = 0;
+          if (visible && build()) begin();
+        }, 760);
+      }
     };
 
     const draw = (now:number) => {
@@ -230,6 +241,7 @@ export default function MistfallDisplayName({
       disposed = true;
       cancelAnimationFrame(raf);
       cancelAnimationFrame(resizeRaf);
+      window.clearTimeout(loopTimer);
       resizeObserver.disconnect();
       intersectionObserver?.disconnect();
     };

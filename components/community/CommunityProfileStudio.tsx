@@ -645,7 +645,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       <Tag className={renderedClassName + ' ps-fuzzy-text-wrap'} style={safeStyle}>
         <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
-          colorSplit={fuzzySettings.colorSplit}
+          colorSplit={previewMode ? Math.max(fuzzySettings.colorSplit, 0.12) : fuzzySettings.colorSplit}
           trigger="always"
           direction={fuzzySettings.direction}
           fontSize="1em"
@@ -657,14 +657,16 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
             : className.includes("effect-chromaflow")
               ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
               : fuzzyAppearance.gradient}
-          baseIntensity={previewMode ? Math.max(fuzzySettings.baseIntensity, 0.22) : fuzzySettings.baseIntensity}
-          hoverIntensity={previewMode ? Math.max(fuzzySettings.hoverIntensity, 0.32) : fuzzySettings.hoverIntensity}
-          fuzzRange={previewMode ? Math.max(fuzzySettings.fuzzRange, 18) : fuzzySettings.fuzzRange}
+          baseIntensity={previewMode ? Math.max(fuzzySettings.baseIntensity, 0.24) : fuzzySettings.baseIntensity}
+          hoverIntensity={previewMode ? Math.max(fuzzySettings.hoverIntensity, 0.36) : fuzzySettings.hoverIntensity}
+          fuzzRange={previewMode ? Math.max(fuzzySettings.fuzzRange, 20) : fuzzySettings.fuzzRange}
           sliceSize={fuzzySettings.sliceSize}
           fps={previewMode ? 45 : fuzzySettings.fps}
           transitionDuration={fuzzySettings.transitionDuration}
-          intro={fuzzySettings.intro}
-          introDuration={fuzzySettings.introDuration}
+          intro={previewMode ? true : fuzzySettings.intro}
+          introDuration={previewMode ? 950 : fuzzySettings.introDuration}
+          loopIntro={previewMode}
+          loopDelay={1100}
           letterSpacing={fuzzySettings.letterSpacing}
           enableHover={fuzzySettings.enableHover}
           clickEffect={fuzzySettings.clickEffect}
@@ -1793,7 +1795,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <div className="ps-community-name-effect-grid">
                         {DISPLAY_NAME_EFFECTS.map((item) => (
                           <button key={item.id} type="button"
-                            className={"ps-community-name-effect-option effect-" + item.id + (draftDisplayNameEffect === item.id ? " is-selected" : "")}
+                            className={"ps-community-name-effect-option" + (draftDisplayNameEffect === item.id ? " is-selected" : "")}
+                            data-effect={item.id}
                             onClick={() => {
                               setDraftDisplayNameEffect(item.id);
                               const colorMode = DISPLAY_NAME_EFFECT_COLOR_MODE[item.id];

@@ -905,6 +905,9 @@ export default function CommunityPage() {
     if (!countError) setMemberCount(count ?? 0);
   }, []);
 
+  const activeSpaceId = activeSpace?.id ?? null;
+  const activeSpaceType = activeSpace?.space_type ?? null;
+
   const loadMessages = useCallback(async (channelId: string) => {
     const requestId = ++messageLoadRequestRef.current;
     if (activeChannelIdRef.current !== channelId) return;
@@ -1004,11 +1007,11 @@ export default function CommunityPage() {
     // is read from a scope-safe projection. Space members see space roles here,
     // never the global staff roles unless assigned in that space as well.
     let compatiblePublicRoleBadges = (publicRoleBadges ?? []) as PublicRoleBadge[];
-    if (activeSpace?.space_type === "preicfes" && authorIds.length) {
+    if (activeSpaceType === "preicfes" && activeSpaceId && authorIds.length) {
       const { data: spaceAssignments, error: spaceRolesError } = await supabase
         .from("community_space_member_roles")
         .select("user_id,role_key")
-        .eq("space_id", activeSpace.id)
+        .eq("space_id", activeSpaceId)
         .in("user_id", authorIds);
       if (!spaceRolesError && (spaceAssignments ?? []).length) {
         const roleKeys = [...new Set((spaceAssignments ?? []).map((assignment) => assignment.role_key))];
@@ -1032,7 +1035,7 @@ export default function CommunityPage() {
         compatiblePublicRoleBadges = [];
       }
     }
-    if (activeSpace?.space_type === "global" && badgeError && authorIds.length) {
+    if (activeSpaceType === "global" && badgeError && authorIds.length) {
       const legacyBadges = await supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
         .in("user_id", authorIds);
@@ -1131,7 +1134,7 @@ export default function CommunityPage() {
       ...current.filter((item) => item.pending && item.channel_id === channelId),
     ]);
     setError("");
-  }, [channels, activeSpace?.id, activeSpace?.space_type]);
+  }, [channels, activeSpaceId, activeSpaceType]);
 
   useEffect(() => {
     let alive = true;

@@ -2197,23 +2197,18 @@
   filter: drop-shadow(0 0 5px rgb(59 151 255 / 36%));
 }
 .root :global(.ps-community-preview-verified) {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 9px 4px 6px;
-  border: 1px solid rgb(88 166 255 / 40%);
-  border-radius: 999px;
-  background: rgb(10 31 57 / 78%);
-  color: #d9ebff;
-  font: 680 10px/1 Inter, "DM Sans", sans-serif;
-  letter-spacing: 0;
-  box-shadow: 0 2px 12px rgb(0 0 0 / 28%);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid rgb(196 181 253 / 68%);
+  border-radius: 50%;
+  background: #7657e8;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgb(118 87 232 / 13%), 0 2px 9px rgb(0 0 0 / 28%);
 }
 .root :global(.ps-community-preview-verified svg) {
-  color: #69b1ff;
-  filter: drop-shadow(0 0 5px rgb(59 151 255 / 36%));
+  color: #fff;
 }
 
 

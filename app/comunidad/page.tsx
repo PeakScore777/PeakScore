@@ -2421,19 +2421,28 @@ export default function CommunityPage() {
                   const Icon = CHANNEL_ICON_KEYS[channel.icon_key ?? ""] ?? CHANNEL_ICONS[channel.slug] ?? Hash;
                   const active = channel.id === activeChannelId;
                   return (
-                    <button type="button" key={channel.id} onClick={() => void selectChannel(channel)}
-                      aria-current={active ? "page" : undefined}
-                      className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
-                      <Icon size={17} style={{ color: channel.accent_color ?? undefined }}/>
-                      <span className="min-w-0 flex-1 truncate">{channel.name}</span>
-                      {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
-                      {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
-                      {(unreadCounts[channel.id] ?? 0) > 0 && (
-                        <span className="community-unread-count" aria-label={unreadCounts[channel.id] + " mensajes sin leer"}>
-                          {unreadCounts[channel.id] > 99 ? "99+" : unreadCounts[channel.id]}
-                        </span>
+                    <div className="community-channel-row" key={channel.id}>
+                      <button type="button" onClick={() => void selectChannel(channel)}
+                        aria-current={active ? "page" : undefined}
+                        className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
+                        <Icon size={17} style={{ color: channel.accent_color ?? undefined }}/>
+                        <span className="min-w-0 flex-1 truncate">{channel.name}</span>
+                        {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
+                        {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
+                        {(unreadCounts[channel.id] ?? 0) > 0 && (
+                          <span className="community-unread-count" aria-label={unreadCounts[channel.id] + " mensajes sin leer"}>
+                            {unreadCounts[channel.id] > 99 ? "99+" : unreadCounts[channel.id]}
+                          </span>
+                        )}
+                      </button>
+                      {isFounder && (
+                        <button type="button" className="community-channel-settings-button"
+                          aria-label={"Ajustes del canal " + channel.name} title={"Ajustes del canal " + channel.name}
+                          onClick={() => openFounderStudio("channels")}>
+                          <Settings2 size={14}/>
+                        </button>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </section>

@@ -67,6 +67,7 @@ type Props = {
   onClose: () => void;
   initialTab?: Tab;
   initialAction?: "create-channel" | "create-category" | null;
+  onAssetUpdated?: (assetType: "icon" | "banner", path: string, url: string) => void;
 };
 
 const PROTECTED_ROLE = "fundador";
@@ -159,6 +160,7 @@ export default function CommunityFounderStudio({
   onClose,
   initialTab = "branding",
   initialAction = null,
+  onAssetUpdated,
 }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [globalBranding, setGlobalBranding] = useState<GlobalBrandingForm>({ ...EMPTY_GLOBAL_BRANDING });
@@ -447,6 +449,7 @@ export default function CommunityFounderStudio({
         [assetType === "icon" ? "icon_path" : "banner_path"]: data.assetPath!,
         [assetType === "icon" ? "icon_url" : "banner_url"]: data.assetUrl!,
       }));
+      onAssetUpdated?.(assetType, data.assetPath, data.assetUrl);
       setNotice(assetType === "icon"
         ? "Icono actualizado y publicado en la comunidad."
         : "Portada actualizada y publicada en la comunidad.");

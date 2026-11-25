@@ -244,6 +244,10 @@ begin
   where space.id = p_space_id and space.is_enabled = true;
 
   if v_space_type = 'global' then
+    if p_permission in ('send_messages','attach_files','add_reactions')
+       and private.is_community_timed_out() then
+      return false;
+    end if;
     return private.has_community_permission(p_permission);
   end if;
 
@@ -561,8 +565,11 @@ begin
   if not private.can_access_community_space(p_space_id) then
     raise exception 'You do not belong to this community' using errcode = '42501';
   end if;
-  if not v_is_founder and not private.is_space_collaborator(p_space_id) then
-    raise exception 'Only an assigned collaborator can moderate this PreICFES space' using errcode = '42501';
+  if not v_is_founder and (
+    not private.is_space_collaborator(p_space_id)
+    or private.is_space_timed_out(p_space_id)
+  ) then
+    raise exception 'Only an active assigned collaborator can moderate this PreICFES space' using errcode = '42501';
   end if;
   if char_length(v_reason) < 3 or char_length(v_reason) > 500 then
     raise exception 'A moderation reason between 3 and 500 characters is required' using errcode = '22023';

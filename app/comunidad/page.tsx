@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/lib/supabase/browser";
 import "../community-profile-status-preview.css";
 import "../community-name-style.css";
+import "../community-name-effects.css";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
@@ -23,7 +24,7 @@ import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName"
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
-import { displayNameColorForEffect, displayNameSolidColor } from "@/components/community/display-name-color";
+import { displayNameColorForEffect, displayNameInklineStrokeColor, displayNameSolidColor } from "@/components/community/display-name-color";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -293,7 +294,9 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   } as React.CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
-    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight={900} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
+    const effectName = className.split(/\\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
+    const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
+    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.4} fontWeight={900} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
     return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;

@@ -779,7 +779,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen]);
+  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, colorPickerOpen, avatarMenuOpen]);
 
   useEffect(() => {
     if (!appearancePicker) return;
@@ -2151,7 +2151,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline:focus {
   border-color:#5865f2 !important; background:rgb(30 31 34 / 92%) !important;
   outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important;
-
+}
 
 /* Compact avatar chooser and first-party banner asset controls. */
 .ps-community-avatar-picker-overlay{position:fixed!important;inset:0!important;z-index:10090!important;display:grid!important;place-items:center!important;padding:20px!important;background:rgb(0 0 0 / 72%)!important;backdrop-filter:blur(9px)!important}

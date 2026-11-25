@@ -870,7 +870,7 @@ create policy community_messages_insert_as_self
         and not channel.is_read_only
         and private.has_space_permission(channel.space_id,'send_messages')
         and (attachment_path is null or private.has_space_permission(channel.space_id,'attach_files'))
-        and not private.is_community_timed_out()
+
         and (
           channel.is_private = false
           or private.is_community_founder()
@@ -944,7 +944,7 @@ create policy community_reactions_insert_as_self
         and not channel.is_archived
         and not channel.is_read_only
         and private.has_space_permission(channel.space_id,'add_reactions')
-        and not private.is_community_timed_out()
+
     )
   );
 
@@ -1000,7 +1000,7 @@ create policy community_comments_insert_as_self
         and not channel.is_archived
         and not channel.is_read_only
         and private.has_space_permission(channel.space_id,'send_messages')
-        and not private.is_community_timed_out()
+
     )
     and (
       parent_comment_id is null
@@ -1027,7 +1027,7 @@ as $function$
     where channel.id = p_channel_id
       and not channel.is_archived
       and private.has_space_permission(channel.space_id,'attach_files')
-      and not private.is_community_timed_out()
+
   );
 $function$;
 
@@ -1065,7 +1065,7 @@ begin
   where message.id = p_message_id
     and message.author_id = v_user_id
     and private.is_community_enabled()
-    and not private.is_community_timed_out()
+
     and exists (
       select 1
       from public.community_channels channel

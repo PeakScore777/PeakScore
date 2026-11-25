@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
@@ -304,7 +304,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
       : "Rol retirado de " + member.display_name + ".");
   }
 
-  async function saveRole(event: React.FormEvent<HTMLFormElement>) {
+  async function saveRole(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!catalogReady) {
       setError("Primero debe aplicarse la migración de roles y permisos en un entorno validado.");

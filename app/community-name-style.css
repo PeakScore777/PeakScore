@@ -7436,3 +7436,25 @@ html:has(.ps-community-picker-overlay) * {
 .ps-community-name-animation-option .ps-depth-lift__face {
   animation:ps-preview-depth-lift 3.6s cubic-bezier(.2,.72,.24,1) infinite !important;
 }
+
+
+/* Reference member-name treatment is plain violet text inside the member row,
+   not a second miniature badge around the username. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > strong.community-member-nameplate {
+  display:inline-block !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  height:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#a96bd2 !important;
+  -webkit-text-fill-color:#a96bd2 !important;
+  font-size:9px !important;
+  font-weight:650 !important;
+  line-height:1.2 !important;
+  text-decoration:none !important;
+}

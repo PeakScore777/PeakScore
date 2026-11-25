@@ -24,8 +24,8 @@ function ownedSpaceAssetPath(value: string | null, spaceId: string, assetType: "
   if (!value?.startsWith(prefix)) return null;
   const filename = value.slice(prefix.length);
   const allowedExtensions = assetType === "banner"
-    ? /^[0-9a-f-]{36}\\.(png|jpg|webp|gif)$/i
-    : /^[0-9a-f-]{36}\\.(png|jpg|webp)$/i;
+    ? /^[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i
+    : /^[0-9a-f-]{36}\.(png|jpg|webp)$/i;
   return allowedExtensions.test(filename) ? value : null;
 }
 

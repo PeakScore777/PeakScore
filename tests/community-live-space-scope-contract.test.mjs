@@ -46,5 +46,5 @@ testCase("the global live calendar remains compatible until space_id is deployed
   assert.match(page, /activeSpace\.space_type === "global"/);
   assert.match(page, /\["42703","PGRST204","PGRST200"\]/);
   assert.match(page, /Before space_id is deployed, keep the original global scheduling path working/);
-  assert.match(page, /activeSpace\.space_type === "preicfes"/);
+  assert.doesNotMatch(page, /if \(insertError && activeSpace\.space_type === "preicfes"/);
 });

@@ -1554,22 +1554,41 @@ export default function CommunityPage() {
       const trackedChannels = list.filter((channel) => typeof seenAt[channel.id] === "string");
       const unread: Record<string, number> = {};
       if (trackedChannels.length) {
-        const oldestSeen = trackedChannels
-          .map((channel) => Date.parse(seenAt[channel.id]))
-          .filter(Number.isFinite)
-          .reduce((oldest, value) => Math.min(oldest, value), Date.now());
-        if (Number.isFinite(oldestSeen) && oldestSeen < Date.now()) {
-          const unreadResult = await supabase.from("community_messages")
-            .select("channel_id,author_id,created_at")
-            .in("channel_id", trackedChannels.map((channel) => channel.id))
-            .gt("created_at", new Date(oldestSeen).toISOString())
-            .neq("author_id", user.id)
-            .order("created_at", { ascending: true })
-            .limit(1000);
-          if (!unreadResult.error) {
-            for (const row of (unreadResult.data ?? []) as Array<{ channel_id: string; author_id: string; created_at: string }>) {
-              if (Date.parse(row.created_at) > Date.parse(seenAt[row.channel_id] ?? "")) {
-                unread[row.channel_id] = (unread[row.channel_id] ?? 0) + 1;
+        const remoteReadByChannel = new Map((remoteReads.data ?? []).map((marker) => [
+          marker.channel_id,
+          Date.parse(marker.last_read_at),
+        ]));
+        const localMarkersAreSynced = !remoteReads.error && trackedChannels.every((channel) =>
+          (remoteReadByChannel.get(channel.id) ?? Number.NEGATIVE_INFINITY) >= Date.parse(seenAt[channel.id]),
+        );
+        const unreadRpc = localMarkersAreSynced
+          ? await supabase.rpc("get_community_unread_counts", {
+              p_channel_ids: trackedChannels.map((channel) => channel.id),
+            })
+          : { data: null, error: { code: "LOCAL_MARKER_NEWER" } };
+        if (!unreadRpc.error) {
+          for (const row of (unreadRpc.data ?? []) as Array<{ channel_id: string; unread_count: number | string }>) {
+            unread[row.channel_id] = Math.min(99, Number(row.unread_count) || 0);
+          }
+        } else {
+          // Compatibility path while the aggregated unread RPC has not been deployed.
+          const oldestSeen = trackedChannels
+            .map((channel) => Date.parse(seenAt[channel.id]))
+            .filter(Number.isFinite)
+            .reduce((oldest, value) => Math.min(oldest, value), Date.now());
+          if (Number.isFinite(oldestSeen) && oldestSeen < Date.now()) {
+            const unreadResult = await supabase.from("community_messages")
+              .select("channel_id,author_id,created_at")
+              .in("channel_id", trackedChannels.map((channel) => channel.id))
+              .gt("created_at", new Date(oldestSeen).toISOString())
+              .neq("author_id", user.id)
+              .order("created_at", { ascending: true })
+              .limit(1000);
+            if (!unreadResult.error) {
+              for (const row of (unreadResult.data ?? []) as Array<{ channel_id: string; author_id: string; created_at: string }>) {
+                if (Date.parse(row.created_at) > Date.parse(seenAt[row.channel_id] ?? "")) {
+                  unread[row.channel_id] = Math.min(99, (unread[row.channel_id] ?? 0) + 1);
+                }
               }
             }
           }

@@ -1,0 +1,272 @@
+/* PeakScore display-name effect composition layer.
+   Loaded after community-name-style.css. Finishes paint letters; animation
+   renderers own transforms, timing and sequencing. No selector changes layout. */
+
+@keyframes ps-name-finish-aurora {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes ps-name-finish-chrome {
+  0% { background-position: 50% 0%; }
+  50% { background-position: 50% 100%; }
+  100% { background-position: 50% 0%; }
+}
+@keyframes ps-name-finish-gloss {
+  0% { background-position: 0% 50%; filter:brightness(1); }
+  50% { background-position: 100% 50%; filter:brightness(1.08); }
+  100% { background-position: 0% 50%; filter:brightness(1); }
+}
+@keyframes ps-name-finish-spectrum {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+@keyframes ps-name-finish-neon {
+  0%,100% { opacity:.84; filter:brightness(.96); }
+  50% { opacity:1; filter:brightness(1.24); }
+}
+@keyframes ps-name-finish-pop {
+  0%,100% { filter:brightness(1); }
+  50% { filter:brightness(1.14); }
+}
+
+/* A renderer wrapper must never paint a rectangular gradient behind child glyphs.
+   The finish is applied to each actual glyph or to the SVG/canvas paint layer. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)),
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop:has(> :is(.ps-inkline-name,.ps-halo-signal,.ps-domino-flow,.ps-mistfall-name,.ps-depth-lift,.ps-name-shuffle,.ps-fuzzy-text-wrap,.ps-decrypted-content,.ps-name-animation-text)) {
+  color:inherit !important;
+  -webkit-text-fill-color:currentColor !important;
+  background:none !important;
+  background-color:transparent !important;
+  text-shadow:none !important;
+  filter:none !important;
+}
+
+/* Static names: one canonical treatment for profile headings, member lists and chat. */
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-gradient {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF) 0%,var(--name-gradient-end,#61B8ED) 35%,#FFFFFF 52%,var(--name-gradient-start,#9D83FF) 100%) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;animation:ps-name-finish-aurora 5.2s ease-in-out infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-toon {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  -webkit-text-stroke:.35px rgb(255 255 255 / 45%) !important;
+  background-image:linear-gradient(180deg,#FFFFFF 0%,#DCE2EB 22%,#8995A8 43%,#FFFFFF 52%,#9AA6B8 76%,#F8FAFC 100%) !important;
+  background-size:100% 220% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 35%),0 2px 0 rgb(25 20 45 / 22%) !important;
+  animation:ps-name-finish-chrome 3.8s ease-in-out infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-gummy {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB 0%,#FFD0A7 20%,#FFF0A6 38%,#9DE8D3 58%,#9FC8FF 78%,#D5A6FF 100%)) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 55%),0 2px 2px rgb(70 39 74 / 22%) !important;
+  animation:ps-name-finish-gloss 5.6s ease-in-out infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-prism {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF)) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 28%) !important;
+  animation:ps-name-finish-spectrum 4.4s linear infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-chromaflow {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(90deg,#FFB52E 0%,#F5E84A 11%,#43DF9A 25%,#35C9DC 39%,#4D8CFF 53%,#A66CFF 66%,#F05BC8 79%,#FF665E 90%,#FFB52E 100%) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;animation:ps-name-finish-spectrum 3.8s linear infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-gradient-flow {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(100deg,#E84DE8 0%,#A34DFF 24%,#527CFF 48%,#31B9D2 68%,#48D8A2 84%,#E84DE8 100%) !important;
+  background-size:300% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-neon {
+  color:#F4EAFF !important;-webkit-text-fill-color:#F4EAFF !important;
+  text-shadow:0 0 2px #FFFFFF,0 0 6px var(--name-solid-color,#A88AF2),0 0 14px var(--name-solid-color,#A88AF2),0 0 24px color-mix(in srgb,var(--name-solid-color,#A88AF2) 40%,transparent) !important;
+  animation:ps-name-finish-neon 2.5s ease-in-out infinite !important;
+}
+:is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-pop {
+  color:var(--name-solid-color,#55CFA3) !important;-webkit-text-fill-color:var(--name-solid-color,#55CFA3) !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 34%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820),0 4px 8px rgb(0 0 0 / 14%) !important;
+  animation:ps-name-finish-pop 2.2s ease-in-out infinite !important;
+}
+
+/* Animated glyph painter. Pseudo layers receive the finish animation independently,
+   so the original animation can keep its transform/opacity timeline untouched. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-name-animation-char,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-name-animation-char {
+  position:relative !important;color:transparent !important;-webkit-text-fill-color:transparent !important;
+  text-shadow:none !important;
+}
+.ps-name-animation-char::after {
+  content:attr(data-glyph);position:absolute;inset:0;display:inline-block;
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-clip:text;-webkit-background-clip:text;
+  pointer-events:none;white-space:pre;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-name-animation-char::after {
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFFFFF,var(--name-gradient-start,#9D83FF));
+  background-size:240% 100%;animation:ps-name-finish-aurora 5.2s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-name-animation-char::after {
+  background-image:linear-gradient(180deg,#FFFFFF,#DCE2EB 22%,#8995A8 43%,#FFFFFF 52%,#9AA6B8 76%,#F8FAFC);
+  background-size:100% 220%;animation:ps-name-finish-chrome 3.8s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-name-animation-char::after {
+  background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF,#D5A6FF));
+  background-size:240% 100%;animation:ps-name-finish-gloss 5.6s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-name-animation-char::after {
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF));
+  background-size:260% 100%;animation:ps-name-finish-spectrum 4.4s linear infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-name-animation-char::after {
+  background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E);
+  background-size:260% 100%;animation:ps-name-finish-spectrum 3.8s linear infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-name-animation-char::after {
+  background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8);
+  background-size:300% 100%;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-name-animation-char::after {
+  background:none;color:#F4EAFF;-webkit-text-fill-color:#F4EAFF;
+  text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2);
+  animation:ps-name-finish-neon 2.5s ease-in-out infinite;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-name-animation-char::after {
+  background:none;color:var(--name-solid-color,#55CFA3);-webkit-text-fill-color:var(--name-solid-color,#55CFA3);
+  text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820);
+  animation:ps-name-finish-pop 2.2s ease-in-out infinite;
+}
+
+/* Domino moves the tile; the inner glyph remains free to animate its finish. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-domino-flow__glyph,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-domino-flow__glyph {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;-webkit-background-clip:text !important;
+}
+.ps-domino-flow__glyph { animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-domino-flow__glyph { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFFFFF,var(--name-gradient-start,#9D83FF)) !important;background-size:240% 100% !important; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-domino-flow__glyph { background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC) !important;background-size:100% 220% !important;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-domino-flow__glyph { background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-domino-flow__glyph { background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF)) !important;background-size:260% 100% !important; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-domino-flow__glyph { background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E) !important;background-size:260% 100% !important; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-domino-flow__glyph { background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8) !important;background-size:300% 100% !important; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-domino-flow__glyph { background:none !important;color:#F4EAFF !important;-webkit-text-fill-color:#F4EAFF !important;text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2) !important;animation:ps-name-finish-neon 2.5s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-domino-flow__glyph { background:none !important;color:var(--name-solid-color,#55CFA3) !important;-webkit-text-fill-color:var(--name-solid-color,#55CFA3) !important;text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820) !important;animation:ps-name-finish-pop 2.2s ease-in-out infinite; }
+
+/* Halo Signal keeps its sequential ignition on the glyph; its pseudo face owns the finish. */
+.ps-halo-signal__glyph { position:relative !important;color:transparent !important;-webkit-text-fill-color:transparent !important; }
+.ps-halo-signal__glyph::after { content:attr(data-glyph) !important;position:absolute;inset:0;display:inline-block;color:transparent;-webkit-text-fill-color:transparent;background-clip:text;-webkit-background-clip:text;pointer-events:none;white-space:pre; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-halo-signal__glyph::after { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFF,var(--name-gradient-start,#9D83FF));background-size:240% 100%;animation:ps-name-finish-aurora 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-halo-signal__glyph::after { background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC);background-size:100% 220%;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-halo-signal__glyph::after { background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF));background-size:240% 100%;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-halo-signal__glyph::after { background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF));background-size:260% 100%;animation:ps-name-finish-spectrum 4.4s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-halo-signal__glyph::after { background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E);background-size:260% 100%;animation:ps-name-finish-spectrum 3.8s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-halo-signal__glyph::after { background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8);background-size:300% 100%;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-halo-signal__glyph::after { background:none;color:#F4EAFF;-webkit-text-fill-color:#F4EAFF;text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2);animation:ps-name-finish-neon 2.5s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-halo-signal__glyph::after { background:none;color:var(--name-solid-color,#55CFA3);-webkit-text-fill-color:var(--name-solid-color,#55CFA3);text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820);animation:ps-name-finish-pop 2.2s ease-in-out infinite; }
+
+/* Shuffle keeps its track translate/flip. The pseudo layer paints each changing glyph. */
+.ps-name-shuffle__track > span { position:relative !important; }
+.ps-name-shuffle__track > span::after { content:attr(data-glyph);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;white-space:pre;color:transparent;-webkit-text-fill-color:transparent;background-clip:text;-webkit-background-clip:text;pointer-events:none; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-name-shuffle__track > span::after { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFF,var(--name-gradient-start,#9D83FF));background-size:240% 100%;animation:ps-name-finish-aurora 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-name-shuffle__track > span::after { background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC);background-size:100% 220%;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-name-shuffle__track > span::after { background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF));background-size:240% 100%;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-name-shuffle__track > span::after { background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF));background-size:260% 100%;animation:ps-name-finish-spectrum 4.4s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-name-shuffle__track > span::after { background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E);background-size:260% 100%;animation:ps-name-finish-spectrum 3.8s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-name-shuffle__track > span::after { background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8);background-size:300% 100%;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-name-shuffle__track > span::after { background:none;color:#F4EAFF;-webkit-text-fill-color:#F4EAFF;text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2);animation:ps-name-finish-neon 2.5s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-name-shuffle__track > span::after { background:none;color:var(--name-solid-color,#55CFA3);-webkit-text-fill-color:var(--name-solid-color,#55CFA3);text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820);animation:ps-name-finish-pop 2.2s ease-in-out infinite; }
+
+/* Hacking Decode has two independent glyph layers: the scrambled glyph and the resolved text. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-decrypted-cell,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-decrypted-cell { color:transparent !important;-webkit-text-fill-color:transparent !important; }
+.ps-decrypted-cell.is-revealed { position:relative; }
+.ps-decrypted-cell.is-revealed::after,.ps-decrypted-glyph::after { content:attr(data-glyph);position:absolute;inset:0;white-space:pre;color:transparent;-webkit-text-fill-color:transparent;background-clip:text;-webkit-background-clip:text;pointer-events:none; }
+.ps-decrypted-cell.is-revealed::after { display:inline-block; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-decrypted-glyph::after { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFF,var(--name-gradient-start,#9D83FF));background-size:240% 100%;animation:ps-name-finish-aurora 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-decrypted-glyph::after { background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC);background-size:100% 220%;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-decrypted-glyph::after { background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF));background-size:240% 100%;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-decrypted-glyph::after { background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF));background-size:260% 100%;animation:ps-name-finish-spectrum 4.4s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-decrypted-glyph::after { background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E);background-size:260% 100%;animation:ps-name-finish-spectrum 3.8s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-decrypted-glyph::after { background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8);background-size:300% 100%;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-neon .ps-decrypted-glyph::after { background:none;color:#F4EAFF;-webkit-text-fill-color:#F4EAFF;text-shadow:0 0 2px #FFF,0 0 7px var(--name-solid-color,#A88AF2),0 0 16px var(--name-solid-color,#A88AF2);animation:ps-name-finish-neon 2.5s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-decrypted-cell.is-revealed::after,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-pop .ps-decrypted-glyph::after { background:none;color:var(--name-solid-color,#55CFA3);-webkit-text-fill-color:var(--name-solid-color,#55CFA3);text-shadow:0 1px 0 #FFFFFF55,0 2px 0 color-mix(in srgb,var(--name-solid-color,#55CFA3) 62%,#101820);animation:ps-name-finish-pop 2.2s ease-in-out infinite; }
+
+/* Depth Lift still owns its hover extrusion; finish paint animates on the face only. */
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-depth-lift__face,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-depth-lift__face,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-depth-lift__face,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-depth-lift__face,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-depth-lift__face,
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-depth-lift__face {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:none !important;
+}
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient .ps-depth-lift__face { background-image:linear-gradient(105deg,var(--name-gradient-start,#9D83FF),var(--name-gradient-end,#61B8ED),#FFF,var(--name-gradient-start,#9D83FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-aurora 5.2s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-toon .ps-depth-lift__face { background-image:linear-gradient(180deg,#FFF,#DCE2EB 22%,#8995A8 43%,#FFF 52%,#9AA6B8 76%,#F8FAFC) !important;background-size:100% 220% !important;animation:ps-name-finish-chrome 3.8s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gummy .ps-depth-lift__face { background-image:var(--name-prism-gradient,linear-gradient(110deg,#FF9CCB,#FFD0A7,#FFF0A6,#9DE8D3,#9FC8FF)) !important;background-size:240% 100% !important;animation:ps-name-finish-gloss 5.6s ease-in-out infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-prism .ps-depth-lift__face { background-image:var(--name-prism-gradient,linear-gradient(90deg,#FF9C45,#36E58C,#FFE05D,#E84ABF,#686BFF)) !important;background-size:260% 100% !important;animation:ps-name-finish-spectrum 4.4s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-chromaflow .ps-depth-lift__face { background-image:linear-gradient(90deg,#FFB52E,#F5E84A,#43DF9A,#35C9DC,#4D8CFF,#A66CFF,#F05BC8,#FF665E,#FFB52E) !important;background-size:260% 100% !important;animation:ps-name-finish-spectrum 3.8s linear infinite; }
+:is(.ps-community-name-render,.ps-community-name-animation-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name).effect-gradient-flow .ps-depth-lift__face { background-image:linear-gradient(100deg,#E84DE8,#A34DFF,#527CFF,#31B9D2,#48D8A2,#E84DE8) !important;background-size:300% 100% !important;animation:ps-name-finish-spectrum 5.2s ease-in-out infinite; }
+
+/* SVG Inkline already renders each finish with a real SVG gradient; keep the SVG
+   transparent around its lettering and preserve the component's draw animation. */
+.ps-inkline-name .ps-inkline-layout { background:none !important; }
+.ps-inkline-name .ps-inkline-svg { overflow:visible !important; }
+.ps-inkline-name .ps-inkline-fill { paint-order:fill !important; }
+
+/* Mistfall and Fuzzy Text are transparent canvases; never paint their wrapper. */
+.ps-mistfall-name,.ps-fuzzy-text-wrap { background:none !important;background-color:transparent !important; }
+.ps-mistfall-name .ps-mistfall-layout { background-clip:text !important;-webkit-background-clip:text !important; }
+
+/* Accessibility: freeze only finish motion when reduced motion is explicitly requested. */
+@media (prefers-reduced-motion:reduce) {
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-gradient,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-toon,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-gummy,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-prism,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-chromaflow,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-gradient-flow,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-neon,
+  :is(.ps-community-name-static,.ps-community-name-effect-sample,.community-member-nameplate,.community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong).effect-pop {
+    animation:none !important;
+  }
+  .ps-name-animation-char::after,.ps-domino-flow__glyph,.ps-halo-signal__glyph::after,
+  .ps-name-shuffle__track > span::after,.ps-decrypted-cell::after,.ps-decrypted-glyph::after,
+  .ps-depth-lift__face { animation:none !important; }
+}

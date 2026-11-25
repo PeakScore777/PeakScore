@@ -192,11 +192,28 @@ as $function$
       from private.community_space_restrictions restriction
       where restriction.space_id = p_space_id
         and restriction.user_id = auth.uid()
+        and restriction.restriction_type = 'kick'
         and restriction.revoked_at is null
-        and (
-          restriction.restriction_type = 'kick'
-          or restriction.expires_at > now()
-        )
+    );
+$function$;
+
+create or replace function private.is_space_timed_out(p_space_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select auth.uid() is not null
+    and not private.is_community_founder()
+    and exists (
+      select 1
+      from private.community_space_restrictions restriction
+      where restriction.space_id = p_space_id
+        and restriction.user_id = auth.uid()
+        and restriction.restriction_type = 'timeout'
+        and restriction.revoked_at is null
+        and restriction.expires_at > now()
     );
 $function$;
 
@@ -231,6 +248,11 @@ begin
   end if;
 
   if p_permission not in ('view_channels','send_messages','attach_files','add_reactions') then
+    return false;
+  end if;
+
+  if p_permission in ('send_messages','attach_files','add_reactions')
+     and private.is_space_timed_out(p_space_id) then
     return false;
   end if;
 
@@ -279,9 +301,11 @@ as $function$
 $function$;
 
 revoke all on function private.can_access_community_space(uuid) from public,anon,authenticated,service_role;
+revoke all on function private.is_space_timed_out(uuid) from public,anon,authenticated,service_role;
 revoke all on function private.has_space_permission(uuid,text) from public,anon,authenticated,service_role;
 revoke all on function private.is_space_collaborator(uuid) from public,anon,authenticated,service_role;
 grant execute on function private.can_access_community_space(uuid) to authenticated;
+grant execute on function private.is_space_timed_out(uuid) to authenticated;
 grant execute on function private.has_space_permission(uuid,text) to authenticated;
 grant execute on function private.is_space_collaborator(uuid) to authenticated;
 
@@ -403,6 +427,37 @@ $function$;
 
 revoke all on function public.manage_community_space(text,uuid,text,text,text,text,text,text) from public,anon,authenticated;
 grant execute on function public.manage_community_space(text,uuid,text,text,text,text,text,text) to authenticated;
+
+create or replace function public.join_community_space(p_space_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or p_space_id is null then
+    raise exception 'An authenticated member and community are required' using errcode = '42501';
+  end if;
+  if not exists (
+    select 1
+    from public.community_spaces space
+    where space.id = p_space_id
+      and space.space_type = 'preicfes'
+      and space.visibility = 'public'
+      and space.is_enabled = true
+  ) then
+    raise exception 'This PreICFES space is not open for public membership' using errcode = '42501';
+  end if;
+
+  insert into public.community_space_members (space_id,user_id,invited_by)
+  values (p_space_id,auth.uid(),auth.uid())
+  on conflict (space_id,user_id) do nothing;
+  return true;
+end;
+$function$;
+
+revoke all on function public.join_community_space(uuid) from public,anon,authenticated;
+grant execute on function public.join_community_space(uuid) to authenticated;
 
 create or replace function public.manage_community_space_member(
   p_space_id uuid,

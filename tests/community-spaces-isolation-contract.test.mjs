@@ -91,7 +91,7 @@ testCase("only founder can create spaces, manage membership and administer their
 
 testCase("a PreICFES collaborator can use private staff channels only in assigned spaces", () => {
   assert.match(migration, /create or replace function private\.can_view_private_community_channel\(p_space_id uuid\)/);
-  assert.match(migration, /private\.is_space_collaborator\(channel\.space_id\)/);
+  assert.match(migration, /space\.space_type = 'preicfes'[\s\S]*?role_key in \('colaborador','docente','profesor'\)/);
   assert.match(migration, /community_space_guard_channels/);
   assert.match(migration, /community_space_guard_messages/);
   assert.match(migration, /community_space_guard_reactions/);

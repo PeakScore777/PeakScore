@@ -953,8 +953,8 @@ export default function CommunityPage() {
   ));
   const markChannelRead = useCallback((
     channelId: string,
-    readerId: string | null = userId,
-    markerSpaceId: string | null = activeSpaceId,
+    readerId: string | null,
+    markerSpaceId: string | null,
   ) => {
     setUnreadCounts((current) => ({ ...current, [channelId]: 0 }));
     if (!readerId || !markerSpaceId) return;
@@ -975,7 +975,7 @@ export default function CommunityPage() {
           console.warn("[PeakScore Community] Channel read marker was not saved.", { code: markerError.code });
         }
       });
-  }, [userId, activeSpaceId]);
+  }, []);
 
   const canvasBackground = appearanceMode === "white"
     ? "#f1f3f5"
@@ -1666,7 +1666,7 @@ export default function CommunityPage() {
         const channelId = row.channel_id;
         if (!channelId || !allowedChannelIds.has(channelId) || row.author_id === userId) return;
         if (activeChannelIdRef.current === channelId && document.visibilityState === "visible") {
-          markChannelRead(channelId);
+          markChannelRead(channelId, userId, activeSpaceId);
           return;
         }
         setUnreadCounts((current) => ({
@@ -1681,7 +1681,7 @@ export default function CommunityPage() {
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.visibilityState === "visible" && activeChannelIdRef.current) {
-        markChannelRead(activeChannelIdRef.current);
+        markChannelRead(activeChannelIdRef.current, userId, activeSpaceId);
       }
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -1732,7 +1732,7 @@ export default function CommunityPage() {
 
   async function selectChannel(channel: Channel) {
     shouldStickToBottomRef.current = true;
-    markChannelRead(channel.id);
+    markChannelRead(channel.id, userId, activeSpaceId);
     activeChannelIdRef.current = channel.id;
     messageLoadRequestRef.current += 1;
     setMessages([]);

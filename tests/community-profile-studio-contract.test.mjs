@@ -1051,10 +1051,10 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","fuzzy-text"/);
   const expectedProps = [
-    'colorSplit={fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
-    'sliceSize={fuzzySettings.sliceSize}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
-    'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
-    'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
+    'direction={fuzzySettings.direction}', 'sliceSize={fuzzySettings.sliceSize}',
+    'transitionDuration={fuzzySettings.transitionDuration}', 'letterSpacing={fuzzySettings.letterSpacing}',
+    'enableHover={fuzzySettings.enableHover}', 'clickEffect={fuzzySettings.clickEffect}',
+    'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
     'glitchDuration={fuzzySettings.glitchDuration}'
   ];
   assert.ok(studio.includes('trigger="always"'));
@@ -1066,6 +1066,12 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(studio, /colorSplit=\\{previewMode \\? Math\\.max\\(fuzzySettings\\.colorSplit, 0\\.12\\) : fuzzySettings\\.colorSplit\\}/);
   assert.match(studio, /intro=\\{previewMode \\? true : fuzzySettings\\.intro\\}/);
   assert.match(studio, /loopIntro=\\{previewMode\\}/);
+  assert.ok(studio.includes('colorSplit={previewMode ? Math.max(fuzzySettings.colorSplit, 0.12) : fuzzySettings.colorSplit}'));
+  assert.ok(studio.includes('intro={previewMode ? true : fuzzySettings.intro}'));
+  assert.ok(studio.includes('introDuration={previewMode ? 950 : fuzzySettings.introDuration}'));
+  assert.ok(page.includes('colorSplit={fuzzySettings.colorSplit}'));
+  assert.ok(page.includes('intro={fuzzySettings.intro}'));
+  assert.ok(page.includes('introDuration={fuzzySettings.introDuration}'));
   assert.ok(page.includes('baseIntensity={fuzzySettings.baseIntensity}'));
   assert.ok(page.includes('hoverIntensity={fuzzySettings.hoverIntensity}'));
   assert.ok(page.includes('fuzzRange={fuzzySettings.fuzzRange}'));

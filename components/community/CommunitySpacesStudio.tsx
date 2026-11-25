@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
 import {
-  Archive, GraduationCap, Hash, Lock, Megaphone, Plus, Save, Trash2, Users, ImagePlus,
+  Archive, GraduationCap, Hash, Lock, Megaphone, Plus, Save, Trash2, Users, ImagePlus, ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 

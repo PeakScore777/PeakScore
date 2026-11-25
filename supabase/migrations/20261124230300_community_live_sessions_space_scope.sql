@@ -7,6 +7,9 @@ begin;
 alter table public.community_live_sessions
   add column if not exists space_id uuid;
 
+-- Keep the prior column-level insert grants and add the space ownership field.
+grant insert (space_id) on public.community_live_sessions to authenticated;
+
 update public.community_live_sessions
 set space_id = '00000000-0000-4000-8000-000000000001'::uuid
 where space_id is null;
@@ -31,10 +34,10 @@ stable
 security definer
 set search_path = ''
 as $function$
-  select auth.uid() is not null
-    and private.is_community_founder() or (
-      auth.uid() is not null
-      and private.can_access_community_space(p_space_id)
+  select auth.uid() is not null and (
+    private.is_community_founder()
+    or (
+      private.can_access_community_space(p_space_id)
       and not private.is_space_timed_out(p_space_id)
       and exists (
         select 1
@@ -63,7 +66,8 @@ as $function$
             )
           )
       )
-    );
+    )
+  );
 $function$;
 
 revoke all on function private.can_host_community_live_session(uuid) from public,anon,authenticated,service_role;

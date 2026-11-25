@@ -524,7 +524,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         <header className="flex min-h-[76px] items-center justify-between border-b border-[#27333e] bg-[#0e151d] px-5 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[9px] border border-[#547f42] bg-[#7fe05c] text-[#09140b] shadow-[0_3px_0_#315d28]"><ShieldCheck size={19}/></span>
-            <div className="min-w-0"><p className="font-[var(--font-silkscreen)] text-[7px] tracking-[.12em] text-[#8ca4b5]">PEAKSCORE COMMUNITY / CONFIGURACIÓN</p>
+            <div className="min-w-0"><p className="font-sans text-[10px] tracking-[.12em] text-[#8ca4b5]">PEAKSCORE COMMUNITY / CONFIGURACIÓN</p>
               <h2 id="ps-founder-title" className="mt-1 truncate text-[16px] font-bold text-white">Ajustes del servidor</h2></div>
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar ajustes" className="grid h-9 w-9 shrink-0 place-items-center rounded-[7px] border border-[#2a3b48] text-[#a7b7c3] transition hover:border-[#71828f] hover:bg-[#1a2631] hover:text-white"><X size={18}/></button>
@@ -539,11 +539,11 @@ export default function CommunityFounderStudio({ onClose }: Props) {
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <aside className="flex w-[236px] shrink-0 flex-col border-r border-[#273642] bg-[#0d151e] max-md:hidden">
-            <div className="border-b border-[#263541] px-4 py-4"><p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.13em] text-[#7e94a4]">PEAKSCORE COMMUNITY</p>
+            <div className="border-b border-[#263541] px-4 py-4"><p className="font-sans text-[9px] tracking-[.13em] text-[#7e94a4]">PEAKSCORE COMMUNITY</p>
               <div className="mt-3 flex items-center gap-2.5"><span className="grid h-9 w-9 place-items-center rounded-[8px] border border-[#3b6240] bg-[#17281b] text-[#9eea86]"><ShieldCheck size={17}/></span>
                 <span className="min-w-0"><span className="block truncate text-[11px] font-bold text-[#e8eff4]">Servidor PeakScore</span><span className="mt-0.5 block text-[9px] text-[#718594]">Panel del founder</span></span></div>
             </div>
-            <div className="space-y-1.5 p-3"><p className="mb-2 px-2 font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#708696]">GESTIÓN DEL SERVIDOR</p>
+            <div className="space-y-1.5 p-3"><p className="mb-2 px-2 font-sans text-[9px] tracking-[.12em] text-[#708696]">GESTIÓN DEL SERVIDOR</p>
               {tabButton("branding", "Identidad", undefined, "Nombre, icono y banner")}
               {tabButton("members", "Miembros", members.length, "Buscar y administrar personas")}
               {tabButton("roles", "Roles", roles.length, "Jerarquía y permisos")}
@@ -551,7 +551,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               {tabButton("spaces", "PreICFES", undefined, "Espacios y comunidades")}
             </div>
             <div className="mt-auto border-t border-[#263541] px-4 py-3"><div className="flex items-center gap-2 text-[9px] text-[#8b9ca8]"><span className="h-1.5 w-1.5 rounded-full bg-[#7fe05c] shadow-[0_0_8px_#7fe05c66]"/> Solo founder</div>
-              <p className="mt-1.5 text-[8px] leading-4 text-[#617687]">Tus cambios de administración quedan protegidos y auditados.</p></div>
+              <p className="mt-1.5 text-[9px] leading-4 text-[#617687]">Tus cambios de administración quedan protegidos y auditados.</p></div>
           </aside>
           <div className="min-w-0 flex-1 overflow-hidden bg-[#111a23]"><div className="hidden h-11 items-center gap-2 border-b border-[#263744] bg-[#101a24] px-5 max-md:flex">
               {tabButton("branding", "Identidad")}{tabButton("members", "Miembros", members.length)}{tabButton("roles", "Roles", roles.length)}{tabButton("channels", "Canales", channels.length)}{tabButton("spaces", "PreICFES")}
@@ -640,7 +640,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
                 <div className="border-b border-[#253644] p-4">
                   <div className="flex items-center justify-between">
-                    <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">DIRECTORIO</p>
+                    <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">DIRECTORIO</p>
                     <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 text-[9px] text-[#8095a5] hover:text-[#01c8ef]">
                       <RefreshCw size={11}/> Actualizar
                     </button>
@@ -673,7 +673,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                 </div>
               </aside>
               <section className="min-h-0 overflow-y-auto px-5 py-5 sm:px-7">
-                <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">ASIGNACIÓN DE AUTORIDAD</p>
+                <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">ASIGNACIÓN DE AUTORIDAD</p>
                 <h3 className="mt-2 text-[18px] font-bold text-white">Roles de PeakScore</h3>
                 <p className="mt-2 max-w-[640px] text-[12px] leading-6 text-[#9aaebb]">
                   Asigna varios roles a cada miembro. Founder es único e intransferible; las asignaciones se validan en PostgreSQL y quedan auditadas.
@@ -691,7 +691,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                 </div>
                 {!catalogReady && <p className="mt-4 rounded-[5px] border border-[#6b542e] bg-[#2c2417] px-3 py-2 text-[10px] leading-5 text-[#edcb8d]">El editor avanzado de roles requiere la migración de catálogo y permisos. Las asignaciones existentes siguen visibles, pero las nuevas acciones no se activarán hasta validar la migración.</p>}
                 <div className="mt-5 border-t border-[#263744] pt-3">
-                  <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3 font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#7891a2]">
+                  <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3 font-sans text-[9px] tracking-[.1em] text-[#7891a2]">
                     <span>MIEMBRO</span><span>ACCESO AL ROL</span>
                   </div>
                   {visibleMembers.map((member) => {
@@ -705,7 +705,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                           <div className="mt-1 flex flex-wrap gap-1">
                             {member.role_keys.map((roleKey) => {
                               const current = roles.find((item) => item.role_key === roleKey);
-                              return current ? <span key={roleKey} className="rounded-[3px] border px-1.5 py-0.5 text-[8px]"
+                              return current ? <span key={roleKey} className="rounded-[3px] border px-1.5 py-0.5 text-[9px]"
                                 style={{ color: current.badge_color, borderColor: current.badge_color + "66", backgroundColor: current.badge_color + "10" }}>{current.label}</span> : null;
                             })}
                           </div>
@@ -730,7 +730,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
             <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)]">
               <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
                 <div className="flex items-center justify-between border-b border-[#253644] p-4">
-                  <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">CATÁLOGO DE ROLES</span>
+                  <span className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">CATÁLOGO DE ROLES</span>
                   <button type="button" onClick={() => { setIsCreatingRole(true); setRoleForm(emptyRole()); }}
                     disabled={!catalogReady} className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear rol">
                     <Plus size={15}/>
@@ -745,7 +745,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                         : "border-transparent hover:border-[#253b49] hover:bg-[#13212c]")}>
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: role.badge_color }}/>
                       <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[#dce7ed]">{role.label}</span>
-                      {role.is_system && <span className="text-[7px] font-semibold tracking-wide text-[#718b9b]">SISTEMA</span>}
+                      {role.is_system && <span className="text-[10px] font-semibold tracking-wide text-[#718b9b]">SISTEMA</span>}
                     </button>
                   ))}
                 </div>
@@ -753,11 +753,11 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               <section className="min-h-0 overflow-y-auto p-5 sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">{isCreatingRole ? "NUEVA DEFINICIÓN" : "CONFIGURACIÓN DEL ROL"}</p>
+                    <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">{isCreatingRole ? "NUEVA DEFINICIÓN" : "CONFIGURACIÓN DEL ROL"}</p>
                     <h3 className="mt-2 text-[18px] font-bold text-white">{isCreatingRole ? "Crear rol personalizado" : selectedRole?.label ?? "Selecciona un rol"}</h3>
                     <p className="mt-1 text-[11px] text-[#849aa9]">Jerarquía, identidad visual y capacidades de participación.</p>
                   </div>
-                  {selectedRole?.is_system && !isCreatingRole && <span className="rounded-[4px] border border-[#3a4d5b] bg-[#17232d] px-2 py-1 text-[8px] font-semibold tracking-wide text-[#a7bac6]">ROL PROTEGIDO</span>}
+                  {selectedRole?.is_system && !isCreatingRole && <span className="rounded-[4px] border border-[#3a4d5b] bg-[#17232d] px-2 py-1 text-[9px] font-semibold tracking-wide text-[#a7bac6]">ROL PROTEGIDO</span>}
                 </div>
 
                 {!catalogReady && <p className="mt-4 rounded-[5px] border border-[#6b542e] bg-[#2c2417] px-3 py-2 text-[10px] leading-5 text-[#edcb8d]">La migración del catálogo aún no está aplicada. El editor queda en modo lectura hasta que se valide el esquema.</p>}
@@ -836,7 +836,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
             <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
               <aside className="flex min-h-0 flex-col border-b border-[#263744] bg-[#0c141e] md:border-r md:border-b-0">
                 <div className="flex items-center justify-between border-b border-[#253644] p-4">
-                  <span className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">CANALES ACTIVOS</span>
+                  <span className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">CANALES ACTIVOS</span>
                   <button type="button" onClick={() => { setIsCreatingChannel(true); setChannelForm(emptyChannel()); setSelectedChannelId(null); }}
                     disabled={!channelsReady} className="grid h-8 w-8 place-items-center rounded-[5px] border border-[#3c6334] bg-[#1b2b1c] text-[#a9e794] hover:border-[#7fe05c] disabled:opacity-40" aria-label="Crear canal">
                     <Plus size={15}/>
@@ -847,7 +847,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                     const group = channels.filter((channel) => channel.category === category.value);
                     if (!group.length) return null;
                     return <section key={category.value} className="mb-4">
-                      <p className="mb-2 px-1 font-[var(--font-silkscreen)] text-[6px] tracking-[.1em] text-[#718b9b]">{category.label}</p>
+                      <p className="mb-2 px-1 font-sans text-[9px] tracking-[.1em] text-[#718b9b]">{category.label}</p>
                       {group.map((channel) => (
                         <button key={channel.id} type="button" onClick={() => { setSelectedChannelId(channel.id); setChannelForm(toChannelForm(channel)); setIsCreatingChannel(false); }}
                           className={"mb-1 flex w-full items-center gap-2 rounded-[5px] border px-2.5 py-2 text-left " + (!isCreatingChannel && selectedChannelId === channel.id
@@ -865,7 +865,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
               </aside>
               <section className="min-h-0 overflow-y-auto p-5 sm:p-7">
                 <div>
-                  <p className="font-[var(--font-silkscreen)] text-[6px] tracking-[.12em] text-[#8198a9]">{isCreatingChannel ? "NUEVO ESPACIO" : "CONFIGURACIÓN DEL CANAL"}</p>
+                  <p className="font-sans text-[9px] tracking-[.12em] text-[#8198a9]">{isCreatingChannel ? "NUEVO ESPACIO" : "CONFIGURACIÓN DEL CANAL"}</p>
                   <h3 className="mt-2 text-[18px] font-bold text-white">{isCreatingChannel ? "Crear canal" : selectedChannel?.name ?? "Selecciona un canal"}</h3>
                   <p className="mt-1 text-[11px] leading-5 text-[#849aa9]">Orden, categoría, acceso, tipo y acento de cada canal.</p>
                 </div>

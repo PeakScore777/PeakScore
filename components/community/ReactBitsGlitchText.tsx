@@ -132,7 +132,9 @@ export default function ReactBitsGlitchText({
     speed, offset, intensity, skew, flicker, enableShadows, shadowColors, burstDuration
   };
   const settingsRef = useRef(settings);
-  settingsRef.current = settings;
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   const safeMode: GlitchMode = MODES.includes(mode) ? mode : "slices";
   const activeTrigger: GlitchTrigger =

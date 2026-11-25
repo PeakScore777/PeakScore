@@ -464,6 +464,7 @@ export default function CommunityPage() {
   const [memberProfileMenuOpen, setMemberProfileMenuOpen] = useState(false);
   const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
   const hoverProfileCloseTimerRef = useRef<number | null>(null);
+  const memberPopoutRef = useRef<HTMLDivElement | null>(null);
   const communityProfileRequestRef = useRef(0);
   const communityProfileCloseRef = useRef<HTMLButtonElement | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
@@ -498,6 +499,27 @@ export default function CommunityPage() {
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberSummary[]>([]);
   const [memberListOpen, setMemberListOpen] = useState(true);
   const [collapsedMemberGroups, setCollapsedMemberGroups] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (!hoverCommunityProfile) return;
+    function handleOutsidePointer(event: PointerEvent) {
+      if (event.target instanceof Node && !memberPopoutRef.current?.contains(event.target)) {
+        setHoverCommunityProfile(null);
+        setMemberProfileMenuOpen(false);
+      }
+    }
+    function handleProfileCardKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setHoverCommunityProfile(null);
+        setMemberProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    document.addEventListener("keydown", handleProfileCardKey);
+    return () => {
+      document.removeEventListener("pointerdown", handleOutsidePointer);
+      document.removeEventListener("keydown", handleProfileCardKey);
+    };
+  }, [hoverCommunityProfile]);
   const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -2841,6 +2863,7 @@ export default function CommunityPage() {
 
         {hoverCommunityProfile && (
           <div
+            ref={memberPopoutRef}
             className="ps-community-member-popout"
             style={{ left: hoverProfilePosition.left, top: hoverProfilePosition.top }}
             onMouseEnter={keepMemberHoverPreviewOpen}

@@ -676,6 +676,7 @@ create policy community_channels_read_active
     and (
       is_private = false
       or private.is_community_founder()
+      or private.is_space_collaborator(space_id)
       or exists (
         select 1 from public.community_member_roles assignment
         where assignment.user_id = (select auth.uid())
@@ -716,7 +717,7 @@ create policy community_messages_read_active_channel
         and (
           channel.is_private = false
           or private.is_community_founder()
-          or private.is_space_collaborator(space_id)
+          or private.is_space_collaborator(channel.space_id)
           or exists (
             select 1 from public.community_member_roles assignment
             where assignment.user_id = (select auth.uid())

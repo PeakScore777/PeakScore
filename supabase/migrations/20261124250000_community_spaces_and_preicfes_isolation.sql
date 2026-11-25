@@ -1733,4 +1733,178 @@ $function$;
 revoke all on function public.can_attach_community_files(uuid) from public,anon,authenticated;
 grant execute on function public.can_attach_community_files(uuid) to authenticated;
 
+
+-- SECURITY DEFINER message editing must enforce the same space membership,
+-- message capability, timeout and private-channel checks as normal inserts.
+create or replace function public.edit_community_message(
+  p_message_id uuid,
+  p_body text
+)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_edited_at timestamptz;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+  if p_message_id is null or p_body is null
+     or char_length(btrim(p_body)) < 1
+     or char_length(btrim(p_body)) > 2000 then
+    raise exception 'Message body must contain between 1 and 2000 characters'
+      using errcode = '22023';
+  end if;
+
+  update public.community_messages message
+  set body = btrim(p_body),
+      edited_at = clock_timestamp()
+  where message.id = p_message_id
+    and message.author_id = v_user_id
+    and private.is_community_enabled()
+    and not private.is_community_timed_out()
+    and exists (
+      select 1
+      from public.community_channels channel
+      where channel.id = message.channel_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+        and private.can_access_community_space(channel.space_id)
+        and private.has_space_permission(channel.space_id,'send_messages')
+        and (
+          channel.is_private = false
+          or private.is_community_founder()
+          or private.is_space_collaborator(channel.space_id)
+          or exists (
+            select 1
+            from public.community_member_roles global_role
+            where global_role.user_id = v_user_id
+              and global_role.role_key in ('profesor','moderador','administrador')
+          )
+        )
+    )
+  returning message.edited_at into v_edited_at;
+
+  if v_edited_at is null then
+    raise exception 'Message not found or editing is not allowed'
+      using errcode = '42501';
+  end if;
+  return v_edited_at;
+end;
+$function$;
+
+revoke all on function public.edit_community_message(uuid,text)
+  from public,anon,authenticated;
+grant execute on function public.edit_community_message(uuid,text)
+  to authenticated;
+
+-- Mention resolution follows the same space scope and never exposes members
+-- from another private PreICFES community.
+create or replace function public.search_community_mention_members(
+  p_channel_id uuid,
+  p_query text,
+  p_limit integer default 8
+)
+returns table (
+  user_id uuid,
+  full_name text,
+  avatar_url text,
+  level integer
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select
+    profile.id,
+    profile.full_name,
+    profile.avatar_url,
+    profile.level
+  from public.community_channels channel
+  join public.community_public_profiles profile on true
+  where auth.uid() is not null
+    and channel.id = p_channel_id
+    and channel.is_archived = false
+    and private.can_access_community_space(channel.space_id)
+    and private.has_space_permission(channel.space_id,'view_channels')
+    and char_length(btrim(coalesce(p_query,''))) between 1 and 32
+    and profile.id <> auth.uid()
+    and strpos(lower(profile.full_name),lower(btrim(p_query))) > 0
+    and (
+      channel.space_id = '00000000-0000-4000-8000-000000000001'::uuid
+      or exists (
+        select 1 from public.community_space_members membership
+        where membership.space_id = channel.space_id
+          and membership.user_id = profile.id
+      )
+    )
+    and (
+      channel.is_private = false
+      or private.is_community_founder()
+      or private.is_space_collaborator(channel.space_id)
+      or exists (
+        select 1
+        from public.community_member_roles global_role
+        where global_role.user_id = profile.id
+          and global_role.role_key in ('profesor','moderador','administrador')
+      )
+    )
+  order by
+    (lower(profile.full_name) = lower(btrim(p_query))) desc,
+    profile.full_name asc
+  limit greatest(1,least(coalesce(p_limit,8),8));
+$function$;
+
+create or replace function public.resolve_community_mention_members(
+  p_channel_id uuid,
+  p_user_ids uuid[]
+)
+returns table (
+  user_id uuid,
+  full_name text
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select profile.id, profile.full_name
+  from public.community_channels channel
+  join public.community_public_profiles profile on true
+  where auth.uid() is not null
+    and channel.id = p_channel_id
+    and channel.is_archived = false
+    and private.can_access_community_space(channel.space_id)
+    and private.has_space_permission(channel.space_id,'view_channels')
+    and p_user_ids is not null
+    and cardinality(p_user_ids) between 1 and 80
+    and profile.id = any(p_user_ids)
+    and (
+      channel.space_id = '00000000-0000-4000-8000-000000000001'::uuid
+      or exists (
+        select 1 from public.community_space_members membership
+        where membership.space_id = channel.space_id
+          and membership.user_id = profile.id
+      )
+    )
+    and (
+      channel.is_private = false
+      or private.is_community_founder()
+      or private.is_space_collaborator(channel.space_id)
+      or exists (
+        select 1
+        from public.community_member_roles global_role
+        where global_role.user_id = profile.id
+          and global_role.role_key in ('profesor','moderador','administrador')
+      )
+    )
+  order by profile.full_name asc
+  limit 80;
+$function$;
+
+
 commit;

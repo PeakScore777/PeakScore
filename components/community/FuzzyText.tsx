@@ -190,15 +190,13 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     const sourceCtx = source.getContext('2d');
     const scratch = document.createElement('canvas');
     const scratchCtx = scratch.getContext('2d');
-    const revealMask = document.createElement('canvas');
-    const revealMaskCtx = revealMask.getContext('2d');
     const channels: ChannelLayer[] = splitOn
       ? [0, 1, 2].map(() => {
           const layer = document.createElement('canvas');
           return { canvas: layer, ctx: layer.getContext('2d') };
         })
       : [];
-    if (!canvas || !ctx || !sourceCtx || !scratchCtx || !revealMaskCtx || channels.some(channel => !channel.ctx)) return;
+    if (!canvas || !ctx || !sourceCtx || !scratchCtx || channels.some(channel => !channel.ctx)) return;
     const layers = channels as { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D }[];
 
     const reduceMotion = respectReducedMotion && (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
@@ -331,33 +329,6 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       }
     };
 
-    const applyNoiseReveal = () => {
-      const progress = Math.max(0, Math.min(1, revealProgressRef.current));
-      if (progress >= 0.999 || !tuningRef.current.intro) return;
-      const width = canvas.width;
-      const height = canvas.height;
-      if (revealMask.width !== width || revealMask.height !== height) {
-        revealMask.width = width;
-        revealMask.height = height;
-      }
-      const cell = Math.max(2, Math.round(3 * dpr));
-      revealMaskCtx.clearRect(0, 0, width, height);
-      revealMaskCtx.fillStyle = '#fff';
-      const edge = padX * dpr + progress * source.width;
-      const grain = Math.max(5, source.width * 0.16);
-      for (let y = 0; y < height; y += cell) {
-        for (let x = 0; x < width; x += cell) {
-          const seed = Math.sin((x * 12.9898 + y * 78.233) * 0.017) * 43758.5453;
-          const noise = (seed - Math.floor(seed) - 0.5) * grain;
-          const localEdge = edge + noise + Math.sin(y * 0.045) * grain * 0.16;
-          if (x + cell * 0.5 <= localEdge) revealMaskCtx.fillRect(x, y, cell, cell);
-        }
-      }
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.drawImage(revealMask, 0, 0);
-      ctx.globalCompositeOperation = 'source-over';
-    };
-
     const draw = () => {
       const tuning = tuningRef.current;
       const step = Math.max(1, Math.round(Math.max(1, tuning.sliceSize) * coarse * dpr));
@@ -366,8 +337,33 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       ctx.globalCompositeOperation = 'source-over';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawn = intensity;
+
+      // Reveal the actual glyphs through an organic, irregular leading edge.
+      // Use the canvas clip path itself: no extra offscreen context is needed,
+      // so a browser reaching its 2D-canvas budget still renders the text.
+      ctx.save();
+      const revealProgress = Math.max(0, Math.min(1, revealProgressRef.current));
+      if (tuning.intro && revealProgress < 0.999) {
+        const edge = padX * dpr + revealProgress * source.width;
+        const grain = Math.max(5, source.width * 0.15);
+        const segments = Math.max(10, Math.ceil(canvas.height / Math.max(2, 3 * dpr)));
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (let index = 0; index <= segments; index++) {
+          const y = (index / segments) * canvas.height;
+          const wave = Math.sin(index * 1.73 + 0.4) * 0.56
+            + Math.sin(index * 0.61 + 1.2) * 0.28
+            + Math.sin(index * 2.91) * 0.12;
+          const noisyEdge = Math.max(0, Math.min(canvas.width, edge + wave * grain));
+          ctx.lineTo(noisyEdge, y);
+        }
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        ctx.clip();
+      }
+
       if (amp >= 0.5) {
-        // Travelling deterministic waves keep the distortion fluid and the letters readable.
+        // Travelling deterministic waves keep the distortion fluid and readable.
         noisePhase += 0.13;
         if (direction === 'vertical') {
           for (let index = 0; index * step < source.width; index++) {
@@ -390,19 +386,19 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
           }
         }
       }
+
       const split = splitOn ? Math.round(tuning.colorSplit * (2 + intensity * fuzzRange * 0.18) * dpr) : 0;
       if (split < 1) {
         fuzz(source, 0, 0, step, amp);
-        applyNoiseReveal();
-        return;
+      } else {
+        const jitter = tuning.colorSplit * amp * 0.2;
+        ctx.globalCompositeOperation = blend;
+        fuzz(layers[0].canvas, -split, jitter, step, amp);
+        fuzz(layers[1].canvas, 0, 0, step, amp);
+        fuzz(layers[2].canvas, split, jitter, step, amp);
+        ctx.globalCompositeOperation = 'source-over';
       }
-      const jitter = tuning.colorSplit * amp * 0.2;
-      ctx.globalCompositeOperation = blend;
-      fuzz(layers[0].canvas, -split, jitter, step, amp);
-      fuzz(layers[1].canvas, 0, 0, step, amp);
-      fuzz(layers[2].canvas, split, jitter, step, amp);
-      ctx.globalCompositeOperation = 'source-over';
-      applyNoiseReveal();
+      ctx.restore();
     };
 
     const build = () => {

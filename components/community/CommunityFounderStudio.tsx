@@ -5,7 +5,7 @@ import Image from "next/image";
 import {
   Search, ShieldCheck, X, UserRound, Check, Plus, Minus, RefreshCw,
   Trash2, Hash, Megaphone, Lock, Eye, EyeOff, MessageSquare, Paperclip, BadgeCheck,
-  Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus, Folder, FolderPlus, Pencil,
+  Smile, Archive, Save, SlidersHorizontal, GraduationCap, Palette, ImagePlus, FolderPlus, Pencil,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import CommunitySpacesStudio from "@/components/community/CommunitySpacesStudio";

@@ -8,6 +8,9 @@ import {
   Smile, Archive, Save, SlidersHorizontal,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
+import CommunitySpacesStudio from "@/components/community/CommunitySpacesStudio";
+
+const GLOBAL_COMMUNITY_SPACE_ID = "00000000-0000-4000-8000-000000000001";
 
 type Member = {
   user_id: string;
@@ -46,7 +49,7 @@ type Channel = {
   accent_color: string;
 };
 
-type Tab = "members" | "roles" | "channels";
+type Tab = "members" | "roles" | "channels" | "spaces";
 type Props = { onClose: () => void };
 
 const PROTECTED_ROLE = "fundador";
@@ -142,6 +145,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
         .order("position", { ascending: true }),
       supabase.from("community_channels")
         .select("id,slug,name,description,category,position,is_private,is_read_only,channel_type,icon_key,accent_color")
+        .eq("space_id", GLOBAL_COMMUNITY_SPACE_ID)
         .eq("is_archived", false)
         .order("category", { ascending: true })
         .order("position", { ascending: true }),
@@ -406,6 +410,7 @@ export default function CommunityFounderStudio({ onClose }: Props) {
           {tabButton("members", "Miembros", members.length)}
           {tabButton("roles", "Roles", roles.length)}
           {tabButton("channels", "Canales", channels.length)}
+          {tabButton("spaces", "PreICFES")}
         </nav>
 
         {(error || notice) && (
@@ -715,6 +720,12 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                   </form>
                 )}
               </section>
+            </div>
+          )}
+
+          {tab === "spaces" && (
+            <div className="h-full min-h-0 overflow-hidden">
+              <CommunitySpacesStudio/>
             </div>
           )}
         </div>

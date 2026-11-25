@@ -2289,16 +2289,12 @@ export default function CommunityPage() {
     <main className={"community-page " + communityTheme.root} style={communityCanvasStyle}>
       <div className="community-layout">
         <nav className="community-server-rail" aria-label="Servidores">
-          <Link href="/" className="community-server-home" aria-label="Volver a PeakScore">
-            <Image src="/peakscore/peakscore-community-mark.svg" alt="PeakScore" width={42} height={42} priority className="community-server-mark-image"/>
-          </Link>
-          <span className="community-server-divider"/>
+
           <button type="button"
             className={"community-server-icon " + (activeSpace?.space_type === "global" ? "community-server-icon-active" : "")}
             onClick={() => router.push("/comunidad")}
             aria-label="PeakScore Community"
-            aria-current={activeSpace?.space_type === "global" ? "page" : undefined}
-            style={activeSpace?.space_type === "global" ? { borderColor: activeSpace.accent_color + "80", color: activeSpace.accent_color } : undefined}>
+            aria-current={activeSpace?.space_type === "global" ? "page" : undefined}>
             {activeSpace?.icon_url
               ? <Image src={activeSpace.icon_url} alt="" width={38} height={38} unoptimized className="h-full w-full rounded-[inherit] object-cover"/>
               : <Image src="/peakscore/peakscore-community-mark.svg" alt="PeakScore" width={38} height={38} unoptimized className="h-[38px] w-[38px] object-contain"/>}
@@ -2306,7 +2302,6 @@ export default function CommunityPage() {
           {communitySpaces.filter((space) => space.space_type === "preicfes").map((space) => (
             <button key={space.id} type="button"
               className={"community-server-icon " + (activeSpace?.id === space.id ? "community-server-icon-active" : "")}
-              style={activeSpace?.id === space.id ? { color: space.accent_color, borderColor: space.accent_color + "80" } : undefined}
               title={space.name}
               aria-label={"Entrar a " + space.name}
               aria-current={activeSpace?.id === space.id ? "page" : undefined}

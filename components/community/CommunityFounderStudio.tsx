@@ -592,10 +592,10 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                     </div>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-[7px] border border-[#3b4c5a] bg-[#1a222b] px-3 py-2 text-[10px] font-semibold text-[#e2e7ed] hover:border-[#8bea45]">
                       <ImagePlus size={14}/>{brandingAssetPending === "banner" ? "Subiendo…" : "Cambiar portada"}
-                      <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={brandingAssetPending !== null}
+                      <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" disabled={brandingAssetPending !== null}
                         onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadGlobalBrandingAsset("banner", file); event.currentTarget.value = ""; }}/>
                     </label>
-                    <p className="text-[9px] leading-4 text-[#788591]">Portada panorámica; se optimiza y elimina metadatos al subirla.</p>
+                    <p className="text-[9px] leading-4 text-[#788591]">Portada panorámica: PNG, JPG, WebP o GIF animado · máximo 5 MB · hasta 60 fotogramas y 30 segundos. Solo el Founder puede cambiarla.</p>
                   </div>
                 </section>
                 <section className="grid gap-4 rounded-[12px] border border-[#303b46] bg-[#0d131a] p-4 sm:grid-cols-2">

@@ -19,7 +19,7 @@ type LiveSpace = {
 };
 type LiveSession = {
   id: string;
-  space_id: string;
+  space_id?: string;
   host_id: string;
   title: string;
   description: string;
@@ -85,7 +85,7 @@ export default function CommunityLivePage() {
   const [capacity, setCapacity] = useState("30");
 
   const loadSessions = useCallback(async (spaceId: string) => {
-    const { data, error: queryError } = await supabase
+    const scopedResult = await supabase
       .from("community_live_sessions")
       .select("id,space_id,host_id,title,description,subject,scheduled_at,duration_minutes,max_participants,status")
       .eq("space_id", spaceId)
@@ -93,12 +93,27 @@ export default function CommunityLivePage() {
       .order("scheduled_at", { ascending: true })
       .limit(50);
 
+    let sessionData = scopedResult.data;
+    let queryError = scopedResult.error;
+    if (queryError && spaceId === "00000000-0000-4000-8000-000000000001"
+      && ["42703","PGRST204","PGRST200"].includes(queryError.code ?? "")) {
+      // Keep the existing global schedule readable until space_id is migrated.
+      const legacyResult = await supabase
+        .from("community_live_sessions")
+        .select("id,host_id,title,description,subject,scheduled_at,duration_minutes,max_participants,status")
+        .in("status", ["scheduled", "live"])
+        .order("scheduled_at", { ascending: true })
+        .limit(50);
+      sessionData = legacyResult.data;
+      queryError = legacyResult.error;
+    }
+
     if (queryError) {
       setError("No se pudo cargar la agenda de directos.");
       return;
     }
 
-    const rows = (data ?? []) as LiveSession[];
+    const rows = (sessionData ?? []) as LiveSession[];
     setSessions(rows);
     const hostIds = Array.from(new Set(rows.map((row) => row.host_id)));
     if (hostIds.length) {
@@ -133,7 +148,6 @@ export default function CommunityLivePage() {
         event: "INSERT",
         schema: "public",
         table: "community_live_sessions",
-        filter: "space_id=eq." + spaceId,
       }, () => {
         void loadSessions(spaceId);
       })

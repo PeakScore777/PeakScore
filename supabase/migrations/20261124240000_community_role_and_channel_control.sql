@@ -23,6 +23,17 @@ alter table public.community_role_catalog
   add constraint community_role_catalog_permissions_object
   check (jsonb_typeof(permissions) = 'object');
 
+insert into public.community_role_catalog
+  (role_key,label,description,badge_color,display_as_badge)
+values
+  ('docente','Docente','Docente de PeakScore; participa en espacios educativos sin autoridad global de moderación.','#39BDE0',true),
+  ('estudiante','Estudiante','Miembro estudiante de PeakScore Community.','#91A0AF',false)
+on conflict (role_key) do update
+set label = excluded.label,
+    description = excluded.description,
+    badge_color = excluded.badge_color,
+    display_as_badge = excluded.display_as_badge;
+
 update public.community_role_catalog
 set
   position = case role_key
@@ -399,6 +410,7 @@ create policy community_messages_insert_as_self
   with check (
     author_id = (select auth.uid())
     and private.has_community_permission('send_messages')
+    and (attachment_path is null or private.has_community_permission('attach_files'))
     and not private.is_community_timed_out()
     and exists (
       select 1 from public.community_channels channel

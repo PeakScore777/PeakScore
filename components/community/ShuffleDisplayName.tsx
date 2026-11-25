@@ -182,6 +182,7 @@ export default function ShuffleDisplayName({
                 {glyphs.map((glyph, glyphIndex) => (
                   <span
                     key={glyphIndex}
+                    data-glyph={glyph}
                     style={{
                       ["--shuffle-glyph-delay" as string]: (glyphIndex * safeStagger * 0.55) + "s",
                     } as CSSProperties}

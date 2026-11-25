@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+<title id="title">PeakScore</title>
+<rect width="512" height="512" fill="#000"/>
+<path fill="#8bea18" d="M94 92h226c61 0 104 43 104 104v40c0 67-45 111-111 111H209l-24-47h116c36 0 57-22 57-59v-35c0-30-18-49-49-49H144l-50-65zm72 116h66l-54 126-67 51 55-177z"/>
+<path fill="#08d4e8" d="m239 208 69 74-40-17-35-25-70 81-72 48 50-75 69-86 29 22zm-50 162 56-28-19 89-97 57 60-118zm80 16 29-15v43l-29 13v-41zm42-22 29-15v48l-29 11v-44zm42-21 29-15v52l-29 9v-46z"/>
+<path fill="#08d4e8" d="m329 263 25-34 47 57-57-28-15 5z"/>
+</svg>

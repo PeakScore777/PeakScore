@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
-  PanelRight,
+  PanelRight, Palette, Headphones, Mic, Settings2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import communityTheme from "./peakscore-community-theme.module.css";
@@ -479,6 +479,18 @@ export default function CommunityPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [appearanceMode, setAppearanceMode] = useState<"black" | "gray" | "white" | "custom">("black");
+  const [appearanceCustomColor, setAppearanceCustomColor] = useState("#252a32");
+  const [chromaEnabled, setChromaEnabled] = useState(true);
+  const [appearanceLoadedKey, setAppearanceLoadedKey] = useState<string | null>(null);
+  const [audioPanelMode, setAudioPanelMode] = useState<"input" | "output" | null>(null);
+  const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [audioInputDeviceId, setAudioInputDeviceId] = useState("");
+  const [audioOutputDeviceId, setAudioOutputDeviceId] = useState("");
+  const [audioFeedback, setAudioFeedback] = useState("");
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const editComposerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -911,6 +923,145 @@ export default function CommunityPage() {
 
   const activeSpaceId = activeSpace?.id ?? null;
   const activeSpaceType = activeSpace?.space_type ?? null;
+  const appearanceStorageKey = userId && activeSpaceId
+    ? "peakscore:community:appearance:" + userId + ":" + activeSpaceId
+    : null;
+  const audioStorageKey = userId ? "peakscore:community:audio:" + userId : null;
+  const canUseMicrophone = isFounder || Boolean(profile?.roles?.some((role) =>
+    ["administrador", "moderador", "profesor", "docente"].includes(role.role_key),
+  ));
+  const markChannelRead = useCallback((channelId: string) => {
+    setUnreadCounts((current) => current[channelId] ? { ...current, [channelId]: 0 } : current);
+    if (!userId || !activeSpaceId) return;
+    try {
+      const key = "peakscore:community:read:" + userId + ":" + activeSpaceId;
+      const current = JSON.parse(window.localStorage.getItem(key) || "{}") as Record<string, string>;
+      current[channelId] = new Date().toISOString();
+      window.localStorage.setItem(key, JSON.stringify(current));
+    } catch {
+      // Unread indicators remain available for the current session when storage is blocked.
+    }
+  }, [userId, activeSpaceId]);
+
+  const canvasBackground = appearanceMode === "white"
+    ? "#f1f3f5"
+    : appearanceMode === "gray"
+      ? "#353a43"
+      : appearanceMode === "custom"
+        ? appearanceCustomColor
+        : "#0b0d11";
+  const canvasLuminance = (() => {
+    const normalized = canvasBackground.replace("#", "");
+    const rgb = [0, 2, 4].map((offset) => parseInt(normalized.slice(offset, offset + 2), 16) / 255);
+    const linear = rgb.map((channel) => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4);
+    return .2126 * linear[0] + .7152 * linear[1] + .0722 * linear[2];
+  })();
+  const communityCanvasStyle = {
+    "--community-canvas-bg": canvasBackground,
+    "--community-canvas-text": canvasLuminance > .42 ? "#171a1f" : "#e8ebef",
+    "--community-canvas-muted": canvasLuminance > .42 ? "#4d5560" : "#9aa2ad",
+    "--community-chroma-opacity": chromaEnabled ? ".72" : "0",
+  } as CSSProperties;
+
+  useEffect(() => {
+    if (!appearanceStorageKey) return;
+    let saved: { mode?: string; customColor?: string; chroma?: boolean } = {};
+    try {
+      saved = JSON.parse(window.localStorage.getItem(appearanceStorageKey) || "{}");
+    } catch {
+      saved = {};
+    }
+    if (saved.mode === "black" || saved.mode === "gray" || saved.mode === "white" || saved.mode === "custom") {
+      setAppearanceMode(saved.mode);
+    } else {
+      setAppearanceMode("black");
+    }
+    if (typeof saved.customColor === "string" && /^#[0-9a-f]{6}$/i.test(saved.customColor)) {
+      setAppearanceCustomColor(saved.customColor);
+    }
+    setChromaEnabled(saved.chroma !== false);
+    setAppearanceLoadedKey(appearanceStorageKey);
+  }, [appearanceStorageKey]);
+
+  useEffect(() => {
+    if (!appearanceStorageKey || appearanceLoadedKey !== appearanceStorageKey) return;
+    try {
+      window.localStorage.setItem(appearanceStorageKey, JSON.stringify({
+        mode: appearanceMode,
+        customColor: appearanceCustomColor,
+        chroma: chromaEnabled,
+      }));
+    } catch {
+      // Appearance still applies in memory if local storage is unavailable.
+    }
+  }, [appearanceStorageKey, appearanceLoadedKey, appearanceMode, appearanceCustomColor, chromaEnabled]);
+
+  useEffect(() => {
+    if (!audioStorageKey) return;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(audioStorageKey) || "{}") as {
+        input?: string;
+        output?: string;
+      };
+      setAudioInputDeviceId(typeof saved.input === "string" ? saved.input : "");
+      setAudioOutputDeviceId(typeof saved.output === "string" ? saved.output : "");
+    } catch {
+      setAudioInputDeviceId("");
+      setAudioOutputDeviceId("");
+    }
+  }, [audioStorageKey]);
+
+  useEffect(() => {
+    if (!audioStorageKey) return;
+    try {
+      window.localStorage.setItem(audioStorageKey, JSON.stringify({
+        input: audioInputDeviceId,
+        output: audioOutputDeviceId,
+      }));
+    } catch {
+      // Audio device choices remain selected for the current page session.
+    }
+  }, [audioStorageKey, audioInputDeviceId, audioOutputDeviceId]);
+
+  const refreshAudioDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      setAudioFeedback("Este navegador no permite consultar dispositivos de audio.");
+      return;
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setAudioInputDevices(devices.filter((device) => device.kind === "audioinput"));
+      setAudioOutputDevices(devices.filter((device) => device.kind === "audiooutput"));
+      setAudioFeedback(devices.length ? "" : "No se encontraron dispositivos de audio.");
+    } catch {
+      setAudioFeedback("No se pudieron consultar los dispositivos de audio.");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!audioPanelMode) return;
+    void refreshAudioDevices();
+  }, [audioPanelMode, refreshAudioDevices]);
+
+  async function verifyMicrophoneDevice() {
+    if (!canUseMicrophone) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setAudioFeedback("Este navegador no permite comprobar el micrófono.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: audioInputDeviceId ? { deviceId: { exact: audioInputDeviceId } } : true,
+      });
+      const track = stream.getAudioTracks()[0];
+      const label = track?.label || "Micrófono disponible";
+      stream.getTracks().forEach((mediaTrack) => mediaTrack.stop());
+      setAudioFeedback("Permiso correcto · " + label);
+      await refreshAudioDevices();
+    } catch {
+      setAudioFeedback("No se pudo acceder al micrófono. Revisa los permisos del navegador.");
+    }
+  }
 
   const loadMessages = useCallback(async (channelId: string) => {
     const requestId = ++messageLoadRequestRef.current;
@@ -1266,12 +1417,55 @@ export default function CommunityPage() {
       } : null);
       const list = (compatibleChannels ?? []) as Channel[];
       setChannels(list);
+
+      // Restore unread counts from the last channel visit on this device.
+      const readStorageKey = "peakscore:community:read:" + user.id + ":" + resolvedSpace.id;
+      let seenAt: Record<string, string> = {};
+      try {
+        seenAt = JSON.parse(window.localStorage.getItem(readStorageKey) || "{}") as Record<string, string>;
+      } catch {
+        seenAt = {};
+      }
+      const trackedChannels = list.filter((channel) => typeof seenAt[channel.id] === "string");
+      const unread: Record<string, number> = {};
+      if (trackedChannels.length) {
+        const oldestSeen = trackedChannels
+          .map((channel) => Date.parse(seenAt[channel.id]))
+          .filter(Number.isFinite)
+          .reduce((oldest, value) => Math.min(oldest, value), Date.now());
+        if (Number.isFinite(oldestSeen) && oldestSeen < Date.now()) {
+          const unreadResult = await supabase.from("community_messages")
+            .select("channel_id,author_id,created_at")
+            .in("channel_id", trackedChannels.map((channel) => channel.id))
+            .gt("created_at", new Date(oldestSeen).toISOString())
+            .neq("author_id", user.id)
+            .order("created_at", { ascending: true })
+            .limit(1000);
+          if (!unreadResult.error) {
+            for (const row of (unreadResult.data ?? []) as Array<{ channel_id: string; author_id: string; created_at: string }>) {
+              if (Date.parse(row.created_at) > Date.parse(seenAt[row.channel_id] ?? "")) {
+                unread[row.channel_id] = (unread[row.channel_id] ?? 0) + 1;
+              }
+            }
+          }
+        }
+      }
+      const initialNow = new Date().toISOString();
+      for (const channel of list) {
+        if (typeof seenAt[channel.id] !== "string") seenAt[channel.id] = initialNow;
+      }
+      setUnreadCounts(unread);
+      try { window.localStorage.setItem(readStorageKey, JSON.stringify(seenAt)); } catch {
+        // A blocked storage API disables cross-session unread restoration only.
+      }
+
       await refreshStats(resolvedSpace.space_type === "preicfes" ? resolvedSpace.id : undefined);
       if (!alive) return;
       const requested = new URLSearchParams(window.location.search).get("channel");
       const selected = list.find((item) => item.slug === requested)
         ?? list.find((item) => item.slug === "general") ?? list[0];
       if (selected) {
+        markChannelRead(selected.id);
         activeChannelIdRef.current = selected.id;
         setActiveChannelId(selected.id);
       }
@@ -1279,7 +1473,7 @@ export default function CommunityPage() {
     }
     void initialize();
     return () => { alive = false; };
-  }, [router, refreshStats]);
+  }, [router, refreshStats, markChannelRead]);
 
   useEffect(() => {
     if (!activeChannelId || !userId) return;
@@ -1312,6 +1506,30 @@ export default function CommunityPage() {
       void supabase.removeChannel(messageSubscription);
     };
   }, [activeChannelId, userId, loadMessages]);
+
+  // Listen for inserts across the channels the member can currently see.
+  // The local last-read timestamp is only advanced when a channel is opened.
+  useEffect(() => {
+    if (!userId || !activeSpaceId || channels.length === 0) return;
+    const allowedChannelIds = new Set(channels.map((channel) => channel.id));
+    const notificationChannel = supabase.channel("community-unread-" + activeSpaceId)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "community_messages",
+      }, (payload) => {
+        const row = payload.new as { channel_id?: string; author_id?: string };
+        const channelId = row.channel_id;
+        if (!channelId || !allowedChannelIds.has(channelId) || row.author_id === userId) return;
+        if (activeChannelIdRef.current === channelId) return;
+        setUnreadCounts((current) => ({
+          ...current,
+          [channelId]: Math.min(99, (current[channelId] ?? 0) + 1),
+        }));
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(notificationChannel); };
+  }, [userId, activeSpaceId, channels]);
 
   // Presence is global to the community, not to an individual channel.
   // Keep this socket stable while the user navigates between channels.
@@ -1357,6 +1575,7 @@ export default function CommunityPage() {
 
   async function selectChannel(channel: Channel) {
     shouldStickToBottomRef.current = true;
+    markChannelRead(channel.id);
     activeChannelIdRef.current = channel.id;
     messageLoadRequestRef.current += 1;
     setMessages([]);
@@ -1749,7 +1968,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className={"community-page " + communityTheme.root}>
+    <main className={"community-page " + communityTheme.root} style={communityCanvasStyle}>
       <div className="community-layout">
         <nav className="community-server-rail" aria-label="Servidores">
           <Link href="/" className="community-server-home" aria-label="Volver a PeakScore">
@@ -1818,6 +2037,11 @@ export default function CommunityPage() {
                       <span className="min-w-0 flex-1 truncate">{channel.name}</span>
                       {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
                       {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
+                      {(unreadCounts[channel.id] ?? 0) > 0 && (
+                        <span className="community-unread-count" aria-label={unreadCounts[channel.id] + " mensajes sin leer"}>
+                          {unreadCounts[channel.id] > 99 ? "99+" : unreadCounts[channel.id]}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -1825,9 +2049,10 @@ export default function CommunityPage() {
             ))}
           </nav>
 
-          <button type="button" className="community-user-panel community-user-panel-button"
-            onClick={() => userId && void openCommunityProfile(userId)}
-            aria-label="Abrir mi perfil de comunidad">
+          <div className="community-user-panel-shell">
+            <button type="button" className="community-user-panel community-user-panel-button"
+              onClick={() => userId && void openCommunityProfile(userId)}
+              aria-label="Abrir mi perfil de comunidad">
             <span className="community-avatar community-user-avatar">
               {profile?.avatar_url
                 ? <Image src={profile.avatar_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover"/>
@@ -1837,8 +2062,66 @@ export default function CommunityPage() {
               <span className="block truncate text-[13px] font-semibold text-white">{profile?.full_name || "Mi perfil social"}</span>
               <span className="community-user-presence"><span/>{profile?.status_text || "Editar perfil comunitario"}</span>
             </span>
-            <Pencil size={14} className="community-user-role" aria-hidden="true"/>
-          </button>
+              <Pencil size={14} className="community-user-role" aria-hidden="true"/>
+            </button>
+            <div className="community-user-audio-controls" aria-label="Controles de audio">
+              <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "output" ? null : "output")}
+                className={audioPanelMode === "output" ? "is-active" : ""}
+                aria-label="Configurar audífonos y salida de audio" title="Audífonos y salida de audio">
+                <Headphones size={17}/>
+              </button>
+              {canUseMicrophone && (
+                <button type="button" onClick={() => setAudioPanelMode((mode) => mode === "input" ? null : "input")}
+                  className={audioPanelMode === "input" ? "is-active" : ""}
+                  aria-label="Configurar micrófono" title="Micrófono">
+                  <Mic size={17}/>
+                </button>
+              )}
+            </div>
+          </div>
+          {audioPanelMode && (
+            <div className="community-audio-popover" role="dialog" aria-label="Preferencias de audio">
+              <div className="community-audio-popover-header">
+                <span>{audioPanelMode === "output" ? "Audífonos y salida" : "Micrófono"}</span>
+                <button type="button" onClick={() => setAudioPanelMode(null)} aria-label="Cerrar audio"><X size={15}/></button>
+              </div>
+              {audioPanelMode === "output" ? (
+                <label className="community-audio-field">
+                  <span>Dispositivo de salida</span>
+                  <select value={audioOutputDeviceId} onChange={(event) => setAudioOutputDeviceId(event.target.value)}>
+                    <option value="">Predeterminado del sistema</option>
+                    {audioOutputDevices.map((device, index) => (
+                      <option key={device.deviceId || index} value={device.deviceId}>
+                        {device.label || "Salida de audio " + (index + 1)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <>
+                  <label className="community-audio-field">
+                    <span>Dispositivo de entrada</span>
+                    <select value={audioInputDeviceId} onChange={(event) => setAudioInputDeviceId(event.target.value)}>
+                      <option value="">Predeterminado del sistema</option>
+                      {audioInputDevices.map((device, index) => (
+                        <option key={device.deviceId || index} value={device.deviceId}>
+                          {device.label || "Micrófono " + (index + 1)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button type="button" className="community-audio-check" onClick={() => void verifyMicrophoneDevice()}>
+                    <Mic size={15}/> Comprobar micrófono
+                  </button>
+                </>
+              )}
+              <button type="button" className="community-audio-refresh" onClick={() => void refreshAudioDevices()}>
+                <Settings2 size={14}/> Actualizar dispositivos
+              </button>
+              {audioFeedback && <p role="status" className="community-audio-feedback">{audioFeedback}</p>}
+              <p className="community-audio-note">Preferencias guardadas en este dispositivo. La salida se aplicará en funciones de voz compatibles.</p>
+            </div>
+          )}
         </aside>
 
         {mobileChannelsOpen && (
@@ -1883,6 +2166,13 @@ export default function CommunityPage() {
                 <i/>{activeSpaceOnlineUsers} en línea
               </span>
               <button type="button"
+                className={"community-chat-tool " + (appearanceOpen ? "community-chat-tool-active" : "")}
+                onClick={() => setAppearanceOpen((open) => !open)}
+                aria-label="Personalizar fondo de la comunidad" aria-expanded={appearanceOpen}
+                title="Apariencia de la comunidad">
+                <Palette size={18}/>
+              </button>
+              <button type="button"
                 className={"community-chat-tool community-member-toggle " + (memberListOpen ? "community-chat-tool-active" : "")}
                 onClick={() => setMemberListOpen((value) => !value)}
                 aria-label={memberListOpen ? "Ocultar lista de miembros" : "Mostrar lista de miembros"}
@@ -1891,6 +2181,42 @@ export default function CommunityPage() {
               </button>
             </div>
           </header>
+
+          {appearanceOpen && (
+            <div className="community-appearance-popover" role="dialog" aria-label="Apariencia de la comunidad">
+              <div className="community-appearance-title">
+                <span>Fondo de la comunidad</span>
+                <button type="button" onClick={() => setAppearanceOpen(false)} aria-label="Cerrar apariencia"><X size={15}/></button>
+              </div>
+              <div className="community-appearance-presets" role="group" aria-label="Colores predeterminados">
+                {([
+                  { id: "black", label: "Negro", color: "#0b0d11" },
+                  { id: "gray", label: "Gris", color: "#353a43" },
+                  { id: "white", label: "Blanco", color: "#f1f3f5" },
+                ] as const).map((option) => (
+                  <button key={option.id} type="button"
+                    className={"community-appearance-swatch" + (appearanceMode === option.id ? " is-selected" : "")}
+                    onClick={() => setAppearanceMode(option.id)}
+                    aria-label={option.label} aria-pressed={appearanceMode === option.id}
+                    title={option.label}>
+                    <i style={{ background: option.color }}/>
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+              <label className="community-appearance-custom">
+                <span>Color personalizado</span>
+                <input type="color" value={appearanceCustomColor}
+                  onChange={(event) => { setAppearanceCustomColor(event.target.value); setAppearanceMode("custom"); }}/>
+              </label>
+              <button type="button" className={"community-appearance-chroma" + (chromaEnabled ? " is-enabled" : "")}
+                onClick={() => setChromaEnabled((enabled) => !enabled)} aria-pressed={chromaEnabled}>
+                <span><i/> Fondo Chroma</span>
+                <strong>{chromaEnabled ? "Activado" : "Desactivado"}</strong>
+              </button>
+              <p>Tu apariencia se guarda en este dispositivo y solo cambia tu vista.</p>
+            </div>
+          )}
 
           <div ref={feedScrollRef} onScroll={handleFeedScroll} className="community-chat-scroll">
             <div className="community-chat-messages">

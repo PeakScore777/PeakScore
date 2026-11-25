@@ -1121,20 +1121,19 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
 });
 
 
-test("animation gallery runs one real preview and keeps the other cards CSS-only", () => {
+test("animation gallery mounts its real motion renderer in every preview tile", () => {
   assert.match(studio, /function DisplayNameMotionPreview/);
-  assert.match(studio, /<AnimatedDisplayName[\s\S]*?previewMode/);
+  assert.match(studio, /<AnimatedDisplayName[\\s\\S]*?previewMode/);
   assert.match(studio, /className="ps-community-name-effect-grid ps-community-name-animation-grid"/);
   assert.match(studio, /ps-community-name-effect-option ps-community-name-animation-option/);
-  assert.match(studio, /draftDisplayNameAnimation === item\.id \? \(/);
-  assert.match(studio, /<DisplayNameMotionPreview[\s\S]*?animation=\{item\.id\}/);
-  assert.match(studio, /ps-name-preview-motion name-preview-/);
-  assert.match(studio, /ps-name-preview-face/);
-  assert.match(studio, /<small className="ps-community-name-font-label">\{item\.label\}<\/small>/);
-  assert.match(nameStyleCss, /\.ps-community-name-font-option > \.ps-community-name-font-label/);
-  assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\.setInterval/);
-  assert.match(nameStyleCss, /ps-community-name-animation-option > \.ps-community-name-animation-sample/);
-  assert.match(nameStyleCss, /name-preview-gradient-flow/);
+  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\\.map\\(\\(item\\) =>/);
+  assert.match(studio, /<DisplayNameMotionPreview[\\s\\S]*?animation=\\{item\\.id\\}/);
+  assert.match(studio, /previewMode/);
+  assert.doesNotMatch(studio, /ps-name-preview-motion|ps-name-preview-face/);
+  assert.match(studio, /<small className="ps-community-name-font-label">\\{item\\.label\\}<\\/small>/);
+  assert.match(nameStyleCss, /\\.ps-community-name-font-option > \\.ps-community-name-font-label/);
+  assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\\.setInterval/);
+  assert.match(nameStyleCss, /\\.ps-community-name-animation-option > \\.ps-community-name-preview-live/);
 });
 
 test("only the profile runs the selected entrance animation; member and chat names stay static but styled", () => {

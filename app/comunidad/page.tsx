@@ -1753,7 +1753,7 @@ export default function CommunityPage() {
       <div className="community-layout">
         <nav className="community-server-rail" aria-label="Servidores">
           <Link href="/" className="community-server-home" aria-label="Volver a PeakScore">
-            <span className="community-server-mark">P</span>
+            <Image src="/peakscore/peakscore-community-mark.svg" alt="PeakScore" width={42} height={42} priority className="community-server-mark-image"/>
           </Link>
           <span className="community-server-divider"/>
           <button type="button"
@@ -1784,7 +1784,7 @@ export default function CommunityPage() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#101824]/95 via-[#101824]/75 to-[#101824]/45"/>
             <div className="relative z-10 min-w-0">
               <p className="community-server-eyebrow">COMUNIDAD</p>
-              <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={22} height={22} unoptimized className="h-[22px] w-[22px] shrink-0 rounded-[6px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p></div>
+              <div className="flex min-w-0 items-center gap-2">{activeSpace?.icon_url && <Image src={activeSpace.icon_url} alt="" width={26} height={26} unoptimized className="h-[26px] w-[26px] shrink-0 rounded-[8px] object-cover"/>}<p className="community-server-name">{activeSpace?.name ?? "PeakScore Community"}</p>{activeSpace?.space_type === "global" && <span className="community-verified-badge" title="Comunidad oficial de PeakScore" aria-label="Comunidad oficial"><ShieldCheck size={13}/><span>OFICIAL</span></span>}</div>
             </div>
             <button type="button" className="community-sidebar-close lg:hidden"
               onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>
@@ -1865,7 +1865,7 @@ export default function CommunityPage() {
                   title="Abrir control central de founder"
                   aria-label="Abrir control central de founder">
                   <ShieldCheck size={16}/>
-                  <span className="hidden xl:inline font-[var(--font-silkscreen)] text-[6px] tracking-wide">CONTROL</span>
+                  <span className="hidden xl:inline font-semibold text-[11px] uppercase tracking-[.08em]">CONTROL</span>
                 </button>
               )}
               {searchOpen && (

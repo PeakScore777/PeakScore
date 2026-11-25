@@ -839,7 +839,7 @@ test("display-name animation picker exposes the supported catalogue and keeps ad
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
-  assert.match(studio, /if \(animation === "fuzzy-text"\)/); // Legacy-only component, excluded from picker and API.
+  assert.doesNotMatch(studio, /animation === "fuzzy-text"/);
   assert.match(studio, /if \(animation === "shuffle"\)/);
   assert.match(studio, /if \(animation === "inkline"\)/);
   assert.match(studio, /if \(animation === "halo-signal"\)/);
@@ -873,7 +873,7 @@ test("motion gallery previews use the exact renderer for each selectable animati
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
   assert.ok(studio.includes("<DecryptedDisplayName"));
-  assert.ok(!studio.includes("<FuzzyText"));
+  assert.doesNotMatch(studio, /<FuzzyText\s/);
   assert.ok(studio.includes("<InklineDisplayName"));
   assert.ok(studio.includes("<HaloSignalDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
@@ -1053,8 +1053,8 @@ test("Noise Reveal is fully removed from selectable and live animation renderers
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
   assert.doesNotMatch(catalogue, /fuzzy-text|Noise Reveal/);
   assert.doesNotMatch(animationWhitelist, /fuzzy-text/);
-  assert.doesNotMatch(studio, /import FuzzyText|<FuzzyText|animation === "fuzzy-text"|resolveFuzzyTextAppearance/);
-  assert.doesNotMatch(page, /import FuzzyText|<FuzzyText|animation === "fuzzy-text"|resolveFuzzyTextAppearance/);
+  assert.doesNotMatch(studio, /import FuzzyText|<FuzzyText\s|animation === "fuzzy-text"|resolveFuzzyTextAppearance/);
+  assert.doesNotMatch(page, /import FuzzyText|<FuzzyText\s|animation === "fuzzy-text"|resolveFuzzyTextAppearance/);
   assert.match(studio, /displayNameFuzzySettings/); // Persisted legacy data is retained, but no longer rendered as an animation.
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
   assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
@@ -1062,8 +1062,8 @@ test("Noise Reveal is fully removed from selectable and live animation renderers
 
 test("retired Noise Reveal settings remain data-only and never create animation UI", () => {
   assert.doesNotMatch(studio, /Fuzzy Text|Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration/);
-  assert.doesNotMatch(studio, /resolveFuzzyTextAppearance|<FuzzyText/);
-  assert.doesNotMatch(page, /resolveFuzzyTextAppearance|<FuzzyText|fuzzySettings=\{/);
+  assert.doesNotMatch(studio, /resolveFuzzyTextAppearance|<FuzzyText\s/);
+  assert.doesNotMatch(page, /resolveFuzzyTextAppearance|<FuzzyText\s|fuzzySettings=\{/);
   assert.doesNotMatch(studio, /ps-community-fuzzy-customizer/);
   assert.match(studio, /displayNameFuzzySettings,/);
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
@@ -1136,14 +1136,17 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(mistfallName, /finished = false/);
   assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);
   assert.match(mistfallName, /\[text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey\]/);
-  assert.match(page, /fps=\{fuzzySettings\.fps\}/);
+  assert.match(mistfallName, /styleKey = \[className, styleTokens\?\.\["--name-solid-color"\]/);\n  assert.match(mistfallName, /particleStops = paletteStops\(selectedPalette\.length >= 2 \? selectedPalette/);\n  assert.doesNotMatch(page, /fps=\{fuzzySettings\.fps\}/);
 });
 
 
 
 test("Chromaflow paints one coordinated full spectrum through every name renderer", () => {
-  assert.match(studio, /gradient=\{className\.includes\("effect-gradient-flow"\)[\s\S]*?className\.includes\("effect-chromaflow"\)/);
-  assert.match(page, /gradient=\{className\.includes\("effect-chromaflow"\)/);
+  assert.match(studio, /id: "chromaflow", label: "Chromaflow"/);
+  assert.match(page, /CommunityStaticName/);
+  assert.match(nameEffectsCss, /effect-chromaflow/);
+  assert.match(mistfallName, /effect === "chromaflow"/);
+  assert.match(inklineName, /chromaflowGradientId/);
   assert.match(decryptedName, /--ps-chroma-position/);
   assert.match(shuffleName, /--ps-chroma-position/);
   assert.match(nameStyleCss, /\.ps-name-shuffle__track > span\s*\{/);
@@ -1390,18 +1393,18 @@ test("community-only profile and name-style stylesheets are loaded by the commun
 });
 
 
-test("Name Atelier previews keep independent effects, live noise typography and the borderless Discord reference layout", () => {
+test("Name Atelier previews keep independent finishes, profile motion and the borderless Discord reference layout", () => {
   const effectGrid = studio.slice(studio.indexOf("DISPLAY_NAME_EFFECTS.map"), studio.indexOf("DISPLAY_NAME_ANIMATIONS.map"));
+  const motionGrid = studio.slice(studio.indexOf("DISPLAY_NAME_ANIMATIONS.map"), studio.indexOf("DISPLAY_NAME_COLORS.map"));
   assert.ok(effectGrid.includes("ps-community-name-effect-option"));
   assert.ok(effectGrid.includes("ps-community-name-effect-sample is-name-style-"));
   assert.ok(!effectGrid.includes('className={"ps-community-name-effect-option effect-'));
-  assert.ok(studio.includes("loopIntro={false}"));
-  assert.ok(studio.includes("loopDelay={1100}"));
-  assert.ok(fuzzySettings.includes("colorSplit: 0"));
-  assert.ok(fuzzySettings.includes("baseIntensity: 0.2"));
-  assert.ok(fuzzyText.includes("getComputedStyle(canvas.parentElement || canvas)"));
-  assert.ok(fuzzyText.includes("loopIntro && introState.done"));
-  assert.ok(fuzzyText.includes("introState.nextStart = now + Math.max(500, loopDelay)"));
+  assert.ok(motionGrid.includes("ps-community-name-animation-option"));
+  assert.ok(motionGrid.includes("ps-community-name-animation-sample"));
+  assert.ok(studio.includes("draftDisplayNameAnimation"));
+  assert.doesNotMatch(studio, /loopIntro=|loopDelay=|colorSplit=|resolveFuzzyTextAppearance|<FuzzyText\\s/);
+  assert.doesNotMatch(page, /resolveFuzzyTextAppearance|<FuzzyText\\s/);
+  assert.match(studio, /displayNameFuzzySettings/); // Legacy persisted settings remain data-only.
 
   const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));

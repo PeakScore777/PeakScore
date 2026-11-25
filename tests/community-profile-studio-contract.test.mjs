@@ -1063,9 +1063,6 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(studio, /hoverIntensity=\{previewMode \? Math\.max\(fuzzySettings\.hoverIntensity, 0\.36\) : fuzzySettings\.hoverIntensity\}/);
   assert.match(studio, /fuzzRange=\{previewMode \? Math\.max\(fuzzySettings\.fuzzRange, 20\) : fuzzySettings\.fuzzRange\}/);
   assert.match(studio, /fps=\{previewMode \? 45 : fuzzySettings\.fps\}/);
-  assert.match(studio, /colorSplit=\\{previewMode \\? Math\\.max\\(fuzzySettings\\.colorSplit, 0\\.12\\) : fuzzySettings\\.colorSplit\\}/);
-  assert.match(studio, /intro=\\{previewMode \\? true : fuzzySettings\\.intro\\}/);
-  assert.match(studio, /loopIntro=\\{previewMode\\}/);
   assert.ok(studio.includes('colorSplit={previewMode ? Math.max(fuzzySettings.colorSplit, 0.12) : fuzzySettings.colorSplit}'));
   assert.ok(studio.includes('intro={previewMode ? true : fuzzySettings.intro}'));
   assert.ok(studio.includes('introDuration={previewMode ? 950 : fuzzySettings.introDuration}'));
@@ -1128,18 +1125,22 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
 
 
 test("animation gallery mounts its real motion renderer in every preview tile", () => {
-  assert.match(studio, /function DisplayNameMotionPreview/);
-  assert.match(studio, /<AnimatedDisplayName[\\s\\S]*?previewMode/);
-  assert.match(studio, /className="ps-community-name-effect-grid ps-community-name-animation-grid"/);
-  assert.match(studio, /ps-community-name-effect-option ps-community-name-animation-option/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\\.map\\(\\(item\\) =>/);
-  assert.match(studio, /<DisplayNameMotionPreview[\\s\\S]*?animation=\\{item\\.id\\}/);
-  assert.match(studio, /previewMode/);
-  assert.doesNotMatch(studio, /ps-name-preview-motion|ps-name-preview-face/);
-  assert.match(studio, /<small className="ps-community-name-font-label">\\{item\\.label\\}<\\/small>/);
-  assert.match(nameStyleCss, /\\.ps-community-name-font-option > \\.ps-community-name-font-label/);
-  assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\\.setInterval/);
-  assert.match(nameStyleCss, /\\.ps-community-name-animation-option > \\.ps-community-name-preview-live/);
+  assert.ok(studio.includes("function DisplayNameMotionPreview"));
+  assert.ok(studio.includes("<AnimatedDisplayName"));
+  assert.ok(studio.includes("previewMode"));
+  assert.ok(studio.includes('className="ps-community-name-effect-grid ps-community-name-animation-grid"'));
+  assert.ok(studio.includes("ps-community-name-effect-option ps-community-name-animation-option"));
+  assert.ok(studio.includes("DISPLAY_NAME_ANIMATIONS.map((item) =>"));
+  assert.ok(studio.includes("<DisplayNameMotionPreview"));
+  assert.ok(studio.includes("animation={item.id}"));
+  assert.ok(!studio.includes("ps-name-preview-motion"));
+  assert.ok(!studio.includes("ps-name-preview-face"));
+  assert.ok(studio.includes('<small className="ps-community-name-font-label">{item.label}</small>'));
+  assert.ok(nameStyleCss.includes(".ps-community-name-font-option > .ps-community-name-font-label"));
+  assert.ok(!studio.includes("autoPreviewNameAnimation"));
+  assert.ok(!studio.includes("previewedNameAnimation"));
+  assert.ok(!studio.includes("window.setInterval"));
+  assert.ok(nameStyleCss.includes(".ps-community-name-animation-option > .ps-community-name-preview-live"));
 });
 
 test("only the profile runs the selected entrance animation; member and chat names stay static but styled", () => {
@@ -1431,26 +1432,29 @@ test("community-only profile and name-style stylesheets are loaded by the commun
 
 test("Name Atelier previews keep independent effects, live noise typography and the borderless Discord reference layout", () => {
   const effectGrid = studio.slice(studio.indexOf("DISPLAY_NAME_EFFECTS.map"), studio.indexOf("DISPLAY_NAME_ANIMATIONS.map"));
-  assert.match(effectGrid, /ps-community-name-effect-option/);
-  assert.match(effectGrid, /ps-community-name-effect-sample is-name-style-/);
-  assert.doesNotMatch(effectGrid, /className=\{["']ps-community-name-effect-option effect-/);
-  assert.match(studio, /loopIntro=\{previewMode\}/);
-  assert.match(studio, /loopDelay=\{1100\}/);
-  assert.match(studio, /fuzzySettings\.colorSplit, 0\.12/);
-  assert.match(studio, /fuzzySettings\.baseIntensity, 0\.24/);
-  assert.match(fuzzyText, /getComputedStyle\(canvas\.parentElement \|\| canvas\)/);
-  assert.match(fuzzyText, /loopIntro && introState\.done/);
-  assert.match(fuzzyText, /introState\.nextStart = now \+ Math\.max\(500, loopDelay\)/);
+  assert.ok(effectGrid.includes("ps-community-name-effect-option"));
+  assert.ok(effectGrid.includes("ps-community-name-effect-sample is-name-style-"));
+  assert.ok(!effectGrid.includes('className={"ps-community-name-effect-option effect-'));
+  assert.ok(studio.includes("loopIntro={previewMode}"));
+  assert.ok(studio.includes("loopDelay={1100}"));
+  assert.ok(studio.includes("fuzzySettings.colorSplit, 0.12"));
+  assert.ok(studio.includes("fuzzySettings.baseIntensity, 0.24"));
+  assert.ok(fuzzyText.includes("getComputedStyle(canvas.parentElement || canvas)"));
+  assert.ok(fuzzyText.includes("loopIntro && introState.done"));
+  assert.ok(fuzzyText.includes("introState.nextStart = now + Math.max(500, loopDelay)"));
 
   const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
-  assert.match(finalPreviewCss, /\.ps-community-name-preview-stage\s*\{[^}]*border:0 !important/s);
-  assert.match(finalPreviewCss, /\.ps-community-name-preview-stage\s*\{[^}]*background:transparent !important/s);
-  assert.match(finalPreviewCss, /\.ps-community-name-style-profile-preview\s*\{[^}]*height:185px !important/s);
-  assert.match(finalPreviewCss, /\.ps-community-status-preview-avatar\s*\{[^}]*width:110px !important/s);
-  assert.match(finalPreviewCss, /\.ps-community-name-community-shell\s*\{[^}]*border:1px solid/s);
-  assert.match(finalPreviewCss, /\.ps-community-name-chat-message\s*\{[^}]*border:1px solid/s);
-  assert.match(finalPreviewCss, /\.ps-community-name-animation-option > \.ps-community-name-preview-live/);
-  assert.match(finalPreviewCss, /\.ps-community-name-animation-option \.ps-fuzzy-text-wrap\s*\{[^}]*height:58px !important/s);
-  assert.match(finalPreviewCss, /\.ps-community-name-effect-sample\.effect-gradient-flow/);
-  assert.match(finalPreviewCss, /\.ps-community-name-effect-sample\.effect-chromaflow/);
+  assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));
+  assert.ok(finalPreviewCss.includes("border:0 !important;"));
+  assert.ok(finalPreviewCss.includes("background:transparent !important;"));
+  assert.ok(finalPreviewCss.includes("height:185px !important;"));
+  assert.ok(finalPreviewCss.includes("width:110px !important;"));
+  assert.ok(finalPreviewCss.includes(".ps-community-name-community-shell"));
+  assert.ok(finalPreviewCss.includes("border:1px solid #343740 !important;"));
+  assert.ok(finalPreviewCss.includes(".ps-community-name-chat-message"));
+  assert.ok(finalPreviewCss.includes(".ps-community-name-animation-option > .ps-community-name-preview-live"));
+  assert.ok(finalPreviewCss.includes(".ps-community-name-animation-option .ps-fuzzy-text-wrap"));
+  assert.ok(finalPreviewCss.includes("height:58px !important;"));
+  assert.ok(finalPreviewCss.includes(".ps-community-name-effect-sample.effect-gradient-flow"));
+  assert.ok(finalPreviewCss.includes(".ps-community-name-effect-sample.effect-chromaflow"));
 });

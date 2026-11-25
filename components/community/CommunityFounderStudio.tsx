@@ -600,9 +600,6 @@ export default function CommunityFounderStudio({ onClose }: Props) {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#293a47] pt-4">
-                      <label className="inline-flex items-center gap-2 text-[10px] text-[#9dafbb]">
-                        <input type="checkbox" checked={roleForm.mentionable} disabled={!catalogReady} onChange={(event) => setRoleForm((current) => ({ ...current, mentionable: event.target.checked }))}/> Permitir menciones al rol
-                      </label>
                       <div className="flex items-center gap-2">
                         {selectedRole && !selectedRole.is_system && !isCreatingRole && <button type="button" onClick={() => void deleteRole()} disabled={!catalogReady || pendingKey !== null}
                           className="inline-flex items-center gap-1.5 rounded-[5px] border border-[#624044] px-3 py-2 text-[10px] text-[#efb1b2] hover:bg-[#321f24] disabled:opacity-40"><Trash2 size={12}/> Eliminar</button>}

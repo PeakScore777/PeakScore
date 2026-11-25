@@ -440,6 +440,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       paintSource();
       built = true;
       draw();
+      canvas.dataset.renderReady = 'true';
     };
 
     const wake = () => {

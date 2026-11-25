@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import FuzzyText from "@/components/community/FuzzyText";
 import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
 import InklineDisplayName from "@/components/community/InklineDisplayName";
 import HaloSignalDisplayName from "@/components/community/HaloSignalDisplayName";
@@ -10,7 +9,7 @@ import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName"
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 import { displayNameColorForEffect, displayNameInklineStrokeColor } from "@/components/community/display-name-color";
-import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -22,7 +21,7 @@ type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil" | "discord-display" | "creator-sans" | "stream-mono" | "street-block" | "action-condensed" | "cyber-racer" | "epic-rpg";
 type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic";
 type DisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
-type DisplayNameAnimation = "decrypt" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift" | "gradient-flow";
+type DisplayNameAnimation = "decrypt" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -495,13 +494,11 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
   className?: string;
   style?: CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
-  fuzzySettings?: FuzzyTextSettings;
 }) {
   return (
     <AnimatedDisplayName
       value={value}
       animation={animation}
-      fuzzySettings={fuzzySettings}
       tag={tag}
       previewMode
       className={className}
@@ -510,10 +507,9 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
   );
 }
 
-function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className = "", style, tag = "strong", previewMode = false }: {
+function AnimatedDisplayName({ value, animation, className = "", style, tag = "strong", previewMode = false }: {
   value: string;
   animation: DisplayNameAnimation;
-  fuzzySettings?: FuzzyTextSettings;
   className?: string;
   style?: CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
@@ -535,7 +531,6 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
     maxWidth: "100%",
   } as CSSProperties;
-  const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
     const effectName = className.split(/\\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
     const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
@@ -549,11 +544,6 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   }
   if (animation === "mistfall") {
     return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode} respectReducedMotion={!previewMode}/>;
-  }
-  if (animation === "gradient-flow") {
-    return <Tag className={renderedClassName + " ps-gradient-flow-name"} style={safeStyle} aria-label={value}>
-      <span className="ps-gradient-flow-face">{value}</span>
-    </Tag>;
   }
   if (animation === "depth-lift") {
     return <DepthLiftDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag}/>;
@@ -633,49 +623,6 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       loopDelay={3400}
     />;
   }
-  if (animation === "fuzzy-text") {
-    return (
-      <Tag className={renderedClassName + ' ps-fuzzy-text-wrap'} style={safeStyle}>
-        <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
-        <FuzzyText
-          colorSplit={fuzzySettings.colorSplit}
-          trigger={fuzzySettings.trigger}
-          direction={fuzzySettings.direction}
-          fontSize="1em"
-          fontWeight="inherit"
-          fontFamily="inherit"
-          color={fuzzyAppearance.color}
-          gradient={className.includes("effect-gradient-flow")
-            ? ["#E84DE8", "#A34DFF", "#527CFF", "#31B9D2", "#48D8A2", "#E84DE8"]
-            : className.includes("effect-chromaflow")
-              ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
-              : fuzzyAppearance.gradient}
-          baseIntensity={fuzzySettings.baseIntensity}
-          hoverIntensity={fuzzySettings.hoverIntensity}
-          fuzzRange={fuzzySettings.fuzzRange}
-          sliceSize={fuzzySettings.sliceSize}
-          fps={fuzzySettings.fps}
-          transitionDuration={fuzzySettings.transitionDuration}
-          intro={true}
-          introDuration={fuzzySettings.introDuration}
-          loopIntro={false}
-          loopDelay={1100}
-          letterSpacing={fuzzySettings.letterSpacing}
-          enableHover={fuzzySettings.enableHover}
-          clickEffect={fuzzySettings.clickEffect}
-          glitchMode={fuzzySettings.glitchMode}
-          glitchInterval={fuzzySettings.glitchInterval}
-          glitchDuration={fuzzySettings.glitchDuration}
-          performanceMode={previewMode ? "preview" : "full"}
-          respectReducedMotion={!previewMode}
-          className="ps-fuzzy-text-canvas"
-        >
-          {value}
-        </FuzzyText>
-      </Tag>
-    );
-  }
-    if (animation === "none") return <Tag className={renderedClassName + " ps-name-plain"} style={safeStyle}>{value}</Tag>;
   return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" data-glyph={character === " " ? "\u00A0" : character} style={{
@@ -1836,7 +1783,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               <DisplayNameMotionPreview
                                 value={displayName || "OMEGA"}
                                 animation={item.id}
-                                fuzzySettings={draftDisplayNameFuzzySettings}
                                 className={previewClass}
                                 style={previewStyle}
                               />

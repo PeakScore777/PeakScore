@@ -2566,6 +2566,7 @@ export default function CommunityPage() {
               </div>
               <div className="community-appearance-presets" role="group" aria-label="Colores predeterminados">
                 {([
+                  { id: "server", label: "Servidor", color: activeSpace?.background_color ?? "#171c24" },
                   { id: "black", label: "Negro", color: "#0b0d11" },
                   { id: "gray", label: "Gris", color: "#353a43" },
                   { id: "white", label: "Blanco", color: "#f1f3f5" },

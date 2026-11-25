@@ -1052,7 +1052,7 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(route, /"decrypt","fuzzy-text"/);
   const expectedProps = [
     'colorSplit={fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
-    'baseIntensity={fuzzySettings.baseIntensity}', 'hoverIntensity={fuzzySettings.hoverIntensity}', 'fuzzRange={fuzzySettings.fuzzRange}',
+    'sliceSize={fuzzySettings.sliceSize}',
     'sliceSize={fuzzySettings.sliceSize}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
     'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
     'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
@@ -1060,7 +1060,10 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   ];
   assert.ok(studio.includes('trigger="always"'));
   assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
-  assert.match(studio, /fps=\{previewMode \? 10 : fuzzySettings\.fps\}/);
+  assert.match(studio, /baseIntensity=\{previewMode \? Math\.max\(fuzzySettings\.baseIntensity, 0\.22\) : fuzzySettings\.baseIntensity\}/);
+  assert.match(studio, /hoverIntensity=\{previewMode \? Math\.max\(fuzzySettings\.hoverIntensity, 0\.32\) : fuzzySettings\.hoverIntensity\}/);
+  assert.match(studio, /fuzzRange=\{previewMode \? Math\.max\(fuzzySettings\.fuzzRange, 18\) : fuzzySettings\.fuzzRange\}/);
+  assert.match(studio, /fps=\{previewMode \? 45 : fuzzySettings\.fps\}/);
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
   for (const prop of expectedProps) {
     assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);
@@ -1157,10 +1160,12 @@ test("selected effects are preserved on the animated glyph layer", () => {
 
 test("Mistfall and animated list names respect visibility and preview performance budgets", () => {
   assert.match(mistfallName, /new IntersectionObserver/);
-  assert.match(mistfallName, /maxParticles = previewMode \? 120 : 520/);
-  assert.match(mistfallName, /fps = previewMode \? 12 : 24/);
+  assert.match(mistfallName, /maxParticles = previewMode \? 120 : 360/);
+  assert.match(mistfallName, /fps = previewMode \? 60 : 30/);
+  assert.match(mistfallName, /window\.setTimeout\(\(\) => \{/);
+  assert.match(mistfallName, /finished = false/);
   assert.match(mistfallName, /pctx\.font = `\$\{computed\.fontStyle\} \$\{computed\.fontWeight\} \$\{fontSize\}px \$\{computed\.fontFamily\}`/);
-  assert.match(mistfallName, /\[text, previewMode, effectName, chromaflow, styleKey\]/);
+  assert.match(mistfallName, /\[text, previewMode, respectReducedMotion, effectName, chromaflow, styleKey\]/);
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
 });
 

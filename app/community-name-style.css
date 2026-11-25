@@ -8490,3 +8490,39 @@ html:has(.ps-community-picker-overlay) * {
 .ps-community-name-render.ps-inkline-name:not(:has(.ps-inkline-svg[style*="visibility: visible"])) > .ps-inkline-layout {
   opacity:1 !important;
 }
+
+
+/* StrokeText-style letter-by-letter contour. Every glyph owns its own dash
+   timeline; the fill remains a single left-to-right wipe after the last glyph. */
+.ps-community-name-render.ps-inkline-name .ps-inkline-outline {
+  animation:none !important;
+  stroke-dasharray:none !important;
+  stroke-dashoffset:0 !important;
+}
+.ps-community-name-render.ps-inkline-name .ps-inkline-outline .ps-inkline-char {
+  stroke-dasharray:7em !important;
+  stroke-dashoffset:7em !important;
+  opacity:1 !important;
+  animation-name:ps-inkline-letter-draw !important;
+  animation-duration:6.4s !important;
+  animation-timing-function:cubic-bezier(.42,.02,.2,1) !important;
+  animation-iteration-count:infinite !important;
+  animation-fill-mode:both !important;
+}
+@keyframes ps-inkline-letter-draw {
+  0%,4% { stroke-dashoffset:7em; opacity:1; }
+  35%,70% { stroke-dashoffset:0; opacity:1; }
+  84%,100% { stroke-dashoffset:7em; opacity:0; }
+}
+@keyframes ps-inkline-stroketext-fill {
+  0%,53% { clip-path:inset(0 100% 0 0); }
+  74%,83% { clip-path:inset(0 0 0 0); }
+  96%,100% { clip-path:inset(0 100% 0 0); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-render.ps-inkline-name .ps-inkline-outline .ps-inkline-char {
+    animation:none !important;
+    stroke-dashoffset:0 !important;
+    opacity:1 !important;
+  }
+}

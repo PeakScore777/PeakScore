@@ -7720,3 +7720,73 @@ html:has(.ps-community-picker-overlay) * {
   .ps-community-name-render.ps-inkline-name .ps-inkline-outline { stroke-dashoffset:0 !important; }
   .ps-community-name-render.ps-inkline-name .ps-inkline-fill { clip-path:inset(0 0 0 0) !important; }
 }
+
+
+/* Match the supplied right-column reference at its actual compact scale. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-community-channel {
+  min-height:29px !important;
+  height:29px !important;
+  padding:0 9px !important;
+  font-size:10px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-members-title {
+  padding:10px 9px 5px !important;
+  font-size:8px !important;
+  line-height:1.2 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  min-height:44px !important;
+  height:44px !important;
+  margin:4px 5px 6px !important;
+  padding:6px 7px !important;
+  gap:7px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar {
+  width:27px !important;
+  height:27px !important;
+  flex-basis:27px !important;
+  font-size:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > strong.community-member-nameplate {
+  display:inline-flex !important;
+  align-items:center !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-height:18px !important;
+  margin:0 !important;
+  padding:2px 6px !important;
+  border:1px solid rgb(151 91 207 / 30%) !important;
+  border-radius:5px !important;
+  background:rgb(119 67 166 / 8%) !important;
+  color:#a96bd2 !important;
+  -webkit-text-fill-color:#a96bd2 !important;
+  font-size:8px !important;
+  font-weight:650 !important;
+  line-height:1.2 !important;
+  text-decoration:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-message {
+  height:50px !important;
+  min-height:50px !important;
+  padding:7px 9px !important;
+  gap:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-avatar {
+  width:27px !important;
+  height:27px !important;
+  flex-basis:27px !important;
+  font-size:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > strong.community-chat-author {
+  font-size:8px !important;
+  font-weight:650 !important;
+  line-height:1.2 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta time {
+  font-size:8px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-content p {
+  margin-top:3px !important;
+  font-size:8px !important;
+  line-height:1.35 !important;
+}

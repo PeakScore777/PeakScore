@@ -9,7 +9,7 @@ import HaloSignalDisplayName from "@/components/community/HaloSignalDisplayName"
 import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName";
 import MistfallDisplayName from "@/components/community/MistfallDisplayName";
 import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
-import { displayNameColorForEffect } from "@/components/community/display-name-color";
+import { displayNameColorForEffect, displayNameInklineStrokeColor } from "@/components/community/display-name-color";
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
@@ -537,7 +537,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
-    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.7} fontWeight={900} className={renderedClassName} style={safeStyle} tag={tag}/>;
+    const effectName = className.split(/\\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
+    const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
+    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.7} fontWeight={900} className={renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
     return <HaloSignalDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;

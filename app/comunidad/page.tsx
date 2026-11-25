@@ -2702,6 +2702,7 @@ export default function CommunityPage() {
                         <div className="community-date-divider"><span>{dayLabel(message.created_at)}</span></div>
                       )}
                       <article id={"post-" + message.id}
+                        onMouseEnter={() => setMessageMenuFor((current) => current && current !== message.id ? null : current)}
                         className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "") + (message.pending ? " community-chat-message-pending" : "") + (userId && message.body.includes("@{" + userId + "|") ? " community-chat-message-mentioned" : "")}>
                         <div className="community-chat-avatar-column">
                           {groupedWithPrevious ? (

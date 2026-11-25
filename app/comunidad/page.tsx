@@ -892,6 +892,15 @@ export default function CommunityPage() {
           .limit(100);
         if (!active || memberError) return;
         memberData = (globalProfiles ?? []) as MemberRow[];
+        // Keep the signed-in Founder visible even when the alphabetical 100-member
+        // window would otherwise omit their profile from the right-hand roster.
+        if (!memberData.some((member) => member.user_id === userId)) {
+          const { data: ownProfile } = await supabase.from("community_member_profiles")
+            .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (active && ownProfile) memberData.push(ownProfile as MemberRow);
+        }
       }
       const ids = memberData.map((member) => member.user_id);
       let roleRows: Array<{
@@ -937,6 +946,20 @@ export default function CommunityPage() {
             .in("user_id", ids);
           roleRows = (legacyRoles.data ?? []) as typeof roleRows;
         }
+      }
+      if (isFounder && activeSpace?.space_type !== "preicfes" && ids.includes(userId)) {
+        // Founder is a reserved platform role and must always be hoisted above
+        // configurable community roles in the Discord-style member list.
+        roleRows = roleRows.filter((role) => !(role.user_id === userId && role.role_key === "fundador"));
+        roleRows.push({
+          user_id: userId,
+          role_key: "fundador",
+          label: "Founder",
+          badge_color: "#8B5CF6",
+          position: -100,
+          mentionable: false,
+          hoist: true,
+        });
       }
       let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings: FuzzyTextSettings | null; display_name_gradient_start: string | null; display_name_gradient_end: string | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
@@ -2423,8 +2446,8 @@ export default function CommunityPage() {
                       <button type="button" onClick={() => void selectChannel(channel)}
                         aria-current={active ? "page" : undefined}
                         className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
-                        <Icon size={17} style={{ color: channel.accent_color ?? undefined }}/>
-                        <span className="min-w-0 flex-1 truncate">{channel.name}</span>
+                        <Icon size={17} className="community-channel-glyph" style={{ color: channel.accent_color ?? undefined }}/>
+                        <span className="community-channel-name min-w-0 flex-1 truncate">{channel.name}</span>
                         {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
                         {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
                         {(unreadCounts[channel.id] ?? 0) > 0 && (
@@ -3001,6 +3024,11 @@ export default function CommunityPage() {
                                     "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
                                   } as React.CSSProperties}
                                 />
+                                {member.id === userId && isFounder && (
+                                  <span className="community-member-verified-dot" title="Founder verificado" aria-label="Founder verificado">
+                                    <Check size={9} strokeWidth={3.2}/>
+                                  </span>
+                                )}
                                 {member.status_text && <small>{member.status_text}</small>}
                                 {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (
                                   <span className="community-member-role-badges" aria-label="Roles">

@@ -2735,10 +2735,9 @@ export default function CommunityPage() {
                                       "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
                                       "--name-solid-color": message.author.display_name_color === "custom-gradient" ? message.author.display_name_gradient_start ?? "#B86BFF" : message.author.display_name_color === "pink" ? "#F72585" : message.author.display_name_color === "green" ? "#25E66B" : message.author.display_name_color === "blue" ? "#269EE5" : message.author.display_name_color === "purple" ? "#A72CF0" : message.author.display_name_color === "magenta" ? "#E60063" : message.author.display_name_color === "red" ? "#F2382E" : message.author.display_name_color === "gold" ? "#D1B11B" : "currentColor",
                                     } as React.CSSProperties}>
-                                    <CommunityAnimatedName
+                                    <CommunityStaticName
                                       tag="span"
                                       value={message.author.full_name}
-                                      animation={communityNameAnimation(message.author.display_name_animation)}
                                       className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(message.author.display_name_effect, message.author.display_name_color)}
                                       style={{
                                         "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
@@ -3041,10 +3040,9 @@ export default function CommunityPage() {
                                 <i className={isOnline ? "is-online" : "is-offline"}/>
                               </span>
                               <span className="community-member-copy">
-                                <CommunityAnimatedName
+                                <CommunityStaticName
                                   tag="span"
                                   value={member.full_name}
-                                  animation={communityNameAnimation(member.display_name_animation)}
                                   className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
                                   style={{
                                     "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",

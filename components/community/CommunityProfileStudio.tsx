@@ -3723,6 +3723,64 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     padding:0 6% 20px!important;
   }
 }
+
+/* Final desktop-like composition for the editor preview. The previous
+   max-width:760 rules incorrectly treated the editor's narrow viewport as
+   a phone layout, squeezing the sidebar and shifting the avatar off-card. */
+@media(max-width:760px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:minmax(220px,275px) minmax(0,1fr)!important;
+  }
+  .ps-community-editor-preview-column {
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  .ps-community-editor-preview-frame {
+    display:grid!important;
+    place-items:center!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    padding:0 10px!important;
+    overflow:hidden!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,100%)!important;
+    max-width:530px!important;
+    height:min(900px,100%)!important;
+    max-height:900px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:0 32px 24px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    position:relative!important;
+    top:auto!important;
+    flex:0 0 142px!important;
+    width:calc(100% + 64px)!important;
+    min-height:142px!important;
+    height:142px!important;
+    margin:-77px -32px 22px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+    left:29px!important;
+    top:0!important;
+    width:142px!important;
+    height:142px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:142px!important;
+    height:142px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:190px!important;
+    top:auto!important;
+    bottom:49px!important;
+    max-width:calc(100% - 190px)!important;
+  }
+}
 `}</style>
     </div>
     </div>,

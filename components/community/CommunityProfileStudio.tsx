@@ -4,7 +4,7 @@ import Image from "next/image";
 import { displayNameColorForEffect } from "@/components/community/display-name-color";
 import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Camera, Check, Copy, Film, ImagePlus, Pencil, Pipette,
   LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
@@ -584,7 +584,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const previewScrollbarDragOffsetRef = useRef<number | null>(null);
   const [previewScrollbar, setPreviewScrollbar] = useState({ top: 0, height: 0, scrollTop: 0, canScroll: false });
 
-  const updatePreviewScrollbar = () => {
+  const updatePreviewScrollbar = useCallback(() => {
     const body = previewBodyRef.current;
     const track = previewScrollbarTrackRef.current;
     if (!body || !track) return;
@@ -597,10 +597,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
     const scrollRange = Math.max(1, body.scrollHeight - body.clientHeight);
     const top = canScroll ? (body.scrollTop / scrollRange) * maxThumbTop : 0;
-    setPreviewScrollbar({ top, height: thumbHeight, scrollTop: body.scrollTop, canScroll });
-  };
+    setPreviewScrollbar((previous) => {
+      if (
+        Math.abs(previous.top - top) < 0.5 &&
+        Math.abs(previous.height - thumbHeight) < 0.5 &&
+        Math.abs(previous.scrollTop - body.scrollTop) < 0.5 &&
+        previous.canScroll === canScroll
+      ) return previous;
+      return { top, height: thumbHeight, scrollTop: body.scrollTop, canScroll };
+    });
+  }, []);
 
-  const movePreviewScrollbarToPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const movePreviewScrollbarToPointer = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     const body = previewBodyRef.current;
     const track = previewScrollbarTrackRef.current;
     const dragOffset = previewScrollbarDragOffsetRef.current;
@@ -614,9 +622,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     const scrollRange = Math.max(0, body.scrollHeight - body.clientHeight);
     body.scrollTop = (thumbTop / maxThumbTop) * scrollRange;
     updatePreviewScrollbar();
-  };
+  }, [previewScrollbar.height, updatePreviewScrollbar]);
 
-  const handlePreviewScrollbarPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handlePreviewScrollbarPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     if (!previewScrollbar.canScroll) return;
     const track = previewScrollbarTrackRef.current;
     if (!track) return;
@@ -626,7 +634,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     previewScrollbarDragOffsetRef.current = onThumb ? pointerTop - previewScrollbar.top : previewScrollbar.height / 2;
     event.currentTarget.setPointerCapture(event.pointerId);
     movePreviewScrollbarToPointer(event);
-  };
+  }, [movePreviewScrollbarToPointer, previewScrollbar.canScroll, previewScrollbar.height, previewScrollbar.top]);
 
   useEffect(() => {
     return () => {
@@ -647,7 +655,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       observer?.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [about, aboutEditing, displayName, pronouns, profile.roles.length, profile.bannerUrl]);
+  }, [updatePreviewScrollbar, about, aboutEditing, displayName, pronouns, profile.roles.length, profile.bannerUrl]);
 
   useLayoutEffect(() => {
     if (!aboutEditing) return;

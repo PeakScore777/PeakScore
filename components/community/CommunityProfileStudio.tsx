@@ -494,7 +494,6 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
   const [portalReady, setPortalReady] = useState(false);
   const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
-  const closeDirtyRef = useRef(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
@@ -634,7 +633,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         return;
       }
       if (!busy && !uploading && !deleting) {
-        if (closeDirtyRef.current) setCloseConfirmationOpen(true);
+        if (hasPendingCloseChanges) setCloseConfirmationOpen(true);
         else onClose();
       }
     };
@@ -644,7 +643,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting, closeConfirmationOpen, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, bannerPickerOpen, posterCollectionOpen, colorPickerOpen, avatarMenuOpen]);
+  }, [onClose, busy, uploading, deleting, closeConfirmationOpen, hasPendingCloseChanges, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, bannerPickerOpen, posterCollectionOpen, colorPickerOpen, avatarMenuOpen]);
 
   useEffect(() => {
     if (!appearancePicker) return;
@@ -722,10 +721,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
   const hasPendingCloseChanges = hasUnsavedChanges || hasPickerChanges;
-  closeDirtyRef.current = hasPendingCloseChanges;
+  useLayoutEffect(() => {
+    // Sync after commit so Escape always reads the latest draft without mutating refs during render.
+    closeDirtyRef.current = hasPendingCloseChanges;
+  }, [hasPendingCloseChanges]);
   function requestEditorClose() {
     if (busy || uploading || deleting) return;
-    if (closeDirtyRef.current) setCloseConfirmationOpen(true);
+    if (hasPendingCloseChanges) setCloseConfirmationOpen(true);
     else onClose();
   }
 
@@ -3295,6 +3297,41 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-editor-close-confirm-actions {justify-content:stretch!important}
   .ps-community-editor-close-confirm-actions button {flex:1 1 auto!important}
 }
+
+
+/* Keep the editable input completely stable while it has focus. Display-name
+   motion effects belong to rendered names, never to the text-editing control. */
+#ps-community-display-name-inline,
+#ps-community-display-name-inline:focus,
+#ps-community-display-name-inline:focus-visible,
+#ps-community-display-name-inline:active {
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
+  -webkit-text-fill-color:currentColor!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  outline:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+  transition:border-color .12s ease!important;
+}
+.ps-community-editor-preview-name-input.is-name-style-8bit {
+  font-size:35px!important;
+  line-height:1.25!important;
+  letter-spacing:0!important;
+}
+.ps-community-status-profile-preview .ps-community-status-profile-copy>strong.is-name-style-8bit {
+  font-size:clamp(29px,2.5vw,34px)!important;
+  line-height:1.3!important;
+  letter-spacing:0!important;
+}
+.ps-community-status-profile-preview .ps-community-status-profile-copy>small:empty {
+  display:none!important;
+}
+
 
 
 `}</style>

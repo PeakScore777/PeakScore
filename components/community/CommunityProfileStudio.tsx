@@ -2304,6 +2304,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
  .ps-community-avatar-picker-options>button{grid-template-columns:64px minmax(0,1fr) 28px!important}
  .ps-community-avatar-crop-stage{width:min(300px,calc(100vw - 72px))!important;height:min(300px,calc(100vw - 72px))!important}
 }
+
+/* Banner media actions use the same compact image-led treatment as the avatar chooser. */
+.ps-community-editor-banner-upload-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+.ps-community-editor-banner-upload-button{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;min-height:54px!important;padding:8px 10px!important;border:1px solid #3b3f49!important;border-radius:10px!important;background:#252830!important;color:#e6e8ed!important;font-size:11px!important;font-weight:700!important;text-align:left!important}
+.ps-community-editor-banner-upload-button:hover{border-color:#687cf2!important;background:#2b2e38!important}
+.ps-community-editor-banner-upload-button>svg{flex:0 0 32px!important;width:32px!important;height:32px!important;padding:8px!important;border:1px solid #454b59!important;border-radius:8px!important;background:#1c1f26!important;color:#c6ceea!important}
+.ps-community-editor-banner-upload-button:disabled{opacity:.55!important;cursor:wait!important}
+@media(max-width:560px){.ps-community-editor-banner-upload-actions{grid-template-columns:1fr!important}}
 `}</style>
     </div>
     </div>,

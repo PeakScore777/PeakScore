@@ -8925,3 +8925,203 @@ html:has(.ps-community-picker-overlay) * {
     animation:none !important;
   }
 }
+
+
+
+/* Animated names in the member/chat preview share the chosen font and finish. */
+/* Preview rows receive an animated span rather than a static strong element. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author {
+  display:inline-block !important;width:max-content !important;max-width:100% !important;min-width:0 !important;
+  margin:0 !important;padding:0 !important;border:0 !important;border-radius:0 !important;
+  text-decoration:none !important;box-shadow:none !important;white-space:nowrap !important;
+  background-color:transparent !important;vertical-align:baseline !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-classic,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-classic {
+  font-family:var(--font-name-classic),Inter,system-ui,sans-serif !important;font-weight:760 !important;letter-spacing:-.035em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-tempo,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-tempo {
+  font-family:var(--font-name-tempo),Georgia,serif !important;font-weight:800 !important;letter-spacing:.025em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-sakura,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-sakura {
+  font-family:var(--font-name-sakura),system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:-.01em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-jellybean,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-jellybean {
+  font-family:var(--font-name-jellybean),system-ui,sans-serif !important;font-weight:900 !important;letter-spacing:-.02em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-modern,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-modern {
+  font-family:var(--font-name-modern),system-ui,sans-serif !important;font-weight:600 !important;letter-spacing:-.01em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-medieval,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-medieval {
+  font-family:var(--font-name-medieval),serif !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-8bit,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-8bit {
+  font-family:var(--font-name-pixel),monospace !important;font-weight:700 !important;letter-spacing:-.08em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-vampyre,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-vampyre {
+  font-family:var(--font-name-vampyre),fantasy,serif !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-monkey-bars,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-monkey-bars {
+  font-family:var(--font-name-monkey),cursive !important;font-weight:900 !important;letter-spacing:-.035em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-mainframe,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-mainframe {
+  font-family:var(--font-name-mainframe),monospace !important;font-weight:700 !important;letter-spacing:-.06em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-headbang,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-headbang {
+  font-family:var(--font-name-headbang),serif !important;font-weight:900 !important;letter-spacing:-.055em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-journal,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-journal {
+  font-family:var(--font-handwriting),cursive !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-display,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-display {
+  font-family:var(--font-name-display),Impact,sans-serif !important;font-weight:900 !important;letter-spacing:-.02em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-editorial,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-editorial {
+  font-family:var(--font-name-editorial),Georgia,serif !important;font-weight:700 !important;letter-spacing:.01em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-elegant,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-elegant {
+  font-family:var(--font-name-elegant),Georgia,serif !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-geometric,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-geometric {
+  font-family:var(--font-name-geometric),system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:-.02em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-retro,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-retro {
+  font-family:var(--font-name-retro),cursive !important;font-weight:700 !important;letter-spacing:.01em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-handwritten,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-handwritten {
+  font-family:var(--font-name-handwritten),cursive !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-signature,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-signature {
+  font-family:var(--font-name-signature),cursive !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-techno,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-techno {
+  font-family:var(--font-name-techno),system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:0 !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-rounded,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-rounded {
+  font-family:var(--font-name-rounded),system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:-.02em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-stencil,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-stencil {
+  font-family:var(--font-name-stencil),system-ui,sans-serif !important;font-weight:800 !important;letter-spacing:.01em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-discord-display,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-discord-display {
+  font-family:var(--font-name-discord-display),Arial,sans-serif !important;font-weight:900 !important;letter-spacing:-.055em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-creator-sans,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-creator-sans {
+  font-family:var(--font-name-creator-sans),Inter,system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:-.035em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-stream-mono,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-stream-mono {
+  font-family:var(--font-name-stream-mono),ui-monospace,monospace !important;font-weight:600 !important;letter-spacing:-.045em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-street-block,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-street-block {
+  font-family:var(--font-name-street-block),system-ui,sans-serif !important;font-weight:400 !important;letter-spacing:.015em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-action-condensed,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-action-condensed {
+  font-family:var(--font-name-action-condensed),Impact,sans-serif !important;font-weight:700 !important;letter-spacing:.012em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-cyber-racer,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-cyber-racer {
+  font-family:var(--font-name-cyber-racer),system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:.012em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.is-name-style-epic-rpg,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.is-name-style-epic-rpg {
+  font-family:var(--font-name-epic-rpg),Georgia,serif !important;font-weight:700 !important;letter-spacing:.012em !important;
+}
+
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-plain:not(.color-custom-gradient),
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-plain:not(.color-custom-gradient) {
+  color:var(--name-solid-color,currentColor) !important;-webkit-text-fill-color:currentColor !important;background:none !important;text-shadow:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-plain.color-custom-gradient,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-plain.color-custom-gradient {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-image:linear-gradient(100deg,var(--name-gradient-start,#B86BFF),var(--name-gradient-end,#4E9BFF)) !important;background-clip:text !important;-webkit-background-clip:text !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-gradient,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-gradient,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-gradient-flow,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-gradient-flow {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-image:linear-gradient(100deg,var(--name-gradient-start,#B86BFF),var(--name-gradient-end,#4E9BFF),var(--name-gradient-start,#B86BFF)) !important;background-size:220% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;animation:ps-dns-gradient-flow 4.8s ease-in-out infinite !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-neon,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-neon {
+  color:var(--name-solid-color,#a88af2) !important;-webkit-text-fill-color:currentColor !important;background:none !important;text-shadow:0 0 1px #fff,0 0 6px var(--name-solid-color,#a88af2),0 0 14px var(--name-solid-color,#a88af2) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-toon,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-toon {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;-webkit-text-stroke:.42px var(--name-solid-color,#e8edf5) !important;background-image:linear-gradient(105deg,var(--name-solid-color,#e8edf5) 0%,#fff 48%,var(--name-solid-color,#e8edf5) 100%) !important;background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;animation:ps-dns-toon-sweep 3.4s linear infinite !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-pop,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-pop {
+  color:var(--name-solid-color,#55cfa3) !important;-webkit-text-fill-color:currentColor !important;background:none !important;text-shadow:0 1px 0 rgb(255 255 255 / 36%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111) !important;animation:ps-dns-pop-press 2.4s ease-in-out infinite !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-gummy,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-gummy {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-image:linear-gradient(110deg,#f6a8cf 0%,#ffe2b8 18%,#fff 34%,#b7f1e0 52%,#a9c8ff 70%,#d5a6ff 86%,#f6a8cf 100%) !important;background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 1px 0 rgb(255 255 255 / 62%),0 2px 0 rgb(119 60 100 / 30%),0 3px 7px rgb(0 0 0 / 16%) !important;animation:ps-dns-gummy-flow 5.2s linear infinite !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-prism,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-prism {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-image:var(--name-prism-gradient,linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff)) !important;background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;animation:ps-dns-prism-flow 4.2s linear infinite !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.effect-chromaflow,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.effect-chromaflow {
+  color:transparent !important;-webkit-text-fill-color:transparent !important;background-image:linear-gradient(90deg,#ffb52e,#f5e84a,#43df9a,#35c9dc,#4d8cff,#a66cff,#f05bc8,#ff665e,#ffb52e) !important;background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;animation:ps-dns-prism-flow 4.8s linear infinite !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author {animation:none !important;}
+}

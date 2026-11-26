@@ -193,6 +193,74 @@ const CHANNEL_ICON_KEYS: Record<string, typeof Hash> = {
 };
 
 
+const COMMUNITY_ROLE_PRESENTATION: Record<string, { label: string; badgeColor: string; position: number }> = {
+  fundador: { label: "Founder", badgeColor: "#8B5CF6", position: 0 },
+  administrador: { label: "Admin", badgeColor: "#ED4245", position: 10 },
+  moderador: { label: "Moderador", badgeColor: "#57F287", position: 20 },
+  profesor: { label: "Profesor", badgeColor: "#E6B85C", position: 30 },
+  docente: { label: "Docente", badgeColor: "#E6B85C", position: 30 },
+  miembro: { label: "Miembro", badgeColor: "#929AA6", position: 100 },
+};
+
+function effectiveCommunityRoleKeys(assignedRoleKeys: string[]) {
+  const assigned = new Set(assignedRoleKeys);
+  const inherited: string[] = [];
+  if (assigned.has("fundador")) inherited.push("administrador", "moderador", "miembro");
+  else if (assigned.has("administrador")) inherited.push("moderador", "miembro");
+  else if (assigned.has("moderador")) inherited.push("miembro");
+  else if (assigned.has("profesor") || assigned.has("docente")) inherited.push("miembro");
+  else inherited.push("miembro");
+
+  return Array.from(new Set([...assigned, ...inherited])).sort((a, b) =>
+    (COMMUNITY_ROLE_PRESENTATION[a]?.position ?? 60)
+    - (COMMUNITY_ROLE_PRESENTATION[b]?.position ?? 60)
+    || a.localeCompare(b, "es"),
+  );
+}
+
+function withInheritedCommunityMemberRoles(roles: CommunityRole[] = []): CommunityRole[] {
+  const byKey = new Map(roles.map((role) => [role.role_key, role]));
+  for (const roleKey of effectiveCommunityRoleKeys(roles.map((role) => role.role_key))) {
+    if (byKey.has(roleKey)) continue;
+    const presentation = COMMUNITY_ROLE_PRESENTATION[roleKey];
+    if (!presentation) continue;
+    byKey.set(roleKey, {
+      role_key: roleKey,
+      label: presentation.label,
+      badge_color: presentation.badgeColor,
+      display_as_badge: true,
+      position: presentation.position,
+      mentionable: false,
+      hoist: roleKey !== "miembro",
+    });
+  }
+  return Array.from(byKey.values()).sort((a, b) =>
+    (a.position ?? COMMUNITY_ROLE_PRESENTATION[a.role_key]?.position ?? 60)
+    - (b.position ?? COMMUNITY_ROLE_PRESENTATION[b.role_key]?.position ?? 60)
+    || a.label.localeCompare(b.label, "es"),
+  );
+}
+
+function withInheritedCommunityProfileRoles(
+  roles: CommunityMemberProfile["roles"] = [],
+): CommunityMemberProfile["roles"] {
+  const byKey = new Map(roles.map((role) => [role.roleKey, role]));
+  for (const roleKey of effectiveCommunityRoleKeys(roles.map((role) => role.roleKey))) {
+    if (byKey.has(roleKey)) continue;
+    const presentation = COMMUNITY_ROLE_PRESENTATION[roleKey];
+    if (presentation) byKey.set(roleKey, {
+      roleKey,
+      label: presentation.label,
+      badgeColor: presentation.badgeColor,
+    });
+  }
+  return Array.from(byKey.values()).sort((a, b) =>
+    (COMMUNITY_ROLE_PRESENTATION[a.roleKey]?.position ?? 60)
+    - (COMMUNITY_ROLE_PRESENTATION[b.roleKey]?.position ?? 60)
+    || a.label.localeCompare(b.label, "es"),
+  );
+}
+
 function getVisibleCommunityStatus(statusText?: string | null, expiresAt?: string | null) {
   if (!statusText) return "";
   if (!expiresAt) return statusText;
@@ -537,8 +605,12 @@ export default function CommunityPage() {
     }).then((response) => response.ok ? response.json() : null)
       .then((payload: { profile?: CommunityMemberProfile } | null) => {
         if (!payload?.profile) return;
-        communityProfileCacheRef.current.set(member.id, payload.profile);
-        setHoverCommunityProfile((current) => current?.userId === member.id ? payload.profile! : current);
+        const enrichedProfile = {
+          ...payload.profile,
+          roles: withInheritedCommunityProfileRoles(payload.profile.roles ?? []),
+        };
+        communityProfileCacheRef.current.set(member.id, enrichedProfile);
+        setHoverCommunityProfile((current) => current?.userId === member.id ? enrichedProfile : current);
       }).catch(() => undefined);
   }
 
@@ -619,9 +691,13 @@ export default function CommunityPage() {
         }
         return;
       }
+      const profileWithRoleStack = {
+        ...payload.profile,
+        roles: withInheritedCommunityProfileRoles(payload.profile.roles ?? []),
+      };
       const resolvedProfile = memberId === userId && registeredAccountName.trim()
-        ? { ...payload.profile, accountName: registeredAccountName.trim().replace(/^@+/, "") }
-        : payload.profile;
+        ? { ...profileWithRoleStack, accountName: registeredAccountName.trim().replace(/^@+/, "") }
+        : profileWithRoleStack;
       communityProfileCacheRef.current.set(memberId, resolvedProfile);
       setCommunityMembers((current) => current.map((item) => item.id === memberId ? {
         ...item,
@@ -924,7 +1000,7 @@ export default function CommunityPage() {
         profile_frame_id: appearanceByMember.get(member.user_id)?.profile_frame_id ?? "none",
         profile_effect_id: appearanceByMember.get(member.user_id)?.profile_effect_id ?? "none",
         status_expires_at: member.status_expires_at ?? null,
-        roles: rolesByMember.get(member.user_id) ?? [],
+        roles: withInheritedCommunityMemberRoles(rolesByMember.get(member.user_id) ?? []),
       }));
       setCommunityMembers(memberRows);
 
@@ -934,32 +1010,33 @@ export default function CommunityPage() {
   }, [userId, activeSpace?.id, activeSpace?.space_type, isFounder]);
 
   const communityMemberGroups = useMemo(() => {
-    const priority: Record<string, number> = {
-      fundador: 0, administrador: 1, moderador: 2, profesor: 3, estudiante: 4,
-    };
-    const groups = new Map<string, { key: string; label: string; color: string; priority: number; members: CommunityMemberSummary[] }>();
+    const definitions = [
+      { key: "fundador", label: "FOUNDER", color: "#8B5CF6", iconPath: "/images/community/roles/founder.png", roles: ["fundador"] },
+      { key: "administrador", label: "ADMINISTRADORES", color: "#ED4245", iconPath: "/images/community/roles/admin.png", roles: ["administrador"] },
+      { key: "moderador", label: "MODERADORES", color: "#57F287", iconPath: "/images/community/roles/moderator.png", roles: ["moderador"] },
+      { key: "profesor", label: "PROFESORES", color: "#E6B85C", iconPath: "/images/community/roles/professor.png", roles: ["profesor", "docente"] },
+      { key: "members", label: "MIEMBROS", color: "#929AA6", iconPath: "/images/community/roles/member.png", roles: [] },
+    ];
+    const groups = definitions.map((definition) => ({
+      ...definition,
+      priority: definitions.indexOf(definition),
+      members: [] as CommunityMemberSummary[],
+    }));
+
     for (const member of communityMembers) {
-      const role = [...(member.roles ?? [])]
-        .filter((candidate) => candidate.hoist ?? (priority[candidate.role_key] ?? 99) <= 3)
-        .sort((a, b) => (a.position ?? priority[a.role_key] ?? 99) - (b.position ?? priority[b.role_key] ?? 99))[0];
-      const key = role?.role_key ?? "members";
-      const label = role?.label ?? "Miembros";
-      const group = groups.get(key) ?? {
-        key, label, color: role?.badge_color ?? "#9297a1",
-        priority: role?.position ?? priority[key] ?? 99, members: [],
-      };
-      group.members.push(member);
-      groups.set(key, group);
+      const roleKeys = new Set((member.roles ?? []).map((role) => role.role_key));
+      const target = groups.find((group) => group.roles.some((roleKey) => roleKeys.has(roleKey)))
+        ?? groups[groups.length - 1];
+      target.members.push(member);
     }
-    return [...groups.values()]
-      .map((group) => ({
-        ...group,
-        members: group.members.sort((a, b) =>
-          Number(onlineMemberIds.includes(b.id)) - Number(onlineMemberIds.includes(a.id))
-          || a.full_name.localeCompare(b.full_name, "es"),
-        ),
-      }))
-      .sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label, "es"));
+
+    return groups.map((group) => ({
+      ...group,
+      members: group.members.sort((a, b) =>
+        Number(onlineMemberIds.includes(b.id)) - Number(onlineMemberIds.includes(a.id))
+        || a.full_name.localeCompare(b.full_name, "es"),
+      ),
+    }));
   }, [communityMembers, onlineMemberIds]);
 
   const groupedChannels = useMemo(() => {
@@ -2898,7 +2975,7 @@ export default function CommunityPage() {
               {communityMemberGroups.map((group) => {
                 const collapsed = Boolean(collapsedMemberGroups[group.key]);
                 return (
-                  <section key={group.key} className="community-member-group">
+                  <section key={group.key} className="community-member-group" data-role={group.key}>
                     <button
                       type="button"
                       className="community-member-group-toggle"
@@ -2907,7 +2984,15 @@ export default function CommunityPage() {
                       aria-expanded={!collapsed}
                     >
                       <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
-                      <i aria-hidden="true"/>
+                      <Image
+                        src={group.iconPath}
+                        alt=""
+                        width={18}
+                        height={18}
+                        unoptimized
+                        className="community-member-group-role-icon"
+                        onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
+                      />
                       <span className="community-member-group-label">{group.label}</span>
                       <span className="community-member-group-count">{group.members.length}</span>
                     </button>
@@ -3104,18 +3189,18 @@ export default function CommunityPage() {
                   <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                 </div>
 
+                {hoverCommunityProfile.about && (
+                  <p className="ps-community-member-popout__about">{hoverCommunityProfile.about}</p>
+                )}
+
                 {hoverCommunityProfile.roles.length > 0 && (
                   <div className="ps-community-member-popout__roles" aria-label="Roles de comunidad">
-                    {hoverCommunityProfile.roles.slice(0, 5).map((role) => (
+                    {hoverCommunityProfile.roles.map((role) => (
                       <span key={role.roleKey} style={{
                         "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#8c95a3",
                       } as CSSProperties}>{role.label}</span>
                     ))}
                   </div>
-                )}
-
-                {hoverCommunityProfile.about && (
-                  <p className="ps-community-member-popout__about">{hoverCommunityProfile.about}</p>
                 )}
 
                 <footer className="ps-community-member-popout__footer">
@@ -3211,16 +3296,16 @@ export default function CommunityPage() {
                   <span className={"ps-community-editor-preview-pronouns ps-community-profile-readonly-pronouns" + (!selectedCommunityProfile.pronouns ? " is-empty" : "")} aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
                 </div>
 
-                <div className="ps-community-editor-preview-role-row">
-                  {selectedCommunityProfile.roles.slice(0, 3).map((role) => (
-                    <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : (selectedCommunityProfile.accentColor ?? "#3987FF") } as CSSProperties}>{role.label}</span>
-                  ))}
-                </div>
-
                 <section className="ps-community-editor-preview-about">
                   <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{selectedCommunityProfile.about.length}/256</small></div>
                   <div className="ps-community-editor-bio-display ps-community-profile-bio-readonly">{selectedCommunityProfile.about || "Cuéntanos un poco sobre ti…"}</div>
                 </section>
+
+                <div className="ps-community-editor-preview-role-row" aria-label="Roles de comunidad">
+                  {selectedCommunityProfile.roles.map((role) => (
+                    <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : (selectedCommunityProfile.accentColor ?? "#3987FF") } as CSSProperties}>{role.label}</span>
+                  ))}
+                </div>
 
                 <section className="ps-community-editor-preview-meta">
                   <span>MIEMBRO DESDE</span>

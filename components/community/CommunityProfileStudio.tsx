@@ -4710,10 +4710,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-main {
   position:relative!important;
   display:flex!important;
-  flex:1 1 auto!important;
+  flex:1 1 0!important;
   flex-direction:column!important;
   width:100%!important;
-  height:auto!important;
+  height:100%!important;
   min-width:0!important;
   min-height:0!important;
   overflow:hidden!important;
@@ -4725,8 +4725,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   display:grid!important;
   grid-template-columns:220px minmax(0,1fr)!important;
   flex:1 1 0!important;
+  align-self:stretch!important;
   width:100%!important;
-  height:auto!important;
+  height:100%!important;
   min-width:0!important;
   min-height:0!important;
   overflow:hidden!important;

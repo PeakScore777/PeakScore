@@ -566,6 +566,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
   const [error, setError] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
+  const avatarGifInput = useRef<HTMLInputElement>(null);
   const bannerImageInput = useRef<HTMLInputElement>(null);
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -1173,6 +1174,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   function clearAssetInputs(kind: "avatar" | "banner") {
     if (kind === "avatar") {
       if (avatarInput.current) avatarInput.current.value = "";
+      if (avatarGifInput.current) avatarGifInput.current.value = "";
     } else {
       if (bannerImageInput.current) bannerImageInput.current.value = "";
     }
@@ -1352,6 +1354,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </section>
 
             <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+            <input ref={avatarGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
             <input ref={bannerImageInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
 
           </aside>
@@ -1978,6 +1981,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className="is-image-choice" onClick={() => avatarInput.current?.click()} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art">{profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : <ImagePlus size={28}/>}</span>
                 <span className="ps-community-avatar-choice-copy"><strong>Elegir imagen</strong><small>PNG, JPG o WebP</small></span>
+              </button>
+              <button type="button" className="is-gif-choice" onClick={() => avatarGifInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art"><Film size={28}/></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Elegir GIF</strong><small>GIF animado</small></span>
               </button>
               <button type="button" className="is-collection-choice" onClick={() => { setAvatarPickerOpen(false); setPosterCollectionTarget("avatar"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
@@ -4693,21 +4700,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     gap:8px!important;width:auto!important;
   }
 }
-/* Final editor geometry: the modal ends with the workspace; no empty
-   gray footer panel is left beneath the profile editor. */
+/* The editor shell must end exactly with its workspace: no empty
+   gray rectangle remains beneath the settings and preview panes. */
 .ps-community-editor-overlay {
   place-items:start center!important;
   padding:16px!important;
 }
-.ps-community-editor-v2 {
-  display:flex!important;
-  flex-direction:column!important;
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] {
   height:min(906px,calc(100dvh - 32px))!important;
-  max-height:calc(100dvh - 32px)!important;
+  max-height:min(906px,calc(100dvh - 32px))!important;
   min-height:0!important;
   overflow:hidden!important;
 }
-.ps-community-editor-main {
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] > main.ps-community-editor-main {
   position:relative!important;
   display:flex!important;
   flex:1 1 0!important;
@@ -4718,79 +4723,39 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   min-height:0!important;
   overflow:hidden!important;
 }
-.ps-community-editor-header {
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-header {
   flex:0 0 auto!important;
 }
-.ps-community-editor-workspace-discord {
-  display:grid!important;
-  grid-template-columns:220px minmax(0,1fr)!important;
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
   flex:1 1 0!important;
-  align-self:stretch!important;
   width:100%!important;
-  height:100%!important;
+  height:auto!important;
   min-width:0!important;
   min-height:0!important;
   overflow:hidden!important;
 }
-.ps-community-editor-settings-sidebar {
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-settings-sidebar {
   min-height:0!important;
   height:100%!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
 }
-.ps-community-editor-preview-column {
-  position:relative!important;
-  display:flex!important;
-  flex:1 1 0!important;
-  align-items:flex-start!important;
-  justify-content:center!important;
-  width:100%!important;
-  height:100%!important;
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-preview-column {
   min-width:0!important;
   min-height:0!important;
+  height:100%!important;
   padding:104px 22px 106px!important;
   box-sizing:border-box!important;
   overflow:hidden!important;
 }
-.ps-community-editor-preview-frame {
-  display:flex!important;
-  flex:0 0 auto!important;
-  align-items:flex-start!important;
-  justify-content:center!important;
-  width:min(420px,100%)!important;
-  max-width:420px!important;
-  min-width:0!important;
-  height:auto!important;
-  min-height:0!important;
-  margin:0 auto!important;
-  padding:0!important;
-  overflow:visible!important;
-}
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
-  display:flex!important;
-  flex:0 0 auto!important;
-  flex-direction:column!important;
-  width:min(420px,100%)!important;
-  min-width:0!important;
-  max-width:420px!important;
-  height:min(720px,calc(100dvh - 170px))!important;
-  min-height:420px!important;
-  max-height:none!important;
-  margin:0 auto!important;
-  padding:0!important;
-  overflow:hidden!important;
-  box-sizing:border-box!important;
-}
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-  position:relative!important;
-  display:flex!important;
-  flex:1 1 0!important;
-  flex-direction:column!important;
-  min-width:0!important;
-  min-height:0!important;
-  height:auto!important;
-  padding:72px 32px 24px!important;
-  background:var(--editor-theme-gradient,#B7D7C3)!important;
+@media(max-width:760px) {
+  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] {
+    height:calc(100dvh - 16px)!important;
+    max-height:calc(100dvh - 16px)!important;
+  }
+  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-preview-column {
+    padding:10px 10px 96px!important;
+  }
 }
 /* Save notice sits on the yellow guide, below the card, inside the right pane. */
 .ps-community-editor-savebar {

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Hash, Menu, Search, Send, Users, X, ShieldCheck, BadgeCheck, LockKeyhole,
+  Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
   PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus, Trash2, Star,
@@ -481,7 +481,6 @@ export default function CommunityPage() {
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileStudioOpen, setCommunityProfileStudioOpen] = useState(false);
   const [communityProfileError, setCommunityProfileError] = useState("");
-  const [copiedCommunityProfileId, setCopiedCommunityProfileId] = useState<string | null>(null);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [communityChannelCategories, setCommunityChannelCategories] = useState<CommunityChannelCategory[]>([]);
   const [communitySpaces, setCommunitySpaces] = useState<CommunitySpace[]>([]);
@@ -560,7 +559,6 @@ export default function CommunityPage() {
       document.removeEventListener("keydown", handleProfileCardKey);
     };
   }, [hoverCommunityProfile]);
-  const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -587,12 +585,8 @@ export default function CommunityPage() {
   const activeChannelIdRef = useRef<string | null>(null);
   const realtimeRefreshTimeoutRef = useRef<number | null>(null);
   const pendingReactionKeysRef = useRef<Set<string>>(new Set());
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
-  const activeSpaceOnlineUsers = activeSpace?.space_type === "preicfes"
-    ? communityMembers.filter((member) => onlineMemberIds.includes(member.id)).length
-    : onlineUsers;
   const messageById = useMemo(
     () => new Map(messages.map((message) => [message.id, message])),
     [messages],
@@ -698,7 +692,6 @@ export default function CommunityPage() {
     // The detail request enriches it in the background without a blocking spinner.
     setCommunityProfileLoading(true);
     setCommunityProfileError("");
-    setCopiedCommunityProfileId(null);
     setSelectedCommunityProfile(instantProfile);
 
     try {
@@ -760,7 +753,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     openCommunityProfileRef.current = openCommunityProfile;
-  }, [openCommunityProfile]);
+  });
 
   function communityMemberProfileUrl(memberId: string) {
     const url = new URL(window.location.href);
@@ -786,7 +779,6 @@ export default function CommunityPage() {
         });
       } else {
         await navigator.clipboard.writeText(url);
-        setCopiedCommunityProfileId(memberId);
       }
       setMemberProfileMenuOpen(false);
     } catch (shareError) {
@@ -849,7 +841,6 @@ export default function CommunityPage() {
         setSelectedCommunityProfile(null);
         setCommunityProfileLoading(false);
         setCommunityProfileError("");
-        setCopiedCommunityProfileId(null);
         clearCommunityMemberProfileUrl();
       }
     }
@@ -1030,7 +1021,7 @@ export default function CommunityPage() {
     }
     void loadCommunityMembers();
     return () => { active = false; };
-  }, [userId, activeSpace?.id, activeSpace?.space_type]);
+  }, [userId, activeSpace?.id, activeSpace?.space_type, isFounder]);
 
   const communityMemberGroups = useMemo(() => {
     const priority: Record<string, number> = {
@@ -1077,21 +1068,6 @@ export default function CommunityPage() {
           .sort((a, b) => a.position - b.position),
       }));
   }, [channels, communityChannelCategories]);
-
-  const refreshStats = useCallback(async (spaceId?: string) => {
-    if (spaceId && spaceId !== GLOBAL_COMMUNITY_SPACE_ID) {
-      const { count, error: countError } = await supabase
-        .from("community_space_members")
-        .select("user_id", { count: "exact", head: true })
-        .eq("space_id", spaceId);
-      if (!countError) setMemberCount(count ?? 0);
-      return;
-    }
-    const { count, error: countError } = await supabase
-      .from("community_member_profiles")
-      .select("user_id", { count: "exact", head: true });
-    if (!countError) setMemberCount(count ?? 0);
-  }, []);
 
   const activeSpaceId = activeSpace?.id ?? null;
   const activeSpaceType = activeSpace?.space_type ?? null;
@@ -1791,7 +1767,6 @@ export default function CommunityPage() {
         // A blocked storage API disables cross-session unread restoration only.
       }
 
-      await refreshStats(resolvedSpace.space_type === "preicfes" ? resolvedSpace.id : undefined);
       if (!alive) return;
       const requested = new URLSearchParams(window.location.search).get("channel");
       const selected = list.find((item) => item.slug === requested)
@@ -1805,7 +1780,7 @@ export default function CommunityPage() {
     }
     void initialize();
     return () => { alive = false; };
-  }, [router, refreshStats, markChannelRead]);
+  }, [router, markChannelRead]);
 
   useEffect(() => {
     if (!activeChannelId || !userId) return;
@@ -2290,20 +2265,6 @@ export default function CommunityPage() {
     }
   }
 
-  async function shareMessage(message: Message) {
-    const spaceParam = activeSpace && activeSpace.space_type === "preicfes"
-      ? "&space=" + encodeURIComponent(activeSpace.slug)
-      : "";
-    const url = window.location.origin + "/comunidad?channel="
-      + encodeURIComponent(message.channel?.slug ?? "general") + spaceParam + "#post-" + message.id;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedMessageId(message.id);
-      window.setTimeout(() => setCopiedMessageId(null), 1600);
-    } catch {
-      setError("El navegador no permitió copiar el enlace.");
-    }
-  }
 
   if (loading) {
     return (
@@ -3249,7 +3210,6 @@ export default function CommunityPage() {
               setSelectedCommunityProfile(null);
               setCommunityProfileLoading(false);
               setCommunityProfileError("");
-              setCopiedCommunityProfileId(null);
               clearCommunityMemberProfileUrl();
             }
           }}>
@@ -3283,7 +3243,6 @@ export default function CommunityPage() {
                   setSelectedCommunityProfile(null);
                   setCommunityProfileLoading(false);
                   setCommunityProfileError("");
-                  setCopiedCommunityProfileId(null);
                   clearCommunityMemberProfileUrl();
                 }} aria-label="Cerrar perfil"><X size={19}/></button>
 

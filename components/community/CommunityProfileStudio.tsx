@@ -4465,7 +4465,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
   left:22px!important;
-  top:0!important;
+  top:-6px!important;
   width:110px!important;
   min-width:110px!important;
   height:110px!important;
@@ -4533,7 +4533,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     height:88px!important;
     min-height:88px!important;
   }
-  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+    top:-6px!important;
+  }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
     width:88px!important;

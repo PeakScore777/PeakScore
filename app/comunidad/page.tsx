@@ -3026,31 +3026,22 @@ export default function CommunityPage() {
                                 <i className={isOnline ? "is-online" : "is-offline"}/>
                               </span>
                               <span className="community-member-copy">
-                                <CommunityStaticName
-                                  tag="span"
-                                  value={member.full_name}
-                                  className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
-                                  style={{
-                                    "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
-                                    "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
-                                    "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                                    "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
-                                  } as React.CSSProperties}
-                                />
-                                {member.status_text && <small>{member.status_text}</small>}
-                                {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (
-                                  <span className="community-member-role-badges" aria-label="Roles">
-                                    {member.roles.filter((role) => role.display_as_badge).slice(0, 2).map((role) => {
-                                      const iconPath = COMMUNITY_ROLE_ICON_PATHS[role.role_key];
-                                      return (
-                                        <span key={role.role_key} title={role.label} aria-label={role.label}
-                                          style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(role.badge_color) ? role.badge_color : "#929aa6" } as CSSProperties}>
-                                          {iconPath ? <Image src={iconPath} alt="" width={18} height={18} unoptimized /> : role.label}
-                                        </span>
-                                      );
-                                    })}
-                                  </span>
+                                {member.id === userId && isFounder ? (
+                                  <span className="community-member-name">{member.full_name}</span>
+                                ) : (
+                                  <CommunityStaticName
+                                    tag="span"
+                                    value={member.full_name}
+                                    className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
+                                    style={{
+                                      "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
+                                      "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
+                                      "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
+                                      "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
+                                    } as React.CSSProperties}
+                                  />
                                 )}
+                                {member.status_text && <small>{member.status_text}</small>}
                               </span>
                             </button>
                           );

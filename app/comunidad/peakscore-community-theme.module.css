@@ -3725,3 +3725,38 @@
 .root :global(.community-member-group-toggle > i) {
   display: none;
 }
+
+
+/* Keep all Discord-style group headings image-led, never dot-led. */
+.root :global(.community-member-group-toggle > i),
+.root :global(.community-member-group-role-emblem::before),
+.root :global(.community-member-group-role-emblem::after) {
+  display: none !important;
+  content: none !important;
+}
+.root :global(.community-member-group-role-emblem) {
+  display: inline-grid !important;
+  flex: 0 0 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  overflow: visible !important;
+}
+.root :global(.community-member-group-role-icon) {
+  display: block !important;
+  visibility: visible !important;
+  width: 20px !important;
+  height: 20px !important;
+  object-fit: contain !important;
+}
+.root :global(.community-member-group[data-role="fundador"] .community-member-group-toggle) {
+  color: var(--community-canvas-muted, #b5bac1) !important;
+}
+/* Founder stays an ordinary member row; only the section heading carries the rank emblem. */
+.root :global(.community-member-name) {
+  display: inline-block;
+  color: var(--community-canvas-text, #f2f3f5);
+  font: 600 14px/1.3 Inter, "DM Sans", sans-serif;
+  letter-spacing: 0;
+  text-shadow: none;
+  text-transform: none;
+}

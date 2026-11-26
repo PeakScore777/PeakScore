@@ -4668,7 +4668,84 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     transition:none!important;
   }
 }
-`}</style>
+`}
+/* Discord-style editor save notice: overlay the right preview pane instead
+   of reserving a full-width footer row beneath the workspace. */
+.ps-community-editor-main {
+  position:relative!important;
+}
+.ps-community-editor-savebar {
+  position:absolute!important;
+  z-index:30!important;
+  left:calc(220px + 16px)!important;
+  right:16px!important;
+  bottom:16px!important;
+  width:auto!important;
+  max-width:none!important;
+  min-height:58px!important;
+  margin:0!important;
+  padding:9px 12px 9px 18px!important;
+  border:1px solid #34363d!important;
+  border-radius:9px!important;
+  background:#18191c!important;
+  box-shadow:0 8px 24px rgb(0 0 0 / 32%)!important;
+  font-size:12px!important;
+}
+.ps-community-editor-savebar>span {
+  color:#dbdee1!important;
+  font-size:12px!important;
+  font-weight:650!important;
+}
+.ps-community-editor-savebar button {
+  min-height:38px!important;
+  border-radius:8px!important;
+}
+@media(max-width:980px) and (min-width:761px) {
+  .ps-community-editor-savebar { left:calc(208px + 12px)!important;right:12px!important; }
+}
+@media(max-width:760px) {
+  .ps-community-editor-savebar {
+    left:10px!important;right:10px!important;bottom:10px!important;
+    gap:8px!important;width:auto!important;
+  }
+}
+/* The profile body is the scroll container. Keep its scrollbar visible
+   and usable at all times; do not wait for a long biography or hover state. */
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body {
+  flex:1 1 0%!important;
+  min-height:0!important;
+  overflow-x:hidden!important;
+  overflow-y:scroll!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:#777f8b transparent!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:block!important;
+  width:9px!important;
+  height:0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-track {
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  min-height:36px!important;
+  border:2px solid transparent!important;
+  border-radius:999px!important;
+  background-color:#777f8b!important;
+  background-clip:padding-box!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background-color:#aab3bf!important;
+}
+
+</style>
     </div>
     </div>,
     document.body,

@@ -284,7 +284,13 @@ export default function DecryptedDisplayName({
         }}
       >
         {graphemes.map((character, index) => {
-          if (isSpace(character)) return character;
+          if (isSpace(character)) return (
+            <span
+              className="ps-decrypted-space"
+              key={index}
+              style={{ flex: "0 0 auto", whiteSpace: "pre" }}
+            >{character}</span>
+          );
           const revealed = frame.revealed[index] ?? false;
           if (revealed) {
             return <span

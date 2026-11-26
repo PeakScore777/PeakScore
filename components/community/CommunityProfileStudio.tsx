@@ -4240,12 +4240,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
   position:absolute!important;
   z-index:8!important;
-  top:130px!important;
+  top:104px!important;
   left:0!important;
   right:0!important;
   width:100%!important;
-  height:116px!important;
-  min-height:116px!important;
+  height:100px!important;
+  min-height:100px!important;
   margin:0!important;
   overflow:visible!important;
   pointer-events:none!important;
@@ -4254,22 +4254,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:absolute!important;
   left:22px!important;
   top:0!important;
-  width:116px!important;
-  height:116px!important;
+  width:100px!important;
+  height:100px!important;
   pointer-events:auto!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
-  width:116px!important;
-  height:116px!important;
+  width:100px!important;
+  height:100px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
   position:absolute!important;
-  left:155px!important;
-  top:32px!important;
+  left:132px!important;
+  top:25px!important;
   bottom:auto!important;
   width:max-content!important;
-  max-width:calc(100% - 166px)!important;
+  max-width:calc(100% - 144px)!important;
   min-height:40px!important;
   padding:9px 14px!important;
   white-space:nowrap!important;
@@ -4349,22 +4349,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     max-height:160px!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-    top:110px!important;
+    top:94px!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
     left:18px!important;
-    width:96px!important;
-    height:96px!important;
+    width:84px!important;
+    height:84px!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
-    width:96px!important;
-    height:96px!important;
+    width:84px!important;
+    height:84px!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
-    left:128px!important;
-    top:25px!important;
-    max-width:calc(100% - 138px)!important;
+    left:110px!important;
+    top:22px!important;
+    max-width:calc(100% - 120px)!important;
     min-height:38px!important;
     padding:8px 11px!important;
     font-size:12px!important;

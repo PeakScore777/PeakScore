@@ -1223,7 +1223,9 @@ test("name colour picker reuses the exact profile-theme HSV selector without rer
   assert.match(studio, /const nextColor = updateFromPlane\(event\);[\s\S]*?requestAnimationFrame\(\(\) => apply\(nextColor\)\)/);
   assert.match(studio, /onApply\(normalized\)/);
   assert.doesNotMatch(studio, /input type="color" aria-label="Elegir color personalizado"/);
-  assert.match(studio, /ps-community-name-custom-picker\{position:absolute/);
+  assert.match(studio, /ps-community-name-custom-picker\{position:static/);
+  assert.match(studio, /grid-column:1\/-1!important;grid-row:2!important;/);
+  assert.doesNotMatch(studio, /ps-community-name-custom-picker\{position:absolute/);
   assert.match(studio, /value=\{hue\}/);
 });
 
@@ -1238,7 +1240,7 @@ test("custom color picker stays open while adjusting color and closes only with 
 });
 
 test("profile preview solid text uses the selected color and member preview has no badge frame", () => {
-  assert.ok(studio.includes('?? readableThemeText(cardColor)'));
+  assert.ok(studio.includes('?? profileThemeInk'));
   assert.ok(nameStyleCss.includes(".ps-community-name-preview-members-view .ps-community-name-member-copy > .community-member-nameplate"));
   assert.ok(nameStyleCss.includes("-webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126)) !important"));
   assert.ok(nameStyleCss.includes(".ps-community-name-style-profile-copy > strong.effect-plain"));
@@ -1256,7 +1258,7 @@ test("founder-intro keeps profile theme color controls and removes name-finish c
 test("name color presets and custom HSV picker remain available in the matching mode", () => {
   assert.match(studio, /ps-community-name-color-picker/);
   assert.match(studio, /role="group" aria-label="Colores de letra"/);
-  assert.match(studio, /DISPLAY_NAME_COLORS\.filter\(\(item\) => item\.id !== "custom-gradient"\)/);
+  assert.ok(studio.includes('DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id))'));
   assert.match(studio, /Elegir color personalizado/);
   assert.match(studio, /aria-pressed=\{draftDisplayNameColor === item\.id\}/);
   assert.match(studio, /Color inicial/);

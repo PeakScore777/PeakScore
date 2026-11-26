@@ -1437,23 +1437,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </section>
                 </div>
               </article>
-              <div className="ps-community-editor-community-context-preview" aria-label="Vista previa en la comunidad">
-                <div className="ps-community-editor-community-context-heading">MIEMBROS DE LA COMUNIDAD</div>
-                <section className="ps-community-editor-community-members">
-                  <div className="ps-community-editor-community-channel"><span>#</span> general</div>
-                  <div className="ps-community-editor-community-members-label">MIEMBROS — 1</div>
-                  <div className="ps-community-editor-community-member">
-                    <span className="ps-community-editor-community-member-avatar">{initials(displayName || "MI")}</span>
-                    <strong>{displayName || "Tu nombre"}</strong>
-                    <small>{isOnline ? "En línea" : "Desconectado"}</small>
-                  </div>
-                </section>
-                <div className="ps-community-editor-community-chat-heading">CHAT</div>
-                <section className="ps-community-editor-community-chat">
-                  <span className="ps-community-editor-community-chat-avatar">{initials(displayName || "MI")}</span>
-                  <div><strong>{displayName || "Tu nombre"}</strong><small> ahora</small><p>Así se verá tu nombre al participar en la conversación.</p></div>
-                </section>
-              </div>
             </div>
           </section>
         </div>
@@ -1868,7 +1851,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <div className="ps-community-name-member-row">
                           <span className={"ps-community-name-member-avatar frame-" + avatarFrame}>
                             {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
-                            <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                           </span>
                           <div className="ps-community-name-member-copy">
                             <DisplayNameMotionPreview
@@ -2823,6 +2805,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   width:100%!important;height:100%!important;max-height:100%!important;min-height:0!important;
   min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;
   overscroll-behavior-y:contain!important;scrollbar-gutter:stable!important;
+  scrollbar-width:thin!important;scrollbar-color:transparent transparent!important;
   -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
   pointer-events:auto!important;
 }
@@ -2830,7 +2813,17 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-settings-sidebar::-webkit-scrollbar-track {background:transparent!important}
 .ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb {
   min-height:36px!important;border:2px solid transparent!important;border-radius:999px!important;
-  background:#59616d!important;background-clip:padding-box!important;
+  background:transparent!important;background-clip:padding-box!important;
+  transition:background-color 140ms ease!important;
+}
+.ps-community-editor-settings-sidebar:hover,
+.ps-community-editor-settings-sidebar:focus-within {
+  scrollbar-color:#59616d transparent!important;
+}
+.ps-community-editor-settings-sidebar:hover::-webkit-scrollbar-thumb,
+.ps-community-editor-settings-sidebar:focus-within::-webkit-scrollbar-thumb,
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb:active {
+  background:#59616d!important;
 }
 .ps-community-editor-preview-column {
   min-width:0!important;min-height:0!important;height:100%!important;
@@ -2976,6 +2969,97 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-name-color-style-group .ps-community-name-colors-row {gap:5px!important}
   .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color,
   .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {height:46px!important;min-height:46px!important}
+}
+
+
+/* In the name-style picker, the custom swatch is one of the eight equal
+   colour controls — never a padded card nested inside the swatch row. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker {
+  display:block!important;position:relative!important;align-self:stretch!important;
+  width:100%!important;height:54px!important;min-width:0!important;min-height:54px!important;
+  max-width:none!important;margin:0!important;padding:0!important;gap:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color {
+  position:relative!important;display:grid!important;grid-template-columns:1fr!important;
+  place-items:center!important;align-items:center!important;justify-content:center!important;
+  gap:0!important;width:100%!important;height:54px!important;min-width:0!important;
+  min-height:54px!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #48505e!important;border-radius:10px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color::before {
+  display:none!important;content:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;position:static!important;flex:0 0 auto!important;
+  place-items:center!important;width:auto!important;height:auto!important;
+  min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  color:#d9deed!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {
+  display:none!important;
+}
+
+/* The member-list specimen mirrors chat: avatar followed immediately by name.
+   The dot is deliberately absent here; the full profile keeps its presence dot. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start!important;gap:10px!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar {
+  display:grid!important;position:relative!important;flex:0 0 40px!important;
+  width:40px!important;height:40px!important;margin:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  display:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex!important;flex:0 1 auto!important;flex-direction:row!important;
+  align-items:center!important;justify-content:flex-start!important;
+  width:auto!important;max-width:calc(100% - 50px)!important;min-width:0!important;
+  margin:0!important;padding:0!important;text-align:left!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>strong.community-member-nameplate {
+  display:inline-block!important;align-self:center!important;justify-self:start!important;
+  flex:0 1 auto!important;width:max-content!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;margin-left:0!important;margin-right:0!important;padding:0!important;
+  text-align:left!important;
+}
+
+/* Both the profile settings rail and the style-picker columns reveal their
+   native scrollbar only while the pointer is over the scroll area. */
+@media (min-width:781px) and (hover:hover) and (pointer:fine) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+    scrollbar-width:thin!important;scrollbar-color:transparent transparent!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar {
+    display:block!important;width:8px!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar-track,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar-track {
+    background:transparent!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar-thumb {
+    background:transparent!important;border:2px solid transparent!important;
+    border-radius:12px!important;background-clip:padding-box!important;
+    transition:background-color 140ms ease!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection:hover,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview:hover {
+    scrollbar-color:#65708a transparent!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection:hover::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview:hover::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
+    background:#65708a!important;
+  }
 }
 
 `}</style>

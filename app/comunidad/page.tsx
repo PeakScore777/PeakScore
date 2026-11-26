@@ -3012,8 +3012,8 @@ export default function CommunityPage() {
                         />
                       </span>
                       <span className="community-member-group-label">{group.label}</span>
-                      <span className="community-member-group-count">{group.members.length}</span>
                       <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
+                      <span className="community-member-group-count">{group.members.length}</span>
                     </button>
                     {!collapsed && group.members.length > 0 && (
                       <div className="community-member-group-list">

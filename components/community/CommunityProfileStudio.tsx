@@ -4553,6 +4553,37 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     padding:91px 18px 20px!important;
   }
 }
+
+/* Final theme swatches: compact two-card layout matching the supplied reference. */
+.ps-community-editor-theme-stop-list {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-editor-theme-stop {
+  display:grid!important;grid-template-columns:29px minmax(0,1fr)!important;
+  grid-template-rows:1fr 1fr!important;align-items:center!important;
+  column-gap:7px!important;row-gap:1px!important;width:100%!important;min-width:0!important;
+  min-height:52px!important;padding:6px 7px!important;box-sizing:border-box!important;
+  border:1px solid #3b3e47!important;border-radius:8px!important;
+  background:#292a30!important;color:#f2f3f5!important;text-align:left!important;box-shadow:none!important;
+}
+.ps-community-editor-theme-stop.is-active {
+  border-color:#858da1!important;box-shadow:0 0 0 1px #858da1!important;
+}
+.ps-community-editor-theme-stop>span:first-child {
+  grid-column:1!important;grid-row:1 / 3!important;width:29px!important;height:29px!important;
+  min-width:29px!important;border-radius:7px!important;
+}
+.ps-community-editor-theme-stop>span:nth-child(2) {
+  grid-column:2!important;grid-row:1!important;min-width:0!important;align-self:end!important;
+  color:#f3f4f6!important;font-size:9px!important;font-weight:700!important;
+  line-height:1.15!important;white-space:nowrap!important;
+}
+.ps-community-editor-theme-stop>small {
+  grid-column:2!important;grid-row:2!important;min-width:0!important;align-self:start!important;
+  color:#aeb2bd!important;font-size:8px!important;line-height:1.15!important;white-space:nowrap!important;
+}
+
 `}</style>
     </div>
     </div>,

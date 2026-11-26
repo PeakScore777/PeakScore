@@ -87,7 +87,9 @@ testCase("community visual system uses Discord charcoal surfaces with GameCode t
 
 testCase("community member profile reuses the editor preview as a read-only social card", () => {
   assert.match(page, /openCommunityProfile\(memberId: string\)/);
-  assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(member\.id\)\}/);
+  assert.match(page, /openMemberHoverPreview\(member, \{/);
+  assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(hoverCommunityProfile\.userId\)\}/);
+  assert.match(page, /Ver perfil completo/);
   assert.match(page, /onClick=\{\(\) => message\.author && void openCommunityProfile\(message\.author\.id\)\}/);
   assert.match(page, /ps-community-member-popout/);
   assert.match(page, /ps-community-profile-dialog/);

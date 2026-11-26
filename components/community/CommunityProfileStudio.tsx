@@ -264,8 +264,24 @@ function themeLuminance(hex: string) {
     .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
-function readableThemeText(hex: string) {
-  return themeLuminance(hex) > 0.179 ? '#202126' : '#F7F8FA';
+function contrastRatio(first: string, second: string) {
+  const a = themeLuminance(first);
+  const b = themeLuminance(second);
+  const lighter = Math.max(a, b);
+  const darker = Math.min(a, b);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+function readableThemeText(hex: string, secondHex = hex) {
+  // Pick one shared foreground that maximizes the worst contrast across the
+  // entire two-colour profile gradient, rather than choosing per colour stop.
+  const samples = Array.from({ length: 9 }, (_, index) =>
+    blendThemeColors(hex, secondHex, index / 8)
+  );
+  const lightInk = "#F7F8FA";
+  const darkInk = "#17191F";
+  const lightWorst = Math.min(...samples.map((sample) => contrastRatio(lightInk, sample)));
+  const darkWorst = Math.min(...samples.map((sample) => contrastRatio(darkInk, sample)));
+  return lightWorst >= darkWorst ? lightInk : darkInk;
 }
 function blendThemeColors(first: string, second: string, amount = 0.5) {
   const a = safeColor(first).slice(1);
@@ -642,7 +658,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
-  const [displayNameEditing, setDisplayNameEditing] = useState(false);
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
@@ -712,7 +727,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [error, setError] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerImageInput = useRef<HTMLInputElement>(null);
-  const displayNameInputRef = useRef<HTMLInputElement>(null);
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
@@ -854,13 +868,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
-  const profileThemeInk = readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55));
+  const profileThemeInk = readableThemeText(cardColor, themeColorSecondary);
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
     "--editor-theme-text": profileThemeInk,
-    "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)),
-    "--editor-theme-bottom-text": readableThemeText(themeColorSecondary),
+    "--editor-theme-body-text": profileThemeInk,
+    "--editor-theme-bottom-text": profileThemeInk,
   } as CSSProperties;
 
   function updateCardColor(nextColor: string) {
@@ -1425,16 +1439,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
               <div className="ps-community-editor-settings-section-title">Decorar cartel de perfil</div>
               <div className="ps-community-editor-banner-tools">
-                <div className="ps-community-editor-banner-current-row">
-                  <button type="button" className="ps-community-editor-banner-current is-action" onClick={() => setBannerPickerOpen(true)} disabled={Boolean(uploading) || busy} aria-label="Cambiar cartel de perfil">
-                    <span className="ps-community-editor-banner-current-preview" style={profile.bannerUrl
+                <button
+                  type="button"
+                  className="ps-community-editor-banner-current ps-community-editor-banner-current-is-preview"
+                  onClick={() => setBannerPickerOpen(true)}
+                  disabled={Boolean(uploading) || busy}
+                  aria-label="Abrir opciones del cartel de perfil"
+                >
+                  <span
+                    className="ps-community-editor-banner-current-preview"
+                    style={profile.bannerUrl
                       ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" }
-                      : { background: "linear-gradient(120deg,#142831,#173f37 58%,#1c272e)" }}/>
-                    <span><strong>{profile.bannerUrl ? "Cartel personalizado" : "Diseño PeakScore"}</strong><small>{profile.bannerUrl ? "Cambiar imagen o ver colección" : "Elige una imagen o explora carteles"}</small></span>
-                    <PlusCircle size={17}/>
-                  </button>
-                  {profile.bannerUrl && <button type="button" className="ps-community-editor-banner-remove" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || Boolean(uploading)} aria-label="Quitar cartel"><Trash2 size={15}/></button>}
-                </div>
+                      : { background: "linear-gradient(120deg,#142831,#173f37 58%,#1c272e)" }}
+                  />
+                </button>
               </div>
             </section>
 
@@ -1454,7 +1472,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner" + (profile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
@@ -1495,23 +1513,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  {displayNameEditing ? (
-                    <input ref={displayNameInputRef} id="ps-community-display-name-inline"
-                      className={"ps-community-editor-preview-name-inline-input is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
-                      value={displayName} maxLength={32} minLength={2} autoFocus autoComplete="off" spellCheck={false}
-                      onChange={(event) => setDisplayName(event.target.value.slice(0, 32))}
-                      onBlur={() => setDisplayNameEditing(false)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") { event.preventDefault(); setDisplayNameEditing(false); }
-                        if (event.key === "Escape") { setDisplayName(savedSnapshot.displayName ?? ""); setDisplayNameEditing(false); }
-                      }}
-                      aria-label="Nombre en la comunidad"/>
-                  ) : (
-                    <button type="button" className="ps-community-editor-preview-name-edit-trigger" onClick={() => setDisplayNameEditing(true)} aria-label="Editar nombre en la comunidad">
-                      <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk } as CSSProperties}/>
-                      <Pencil size={12} aria-hidden="true"/>
-                    </button>
-                  )}                  <div className="ps-community-editor-preview-identity-line">
+                  <input
+                    id="ps-community-display-name-inline"
+                    className={"ps-community-editor-preview-name-input ps-community-profile-name is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
+                    value={displayName}
+                    maxLength={32}
+                    minLength={2}
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(event) => setDisplayName(event.target.value.slice(0, 32))}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") { event.preventDefault(); event.currentTarget.blur(); }
+                      if (event.key === "Escape") { setDisplayName(savedSnapshot.displayName ?? ""); event.currentTarget.blur(); }
+                    }}
+                    placeholder="Tu nombre"
+                    aria-label="Nombre en la comunidad"
+                    style={{
+                      "--name-gradient-start": displayNameGradientStart,
+                      "--name-gradient-end": displayNameGradientEnd,
+                      "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")",
+                      "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
+                    } as CSSProperties}
+                  />                  <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
                     <textarea
                       ref={pronounsTextareaRef}
@@ -1992,7 +2015,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-name-preview-stage">
+                  <div className="ps-community-name-preview-stage" style={{ "--status-theme-text": profileThemeInk, "--editor-theme-text": profileThemeInk } as CSSProperties}>
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
                       <article className="ps-community-name-style-profile-preview"
@@ -2000,12 +2023,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         style={{
                           "--status-theme": cardColor,
                           "--status-theme-secondary": themeColorSecondary,
-                          "--status-theme-text": readableThemeText(cardColor),
+                          "--status-theme-text": profileThemeInk,
                           "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none",
                           "--name-gradient-start": draftDisplayNameGradientStart,
                           "--name-gradient-end": draftDisplayNameGradientEnd,
                           "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
-                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? readableThemeText(cardColor),
+                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk,
                         } as CSSProperties}>
                         <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                           {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}
@@ -2028,7 +2051,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                           </span>
                           <div className="ps-community-name-member-copy">
-                            <strong className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            <strong className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}><DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}/></strong>
                           </div>
                         </div>
                       </div>
@@ -2093,12 +2116,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className="is-image-choice" onClick={() => avatarInput.current?.click()} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art">{profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : <ImagePlus size={28}/>}</span>
                 <span className="ps-community-avatar-choice-copy"><strong>Elegir imagen</strong><small>PNG, JPG o WebP</small></span>
-                <span className="ps-community-avatar-choice-arrow"><Camera size={17}/></span>
               </button>
               <button type="button" className="is-collection-choice" onClick={() => { setAvatarPickerOpen(false); setPosterCollectionTarget("avatar"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
                 <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>
-                <span className="ps-community-avatar-choice-arrow"><Plus size={17}/></span>
               </button>
             </div>
             {uploading === "avatar" && <div className="ps-community-avatar-picker-progress"><LoaderCircle size={15}/> Actualizando avatar…</div>}
@@ -2119,12 +2140,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className="is-image-choice" onClick={() => bannerImageInput.current?.click()} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art">{profile.bannerUrl ? <span className="ps-community-banner-choice-thumbnail" style={{ backgroundImage: "url(" + profile.bannerUrl + ")" }}/> : <ImagePlus size={28}/>}</span>
                 <span className="ps-community-avatar-choice-copy"><strong>Subir imagen</strong><small>PNG, JPG o WebP</small></span>
-                <span className="ps-community-avatar-choice-arrow"><Camera size={17}/></span>
               </button>
               <button type="button" className="is-collection-choice" onClick={() => { setBannerPickerOpen(false); setPosterCollectionTarget("banner"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
                 <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>
-                <span className="ps-community-avatar-choice-arrow"><Plus size={17}/></span>
               </button>
             </div>
             {uploading === "banner" && <div className="ps-community-avatar-picker-progress"><LoaderCircle size={15}/> Actualizando cartel…</div>}
@@ -2582,6 +2601,178 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
  .ps-community-name-preset-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
  .ps-community-name-style-group>.ps-community-name-animation-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  .ps-community-name-custom-gradient-stops{grid-template-columns:1fr!important}
+}
+
+/* Refined profile controls: compact Discord-like choices with no trailing camera/plus affordances. */
+.ps-community-avatar-picker-modal { width:min(640px,calc(100vw - 32px))!important; }
+.ps-community-avatar-picker-options {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;padding:18px 24px 20px!important;min-width:0!important;
+}
+.ps-community-avatar-picker-options>button {
+  display:grid!important;grid-template-columns:64px minmax(0,1fr)!important;
+  align-items:center!important;justify-items:stretch!important;gap:14px!important;
+  min-width:0!important;min-height:112px!important;height:auto!important;
+  padding:14px!important;overflow:hidden!important;text-align:left!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-art {
+  width:64px!important;height:64px!important;flex:0 0 64px!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy {
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:6px!important;width:100%!important;min-width:0!important;
+  overflow:visible!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong {
+  display:block!important;width:100%!important;max-width:100%!important;
+  color:#f3f5f8!important;font-size:14px!important;font-weight:750!important;
+  line-height:1.25!important;white-space:normal!important;overflow-wrap:normal!important;
+  word-break:normal!important;text-overflow:clip!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small {
+  display:block!important;width:100%!important;max-width:100%!important;
+  color:#aeb7c5!important;font-size:11px!important;line-height:1.35!important;
+  white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important;
+}
+.ps-community-avatar-choice-art.is-collection-art {color:#c3cde0!important}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-arrow {display:none!important}
+.ps-community-avatar-picker-modal>footer {justify-content:flex-end!important;padding:12px 24px 18px!important}
+.ps-community-avatar-picker-modal>footer button {min-width:92px!important}
+@media(max-width:620px) {
+  .ps-community-avatar-picker-options {grid-template-columns:1fr!important;padding-inline:16px!important}
+  .ps-community-avatar-picker-options>button {min-height:88px!important}
+}
+
+/* Poster decoration shows only the actual banner preview. Clicking it opens
+   the image / collection choices; no generic title, plus or description sits beside it. */
+.ps-community-editor-banner-current-is-preview {
+  position:relative!important;display:block!important;width:100%!important;height:112px!important;
+  min-height:112px!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #3c424d!important;border-radius:11px!important;background:#18282b!important;
+  cursor:pointer!important;
+}
+.ps-community-editor-banner-current-is-preview:hover {border-color:#687cf2!important;filter:brightness(1.06)!important}
+.ps-community-editor-banner-current-is-preview .ps-community-editor-banner-current-preview {
+  position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;
+  min-height:0!important;border:0!important;border-radius:0!important;background-size:cover!important;background-position:center!important;
+}
+.ps-community-editor-banner-current-is-preview:focus-visible {outline:2px solid #7888ff!important;outline-offset:2px!important}
+
+/* Name is an always-present inline field: focusing it cannot change the layout
+   or push the pronoun row down. Its visual language matches the pronoun input. */
+.ps-community-editor-preview-name-input {
+  display:block!important;box-sizing:border-box!important;width:max-content!important;max-width:100%!important;
+  min-width:8ch!important;min-height:34px!important;height:34px!important;margin:0 0 4px!important;
+  padding:2px 4px!important;border:1px solid transparent!important;border-radius:6px!important;
+  outline:none!important;background:transparent!important;box-shadow:none!important;
+  color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+  caret-color:var(--editor-theme-text,#f2f3f5)!important;
+  font-family:inherit!important;font-size:27px!important;font-weight:850!important;
+  line-height:1.15!important;letter-spacing:-.025em!important;text-align:left!important;
+  transition:border-color .12s ease,background .12s ease!important;
+}
+.ps-community-editor-preview-name-input::placeholder {color:var(--editor-theme-text,#f2f3f5)!important;opacity:.68!important}
+.ps-community-editor-preview-name-input:hover {border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 25%,transparent)!important}
+.ps-community-editor-preview-name-input:focus {
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 42%,transparent)!important;
+  background:color-mix(in srgb,var(--editor-theme-text,#fff) 5%,transparent)!important;
+  outline:none!important;box-shadow:none!important;
+}
+
+/* Theme contrast is one decision for both ends of the gradient and every text
+   block on the card, never white above and black below. */
+.ps-community-editor-preview-card {
+  --editor-theme-body-text:var(--editor-theme-text,#f2f3f5)!important;
+  --editor-theme-bottom-text:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row *,
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+}
+
+/* Larger Discord-like online dot in the large profile previews. Its ring uses
+   exactly the avatar border colour, with no black outline or shadow. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:-6px!important;bottom:-2px!important;width:24px!important;height:24px!important;
+  box-sizing:border-box!important;border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:-5px!important;bottom:-1px!important;width:20px!important;height:20px!important;
+  box-sizing:border-box!important;border:4px solid var(--status-theme,#B7D7C3)!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-member-avatar {position:relative!important;overflow:visible!important}
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-2px!important;bottom:-1px!important;width:13px!important;height:13px!important;
+  border:3px solid #2b2d34!important;border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+
+/* Name Atelier: same left-aligned identity placement in member list and chat. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex!important;flex:1 1 auto!important;align-items:center!important;
+  justify-content:flex-start!important;min-width:0!important;margin:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>strong.community-member-nameplate {
+  display:block!important;width:max-content!important;max-width:100%!important;
+  margin:0!important;text-align:left!important;
+  color:var(--status-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#f2f3f5)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>strong.community-chat-author.color-default {
+  color:var(--status-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#f2f3f5)!important;
+}
+
+/* Eight equal swatches in one row: pipette + seven colours, no squeezed vertical bars. */
+.ps-community-name-color-style-group .ps-community-name-colors-row {
+  display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:8px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root {
+  display:block!important;width:auto!important;min-width:0!important;max-width:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root>.ps-community-name-custom-color {
+  display:grid!important;grid-template-columns:1fr!important;place-items:center!important;
+  width:100%!important;height:42px!important;min-height:42px!important;margin:0!important;
+  padding:0!important;border:1px solid #48505e!important;border-radius:9px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {display:none!important}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;place-items:center!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid {
+  display:contents!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {
+  display:block!important;width:100%!important;height:42px!important;min-height:42px!important;
+  min-width:0!important;margin:0!important;padding:0!important;border-radius:9px!important;
+}
+@media(max-width:620px) {
+  .ps-community-name-color-style-group .ps-community-name-colors-row {gap:5px!important}
 }
 
 /* Last cascade layer: consistent theme contrast and clean Name Atelier cards. */

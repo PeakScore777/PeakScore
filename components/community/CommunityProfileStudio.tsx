@@ -4584,6 +4584,44 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   color:#aeb2bd!important;font-size:8px!important;line-height:1.15!important;white-space:nowrap!important;
 }
 
+
+/* Slim profile scrollbar: hidden at rest, softly revealed while hovering the card. */
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body {
+  scrollbar-width:thin!important;
+  scrollbar-color:transparent transparent!important;
+  scrollbar-gutter:stable!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar {
+  width:4px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-track {
+  margin:9px 0!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  border:1px solid transparent!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  background-clip:padding-box!important;
+  transition:background-color .18s ease!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body {
+  scrollbar-color:#737d8b transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  background:#737d8b!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background:#a2adbb!important;
+}
+
 `}</style>
     </div>
     </div>,

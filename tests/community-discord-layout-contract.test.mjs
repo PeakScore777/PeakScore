@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, styles, launcher, stylePage] = await Promise.all([
+const [page, globalStyles, profileStyles, launcher, stylePage] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../app/community-member-profile-ui.css", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/perfil/estilo/page.tsx", import.meta.url), "utf8"),
 ]);
+const styles = globalStyles + "\n" + profileStyles;
 
 testCase("community keeps the Discord server rail, channel list and shared chat composer", () => {
   assert.match(page, /community-server-rail/);

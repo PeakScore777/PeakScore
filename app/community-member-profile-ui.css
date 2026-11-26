@@ -1712,3 +1712,18 @@
 .ps-community-profile-avatar > i.is-online {
   background:#23a55a!important;
 }
+
+/* Keep the single selected foreground readable over both ends of custom
+   profile gradients. The fine opposite-colour edge is only a contrast aid. */
+.ps-community-profile-live-card .ps-community-editor-preview-name-static.color-default,
+.ps-community-profile-live-card .ps-community-editor-preview-tag,
+.ps-community-profile-live-card .ps-community-editor-preview-pronouns,
+.ps-community-profile-live-card .ps-community-editor-preview-about-heading,
+.ps-community-profile-live-card .ps-community-editor-preview-meta,
+.ps-community-profile-live-card .ps-community-editor-preview-meta *,
+.ps-community-profile-live-card .ps-community-editor-bio-display,
+.ps-community-profile-live-card .ps-community-editor-preview-role-row,
+.ps-community-profile-live-card .ps-community-editor-preview-role-row * {
+  -webkit-text-stroke:.22px var(--editor-theme-outline,transparent)!important;
+  text-shadow:0 1px 1px color-mix(in srgb,var(--editor-theme-outline,transparent) 42%,transparent)!important;
+}

@@ -4906,8 +4906,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:absolute!important;
   z-index:30!important;
   left:auto!important;
-  right:calc((100% - min(420px,100%))/2)!important;
-  bottom:30px!important;
+  right:calc((100% - min(420px,100%))/2 - 60px)!important;
+  bottom:20px!important;
   width:min(420px,calc(100% - 32px))!important;
   max-width:420px!important;
   display:flex!important;
@@ -4950,7 +4950,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     grid-template-columns:208px minmax(0,1fr)!important;
   }
   .ps-community-editor-savebar {
-    left:auto!important;right:calc((100% - min(420px,100%))/2)!important;
+    left:auto!important;right:calc((100% - min(420px,100%))/2 - 60px)!important;
     width:min(420px,calc(100% - 32px))!important;
   }
 }

@@ -258,7 +258,7 @@ function communityThemeLuminance(hex: string) {
     .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
-function communityThemeContrast(first: string, second: string) {
+function communityThemeText(first: string, second: string) {
   const a = /^#[0-9a-f]{6}$/i.test(first) ? first.slice(1) : 'B7D7C3';
   const b = /^#[0-9a-f]{6}$/i.test(second) ? second.slice(1) : '8FB9A6';
   const samples = Array.from({ length: 9 }, (_, step) => {
@@ -3001,10 +3001,10 @@ export default function CommunityPage() {
                 "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF",
                 "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3",
                 "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")",
-                "--community-theme-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--community-theme-body-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-body-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--community-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--community-theme-body-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-body-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
               } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
@@ -3129,9 +3129,9 @@ export default function CommunityPage() {
                 "--editor-card": selectedCommunityProfile.cardColor ?? "#B7D7C3",
                 "--editor-theme-gradient": "linear-gradient(180deg, " + (selectedCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")",
                 "--editor-banner-background": "#20242D",
-                "--editor-theme-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-body-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-bottom-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-text": communityThemeText(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-body-text": communityThemeText(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-bottom-text": communityThemeText(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF",
                 "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF",
                 "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",

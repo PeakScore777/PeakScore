@@ -1364,9 +1364,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>
-                </div>
-                <div className="ps-community-editor-preview-body">
-                  <div className="ps-community-editor-preview-avatar-row">
+
+                <div className="ps-community-editor-preview-avatar-row">
                     <div className="ps-community-editor-preview-avatar-anchor" ref={avatarMenuAnchorRef}>
                       <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar">
                         <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame}>
@@ -1399,6 +1398,2636 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
+                </div>
+                <div className="ps-community-editor-preview-body">
+                    <input
+                    id="ps-community-display-name-inline"
+                    className={"ps-community-editor-preview-name-input ps-community-profile-name is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
+                    value={displayName}
+                    size={Math.max(8, Math.min(32, displayName.length + 1))}
+                    maxLength={32}
+                    minLength={2}
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(event) => setDisplayName(event.target.value.slice(0, 32))}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") { event.preventDefault(); event.currentTarget.blur(); }
+                      if (event.key === "Escape") { setDisplayName(savedSnapshot.displayName ?? ""); event.currentTarget.blur(); }
+                    }}
+                    placeholder="Tu nombre"
+                    aria-label="Nombre en la comunidad"
+                    style={{
+                      "--name-gradient-start": displayNameGradientStart,
+                      "--name-gradient-end": displayNameGradientEnd,
+                      "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")",
+                      "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : displayNameColor === "default" ? profileThemeInk : displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
+                    } as CSSProperties}
+                  />                  <div className="ps-community-editor-preview-identity-line">
+                    {accountTag(profile.accountName) && (
+                      <>
+                        <span className="ps-community-editor-preview-tag">{"@" + accountTag(profile.accountName)}</span>
+                        <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
+                      </>
+                    )}
+                    <textarea
+                      ref={pronounsTextareaRef}
+                      className="ps-community-editor-preview-pronouns"
+                      value={pronouns}
+                      maxLength={24}
+                      rows={1}
+                      wrap="soft"
+                      spellCheck={false}
+                      onChange={(event) => setPronouns(event.target.value)}
+                      placeholder="Añadir pronombres"
+                      aria-label="Editar pronombres"
+                    />
+                  </div>
+                  <div className="ps-community-editor-preview-role-row">
+                    {profile.roles.slice(0, 3).map((role) => (
+                      <span key={role.roleKey} style={{
+                        "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor,
+                      } as CSSProperties}>{role.label}</span>
+                    ))}
+                  </div>
+                  <section className="ps-community-editor-preview-about">
+                    <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/256</small></div>
+                    {aboutEditing ? (
+                      <textarea
+                        ref={aboutTextareaRef}
+                        className="ps-community-editor-bio-inline is-editing"
+                        value={about}
+                        maxLength={256}
+                        rows={1}
+                        autoFocus
+                        onChange={(event) => setAbout(event.target.value)}
+                        onBlur={() => setAboutEditing(false)}
+                        placeholder="Cuéntanos un poco sobre ti…"
+                        aria-label="Biografía del perfil"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="ps-community-editor-bio-display"
+                        onClick={() => setAboutEditing(true)}
+                        aria-label="Editar biografía"
+                      >
+                        {about || <span>Cuéntanos un poco sobre ti…</span>}
+                      </button>
+                    )}
+                  </section>
+                  <section className="ps-community-editor-preview-meta">
+                    <span>MIEMBRO DESDE</span>
+                    <strong>{joinedLabel}</strong>
+                  </section>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        {(hasUnsavedChanges || hasPickerChanges) && (
+          <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
+            <span>¡No te olvides de guardar los cambios!</span>
+            <div>
+              <button type="button" className="is-secondary" onClick={() => {
+                const shouldCloseAfterReset = closeConfirmationOpen;
+                discardChanges();
+                setCloseConfirmationOpen(false);
+                if (shouldCloseAfterReset) onClose();
+              }} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
+                Restablecer
+              </button>
+              <button type="button" className="is-primary" onClick={() => void saveProfile()} disabled={!canSave || !hasUnsavedChanges} aria-label="Guardar cambios">
+                {busy ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <Save size={15}/>}
+                {busy ? "Guardando…" : "Guardar"}
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {appearancePicker && (
+        <div className="ps-community-picker-overlay">
+          <section ref={appearanceModalRef} id={appearancePicker === "nameStyle" ? "ps-community-name-style-picker" : undefined} className={"ps-community-picker-modal" + (appearancePicker === "nameStyle" ? " is-name-style-modal" : "")} role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
+            <header className="ps-community-picker-header">
+              <div>
+                {appearancePicker !== "nameStyle" && <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>}
+                <h2 id="ps-community-picker-title">
+                  {appearancePicker === "avatarFrame" ? "Cambiar marco de avatar"
+                    : appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
+                    : appearancePicker === "profileFrame" ? "Cambiar marco de perfil"
+                    : appearancePicker === "profileEffect" ? "Cambiar efecto de perfil"
+                    : appearancePicker === "nameStyle" ? "Estilo de nombre de visualización"
+                    : "Cambiar placa de identificación"}
+                </h2>
+                <p className={appearancePicker === "nameStyle" ? "is-empty" : ""}>
+                  {appearancePicker === "avatarFrame" ? "Elige el contorno que rodea tu imagen de perfil."
+                    : appearancePicker === "avatarDecoration" ? "Elige el detalle animado que acompaña tu avatar."
+                    : appearancePicker === "profileFrame" ? "Elige el contorno que rodea la tarjeta completa."
+                    : appearancePicker === "profileEffect" ? "Elige el ambiente animado que se reproduce en el perfil."
+                    : appearancePicker === "nameStyle" ? ""
+                    : "Elige la placa que acompaña tu nombre en la comunidad."}
+                </p>
+              </div>
+              <button type="button" onClick={() => setAppearancePicker(null)} aria-label="Cerrar selector"><X size={19}/></button>
+            </header>
+
+            <div className="ps-community-picker-layout">
+              <div
+                className="ps-community-picker-collection"
+                tabIndex={0}
+                aria-label="Opciones de estilo y color"
+                onPointerMove={handlePickerScrollbarPointerMove}
+                onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
+              >
+                {appearancePicker !== "nameStyle" && <div className="ps-community-picker-collection-heading">
+                  <strong>
+                    {appearancePicker === "avatarFrame" ? "Marcos de avatar"
+                      : appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
+                      : appearancePicker === "profileFrame" ? "Marcos de perfil"
+                      : appearancePicker === "profileEffect" ? "Efectos animados"
+                      : "Placas de identificación"}
+                  </strong>
+                  <span>Opciones disponibles</span>
+                </div>}
+
+                {appearancePicker === "avatarFrame" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {FRAMES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftAvatarFrame === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftAvatarFrame(item.id)} aria-pressed={draftAvatarFrame === item.id}>
+                        <span className={"ps-community-picker-avatar-large ps-community-picker-avatar-small frame-" + item.id}>
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="56px"/> : <span>{initials(displayName || "PeakScore")}</span>}
+                        </span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftAvatarFrame === item.id && <i><Check size={12}/></i>}
+                        <em>{avatarFrame === item.id ? "EQUIPADO" : draftAvatarFrame === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "avatarDecoration" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {AVATAR_DECORATIONS.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftDecorationId === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftDecorationId(item.id)} aria-pressed={draftDecorationId === item.id}>
+                        <span className={"ps-community-picker-avatar-decoration is-decoration-" + item.id}>
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="58px"/> : initials(displayName || "PeakScore")}
+                        </span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftDecorationId === item.id && <i><Check size={12}/></i>}
+                        <em>{avatarDecorationId === item.id ? "EQUIPADO" : draftDecorationId === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "profileFrame" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {PROFILE_FRAMES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftProfileFrameId === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftProfileFrameId(item.id)}
+                        onMouseEnter={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, true)}
+                        onMouseLeave={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, false)}
+                        onFocus={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, true)}
+                        onBlur={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, false)}
+                        aria-pressed={draftProfileFrameId === item.id}>
+                        <span className={"ps-community-picker-mini-profile is-profile-frame-" + item.id} aria-hidden="true">
+                          <span className="ps-community-picker-mini-banner" style={{ backgroundColor: cardColor }}/>
+                          <span className="ps-community-picker-mini-avatar">
+                            {profile.avatarUrl
+                              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
+                              : initials(displayName || "PeakScore")}
+                          </span>
+                          <span className="ps-community-picker-mini-name">{displayName || "Tu nombre"}</span>
+                          <span className="ps-community-picker-mini-border"/>
+                        </span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftProfileFrameId === item.id && <i><Check size={12}/></i>}
+                        <em>{profileFrameId === item.id ? "EQUIPADO" : draftProfileFrameId === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "profileEffect" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {PROFILE_EFFECTS.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftProfileEffectId === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftProfileEffectId(item.id)}
+                        onMouseEnter={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, true)}
+                        onMouseLeave={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, false)}
+                        onFocus={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, true)}
+                        onBlur={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, false)}
+                        aria-pressed={draftProfileEffectId === item.id}>
+                        <span className={"ps-community-picker-mini-profile is-effect is-profile-effect-" + item.id} aria-hidden="true">
+                          <span className="ps-community-picker-mini-banner" style={{ backgroundColor: cardColor }}/>
+                          <span className="ps-community-picker-mini-avatar">
+                            {profile.avatarUrl
+                              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
+                              : initials(displayName || "PeakScore")}
+                          </span>
+                          <span className="ps-community-picker-mini-name">{displayName || "Tu nombre"}</span>
+                          <span className="ps-community-picker-mini-art">
+                            <Image src="/profile-cosmetics/effects/starfall.svg" alt="" fill unoptimized sizes="95px"/>
+                            <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="95px"/>
+                          </span>
+                        </span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
+                        <em>{profileEffectId === item.id ? "EQUIPADO" : draftProfileEffectId === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "nameStyle" && (
+                  <div className="ps-community-name-style-controls">
+                    <section className="ps-community-name-style-group">
+                      <div className="ps-community-name-style-heading">Tipografías <span>{DISPLAY_NAME_STYLES.length} ESTILOS</span></div>
+                      <div className="ps-community-name-font-categories" role="group" aria-label="Familias tipográficas">
+                        {DISPLAY_NAME_FONT_CATEGORIES.map((category) => (
+                          <button key={category.id} type="button"
+                            className={"ps-community-name-font-category" + (draftDisplayNameFontCategory === category.id ? " is-selected" : "")}
+                            onClick={() => setDraftDisplayNameFontCategory(category.id)}
+                            aria-pressed={draftDisplayNameFontCategory === category.id}>
+                            <span>{category.label}</span>
+                            <small>{category.fonts.length}</small>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="ps-community-name-font-grid">
+                        {DISPLAY_NAME_STYLES.filter((item) => DISPLAY_NAME_FONT_CATEGORIES.find((category) => category.id === draftDisplayNameFontCategory)?.fonts.includes(item.id)).map((item) => (
+                          <button key={item.id} type="button"
+                            className={"ps-community-name-font-option is-name-style-" + item.id + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
+                            title={item.label + " · " + item.description}
+                            aria-label={item.label + ". " + item.description}
+                            onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
+                            <span>{item.sample}</span>
+                            <small className="ps-community-name-font-label">{item.label}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="ps-community-name-style-group ps-community-name-color-style-group">
+                      <div className="ps-community-name-style-heading">
+                        Color de letra
+                        <span>{draftDisplayNameColorMode === "single" ? "TONO" : draftDisplayNameColorMode === "gradient" ? "DEGRADADO" : draftDisplayNameColorMode === "spectrum" ? "ESPECTRO" : "AUTOMÁTICO"}</span>
+                      </div>
+                      {draftDisplayNameColorMode === "single" && (
+                        <>
+                          <div className="ps-community-name-colors-row">
+                            <DisplayNameCustomColorPicker
+                              value={draftDisplayNameGradientStart}
+                              selected={draftDisplayNameColor === "custom-gradient"}
+                              onApply={(color) => {
+                                setDraftDisplayNameGradientStart(color);
+                                setDraftDisplayNameColor("custom-gradient");
+                              }}
+                              onReset={() => setDraftDisplayNameColor("default")}
+                            />
+                            <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Colores de letra">
+                              {DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id)).map((item) => (
+                                <button key={item.id} type="button"
+                                  className={"ps-community-name-preset-swatch" + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                                  style={{ background: item.value }}
+                                  aria-label={item.label} aria-pressed={draftDisplayNameColor === item.id} title={item.label}
+                                  onClick={() => setDraftDisplayNameColor(item.id)}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {draftDisplayNameColorMode === "gradient" && (
+                        <>
+                          <div className="ps-community-name-preset-grid" role="group" aria-label="Degradados de letra">
+                            {DISPLAY_NAME_GRADIENT_PRESETS.map((preset) => {
+                              const selected = draftDisplayNameGradientStart.toUpperCase() === preset.start && draftDisplayNameGradientEnd.toUpperCase() === preset.end;
+                              return (
+                                <button
+                                  key={preset.id}
+                                  type="button"
+                                  className={"ps-community-name-preset-swatch" + (selected ? " is-selected" : "")}
+                                  style={{ background: "linear-gradient(110deg," + preset.start + "," + preset.end + ")" }}
+                                  aria-label={preset.label}
+                                  aria-pressed={selected}
+                                  title={preset.label}
+                                  onClick={() => {
+                                    setDraftDisplayNameColor("custom-gradient");
+                                    setDraftDisplayNameGradientStart(preset.start);
+                                    setDraftDisplayNameGradientEnd(preset.end);
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                          <div className="ps-community-name-custom-gradient-stops">
+                            <div className="ps-community-name-gradient-stop"><span>Color inicial</span><DisplayNameCustomColorPicker
+                              value={draftDisplayNameGradientStart}
+                              selected={true}
+                              onApply={(color) => {
+                                setDraftDisplayNameColor("custom-gradient");
+                                setDraftDisplayNameGradientStart(color);
+                              }}
+                            /></div>
+                            <div className="ps-community-name-gradient-stop"><span>Color final</span><DisplayNameCustomColorPicker
+                              value={draftDisplayNameGradientEnd}
+                              selected={true}
+                              onApply={(color) => {
+                                setDraftDisplayNameColor("custom-gradient");
+                                setDraftDisplayNameGradientEnd(color);
+                              }}
+                            /></div>
+                          </div>
+                        </>
+                      )}
+                      {draftDisplayNameColorMode === "spectrum" && (
+                        <div className="ps-community-name-spectrum-presets ps-community-name-prism-editor" role="group" aria-label="Paletas de letra">
+                          {DISPLAY_NAME_SPECTRUM_PRESETS.map((preset) => {
+                            const selected = JSON.stringify(draftDisplayNamePrismColors) === JSON.stringify(preset.colors);
+                            return (
+                              <button
+                                key={preset.id}
+                                type="button"
+                                className={"ps-community-name-spectrum-swatch" + (selected ? " is-selected" : "")}
+                                style={{ background: "linear-gradient(90deg," + preset.colors.join(",") + ")" }}
+                                aria-label={preset.label}
+                                aria-pressed={selected}
+                                title={preset.label}
+                                onClick={() => setDraftDisplayNamePrismColors(preset.colors.slice())}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                      {draftDisplayNameColorMode === "automatic" && (
+                        <p className="ps-community-name-color-auto-note">Este acabado administra su propia paleta para mantener el reflejo y los colores sincronizados.</p>
+                      )}
+                    </section>
+
+
+                  </div>
+                )}
+
+                {appearancePicker === "plate" && (
+                  <div className="ps-community-picker-items is-plates">
+                    {PLATES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item is-plate-item" + (draftPlate === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftPlate(item.id)} aria-pressed={draftPlate === item.id}>
+                        <span className={"ps-community-picker-member-option is-plate-" + item.id}>
+                          <span className="ps-community-picker-member-avatar">
+                            {profile.avatarUrl
+                              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="34px"/>
+                              : initials(displayName || "PeakScore")}
+                          </span>
+                          <span className="ps-community-picker-member-copy">
+                            <strong className={"ps-community-picker-member-name is-plate-" + item.id + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}>{displayName || "Tu nombre"}</strong>
+                            <small>{profile.roles[0]?.label ?? "Miembro"}</small>
+                          </span>
+                        </span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftPlate === item.id && <i><Check size={12}/></i>}
+                        <em>{plateStyle === item.id ? "EQUIPADO" : draftPlate === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <aside
+                className="ps-community-picker-preview"
+                tabIndex={0}
+                aria-label="Vistas previas del nombre"
+                onPointerMove={handlePickerScrollbarPointerMove}
+                onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
+              >
+                {appearancePicker !== "nameStyle" && <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>}
+                {appearancePicker === "avatarFrame" && (
+                  <div className="ps-community-picker-frame-stage">
+                    <div className={"ps-community-picker-avatar-large frame-" + draftAvatarFrame}>
+                      {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
+                    </div>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{accountTag(profile.accountName)}</small>
+                  </div>
+                )}
+                {appearancePicker === "avatarDecoration" && (
+                  <div className="ps-community-picker-frame-stage">
+                    <div className={"ps-community-picker-avatar-large is-decoration-" + draftDecorationId}>
+                      {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
+                    </div>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{accountTag(profile.accountName)}</small>
+                  </div>
+                )}
+                {appearancePicker === "profileFrame" && (
+                  <article className={"ps-community-picker-card-preview is-profile-frame-" + draftProfileFrameId}>
+                    <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
+                    <div className="ps-community-picker-card-preview-body">
+                      <span className="ps-community-picker-card-preview-avatar">
+                        {profile.avatarUrl
+                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/>
+                          : initials(displayName || "PeakScore")}
+                      </span>
+                      <strong>{displayName || "Tu nombre"}</strong>
+                      <small>{accountTag(profile.accountName)}</small>
+                      <span>PERFIL DE COMUNIDAD</span>
+                    </div>
+                  </article>
+                )}
+                {appearancePicker === "profileEffect" && (
+                  <article className={"ps-community-picker-card-preview is-profile-effect-" + draftProfileEffectId}>
+                    <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
+                    <div className="ps-community-picker-card-preview-body">
+                      <span className="ps-community-picker-card-preview-avatar">
+                        {profile.avatarUrl
+                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/>
+                          : initials(displayName || "PeakScore")}
+                      </span>
+                      <strong>{displayName || "Tu nombre"}</strong>
+                      <small>{accountTag(profile.accountName)}</small>
+                      <span>VISTA PREVIA DEL EFECTO</span>
+                    </div>
+                    <span className="ps-community-picker-card-preview-art" aria-hidden="true">
+                      <Image src="/profile-cosmetics/effects/starfall.svg" alt="" fill unoptimized sizes="320px"/>
+                      <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="320px"/>
+                    </span>
+                  </article>
+                )}
+                {appearancePicker === "nameStyle" && (
+                  <div className="ps-community-name-preview-stage" style={{ "--status-theme-text": profileThemeInk, "--editor-theme-text": profileThemeInk, } as CSSProperties}>
+                    <section className="ps-community-name-preview-profile-view">
+                      <div className="ps-community-name-context-label">PERFIL</div>
+                      <article className="ps-community-name-style-profile-preview"
+                        aria-live="polite"
+                        style={{
+                          "--status-theme": cardColor,
+                          "--status-theme-secondary": themeColorSecondary,
+                          "--status-theme-text": profileThemeInk,
+                                                    "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none",
+                          "--name-gradient-start": draftDisplayNameGradientStart,
+                          "--name-gradient-end": draftDisplayNameGradientEnd,
+                          "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
+                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : draftDisplayNameColor === "default" ? profileThemeInk : draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk,
+                        } as CSSProperties}>
+                        <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}
+                          <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
+                        </div>
+                        <div className="ps-community-name-style-profile-copy">
+                          <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"}
+                            animation={draftDisplayNameAnimation}
+                            className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
+                            style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
+                          />
+                          <small className="ps-community-name-style-profile-handle">{accountTag(profile.accountName)}</small>
+                        </div>
+                      </article>
+                    </section>
+                    <section className="ps-community-name-preview-members-view">
+                      <div className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD</div>
+                      <div className="ps-community-name-community-shell">
+                        <div className="ps-community-name-community-channel"><span className="ps-community-name-channel-hash">#</span> general</div>
+                        <div className="ps-community-name-members-title">MIEMBROS — 1</div>
+                        <div className="ps-community-name-member-row">
+                          <span className={"ps-community-name-member-avatar frame-" + avatarFrame}>
+                            {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
+                          </span>
+                          <div className="ps-community-name-member-copy">
+                            <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"}
+                              animation={draftDisplayNameAnimation}
+                              className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
+                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                    <section className="ps-community-name-preview-chat-view">
+                      <div className="ps-community-name-context-label">CHAT</div>
+                      <div className="ps-community-name-chat-message">
+                        <span className="ps-community-name-chat-avatar">
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/> : initials(displayName || "PeakScore")}
+                        </span>
+                        <div className="ps-community-name-chat-content">
+                          <div className="ps-community-name-chat-meta">
+                            <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"}
+                              animation={draftDisplayNameAnimation}
+                              className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
+                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
+                            />
+                          </div>
+                          <p>Así se verá tu nombre al participar en la conversación.</p>
+                        </div>
+                      </div>
+                    </section>
+                    
+                  </div>
+                )}
+                {appearancePicker !== "nameStyle" && <div className="ps-community-picker-selection">
+                  <span>SELECCIÓN ACTUAL</span>
+                  <strong>
+                    {appearancePicker === "avatarFrame" ? FRAMES.find((item) => item.id === draftAvatarFrame)?.label
+                      : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.label
+                      : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.label
+                      : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.label
+                      : PLATES.find((item) => item.id === draftPlate)?.label}
+                  </strong>
+                  <p>
+                    {appearancePicker === "avatarFrame" ? FRAMES.find((item) => item.id === draftAvatarFrame)?.description
+                      : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.description
+                      : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.description
+                      : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.description
+                      : PLATES.find((item) => item.id === draftPlate)?.description}
+                  </p>
+                </div>}
+              </aside>
+            </div>
+
+            <footer className={"ps-community-picker-footer" + (appearancePicker === "nameStyle" ? " is-name-style-footer" : "")}>
+              <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
+              <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>
+                {hasPickerChanges ? "Aplicar" : "Ya equipado"}
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {avatarPickerOpen && (
+        <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) setAvatarPickerOpen(false);
+        }}>
+          <section className="ps-community-avatar-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-picker-title">
+            <header>
+              <div><h2 id="ps-community-avatar-picker-title">Cambiar avatar</h2><p>Elige una imagen o explora tu colección de carteles.</p></div>
+              <button type="button" onClick={() => setAvatarPickerOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
+            </header>
+            <div className="ps-community-avatar-picker-options">
+              <button type="button" className="is-image-choice" onClick={() => avatarInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art">{profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : <ImagePlus size={28}/>}</span>
+                <span className="ps-community-avatar-choice-copy"><strong>Elegir imagen</strong><small>PNG, JPG o WebP</small></span>
+              </button>
+              <button type="button" className="is-collection-choice" onClick={() => { setAvatarPickerOpen(false); setPosterCollectionTarget("avatar"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>
+              </button>
+            </div>
+            {uploading === "avatar" && <div className="ps-community-avatar-picker-progress"><LoaderCircle size={15}/> Actualizando avatar…</div>}
+            <footer><button type="button" onClick={() => setAvatarPickerOpen(false)}>Cancelar</button></footer>
+          </section>
+        </div>
+      )}
+      {bannerPickerOpen && (
+        <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) setBannerPickerOpen(false);
+        }}>
+          <section className="ps-community-avatar-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-banner-picker-title">
+            <header>
+              <div><h2 id="ps-community-banner-picker-title">Decorar cartel de perfil</h2><p>Sube una imagen o consulta tu colección de carteles.</p></div>
+              <button type="button" onClick={() => setBannerPickerOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
+            </header>
+            <div className="ps-community-avatar-picker-options">
+              <button type="button" className="is-image-choice" onClick={() => bannerImageInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art">{profile.bannerUrl ? <span className="ps-community-banner-choice-thumbnail" style={{ backgroundImage: "url(" + profile.bannerUrl + ")" }}/> : <ImagePlus size={28}/>}</span>
+                <span className="ps-community-avatar-choice-copy"><strong>Subir imagen</strong><small>PNG, JPG o WebP</small></span>
+              </button>
+              <button type="button" className="is-collection-choice" onClick={() => { setBannerPickerOpen(false); setPosterCollectionTarget("banner"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>
+              </button>
+            </div>
+            {uploading === "banner" && <div className="ps-community-avatar-picker-progress"><LoaderCircle size={15}/> Actualizando cartel…</div>}
+            <footer><button type="button" onClick={() => setBannerPickerOpen(false)}>Cancelar</button></footer>
+          </section>
+        </div>
+      )}
+      {posterCollectionOpen && (
+        <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) { setPosterCollectionOpen(false); setPosterCollectionTarget(null); }
+        }}>
+          <section className="ps-community-avatar-picker-modal ps-community-poster-collection-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-poster-collection-title">
+            <header>
+              <div><h2 id="ps-community-poster-collection-title">Colección de carteles</h2><p>Tu espacio para guardar y elegir carteles de perfil.</p></div>
+              <button type="button" onClick={() => { setPosterCollectionOpen(false); setPosterCollectionTarget(null); }} aria-label="Cerrar colección"><X size={19}/></button>
+            </header>
+            <div className="ps-community-poster-collection-empty" role="status">
+              <Film size={30}/>
+              <strong>Tu colección está vacía</strong>
+              <p>Todavía no hay carteles disponibles. Aquí aparecerán cuando agreguemos contenido a la colección.</p>
+            </div>
+            <footer><button type="button" onClick={() => {
+              const target = posterCollectionTarget;
+              setPosterCollectionOpen(false); setPosterCollectionTarget(null);
+              if (target === "avatar") setAvatarPickerOpen(true);
+              if (target === "banner") setBannerPickerOpen(true);
+            }}>Volver</button></footer>
+          </section>
+        </div>
+      )}
+      {avatarCropUrl && (
+        <div className="ps-community-avatar-crop-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) closeAvatarCrop();
+        }}>
+          <section ref={avatarCropModalRef} className="ps-community-avatar-crop-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-crop-title">
+            <header>
+              <div><h2 id="ps-community-avatar-crop-title">Ajustar avatar</h2><p>Arrastra la imagen para encuadrarla.</p></div>
+              <button type="button" onClick={closeAvatarCrop} aria-label="Cerrar recorte"><X size={18}/></button>
+            </header>
+            <div
+              className="ps-community-avatar-crop-stage"
+              onPointerDown={handleAvatarCropPointerDown}
+              onPointerMove={handleAvatarCropPointerMove}
+              onPointerUp={handleAvatarCropPointerUp}
+              onPointerCancel={handleAvatarCropPointerUp}
+            >
+              <Image src={avatarCropUrl} alt="Vista previa del recorte" fill unoptimized sizes="320px" draggable={false} style={{
+                transform: "scale(" + avatarCropZoom + ")",
+                transformOrigin: avatarCropX + "% " + avatarCropY + "%",
+              }}/>
+              <span/>
+            </div>
+            <div className="ps-community-avatar-crop-controls">
+              <label><span>Zoom</span><input type="range" min="1" max="3" step="0.05" value={avatarCropZoom} onChange={(event) => setAvatarCropZoom(Number(event.target.value))}/></label>
+            </div>
+            <footer>
+              <button type="button" onClick={closeAvatarCrop}>Cancelar</button>
+              <button type="button" className="is-primary" onClick={confirmAvatarCrop}>Aplicar</button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {statusEditorOpen && (
+        <div className="ps-community-status-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) setStatusEditorOpen(false);
+        }}>
+          <section ref={statusModalRef} className="ps-community-status-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-status-title">
+            <header>
+              <h2 id="ps-community-status-title">Establecer estado</h2>
+              <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
+            </header>
+
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": profileThemeInk, "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
+              <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
+                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
+                <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
+              </div>
+              <div className="ps-community-status-preview-bubble-wrap">
+                
+                <div className="ps-community-status-bubble">
+                  {statusDraft.trim() || <span className="ps-community-status-placeholder">¿Qué ganas de...</span>}
+                </div>
+              </div>
+              <div className="ps-community-status-profile-copy" style={{ color: "var(--status-theme-text)" }}>
+                <DisplayNameMotionPreview tag="strong" value={displayName || "Tu perfil"}
+                  animation={displayNameAnimation}
+                  className={"ps-community-name-render ps-community-profile-name is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
+                  style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk } as CSSProperties}
+                />
+                <small>{accountTag(profile.accountName)}</small>
+                {pronouns && <small>{pronouns}</small>}
+              </div>
+            </div>
+
+            <label ref={statusEmojiFieldRef} className="ps-community-status-field">
+              <span>Estado</span>
+              <div className="ps-community-status-input-wrap">
+                <button type="button" className="ps-community-status-emoji-trigger" aria-label="Añadir emoji" aria-expanded={statusEmojiOpen} onClick={() => setStatusEmojiOpen((value) => !value)}><Smile size={20}/></button>
+                <input ref={statusInputRef} autoFocus value={statusDraft} maxLength={128} onChange={(event) => setStatusDraft(event.target.value)} onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    applyStatusDraft();
+                  }
+                  if (event.key === "Escape") setStatusEmojiOpen(false);
+                }} placeholder="¿Qué ganas de..."/>
+                {statusDraft && <button type="button" className="ps-community-status-clear-input" aria-label="Borrar texto" onClick={() => { setStatusDraft(""); statusInputRef.current?.focus(); }}><X size={15}/></button>}
+              </div>
+              {statusEmojiOpen && (
+                <div className="ps-community-status-emoji-picker" role="group" aria-label="Selector de emojis" onPointerDown={(event) => event.stopPropagation()}>
+                  <div className="ps-community-status-emoji-search">
+                    <Smile size={16}/>
+                    <input value={statusEmojiSearch} onChange={(event) => setStatusEmojiSearch(event.target.value)} placeholder="Encuentra el emoji perfecto" aria-label="Buscar emojis"/>
+                    {statusEmojiSearch && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setStatusEmojiSearch("")}><X size={13}/></button>}
+                  </div>
+                  <div className="ps-community-status-emoji-categories">
+                    {STATUS_EMOJI_CATEGORIES.map((category) => (
+                      <button type="button" key={category} className={statusEmojiCategory === category ? "is-active" : ""} onClick={() => setStatusEmojiCategory(category)}>{category}</button>
+                    ))}
+                  </div>
+                  <div className="ps-community-status-emoji-picker-heading">{statusEmojiSearch ? "Resultados" : statusEmojiCategory === "Todos" ? "Todos los emojis" : statusEmojiCategory === "Frecuentes" ? "Usados frecuentemente" : statusEmojiCategory}</div>
+                  <div className="ps-community-status-emoji-grid">
+                    {STATUS_EMOJI_ITEMS.filter((item) => (statusEmojiCategory === "Todos" || item.category === statusEmojiCategory || (statusEmojiCategory === "Frecuentes" && item.category === "Frecuentes")) && (!statusEmojiSearch || (item.name + " " + item.emoji).toLowerCase().includes(statusEmojiSearch.toLowerCase()))).map((item) => (
+                      <button type="button" key={item.emoji} onClick={() => insertStatusEmoji(item.emoji)} aria-label={`Insertar ${item.name}`} title={item.name}>{item.emoji}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </label>
+
+            <div ref={statusDurationRef} className="ps-community-status-expiry">
+              <button type="button" className="ps-community-status-expiry-trigger" aria-expanded={statusDurationOpen} onClick={() => { setStatusDurationOpen((value) => !value); setStatusEmojiOpen(false); }}>
+                <span>{statusExpiryLabel(statusDuration)}</span>
+                <span className={"ps-community-status-chevron" + (statusDurationOpen ? " is-open" : "")}>⌄</span>
+              </button>
+              {statusDurationOpen && (
+                <div className="ps-community-status-expiry-menu" role="listbox" aria-label="Borrar estado después de">
+                  <div className="ps-community-status-expiry-heading">Borrar después de</div>
+                  {(["1d","4h","1h","30m","1w","never"] as StatusDuration[]).map((duration) => (
+                    <button type="button" role="option" aria-selected={statusDuration === duration} className={statusDuration === duration ? "is-selected" : ""} key={duration} onClick={() => { setStatusDuration(duration); setStatusDurationOpen(false); }}>
+                      <span>{statusExpiryLabel(duration, true)}</span>
+                      {statusDuration === duration && <Check size={16}/>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <footer>
+              {(status || statusDraft) ? (
+                <button type="button" className="is-clear" onClick={() => { setStatusDraft(""); setStatus(""); setStatusExpiresAt(null); setStatusEmojiOpen(false); setStatusDurationOpen(false); setStatusEditorOpen(false); }}>Borrar estado</button>
+              ) : <span className="ps-community-status-footer-spacer"/>}
+              <button type="button" className="is-save" onClick={applyStatusDraft} disabled={busy}>Guardar</button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+<style jsx global>{`
+/* PeakScore final pass: editable identity, shared theme ink and consistent presence. */
+.ps-community-editor-preview-name-edit-trigger{display:inline-flex!important;align-items:center!important;gap:7px!important;max-width:100%!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--editor-theme-text,#f2f3f5)!important;text-align:left!important;cursor:text!important}
+.ps-community-editor-preview-name-edit-trigger>svg{flex:0 0 auto!important;opacity:0!important;color:var(--editor-theme-text,#f2f3f5)!important;transition:opacity .12s ease!important}
+.ps-community-editor-preview-name-edit-trigger:hover>svg,.ps-community-editor-preview-name-edit-trigger:focus-visible>svg{opacity:.72!important}
+.ps-community-editor-preview-name-inline-input{display:block!important;width:min(100%,420px)!important;max-width:100%!important;min-height:34px!important;margin:0!important;padding:0 2px!important;border:0!important;border-bottom:1px solid color-mix(in srgb,var(--editor-theme-text,#fff) 55%,transparent)!important;border-radius:0!important;background:transparent!important;color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;caret-color:var(--editor-theme-text,#f2f3f5)!important;font:inherit!important;font-size:inherit!important;font-weight:850!important;outline:none!important;box-shadow:none!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-static.color-default{color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag{color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;background:color-mix(in srgb,var(--editor-theme-text,#f2f3f5) 12%,transparent)!important;border-color:color-mix(in srgb,var(--editor-theme-text,#f2f3f5) 24%,transparent)!important;text-shadow:none!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns{color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;caret-color:var(--editor-theme-text,#f2f3f5)!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,.ps-community-editor-preview-card .ps-community-editor-preview-meta,.ps-community-editor-preview-card .ps-community-editor-bio-display{color:var(--editor-theme-body-text,var(--editor-theme-text,#f2f3f5))!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small,.ps-community-editor-preview-card .ps-community-editor-preview-meta strong{color:var(--editor-theme-body-text,var(--editor-theme-text,#f2f3f5))!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot{position:absolute!important;right:-4px!important;bottom:0!important;width:18px!important;height:18px!important;box-sizing:border-box!important;border:4px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline{background:#747b86!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::before,.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::after,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after{display:none!important;content:none!important;box-shadow:none!important}
+.ps-community-avatar-picker-modal>header{border-bottom:0!important}
+.ps-community-avatar-picker-modal>footer{border-top:0!important}
+.ps-community-avatar-choice-art.is-collection-art{background:linear-gradient(145deg,#202932,#252b35)!important;color:#bdc8e0!important}
+.ps-community-avatar-choice-art .ps-community-banner-choice-thumbnail{position:absolute;inset:0;background-size:cover;background-position:center}
+.ps-community-editor-banner-current-row{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
+.ps-community-editor-banner-current.is-action{flex:1 1 auto!important;width:100%!important;text-align:left!important;cursor:pointer!important}
+.ps-community-editor-banner-current.is-action>svg{margin-left:auto!important;flex:0 0 auto!important;color:#bdc8e0!important}
+.ps-community-editor-banner-current.is-action:hover{border-color:#687cf2!important;background:#2b2e38!important}
+.ps-community-editor-banner-remove{display:grid!important;flex:0 0 32px!important;width:32px!important;height:32px!important;place-items:center!important;border:1px solid #444850!important;border-radius:8px!important;background:#292b31!important;color:#ed777d!important}
+.ps-community-poster-collection-modal{min-height:320px!important}
+.ps-community-poster-collection-empty{display:flex!important;min-height:205px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:10px!important;padding:26px!important;text-align:center!important;color:#aeb7c8!important}
+.ps-community-poster-collection-empty>svg{color:#9eabc1!important;opacity:.8!important}
+.ps-community-poster-collection-empty>strong{color:#eef1f6!important;font-size:14px!important}
+.ps-community-poster-collection-empty>p{max-width:320px!important;margin:0!important;color:#9ea8b9!important;font-size:11px!important;line-height:1.55!important}
+
+/* Discord-like inline biography: no inner scrollbar, natural height and readable input surface. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  border-color: var(--editor-card, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px var(--editor-card, #B7D7C3), 0 7px 18px #0006 !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot {
+  border: 4px solid var(--editor-card, #B7D7C3) !important;
+  background: #23a55a !important;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 12%) !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after {
+  display:none !important; content:none !important; animation:none !important; box-shadow:none !important;
+}
+
+/* Discord-style presence: green center with a theme-colored outer ring. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  border-color: var(--editor-card, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px var(--editor-card, #B7D7C3), 0 7px 18px #0006 !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot {
+  width: 18px !important;
+  height: 18px !important;
+  border: 4px solid var(--editor-card, var(--status-theme, #B7D7C3)) !important;
+  outline: 0 !important;
+  background: #23a55a !important;
+  box-shadow: none !important;
+}
+.ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+  border-color: var(--status-theme, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px var(--status-theme, #B7D7C3), 0 6px 18px #0006 !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot.is-offline {
+  background: #747b86 !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot::after,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot::before,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot::after,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot::before,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot::after {
+  display: none !important;
+  content: none !important;
+  box-shadow: none !important;
+}
+/* Theme-aware identity ink: the name and account handle follow the card contrast. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-static.color-default {
+  color: var(--editor-theme-text, #f2f3f5) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #f2f3f5) !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  color: var(--editor-theme-text, #f2f3f5) !important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy {
+  color: var(--status-theme-text, #202126) !important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy > strong.color-default {
+  color: var(--status-theme-text, #202126) !important;
+  -webkit-text-fill-color: var(--status-theme-text, #202126) !important;
+}
+
+/* Pronouns behave like a compact, theme-integrated multiline identity field. */
+.ps-community-editor-preview-identity-line {
+  display: flex !important;
+  align-items: flex-start !important;
+  flex-wrap: nowrap !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+.ps-community-editor-preview-tag {
+  flex: 0 0 auto !important;
+  align-self: flex-start !important;
+}
+.ps-community-editor-preview-pronouns {
+  display: block !important;
+  flex: 0 1 170px !important;
+  width: 170px !important;
+  min-width: 76px !important;
+  max-width: min(190px, calc(100% - 110px)) !important;
+  min-height: 26px !important;
+  /* Height is set from scrollHeight so wrapped pronouns expand downward. */
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 3px 4px !important;
+  resize: none !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  box-sizing: border-box !important;
+  border: 1px solid transparent !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: var(--editor-theme-text, #f2f3f5) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #f2f3f5) !important;
+  caret-color: var(--editor-theme-text, #fff) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+.ps-community-editor-preview-pronouns::-webkit-scrollbar { display:none !important; }
+.ps-community-editor-preview-pronouns::placeholder {
+  color: var(--editor-theme-text, #f2f3f5) !important;
+  opacity: .62 !important;
+  font-style: italic !important;
+}
+.ps-community-editor-preview-pronouns:hover {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+.ps-community-editor-preview-pronouns:focus {
+  color: var(--editor-theme-text, #fff) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.ps-community-editor-preview-tag {
+  color:#f2f3f5 !important; background:rgb(30 31 34 / 78%) !important;
+  border-color:rgb(255 255 255 / 22%) !important; text-shadow:0 1px 2px #0006 !important;
+}
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline {
+  display:block !important; width:100% !important; min-height:36px !important;
+  max-height:none !important; padding:8px 10px !important;
+  margin:5px 0 0 !important; resize:none !important; overflow:hidden !important;
+  scrollbar-width:none !important; -ms-overflow-style:none !important;
+  box-sizing:border-box !important; border:1px solid rgb(255 255 255 / 18%) !important;
+  border-radius:7px !important; background:rgb(30 31 34 / 88%) !important;
+  color:#f2f3f5 !important; -webkit-text-fill-color:#f2f3f5 !important;
+  caret-color:#fff !important; line-height:1.45 !important; white-space:pre-wrap !important;
+}
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline::-webkit-scrollbar { display:none !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline::placeholder { color:#b5bac1 !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline:focus {
+  border-color:#5865f2 !important; background:rgb(30 31 34 / 92%) !important;
+  outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important;
+}
+
+/* Compact avatar chooser and first-party banner asset controls. */
+.ps-community-avatar-picker-overlay{position:fixed!important;inset:0!important;z-index:10090!important;display:grid!important;place-items:center!important;padding:20px!important;background:rgb(0 0 0 / 72%)!important;backdrop-filter:blur(9px)!important}
+.ps-community-avatar-picker-modal{width:min(430px,calc(100vw - 32px))!important;overflow:hidden!important;border:1px solid #3b3e46!important;border-radius:14px!important;background:#202127!important;color:#f2f3f5!important;box-shadow:0 24px 80px #0009!important}
+.ps-community-avatar-picker-modal>header{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:14px!important;padding:20px 20px 17px!important;border-bottom:1px solid #34363d!important}
+.ps-community-avatar-picker-modal>header span{display:block!important;margin-bottom:6px!important;color:#969daa!important;font:750 8px/1.2 var(--font-silkscreen),monospace!important;letter-spacing:.12em!important}
+.ps-community-avatar-picker-modal>header h2{margin:0!important;color:#f2f3f5!important;font-size:19px!important;font-weight:750!important}
+.ps-community-avatar-picker-modal>header p{margin:5px 0 0!important;color:#aeb4bf!important;font-size:12px!important}
+.ps-community-avatar-picker-modal>header>button{display:grid!important;width:32px!important;height:32px!important;place-items:center!important;border:1px solid #3b3e46!important;border-radius:8px!important;background:#2b2d31!important;color:#c7ccd4!important}
+.ps-community-avatar-picker-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;padding:18px 20px 20px!important}
+.ps-community-avatar-picker-options>button{display:grid!important;min-height:144px!important;align-content:center!important;justify-items:center!important;gap:8px!important;padding:16px 12px!important;border:1px solid #3b3e46!important;border-radius:11px!important;background:linear-gradient(180deg,#2b2d34,#25272d)!important;color:#e5e7eb!important;transition:border-color 120ms ease,background 120ms ease,transform 120ms ease!important}
+.ps-community-avatar-picker-options>button:hover{transform:translateY(-2px)!important;border-color:#7884a0!important;background:#31343c!important}
+.ps-community-avatar-picker-options>button>span{display:grid!important;width:44px!important;height:44px!important;place-items:center!important;border:1px solid #4d5360!important;border-radius:12px!important;background:#1e2026!important;color:#c6d1ff!important}
+.ps-community-avatar-picker-options strong{font-size:13px!important;font-weight:750!important}
+.ps-community-avatar-picker-options small{color:#9ca3af!important;font-size:10px!important}
+.ps-community-avatar-picker-modal>footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:12px 20px!important;border-top:1px solid #34363d!important;color:#9299a5!important;font-size:10px!important}
+.ps-community-avatar-picker-modal>footer button{padding:7px 12px!important;border:1px solid #454954!important;border-radius:7px!important;background:#2b2d31!important;color:#e4e6eb!important}
+.ps-community-editor-banner-tools{display:grid!important;gap:9px!important}
+.ps-community-editor-banner-current{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important;padding:8px!important;border:1px solid #373940!important;border-radius:9px!important;background:#25272d!important}
+.ps-community-editor-banner-current-preview{flex:0 0 72px!important;width:72px!important;height:40px!important;border-radius:6px!important;background:#182a2e!important;background-size:cover!important;background-position:center!important}
+.ps-community-editor-banner-current>span:nth-child(2){display:grid!important;min-width:0!important;gap:3px!important}
+.ps-community-editor-banner-current strong{color:#e4e6eb!important;font-size:11px!important}
+.ps-community-editor-banner-current small{color:#9da4b0!important;font-size:9px!important}
+.ps-community-editor-banner-current>button{margin-left:auto!important;display:grid!important;width:29px!important;height:29px!important;place-items:center!important;border:1px solid #444850!important;border-radius:7px!important;background:#292b31!important;color:#ed777d!important}
+.ps-community-editor-banner-upload-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+.ps-community-editor-banner-upload-button{display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:36px!important;padding:7px!important;border:1px solid #424650!important;border-radius:8px!important;background:#2b2d31!important;color:#e4e6eb!important;font-size:10px!important;font-weight:700!important;transition:background 100ms ease,border-color 100ms ease!important}
+.ps-community-editor-banner-upload-button:hover{background:#363941!important;border-color:#707987!important}
+.ps-community-editor-banner-upload-button:disabled{opacity:.55!important;cursor:wait!important}
+
+/* Thin, hover-only scrollbar on the left settings rail. */
+.ps-community-editor-settings-sidebar{overflow-y:auto!important;overscroll-behavior:contain!important;scrollbar-width:none!important;scrollbar-color:transparent transparent!important}
+.ps-community-editor-settings-sidebar:hover{scrollbar-width:thin!important;scrollbar-color:#59616d transparent!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar{width:5px!important;background:transparent!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb{border-radius:8px!important;background:transparent!important}
+.ps-community-editor-settings-sidebar:hover::-webkit-scrollbar-thumb{background:#59616d!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-track{background:transparent!important}
+
+/* Professional, compact avatar cropper. */
+.ps-community-avatar-crop-modal{width:min(480px,calc(100vw - 28px))!important;padding:0!important;overflow:hidden!important;border:1px solid #3d414a!important;border-radius:15px!important;background:#202127!important;box-shadow:0 24px 80px #0009!important}
+.ps-community-avatar-crop-modal>header{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:17px 19px!important;border-bottom:1px solid #34363d!important}
+.ps-community-avatar-crop-modal>header span{display:block!important;margin-bottom:5px!important;color:#969daa!important;font:750 8px/1.2 var(--font-silkscreen),monospace!important;letter-spacing:.12em!important}
+.ps-community-avatar-crop-modal>header h2{margin:0!important;color:#f2f3f5!important;font-size:18px!important;font-weight:750!important}
+.ps-community-avatar-crop-stage{position:relative!important;width:min(320px,calc(100vw - 78px))!important;height:min(320px,calc(100vw - 78px))!important;margin:20px auto 16px!important;overflow:hidden!important;border:1px solid #454954!important;border-radius:12px!important;background:radial-gradient(circle,#2d3038,#17191f)!important;box-shadow:inset 0 0 0 1px #ffffff08!important}
+.ps-community-avatar-crop-stage>img{width:100%!important;height:100%!important;object-fit:contain!important}
+.ps-community-avatar-crop-stage>span{position:absolute!important;inset:0!important;border:1px solid rgb(255 255 255 / 12%)!important;border-radius:50%!important;box-shadow:0 0 0 999px rgb(0 0 0 / 23%),inset 0 0 0 1px rgb(255 255 255 / 15%)!important;pointer-events:none!important}
+.ps-community-avatar-crop-controls{display:grid!important;gap:12px!important;padding:0 22px 18px!important}
+.ps-community-avatar-crop-controls label{display:grid!important;grid-template-columns:116px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;color:#b8bec8!important;font-size:11px!important}
+.ps-community-avatar-crop-controls input[type=range]{width:100%!important;accent-color:#7b8cff!important}
+.ps-community-avatar-crop-modal>p{margin:0!important;padding:0 22px 15px!important;color:#9299a5!important;font-size:10px!important}
+.ps-community-avatar-crop-modal>footer{display:flex!important;justify-content:flex-end!important;gap:8px!important;padding:13px 18px!important;border-top:1px solid #34363d!important;background:#1c1e23!important}
+.ps-community-avatar-crop-modal>footer button{min-height:34px!important;padding:7px 13px!important;border:1px solid #424650!important;border-radius:8px!important;background:#2b2d31!important;color:#e4e6eb!important;font-size:11px!important;font-weight:700!important}
+.ps-community-avatar-crop-modal>footer button.is-primary{border-color:#6476f1!important;background:#5668df!important;color:white!important}
+@media(max-width:560px){.ps-community-avatar-picker-options{grid-template-columns:1fr!important}.ps-community-avatar-picker-options>button{min-height:100px!important}.ps-community-avatar-crop-controls label{grid-template-columns:92px minmax(0,1fr)!important}}
+/* The Name Atelier custom colour panel is placed in the grid below the swatches,
+   never floated above the typography controls. */
+.ps-community-name-custom-picker-root{position:relative!important;display:flex!important;flex:1 1 auto!important;min-width:0!important}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-width:0!important}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker{position:static!important;z-index:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;max-width:none!important;grid-column:1/-1!important;grid-row:2!important;margin:0!important;}
+
+/* Refined avatar chooser and cropper: compact, media-led and keyboard-friendly. */
+.ps-community-editor-display-name-input{display:block!important;width:100%!important;min-height:40px!important;padding:0 12px!important;border:1px solid #3a3d45!important;border-radius:9px!important;background:#1b1d22!important;color:#f2f3f5!important;font-size:13px!important;font-weight:600!important;outline:none!important;transition:border-color .14s ease,box-shadow .14s ease!important}
+.ps-community-editor-display-name-input:focus{border-color:#697cf1!important;box-shadow:0 0 0 3px rgb(88 101 242 / 17%)!important}
+.ps-community-avatar-picker-modal{width:min(500px,calc(100vw - 32px))!important;border-radius:16px!important;background:#202127!important}
+.ps-community-avatar-picker-modal>header{align-items:center!important;padding:20px 22px!important}
+.ps-community-avatar-picker-modal>header h2{font-size:19px!important;letter-spacing:-.02em!important}
+.ps-community-avatar-picker-modal>header p{margin-top:5px!important;font-size:12px!important}
+.ps-community-avatar-picker-options{grid-template-columns:1fr 1fr!important;gap:12px!important;padding:18px 20px 20px!important}
+.ps-community-avatar-picker-options>button{position:relative!important;display:grid!important;grid-template-columns:76px minmax(0,1fr) 30px!important;align-items:center!important;justify-items:stretch!important;gap:12px!important;min-height:104px!important;padding:12px!important;border:1px solid #3a3d46!important;border-radius:12px!important;background:#272930!important;text-align:left!important}
+.ps-community-avatar-picker-options>button:hover{transform:none!important;border-color:#687cf2!important;background:#2b2e38!important}
+.ps-community-avatar-choice-art{position:relative!important;display:grid!important;width:76px!important;height:76px!important;place-items:center!important;overflow:hidden!important;border:1px solid #454a55!important;border-radius:10px!important;background:#1a1c21!important;color:#c9d0dd!important}
+.ps-community-avatar-choice-art>img{width:100%!important;height:100%!important;object-fit:cover!important}
+.ps-community-avatar-choice-art.is-gif-art{background:linear-gradient(140deg,#353849,#242631)!important;color:#e2e6f7!important}
+.ps-community-avatar-choice-art.is-gif-art i{position:absolute!important;right:5px!important;bottom:5px!important;padding:2px 5px!important;border-radius:4px!important;background:#5865f2!important;color:#fff!important;font-size:9px!important;font-style:normal!important;font-weight:800!important;letter-spacing:.04em!important}
+.ps-community-avatar-choice-copy{display:grid!important;gap:5px!important;min-width:0!important}
+.ps-community-avatar-choice-copy strong{color:#f2f3f5!important;font-size:13px!important;font-weight:750!important}
+.ps-community-avatar-choice-copy small{color:#9da4b1!important;font-size:10px!important;line-height:1.3!important}
+.ps-community-avatar-choice-arrow{display:grid!important;width:28px!important;height:28px!important;place-items:center!important;border:1px solid #414652!important;border-radius:50%!important;background:#202229!important;color:#bfc6d4!important}
+.ps-community-avatar-picker-progress{display:flex!important;align-items:center!important;gap:8px!important;padding:0 22px 12px!important;color:#c4c9d3!important;font-size:11px!important}
+.ps-community-avatar-picker-progress svg{animation:ps-community-avatar-spin .9s linear infinite!important}
+@keyframes ps-community-avatar-spin{to{transform:rotate(360deg)}}
+.ps-community-avatar-picker-modal>footer{justify-content:flex-end!important}
+.ps-community-avatar-picker-modal>footer button{min-width:84px!important;min-height:34px!important;border-radius:8px!important}
+.ps-community-avatar-crop-modal{width:min(540px,calc(100vw - 28px))!important;border-radius:16px!important}
+.ps-community-avatar-crop-modal>header{align-items:center!important;padding:18px 21px!important}
+.ps-community-avatar-crop-modal>header h2{font-size:19px!important;letter-spacing:-.02em!important}
+.ps-community-avatar-crop-modal>header p{margin:4px 0 0!important;color:#969eab!important;font-size:11px!important}
+.ps-community-avatar-crop-stage{width:min(340px,calc(100vw - 84px))!important;height:min(340px,calc(100vw - 84px))!important;margin:22px auto 18px!important;border:1px solid #4b5260!important;border-radius:50%!important;background:#121419!important;touch-action:none!important;cursor:grab!important;user-select:none!important}
+.ps-community-avatar-crop-stage:active{cursor:grabbing!important}
+.ps-community-avatar-crop-stage>img{width:100%!important;height:100%!important;object-fit:cover!important;pointer-events:none!important;user-select:none!important}
+.ps-community-avatar-crop-stage>span{border:2px solid rgb(255 255 255 / 85%)!important;border-radius:50%!important;box-shadow:0 0 0 999px rgb(0 0 0 / 48%),inset 0 0 0 1px rgb(0 0 0 / 20%)!important}
+.ps-community-avatar-crop-controls{padding:0 26px 20px!important}
+.ps-community-avatar-crop-controls label{grid-template-columns:54px minmax(0,1fr)!important;font-size:12px!important}
+.ps-community-avatar-crop-controls input[type=range]{accent-color:#5865f2!important;cursor:pointer!important;touch-action:pan-y!important}
+.ps-community-avatar-crop-modal>footer{padding:15px 20px!important}
+.ps-community-avatar-crop-modal>footer button{min-height:38px!important;padding-inline:16px!important;border-radius:9px!important}
+.ps-community-avatar-crop-modal>footer button.is-primary{border-color:#5865f2!important;background:#5865f2!important}
+@media(max-width:560px){
+ .ps-community-avatar-picker-options{grid-template-columns:1fr!important}
+ .ps-community-avatar-picker-options>button{min-height:92px!important}
+ .ps-community-avatar-choice-art{width:64px!important;height:64px!important}
+ .ps-community-avatar-picker-options>button{grid-template-columns:64px minmax(0,1fr) 28px!important}
+ .ps-community-avatar-crop-stage{width:min(300px,calc(100vw - 72px))!important;height:min(300px,calc(100vw - 72px))!important}
+}
+
+/* Banner media actions use the same compact image-led treatment as the avatar chooser. */
+.ps-community-editor-banner-upload-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+.ps-community-editor-banner-upload-button{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;min-height:54px!important;padding:8px 10px!important;border:1px solid #3b3f49!important;border-radius:10px!important;background:#252830!important;color:#e6e8ed!important;font-size:11px!important;font-weight:700!important;text-align:left!important}
+.ps-community-editor-banner-upload-button:hover{border-color:#687cf2!important;background:#2b2e38!important}
+.ps-community-editor-banner-upload-button>svg{flex:0 0 32px!important;width:32px!important;height:32px!important;padding:8px!important;border:1px solid #454b59!important;border-radius:8px!important;background:#1c1f26!important;color:#c6ceea!important}
+.ps-community-editor-banner-upload-button:disabled{opacity:.55!important;cursor:wait!important}
+@media(max-width:560px){.ps-community-editor-banner-upload-actions{grid-template-columns:1fr!important}}
+
+/* Name Atelier: compact color and motion controls with a synchronized live preview. */
+.ps-community-name-color-style-group{display:grid!important;gap:10px!important;padding-bottom:16px!important;border-bottom:1px solid #343740!important}
+.ps-community-name-style-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;color:#e7e9ef!important;font-size:12px!important;font-weight:750!important}
+.ps-community-name-style-heading>span{color:#8e97a8!important;font-size:9px!important;font-weight:750!important;letter-spacing:.08em!important}
+.ps-community-name-preset-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:9px!important}
+.ps-community-name-preset-swatch{height:34px!important;min-height:34px!important;border-radius:8px!important}
+.ps-community-name-preset-swatch:hover,.ps-community-name-spectrum-swatch:hover{transform:translateY(-1px)!important}
+.ps-community-name-custom-picker-root{width:100%!important}
+.ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-height:39px!important;grid-template-columns:30px minmax(0,1fr)!important;justify-items:start!important;gap:9px!important;padding:0 10px!important;border-radius:9px!important}
+.ps-community-name-custom-gradient-stops{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
+.ps-community-name-color-auto-note{margin:0!important;color:#9ca4b2!important;font-size:10px!important;line-height:1.5!important}
+.ps-community-name-style-group>.ps-community-name-animation-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option{min-height:108px!important}
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage{display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;min-height:48px!important;max-width:100%!important;overflow:hidden!important}
+.ps-community-name-animation-sample{display:inline-block!important;width:max-content!important;max-width:100%!important;font-size:17px!important;line-height:1.1!important;white-space:nowrap!important}
+@media(max-width:560px){
+ .ps-community-name-preset-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+ .ps-community-name-style-group>.ps-community-name-animation-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .ps-community-name-custom-gradient-stops{grid-template-columns:1fr!important}
+}
+
+/* Refined profile controls: compact Discord-like choices with no trailing camera/plus affordances. */
+.ps-community-avatar-picker-modal { width:min(640px,calc(100vw - 32px))!important; }
+.ps-community-avatar-picker-options {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;padding:18px 24px 20px!important;min-width:0!important;
+}
+.ps-community-avatar-picker-options>button {
+  display:grid!important;grid-template-columns:64px minmax(0,1fr)!important;
+  align-items:center!important;justify-items:stretch!important;gap:14px!important;
+  min-width:0!important;min-height:112px!important;height:auto!important;
+  padding:14px!important;overflow:hidden!important;text-align:left!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-art {
+  width:64px!important;height:64px!important;flex:0 0 64px!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy {
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:6px!important;width:100%!important;min-width:0!important;
+  overflow:visible!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong {
+  display:block!important;width:100%!important;max-width:100%!important;
+  color:#f3f5f8!important;font-size:14px!important;font-weight:750!important;
+  line-height:1.25!important;white-space:normal!important;overflow-wrap:normal!important;
+  word-break:normal!important;text-overflow:clip!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small {
+  display:block!important;width:100%!important;max-width:100%!important;
+  color:#aeb7c5!important;font-size:11px!important;line-height:1.35!important;
+  white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important;
+}
+.ps-community-avatar-choice-art.is-collection-art {color:#c3cde0!important}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-arrow {display:none!important}
+.ps-community-avatar-picker-modal>footer {justify-content:flex-end!important;padding:12px 24px 18px!important}
+.ps-community-avatar-picker-modal>footer button {min-width:92px!important}
+@media(max-width:620px) {
+  .ps-community-avatar-picker-options {grid-template-columns:1fr!important;padding-inline:16px!important}
+  .ps-community-avatar-picker-options>button {min-height:88px!important}
+}
+
+/* Poster decoration shows only the actual banner preview. Clicking it opens
+   the image / collection choices; no generic title, plus or description sits beside it. */
+.ps-community-editor-banner-current-is-preview {
+  position:relative!important;display:block!important;width:100%!important;height:112px!important;
+  min-height:112px!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #3c424d!important;border-radius:11px!important;background:#18282b!important;
+  cursor:pointer!important;
+}
+.ps-community-editor-banner-current-is-preview:hover {border-color:#687cf2!important;filter:brightness(1.06)!important}
+.ps-community-editor-banner-current-is-preview .ps-community-editor-banner-current-preview {
+  position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;
+  min-height:0!important;border:0!important;border-radius:0!important;background-size:cover!important;background-position:center!important;
+}
+.ps-community-editor-banner-current-is-preview:focus-visible {outline:2px solid #7888ff!important;outline-offset:2px!important}
+
+/* Name is an always-present inline field: focusing it cannot change the layout
+   or push the pronoun row down. Its visual language matches the pronoun input. */
+.ps-community-editor-preview-name-input {
+  display:block!important;box-sizing:border-box!important;width:max-content!important;max-width:100%!important;
+  min-width:8ch!important;min-height:34px!important;height:34px!important;margin:0 0 4px!important;
+  padding:2px 4px!important;border:1px solid transparent!important;border-radius:6px!important;
+  outline:none!important;background:transparent!important;box-shadow:none!important;
+  color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:currentColor!important;
+  caret-color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
+  font-size:27px!important;font-weight:850!important;
+  line-height:1.15!important;letter-spacing:-.025em!important;text-align:left!important;
+  transition:border-color .12s ease,background .12s ease!important;
+}
+.ps-community-editor-preview-name-input::placeholder {color:var(--editor-theme-text,#f2f3f5)!important;opacity:.68!important}
+.ps-community-editor-preview-name-input:hover {border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 25%,transparent)!important}
+.ps-community-editor-preview-name-input:focus {
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 42%,transparent)!important;
+  background-color:transparent!important;
+  outline:none!important;box-shadow:none!important;
+}
+
+/* Theme contrast is one decision for both ends of the gradient and every text
+   block on the card, never white above and black below. */
+.ps-community-editor-preview-card {
+  --editor-theme-body-text:var(--editor-theme-text,#f2f3f5)!important;
+  --editor-theme-bottom-text:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row *,
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+}
+
+/* Larger Discord-like online dot in the large profile previews. Its ring uses
+   exactly the avatar border colour, with no black outline or shadow. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:-6px!important;bottom:-2px!important;width:24px!important;height:24px!important;
+  box-sizing:border-box!important;border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:3px!important;bottom:3px!important;width:20px!important;height:20px!important;
+  box-sizing:border-box!important;border:4px solid var(--status-theme,#B7D7C3)!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-member-avatar {position:relative!important;overflow:visible!important}
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-2px!important;bottom:-1px!important;width:13px!important;height:13px!important;
+  border:3px solid #2b2d34!important;border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+
+/* Name Atelier: same left-aligned identity placement in member list and chat. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex!important;flex:1 1 auto!important;align-items:center!important;
+  justify-content:flex-start!important;min-width:0!important;margin:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>strong.community-member-nameplate {
+  display:block!important;width:max-content!important;max-width:100%!important;
+  margin:0!important;text-align:left!important;
+  color:var(--status-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#f2f3f5)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>strong.community-chat-author.color-default {
+  color:var(--status-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#f2f3f5)!important;
+}
+
+/* Eight equal swatches in one row: pipette + seven colours, no squeezed vertical bars. */
+.ps-community-name-color-style-group .ps-community-name-colors-row {
+  display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:8px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root {
+  display:block!important;width:auto!important;min-width:0!important;max-width:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root>.ps-community-name-custom-color {
+  display:grid!important;grid-template-columns:1fr!important;place-items:center!important;
+  width:100%!important;height:42px!important;min-height:42px!important;margin:0!important;
+  padding:0!important;border:1px solid #48505e!important;border-radius:9px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {display:none!important}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;place-items:center!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid {
+  display:contents!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {
+  display:block!important;width:100%!important;height:42px!important;min-height:42px!important;
+  min-width:0!important;margin:0!important;padding:0!important;border-radius:9px!important;
+}
+@media(max-width:620px) {
+  .ps-community-name-color-style-group .ps-community-name-colors-row {gap:5px!important}
+}
+
+/* Last cascade layer: consistent theme contrast and clean Name Atelier cards. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-edit-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-edit-trigger .ps-community-editor-preview-name-static.color-default,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-inline-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-edit-trigger .ps-community-editor-preview-name-static.color-default,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-inline-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns {
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
+  color:var(--editor-theme-body-text,var(--editor-theme-text,#f2f3f5))!important;
+}
+/* Shared 18px Discord-style presence marker for all large profile previews. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-4px!important;bottom:0!important;
+  width:18px!important;height:18px!important;box-sizing:border-box!important;
+  border:4px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;outline:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::after,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after {display:none!important;content:none!important;box-shadow:none!important}
+/* Remove the two dividers from the image/collection chooser. */
+.ps-community-avatar-picker-modal>header {border-bottom:0!important}
+.ps-community-avatar-picker-modal>footer {border-top:0!important}
+/* Keep the collection as an explicit empty state until real posters are added. */
+.ps-community-poster-collection-empty {min-height:205px!important}
+.ps-community-editor-banner-current.is-action {cursor:pointer!important}
+/* The animation preview is one open stage, not a second framed card inside a card. */
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;height:48px!important;min-height:48px!important;margin:0!important;
+  padding:0!important;border:0!important;border-radius:0!important;outline:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage::before,
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage::after {
+  display:none!important;content:none!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.ps-community-name-style-group .ps-community-name-animation-option .ps-community-name-preview-live {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-width:0!important;min-height:28px!important;height:auto!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  outline:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-name-style-group .ps-community-name-animation-option .ps-decrypted-name {color:var(--name-solid-color,#F2F3F5)!important}
+.ps-community-name-style-group .ps-community-name-animation-option .ps-decrypted-cell.is-encrypted,
+.ps-community-name-style-group .ps-community-name-animation-option .ps-decrypted-glyph {color:var(--name-solid-color,#F2F3F5)!important;-webkit-text-fill-color:currentColor!important}
+.ps-community-name-style-group .ps-community-name-animation-option.effect-plain .ps-decrypted-cell.is-revealed::after {
+  color:var(--name-solid-color,#F2F3F5)!important;-webkit-text-fill-color:currentColor!important;
+}
+.ps-community-name-colors-row {display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
+.ps-community-name-colors-row>.ps-community-name-custom-picker-root {flex:0 0 44px!important;width:44px!important;min-width:44px!important}
+.ps-community-name-colors-row>.ps-community-name-custom-picker-root>.ps-community-name-custom-color {
+  width:44px!important;height:42px!important;min-height:42px!important;
+  display:grid!important;grid-template-columns:1fr!important;place-items:center!important;
+  padding:0!important;border-radius:9px!important;background:#252a34!important;
+}
+.ps-community-name-colors-row .ps-community-name-custom-color-copy {display:none!important}
+.ps-community-name-colors-row .ps-community-name-custom-color-mark {display:grid!important;place-items:center!important}
+.ps-community-name-colors-row>.ps-community-name-preset-grid {
+  display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  flex:1 1 auto!important;min-width:0!important;gap:7px!important;
+}
+.ps-community-name-colors-row .ps-community-name-preset-swatch {height:42px!important;min-height:42px!important;border-radius:9px!important}
+
+
+/* Final scale pass for the Discord-style presence ring on all large avatar previews. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-6px!important;bottom:-2px!important;
+  width:24px!important;height:24px!important;box-sizing:border-box!important;
+  border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;
+  outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-6px!important;bottom:-2px!important;
+  width:24px!important;height:24px!important;box-sizing:border-box!important;
+  border:5px solid var(--status-theme,#B7D7C3)!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-2px!important;bottom:-1px!important;
+  width:15px!important;height:15px!important;border:3px solid #2b2d34!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;
+}
+
+/* The live name input behaves like the pronoun field: fixed line box, text-sized
+   width, no layout jump when focused, and an understated focus treatment. */
+.ps-community-editor-preview-name-input {
+  width:auto!important;min-width:8ch!important;max-width:100%!important;
+  height:34px!important;min-height:34px!important;margin:0 0 4px!important;
+  padding:3px 4px!important;border:1px solid transparent!important;border-radius:6px!important;
+  background:transparent!important;outline:none!important;box-shadow:none!important;
+  font-size:27px!important;font-weight:850!important;line-height:1.15!important;
+}
+.ps-community-editor-preview-name-input:hover {
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 25%,transparent)!important;
+}
+.ps-community-editor-preview-name-input:focus {
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 42%,transparent)!important;
+  background:color-mix(in srgb,var(--editor-theme-text,#fff) 5%,transparent)!important;
+  outline:none!important;box-shadow:none!important;
+}
+
+/* Apply theme-selected ink to the whole profile card, including the lower
+   member-since block; do not independently choose white/black per gradient stop. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row *,
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  background:color-mix(in srgb,var(--editor-theme-text,#fff) 12%,transparent)!important;
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 24%,transparent)!important;
+  text-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+}
+/* A hairline opposite-colour glyph edge preserves legibility on mixed light/dark gradients. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row * {
+  -webkit-text-stroke:0 transparent!important;text-shadow:none!important;
+}
+
+/* One aligned, left-anchored member name row, using the same text treatment as chat. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex!important;flex:1 1 auto!important;align-items:center!important;
+  justify-content:flex-start!important;min-width:0!important;margin:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate {
+  display:inline-block!important;width:max-content!important;max-width:100%!important;
+  margin:0!important;text-align:left!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy>.ps-community-name-preview-live.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-default.effect-plain {
+  color:var(--status-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+}
+
+
+/* Stable editor geometry: the settings pane owns its scroll area. */
+.ps-community-editor-overlay {
+  position:fixed!important;inset:0!important;display:grid!important;place-items:center!important;
+  padding:16px!important;overflow:hidden!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-v2 {
+  display:flex!important;flex-direction:column!important;
+  width:min(1150px,calc(100vw - 32px))!important;
+  height:min(980px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;min-width:0!important;min-height:0!important;
+  overflow:hidden!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-main {
+  display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
+  width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-workspace-discord {
+  display:grid!important;grid-template-columns:minmax(248px,275px) minmax(0,1fr)!important;
+  flex:1 1 auto!important;width:100%!important;min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-settings-sidebar {
+  position:relative!important;align-self:stretch!important;
+  width:100%!important;height:100%!important;max-height:100%!important;min-height:0!important;
+  min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;scrollbar-gutter:stable!important;
+  scrollbar-width:thin!important;scrollbar-color:transparent transparent!important;
+  -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar {width:9px!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-track {background:transparent!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb {
+  min-height:36px!important;border:2px solid transparent!important;border-radius:999px!important;
+  background:transparent!important;background-clip:padding-box!important;
+  transition:background-color 140ms ease!important;
+}
+.ps-community-editor-settings-sidebar:hover,
+.ps-community-editor-settings-sidebar:focus-within {
+  scrollbar-color:#59616d transparent!important;
+}
+.ps-community-editor-settings-sidebar:hover::-webkit-scrollbar-thumb,
+.ps-community-editor-settings-sidebar:focus-within::-webkit-scrollbar-thumb,
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb:active {
+  background:#59616d!important;
+}
+.ps-community-editor-preview-column {
+  min-width:0!important;min-height:0!important;height:100%!important;
+  overflow:auto!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-theme-picker-anchor {position:relative!important;z-index:12!important;min-width:0!important}
+.ps-community-editor-sidebar-color-picker {
+  box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;
+}
+.ps-community-color-picker-plane {
+  width:100%!important;min-width:0!important;height:142px!important;min-height:142px!important;
+  box-sizing:border-box!important;border-radius:9px!important;touch-action:none!important;
+}
+.ps-community-color-picker-hue-wrap,
+.ps-community-color-picker-hex {width:100%!important;min-width:0!important;box-sizing:border-box!important}
+
+/* Two proper theme swatches: no wrapped "Color 1 / Color 2" labels. */
+.ps-community-editor-theme-stop-list {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:9px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-editor-theme-stop {
+  display:grid!important;grid-template-columns:36px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;align-items:center!important;
+  gap:3px 9px!important;width:100%!important;min-width:0!important;min-height:62px!important;
+  padding:9px!important;box-sizing:border-box!important;text-align:left!important;
+}
+.ps-community-editor-theme-stop>span:first-child {
+  grid-column:1!important;grid-row:1 / 3!important;width:36px!important;height:36px!important;
+  min-width:36px!important;border-radius:9px!important;
+}
+.ps-community-editor-theme-stop>span:nth-child(2) {
+  grid-column:2!important;grid-row:1!important;min-width:0!important;
+  font-size:11px!important;line-height:1.2!important;white-space:nowrap!important;
+}
+.ps-community-editor-theme-stop>small {
+  grid-column:2!important;grid-row:2!important;min-width:0!important;
+  font-size:9px!important;line-height:1.2!important;white-space:nowrap!important;
+}
+
+/* Letter-colour palette: eight equal square controls; the pipette is icon-only. */
+.ps-community-name-color-style-group .ps-community-name-colors-row {
+  display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:8px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root {
+  display:block!important;flex:none!important;width:auto!important;height:54px!important;
+  min-width:0!important;max-width:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root>.ps-community-name-custom-color {
+  display:grid!important;grid-template-columns:1fr!important;place-items:center!important;
+  width:100%!important;height:54px!important;min-height:54px!important;margin:0!important;
+  padding:0!important;border:1px solid #48505e!important;border-radius:10px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {display:none!important}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;place-items:center!important;margin:0!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid {display:contents!important}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {
+  display:block!important;width:100%!important;height:54px!important;min-height:54px!important;
+  min-width:0!important;margin:0!important;padding:0!important;border-radius:10px!important;
+}
+
+/* The chooser keeps its outer option cards; the copy area is plain text, not
+   another bordered card nested inside each option. */
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy {
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:6px!important;min-width:0!important;width:100%!important;
+  padding:0!important;border:0!important;border-radius:0!important;outline:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy::before,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy::after,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong::before,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong::after,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small::before,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small::after {
+  display:none!important;content:none!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small {
+  display:block!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;
+  box-shadow:none!important;white-space:normal!important;overflow-wrap:break-word!important;
+}
+
+/* Move the editable name a few pixels below the avatar edge in both previews. */
+.ps-community-editor-preview-name-input {margin:7px 0 4px!important}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy {margin-top:8px!important}
+.ps-community-profile-live-readonly-body>.ps-community-editor-preview-name-static {margin-top:7px!important}
+
+/* Same foreground for every information field on the profile card. Do not add
+   a dark/white outline: choose one contrast colour for the complete gradient. */
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading *,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row * {
+  color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-stroke:0 transparent!important;text-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  background:color-mix(in srgb,var(--editor-theme-text,#17191f) 10%,transparent)!important;
+  border-color:color-mix(in srgb,var(--editor-theme-text,#17191f) 22%,transparent)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row>span {
+  color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#17191f)!important;
+  border-color:color-mix(in srgb,var(--editor-theme-text,#17191f) 30%,transparent)!important;
+  background:color-mix(in srgb,var(--editor-theme-text,#17191f) 9%,transparent)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta span,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
+  color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#17191f)!important;
+}
+
+/* Discord-style presence marker sits slightly inside the avatar, not outside it. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:3px!important;bottom:3px!important;width:24px!important;height:24px!important;
+  box-sizing:border-box!important;border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot {right:0!important;bottom:1px!important}
+
+/* Inset internal scrolling: dragging the sidebar scrollbar no longer closes
+   the active colour picker and cannot hand scrolling to the page behind it. */
+@media(max-width:760px) {
+  .ps-community-editor-overlay {padding:8px!important}
+  .ps-community-editor-v2 {width:calc(100vw - 16px)!important;height:calc(100dvh - 16px)!important;max-height:calc(100dvh - 16px)!important}
+  .ps-community-editor-workspace-discord {grid-template-columns:minmax(220px,42%) minmax(0,1fr)!important}
+  .ps-community-editor-theme-stop-list {grid-template-columns:1fr!important}
+  .ps-community-name-color-style-group .ps-community-name-colors-row {gap:5px!important}
+  .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color,
+  .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {height:46px!important;min-height:46px!important}
+}
+
+
+/* In the name-style picker, the custom swatch is one of the eight equal
+   colour controls — never a padded card nested inside the swatch row. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker {
+  display:block!important;position:relative!important;align-self:stretch!important;
+  width:100%!important;height:54px!important;min-width:0!important;min-height:54px!important;
+  max-width:none!important;margin:0!important;padding:0!important;gap:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color {
+  position:relative!important;display:grid!important;grid-template-columns:1fr!important;
+  place-items:center!important;align-items:center!important;justify-content:center!important;
+  gap:0!important;width:100%!important;height:54px!important;min-width:0!important;
+  min-height:54px!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #48505e!important;border-radius:10px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color::before {
+  display:none!important;content:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;position:static!important;flex:0 0 auto!important;
+  place-items:center!important;width:auto!important;height:auto!important;
+  min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  color:#d9deed!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {
+  display:none!important;
+}
+
+/* The member-list specimen mirrors chat: avatar followed immediately by name.
+   The dot is deliberately absent here; the full profile keeps its presence dot. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start!important;gap:10px!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar {
+  display:grid!important;position:relative!important;flex:0 0 40px!important;
+  width:40px!important;height:40px!important;margin:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  display:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex!important;flex:0 1 auto!important;flex-direction:row!important;
+  align-items:center!important;justify-content:flex-start!important;
+  width:auto!important;max-width:calc(100% - 50px)!important;min-width:0!important;
+  margin:0!important;padding:0!important;text-align:left!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>strong.community-member-nameplate {
+  display:inline-block!important;align-self:center!important;justify-self:start!important;
+  flex:0 1 auto!important;width:max-content!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;margin-left:0!important;margin-right:0!important;padding:0!important;
+  text-align:left!important;
+}
+
+/* Both the profile settings rail and the style-picker columns reveal their
+   native scrollbar only while the pointer is over the scroll area. */
+@media (min-width:781px) and (hover:hover) and (pointer:fine) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+    scrollbar-width:thin!important;scrollbar-color:transparent transparent!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar {
+    display:block!important;width:8px!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar-track,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar-track {
+    background:transparent!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar-thumb {
+    background:transparent!important;border:2px solid transparent!important;
+    border-radius:12px!important;background-clip:padding-box!important;
+    transition:background-color 140ms ease!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection:hover,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview:hover {
+    scrollbar-color:#65708a transparent!important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection:hover::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview:hover::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb,
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
+    background:#65708a!important;
+  }
+}
+
+
+/* Single-colour custom picker: first row holds all eight swatches; opening the
+   pipette adds a full-width second row below them, like the profile-theme picker. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row {
+  display:grid!important;
+  grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  grid-template-rows:54px auto!important;
+  align-items:stretch!important;
+  column-gap:8px!important;
+  row-gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker {
+  display:contents!important;
+  width:auto!important;height:auto!important;min-width:0!important;max-width:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color {
+  display:grid!important;
+  grid-column:1!important;grid-row:1!important;
+  place-items:center!important;
+  width:100%!important;height:54px!important;min-height:54px!important;min-width:0!important;
+  margin:0!important;padding:0!important;gap:0!important;
+  border:1px solid #48505e!important;border-radius:10px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color::before {
+  display:none!important;content:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;position:static!important;place-items:center!important;
+  width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;color:#d9deed!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {
+  display:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-picker {
+  display:grid!important;position:relative!important;z-index:1!important;
+  grid-column:1/-1!important;grid-row:2!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  height:auto!important;min-height:0!important;margin:0!important;
+  padding:14px!important;gap:13px!important;
+  border:1px solid #353944!important;border-radius:12px!important;
+  background:linear-gradient(145deg,#24262e 0%,#1e2027 100%)!important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 3%),0 8px 20px rgb(0 0 0 / 13%)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid {
+  display:contents!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid>.ps-community-name-preset-swatch {
+  grid-row:1!important;align-self:stretch!important;
+  display:block!important;width:100%!important;height:54px!important;min-height:54px!important;
+  min-width:0!important;margin:0!important;padding:0!important;border-radius:10px!important;
+}
+/* The panel behaves like the profile-theme selector and stays fully in document flow. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-plane {
+  display:block!important;width:100%!important;height:142px!important;min-height:142px!important;
+  border-radius:9px!important;touch-action:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-hex {
+  display:flex!important;align-items:center!important;gap:8px!important;
+  width:100%!important;min-width:0!important;min-height:42px!important;
+  padding:0 9px!important;border:1px solid #3d424d!important;border-radius:8px!important;
+  background:#17191e!important;box-sizing:border-box!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-hex input {
+  flex:1 1 auto!important;min-width:0!important;height:36px!important;
+  border:0!important;outline:0!important;background:transparent!important;color:#f2f3f5!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-hex button {
+  display:grid!important;place-items:center!important;flex:0 0 28px!important;
+  width:28px!important;height:28px!important;border:0!important;background:transparent!important;color:#b9c1d1!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-recent {
+  display:flex!important;flex-wrap:wrap!important;gap:8px!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-recent button {
+  display:block!important;width:26px!important;height:26px!important;flex:0 0 26px!important;
+  border:1px solid rgb(255 255 255 / 28%)!important;border-radius:7px!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-actions {
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;
+  padding-top:10px!important;border-top:1px solid #343740!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-actions button {
+  min-height:36px!important;padding:0 14px!important;border:1px solid #3d424d!important;
+  border-radius:8px!important;background:#2b2e36!important;color:#dce0e8!important;font-size:11px!important;font-weight:700!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-actions button:last-child {
+  border-color:#5865f2!important;background:#5865f2!important;color:#fff!important;
+}
+
+/* A consistent, slightly larger 26px presence marker in all large avatar previews. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:2px!important;bottom:2px!important;
+  width:26px!important;height:26px!important;box-sizing:border-box!important;
+  border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {
+  background:#747b86!important;
+}
+
+/* Name color belongs to the selected name style; profile contrast belongs to
+   descriptive fields. Keep the text input from inheriting a theme override. */
+.ps-community-editor-preview-name-input {
+  color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
+  -webkit-text-fill-color:currentColor!important;
+  background-color:transparent!important;
+  transition:border-color .12s ease!important;
+}
+.ps-community-editor-preview-name-input:focus {
+  background-color:transparent!important;
+  box-shadow:none!important;
+}
+.ps-community-editor-preview-name-input.is-name-style-8bit {
+  font-size:35px!important;
+  line-height:1.25!important;
+  letter-spacing:-.015em!important;
+  min-height:42px!important;
+  height:42px!important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy>strong.is-name-style-8bit,
+.ps-community-status-profile-copy>strong.is-name-style-8bit,
+.ps-community-profile-live-readonly-body>.ps-community-editor-preview-name-static.is-name-style-8bit {
+  font-size:clamp(29px,2.5vw,34px)!important;
+  line-height:1.3!important;
+  letter-spacing:-.015em!important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy>small,
+.ps-community-status-profile-preview .ps-community-status-profile-copy>small {
+  color:var(--status-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+  opacity:.86!important;
+}
+/* The preview reuses the exact dimensions, rounded shell and child geometry
+   of the published profile dialog. The card no longer stretches to fill the pane. */
+.ps-community-editor-preview-frame {
+  display:flex!important;align-items:flex-start!important;justify-content:center!important;
+  width:100%!important;min-width:0!important;min-height:100%!important;
+  box-sizing:border-box!important;padding:22px 16px!important;
+  overflow:auto!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  display:flex!important;flex:0 0 auto!important;flex-direction:column!important;
+  width:min(458px,calc(100vw - 24px))!important;max-width:458px!important;
+  height:min(720px,calc(100dvh - 24px))!important;
+  min-height:0!important;max-height:calc(100dvh - 24px)!important;
+  margin:0 auto!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #363941!important;border-radius:16px!important;
+  background:#202126!important;box-shadow:0 24px 65px rgb(0 0 0 / 30%)!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;z-index:2!important;display:block!important;
+  flex:0 0 184px!important;width:100%!important;min-height:184px!important;max-height:184px!important;
+  overflow:visible!important;border-radius:15px 15px 0 0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;display:block!important;width:100%!important;
+  height:184px!important;min-height:184px!important;max-height:184px!important;
+  overflow:hidden!important;border-radius:15px 15px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;background-position:center!important;background-size:cover!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-frame {padding:14px 10px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(458px,calc(100vw - 36px))!important;
+    height:min(720px,calc(100dvh - 36px))!important;
+    max-height:calc(100dvh - 36px)!important;
+  }
+}
+/* The warning bar is a real footer, not unstyled content below the workspace. */
+.ps-community-editor-savebar {
+  position:relative!important;z-index:12!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:16px!important;width:min(720px,calc(100% - 32px))!important;
+  min-height:68px!important;box-sizing:border-box!important;
+  margin:0 auto 12px!important;padding:11px 14px 11px 18px!important;
+  border:1px solid #393d46!important;border-radius:13px!important;
+  background:#202126!important;color:#e8eaf0!important;
+  box-shadow:0 12px 32px rgb(0 0 0 / 24%)!important;
+  font-size:12px!important;font-weight:750!important;
+}
+.ps-community-editor-savebar>span {flex:1 1 auto!important;min-width:0!important;color:#e8eaf0!important}
+.ps-community-editor-savebar>div {display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex:0 0 auto!important}
+.ps-community-editor-savebar button {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+  min-width:96px!important;min-height:38px!important;padding:0 13px!important;
+  border:1px solid #3d424c!important;border-radius:8px!important;
+  font-size:12px!important;font-weight:800!important;cursor:pointer!important;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease!important;
+}
+.ps-community-editor-savebar .is-secondary {background:#292c33!important;color:#e7e9ef!important}
+.ps-community-editor-savebar .is-secondary:hover:not(:disabled) {background:#343842!important;border-color:#555d6b!important}
+.ps-community-editor-savebar .is-primary {background:#5865f2!important;border-color:#5865f2!important;color:#fff!important;box-shadow:0 3px 10px rgb(88 101 242 / 20%)!important}
+.ps-community-editor-savebar .is-primary:hover:not(:disabled) {background:#6978ff!important;border-color:#6978ff!important;transform:translateY(-1px)!important}
+.ps-community-editor-savebar button:disabled {opacity:.55!important;cursor:not-allowed!important}
+@media(max-width:560px) {
+  .ps-community-editor-savebar {width:calc(100% - 16px)!important;gap:8px!important;padding:9px!important}
+  .ps-community-editor-savebar>span {font-size:11px!important}
+  .ps-community-editor-savebar button {min-width:0!important;min-height:36px!important;padding:0 9px!important}
+}
+/* Premium Discord-style unsaved state: the editor shifts slightly and its
+   own footer turns red. Reset restores the last saved snapshot; Save persists it. */
+.ps-community-editor-v2 {
+  position:relative!important;
+  transform:translateX(0) scale(1)!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
+}
+.ps-community-editor-v2[data-close-confirming="true"] {
+  transform:translateX(-64px) translateY(-4px) scale(.988)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
+}
+.ps-community-editor-savebar {
+  transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
+}
+.ps-community-editor-savebar.is-close-warning {
+  border-color:#eb4b55!important;
+  background:linear-gradient(110deg,#9f2935 0%,#7f202c 100%)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 12px 34px rgb(0 0 0 / 32%)!important;
+  animation:ps-community-unsaved-bar-enter .24s cubic-bezier(.2,.8,.2,1) both!important;
+}
+.ps-community-editor-savebar.is-close-warning>span {
+  color:#ffe4e6!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-secondary {
+  border-color:rgb(248 113 113 / 32%)!important;
+  background:rgb(127 29 29 / 24%)!important;
+  color:#ffe4e6!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-primary {
+  background:#5865f2!important;
+  border-color:#5865f2!important;
+  color:#fff!important;
+  box-shadow:0 3px 10px rgb(88 101 242 / 24%)!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-primary:hover:not(:disabled) {
+  background:#6978ff!important;
+  border-color:#6978ff!important;
+  transform:translateY(-1px)!important;
+}
+@keyframes ps-community-unsaved-bar-enter {
+  from {opacity:.7;transform:translateY(8px)}
+  to {opacity:1;transform:translateY(0)}
+}
+@media(max-width:760px) {
+  .ps-community-editor-v2[data-close-confirming="true"] {
+    transform:translateX(0) translateY(-2px) scale(.995)!important;
+  }
+}
+
+
+/* Keep the editable input completely stable while it has focus. Display-name
+   motion effects belong to rendered names, never to the text-editing control. */
+#ps-community-display-name-inline,
+#ps-community-display-name-inline:focus,
+#ps-community-display-name-inline:focus-visible,
+#ps-community-display-name-inline:active {
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
+  -webkit-text-fill-color:currentColor!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  outline:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+  transition:border-color .12s ease!important;
+}
+.ps-community-editor-preview-name-input.is-name-style-8bit {
+  font-size:35px!important;
+  line-height:1.25!important;
+  letter-spacing:0!important;
+}
+.ps-community-status-profile-preview .ps-community-status-profile-copy>strong.is-name-style-8bit {
+  font-size:clamp(29px,2.5vw,34px)!important;
+  line-height:1.3!important;
+  letter-spacing:0!important;
+}
+.ps-community-status-profile-preview .ps-community-status-profile-copy>small:empty {
+  display:none!important;
+}
+
+
+
+/* Discord-like account identity: handle, separator and pronouns share one
+   baseline. The handle is text, not a disconnected badge. */
+.ps-community-editor-preview-identity-line {
+  display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:7px!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-tag {
+  display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;text-shadow:none!important;
+  color:var(--editor-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#202126)!important;
+  font-size:14px!important;font-weight:650!important;line-height:1.35!important;opacity:.9!important;
+}
+.ps-community-editor-preview-identity-separator {
+  display:inline-block!important;flex:0 0 auto!important;
+  color:var(--editor-theme-text,#202126)!important;opacity:.62!important;
+  font-size:13px!important;line-height:1!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 180px!important;max-width:min(190px,calc(100% - 110px))!important;
+  color:var(--editor-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#202126)!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns::placeholder {
+  color:var(--editor-theme-text,#202126)!important;opacity:.58!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.effect-plain:not(.color-custom-gradient),
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.effect-plain:not(.color-custom-gradient) {
+  color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  background:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+  filter:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.is-name-style-8bit,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.is-name-style-8bit {
+  font-size:1.04em!important;line-height:1.28!important;letter-spacing:0!important;
+  color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  background:none!important;filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+}
+
+/* Profile preview mirrors the public profile composition: larger card,
+   full-size avatar overlapping the banner, and the status bubble beside it. */
+.ps-community-editor-preview-column {
+  display:flex!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  position:relative!important;
+  display:flex!important;
+  flex:0 0 auto!important;
+  flex-direction:column!important;
+  width:min(530px,100%)!important;
+  min-width:0!important;
+  max-width:530px!important;
+  height:min(900px,100%)!important;
+  min-height:0!important;
+  max-height:900px!important;
+  margin:0!important;
+  padding:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:14px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;
+  z-index:2!important;
+  display:block!important;
+  flex:0 0 231px!important;
+  width:100%!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  height:231px!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:hidden!important;
+  border-radius:13px 13px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:cover!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  position:relative!important;
+  z-index:3!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:42px 32px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:none!important;
+  width:0!important;
+  height:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  position:absolute!important;
+  z-index:8!important;
+  top:138px!important;
+  left:0!important;
+  right:0!important;
+  display:block!important;
+  width:100%!important;
+  min-height:142px!important;
+  height:142px!important;
+  margin:0!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  position:absolute!important;
+  z-index:5!important;
+  left:29px!important;
+  top:0!important;
+  pointer-events:auto!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger {
+  display:block!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  position:relative!important;
+  display:grid!important;
+  width:142px!important;
+  height:142px!important;
+  box-sizing:border-box!important;
+  place-items:center!important;
+  overflow:visible!important;
+  border:8px solid var(--editor-card,#b7d7c3)!important;
+  border-radius:50%!important;
+  background:#36383f!important;
+  color:#fff!important;
+  font-size:25px!important;
+  font-weight:850!important;
+  box-shadow:0 0 0 2px #232428,0 9px 22px rgb(0 0 0 / 36%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>img {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  position:absolute!important;
+  z-index:7!important;
+  left:190px!important;
+  top:36px!important;
+  bottom:auto!important;
+  display:flex!important;
+  pointer-events:auto!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:calc(100% - 190px)!important;
+  min-height:44px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:11px 17px!important;
+  overflow:visible!important;
+  border:1px solid #454850!important;
+  border-radius:19px 19px 19px 9px!important;
+  background:linear-gradient(180deg,#32343a 0%,#292b30 100%)!important;
+  color:#f2f3f5!important;
+  font:600 14px/1.35 var(--font-geist-sans),sans-serif!important;
+  box-shadow:0 7px 18px rgb(0 0 0 / 38%),inset 0 1px 0 rgb(255 255 255 / 5%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  border-radius:50%!important;
+  background:#2b2d31!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before {
+  left:-10px!important;bottom:1px!important;width:10px!important;height:10px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  left:-17px!important;bottom:-5px!important;width:6px!important;height:6px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  position:relative!important;
+  z-index:1!important;
+  display:block!important;
+  overflow-wrap:anywhere!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-edit {
+  position:relative!important;
+  z-index:1!important;
+  flex:0 0 auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  width:max-content!important;
+  max-width:100%!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0 0 10px!important;
+  padding:2px 4px!important;
+  font-size:32px!important;
+  line-height:1.15!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0 0 32px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 auto!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  min-height:30px!important;
+  padding:0 11px!important;
+  font-size:14px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns {
+  font-size:14px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  min-height:27px!important;
+  margin:0 0 43px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {
+  margin:0 0 68px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading {
+  margin-bottom:20px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading>span {
+  font-size:15px!important;
+  font-weight:750!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading>small {
+  font-size:12px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  margin:0!important;
+  padding:0!important;
+  font-size:19px!important;
+  line-height:1.5!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {
+  margin-top:auto!important;
+  padding-top:0!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,100%)!important;
+    height:min(900px,100%)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    top:clamp(126px,26.8vw,138px)!important;
+    min-height:clamp(108px,26.8vw,142px)!important;
+    height:clamp(108px,26.8vw,142px)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:clamp(108px,26.8vw,142px)!important;
+    height:clamp(108px,26.8vw,142px)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:36%!important;
+    top:34%!important;
+    bottom:auto!important;
+    max-width:58%!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:0 6% 20px!important;
+  }
+}
+
+/* Final desktop-like composition for the editor preview. The previous
+   max-width:760 rules incorrectly treated the editor's narrow viewport as
+   a phone layout, squeezing the sidebar and shifting the avatar off-card. */
+@media(max-width:760px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:minmax(220px,275px) minmax(0,1fr)!important;
+  }
+  .ps-community-editor-preview-column {
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  .ps-community-editor-preview-frame {
+    display:grid!important;
+    place-items:center!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    padding:0 10px!important;
+    overflow:hidden!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,100%)!important;
+    max-width:530px!important;
+    height:min(900px,100%)!important;
+    max-height:900px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:0 32px 24px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    position:relative!important;
+    top:auto!important;
+    flex:0 0 142px!important;
+    width:calc(100% + 64px)!important;
+    min-height:142px!important;
+    height:142px!important;
+    margin:-77px -32px 22px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+    left:29px!important;
+    top:0!important;
+    width:142px!important;
+    height:142px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:142px!important;
+    height:142px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:190px!important;
+    top:auto!important;
+    bottom:49px!important;
+    max-width:calc(100% - 190px)!important;
+  }
+}
+
+/* Definitive profile composition — avatar/status are anchored to the banner,
+   never laid out as content inside the bio/name column. */
+.ps-community-editor-workspace-discord {
+  grid-template-columns:minmax(270px,32%) minmax(0,1fr)!important;
+}
+.ps-community-editor-preview-column {
+  display:flex!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:0 22px!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  position:relative!important;
+  display:flex!important;
+  flex:0 1 auto!important;
+  flex-direction:column!important;
+  width:min(700px,calc(100% - 40px))!important;
+  min-width:0!important;
+  max-width:700px!important;
+  height:min(1000px,100%)!important;
+  min-height:0!important;
+  max-height:1000px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:14px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;
+  z-index:4!important;
+  display:block!important;
+  flex:0 0 231px!important;
+  width:100%!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:visible!important;
+  border-radius:14px 14px 0 0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  height:231px!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:hidden!important;
+  border-radius:13px 13px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  position:absolute!important;
+  z-index:8!important;
+  left:29px!important;
+  right:30px!important;
+  bottom:-77px!important;
+  display:block!important;
+  width:auto!important;
+  min-height:142px!important;
+  height:142px!important;
+  margin:0!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  position:absolute!important;
+  z-index:5!important;
+  left:0!important;
+  top:0!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger {
+  display:block!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  position:relative!important;
+  display:grid!important;
+  width:142px!important;
+  height:142px!important;
+  box-sizing:border-box!important;
+  place-items:center!important;
+  overflow:visible!important;
+  border:8px solid var(--editor-card,#b7d7c3)!important;
+  border-radius:50%!important;
+  background:#36383f!important;
+  color:#fff!important;
+  font-size:25px!important;
+  font-weight:850!important;
+  box-shadow:0 0 0 2px #232428,0 9px 22px rgb(0 0 0 / 36%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>img {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  position:absolute!important;
+  z-index:9!important;
+  left:164px!important;
+  top:19px!important;
+  bottom:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:calc(100% - 164px)!important;
+  min-height:44px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:11px 17px!important;
+  overflow:visible!important;
+  border:1px solid #454850!important;
+  border-radius:19px 19px 19px 9px!important;
+  background:linear-gradient(180deg,#32343a 0%,#292b30 100%)!important;
+  color:#f2f3f5!important;
+  font:600 14px/1.35 var(--font-geist-sans),sans-serif!important;
+  box-shadow:0 7px 18px rgb(0 0 0 / 38%),inset 0 1px 0 rgb(255 255 255 / 5%)!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  border-radius:50%!important;
+  background:#2b2d31!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before {
+  left:-10px!important;bottom:1px!important;width:10px!important;height:10px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  left:-17px!important;bottom:-5px!important;width:6px!important;height:6px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  position:relative!important;z-index:1!important;display:block!important;
+  overflow-wrap:anywhere!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-edit {
+  position:relative!important;z-index:1!important;flex:0 0 auto!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  position:relative!important;
+  z-index:2!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:82px 32px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:none!important;width:0!important;height:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  width:max-content!important;
+  max-width:100%!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0 0 10px!important;
+  padding:2px 4px!important;
+  font-size:32px!important;
+  line-height:1.15!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  gap:10px!important;width:100%!important;min-width:0!important;margin:0 0 32px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 220px!important;min-width:0!important;white-space:normal!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  min-height:27px!important;margin:0 0 43px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {margin:0 0 68px!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading {margin-bottom:20px!important}
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  margin:0!important;padding:0!important;font-size:19px!important;line-height:1.5!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {margin-top:auto!important;padding-top:0!important}
+@media(max-width:900px) {
+  .ps-community-editor-workspace-discord {grid-template-columns:minmax(220px,34%) minmax(0,1fr)!important}
+  .ps-community-editor-preview-frame {padding:0 12px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:calc(100% - 20px)!important;max-width:700px!important;height:100%!important;
+  }
+}
+@media(max-width:620px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:minmax(190px,auto) minmax(0,1fr)!important;
+    overflow:auto!important;
+  }
+  .ps-community-editor-settings-sidebar {height:auto!important;max-height:34vh!important}
+  .ps-community-editor-preview-column {min-height:650px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,calc(100% - 16px))!important;height:760px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:82px 24px 24px!important;
+  }
+}
+`}</style>
+    </div>
+    </div>,
+    document.body,
+  );
+}
                   <input
                     id="ps-community-display-name-inline"
                     className={"ps-community-editor-preview-name-input ps-community-profile-name is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}

@@ -3204,7 +3204,7 @@ export default function CommunityPage() {
                 <div className="ps-community-editor-preview-identity-line">
                   {selectedCommunityProfile.accountName?.trim() && (
                     <>
-                      <span className="ps-community-editor-preview-tag">{"@" + selectedCommunityProfile.accountName.trim().replace(/^@+/, "")}</span>
+                      <span className="ps-community-editor-preview-tag">{"@" + (selectedCommunityProfile.accountName?.trim().replace(/^@+/, "") || "")}</span>
                       <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
                     </>
                   )}

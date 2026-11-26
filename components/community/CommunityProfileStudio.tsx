@@ -1514,7 +1514,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         </div>
       </main>
 
-      {appearancePicker && (
+      {appearancePicker && createPortal((
         <div className="ps-community-picker-overlay">
           <section ref={appearanceModalRef} id={appearancePicker === "nameStyle" ? "ps-community-name-style-picker" : undefined} className={"ps-community-picker-modal" + (appearancePicker === "nameStyle" ? " is-name-style-modal" : "")} role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
             <header className="ps-community-picker-header">
@@ -1966,7 +1966,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </footer>
           </section>
         </div>
-      )}
+      ), document.body)}
 
       {avatarPickerOpen && (
         <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {

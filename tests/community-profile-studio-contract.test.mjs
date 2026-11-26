@@ -1037,7 +1037,7 @@ test("member rail keeps the selected name font inside a flexible copy column", (
   assert.match(communityThemeCss, /\.root :global\(\.community-member-copy\)\s*\{[\s\S]*?flex: 1 1 auto;[\s\S]*?min-width: 0;/);
   assert.match(communityThemeCss, /\.root :global\(\.community-member-copy \.community-member-nameplate\)/);
   assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
-  assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);
+  assert.match(page, /\+ " is-name-style-" \+ \(member\.display_name_style/);
 });
 
 test("selected entrance animation runs on profile and all three editor previews while live lists stay lightweight", () => {
@@ -1344,7 +1344,7 @@ test("Name Atelier keeps the font specimen and synchronized profile/member/chat 
   assert.match(studio, /ps-community-name-preview-profile-view/);
   assert.match(studio, /ps-community-name-preview-members-view/);
   assert.match(studio, /ps-community-name-preview-chat-view/);
-  assert.match(studio, /DISPLAY_NAME_EFFECTS\.map/);
+  assert.match(studio, /DISPLAY_NAME_EFFECT_COLOR_MODE/);
   assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameFuzzySettings/);

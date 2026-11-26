@@ -160,6 +160,22 @@ testCase("community profile popout keeps member actions separate from the owner'
 });
 
 
+testCase("PeakScore role rail always shows the five fixed groups and profile badges include inherited base roles", () => {
+  for (const label of ["FOUNDER", "ADMINISTRADORES", "MODERADORES", "PROFESORES", "MIEMBROS"]) {
+    assert.ok(page.includes('label: "' + label + '"'), "Missing fixed role group: " + label);
+  }
+  assert.match(page, /\/images\/community\/roles\/founder\.png/);
+  assert.match(page, /\/images\/community\/roles\/admin\.png/);
+  assert.match(page, /\/images\/community\/roles\/moderator\.png/);
+  assert.match(page, /\/images\/community\/roles\/professor\.png/);
+  assert.match(page, /\/images\/community\/roles\/member\.png/);
+  assert.match(page, /function effectiveCommunityRoleKeys/);
+  assert.match(page, /withInheritedCommunityMemberRoles/);
+  assert.match(page, /withInheritedCommunityProfileRoles/);
+  const fullProfile = page.slice(page.indexOf("{!communityProfileStudioOpen && selectedCommunityProfile"));
+  assert.ok(fullProfile.indexOf("ps-community-profile-bio-readonly") < fullProfile.indexOf('aria-label="Roles de comunidad"'));
+});
+
 testCase("member rail is role-grouped, collapsible, and uses a clean Discord-style online heading", () => {
   assert.match(page, /community-member-group-label/);
   assert.match(page, /community-member-group-toggle/);

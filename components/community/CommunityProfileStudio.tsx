@@ -493,6 +493,8 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
 
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
   const [portalReady, setPortalReady] = useState(false);
+  const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
+  const closeDirtyRef = useRef(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
@@ -607,6 +609,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (closeConfirmationOpen) { setCloseConfirmationOpen(false); return; }
       if (posterCollectionOpen) { setPosterCollectionOpen(false); setPosterCollectionTarget(null); return; }
       if (bannerPickerOpen) { setBannerPickerOpen(false); return; }
       if (avatarPickerOpen) { setAvatarPickerOpen(false); return; }
@@ -630,7 +633,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         setAvatarMenuOpen(false);
         return;
       }
-      if (!busy && !uploading && !deleting) onClose();
+      if (!busy && !uploading && !deleting) {
+        if (closeDirtyRef.current) setCloseConfirmationOpen(true);
+        else onClose();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
 
@@ -638,7 +644,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, bannerPickerOpen, posterCollectionOpen, colorPickerOpen, avatarMenuOpen]);
+  }, [onClose, busy, uploading, deleting, closeConfirmationOpen, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, bannerPickerOpen, posterCollectionOpen, colorPickerOpen, avatarMenuOpen]);
 
   useEffect(() => {
     if (!appearancePicker) return;
@@ -715,6 +721,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
+  const hasPendingCloseChanges = hasUnsavedChanges || hasPickerChanges;
+  closeDirtyRef.current = hasPendingCloseChanges;
+  function requestEditorClose() {
+    if (busy || uploading || deleting) return;
+    if (closeDirtyRef.current) setCloseConfirmationOpen(true);
+    else onClose();
+  }
+
   const profileThemeInk = readableThemeText(cardColor, themeColorSecondary);
   const previewStyle = {
     "--editor-accent": accentColor,
@@ -1078,7 +1092,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setProfileEffectId(updated.profileEffectId ?? "none");
       setStatusExpiresAt(updated.statusExpiresAt ?? null);
 
-      if (payload.appearanceSaved !== false) onSaved();
+      if (payload.appearanceSaved !== false) {
+        onSaved();
+        if (closeConfirmationOpen) onClose();
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudieron guardar los cambios.");
     } finally {
@@ -1183,14 +1200,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
   return createPortal(
     <div
-      className="ps-community-editor-overlay"
+      className={"ps-community-editor-overlay" + (closeConfirmationOpen ? " is-close-confirming" : "")}
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy && !uploading && !deleting) onClose();
+        if (event.target === event.currentTarget) requestEditorClose();
       }}
     >
     <div
-      className="ps-community-editor-v2"
+      className={"ps-community-editor-v2" + (closeConfirmationOpen ? " is-close-confirming" : "")}
       style={previewStyle}
       role="dialog"
       aria-modal="true"
@@ -1204,7 +1221,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <p>Personaliza cómo te ve la comunidad.</p>
           </div>
           <div className="ps-community-editor-header-actions">
-            <button type="button" className="ps-community-editor-close" onClick={onClose} aria-label="Cerrar editor">
+            <button type="button" className="ps-community-editor-close" onClick={requestEditorClose} aria-label="Cerrar editor">
               <X size={19}/>
             </button>
           </div>
@@ -1441,7 +1458,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
 
-        {hasUnsavedChanges && (
+        {closeConfirmationOpen ? (
+          <div className="ps-community-editor-close-confirm" role="alertdialog" aria-live="assertive" aria-label="Cambios sin guardar">
+            <div className="ps-community-editor-close-confirm-copy">
+              <strong>¡Tienes cambios sin guardar!</strong>
+              <span>¿Quieres seguir editando o salir sin guardar?</span>
+            </div>
+            <div className="ps-community-editor-close-confirm-actions">
+              <button type="button" className="is-keep" onClick={() => setCloseConfirmationOpen(false)}>
+                Seguir editando
+              </button>
+              <button type="button" className="is-discard" onClick={() => { discardChanges(); setCloseConfirmationOpen(false); onClose(); }}>
+                Descartar
+              </button>
+              {hasUnsavedChanges && (
+                <button type="button" className="is-save" onClick={() => void saveProfile()} disabled={!canSave}>
+                  {busy ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <Save size={15}/>}
+                  {busy ? "Guardando…" : "Guardar y salir"}
+                </button>
+              )}
+            </div>
+          </div>
+        ) : hasUnsavedChanges && (
           <div className="ps-community-editor-savebar" role="status" aria-live="polite">
             <span>¡No te olvides de guardar los cambios!</span>
             <div>
@@ -2487,8 +2525,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   padding:2px 4px!important;border:1px solid transparent!important;border-radius:6px!important;
   outline:none!important;background:transparent!important;box-shadow:none!important;
   color:var(--editor-theme-text,#f2f3f5)!important;
-  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
-  caret-color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:currentColor!important;
+  caret-color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
   font-size:27px!important;font-weight:850!important;
   line-height:1.15!important;letter-spacing:-.025em!important;text-align:left!important;
   transition:border-color .12s ease,background .12s ease!important;
@@ -2497,7 +2535,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-name-input:hover {border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 25%,transparent)!important}
 .ps-community-editor-preview-name-input:focus {
   border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 42%,transparent)!important;
-  background:color-mix(in srgb,var(--editor-theme-text,#fff) 5%,transparent)!important;
+  background-color:transparent!important;
   outline:none!important;box-shadow:none!important;
 }
 
@@ -2509,7 +2547,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-tag,
 .ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
-.ps-community-editor-preview-card .ps-community-editor-preview-name-input,
+
 .ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
 .ps-community-editor-preview-card .ps-community-editor-preview-meta,
 .ps-community-editor-preview-card .ps-community-editor-preview-meta *,
@@ -3173,6 +3211,91 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {
   background:#747b86!important;
 }
+
+/* Name color belongs to the selected name style; profile contrast belongs to
+   descriptive fields. Keep the text input from inheriting a theme override. */
+.ps-community-editor-preview-name-input {
+  color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
+  -webkit-text-fill-color:currentColor!important;
+  background-color:transparent!important;
+  transition:border-color .12s ease!important;
+}
+.ps-community-editor-preview-name-input:focus {
+  background-color:transparent!important;
+  box-shadow:none!important;
+}
+.ps-community-editor-preview-name-input.is-name-style-8bit {
+  font-size:35px!important;
+  line-height:1.25!important;
+  letter-spacing:-.015em!important;
+  min-height:42px!important;
+  height:42px!important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy>strong.is-name-style-8bit,
+.ps-community-status-profile-copy>strong.is-name-style-8bit,
+.ps-community-profile-live-readonly-body>.ps-community-editor-preview-name-static.is-name-style-8bit {
+  font-size:clamp(29px,2.5vw,34px)!important;
+  line-height:1.3!important;
+  letter-spacing:-.015em!important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy>small,
+.ps-community-status-profile-preview .ps-community-status-profile-copy>small {
+  color:var(--status-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+  opacity:.86!important;
+}
+/* Discord-like discard prompt: the studio shifts aside while a red decision
+   bar enters from below, without closing or resetting the draft prematurely. */
+.ps-community-editor-v2 {
+  position:relative!important;
+  transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s ease!important;
+}
+.ps-community-editor-v2.is-close-confirming {
+  transform:translateX(-28px) scale(.992)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 22%),0 22px 70px rgb(0 0 0 / 42%)!important;
+}
+.ps-community-editor-main {position:relative!important}
+.ps-community-editor-close-confirm {
+  position:absolute!important;z-index:40!important;left:50%!important;bottom:14px!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;
+  width:min(760px,calc(100% - 32px))!important;min-height:76px!important;box-sizing:border-box!important;
+  padding:13px 16px!important;border:1px solid rgb(255 153 153 / 42%)!important;border-radius:13px!important;
+  background:linear-gradient(115deg,#9f3039 0%,#76272f 100%)!important;
+  box-shadow:0 18px 48px rgb(0 0 0 / 42%),0 5px 16px rgb(0 0 0 / 22%)!important;
+  color:#fff!important;transform:translate(-50%,28px)!important;
+  animation:ps-community-close-confirm-enter .26s cubic-bezier(.2,.8,.2,1) forwards!important;
+}
+.ps-community-editor-close-confirm-copy {
+  display:flex!important;flex-direction:column!important;gap:4px!important;min-width:180px!important;
+}
+.ps-community-editor-close-confirm-copy strong {color:#fff!important;font-size:13px!important;font-weight:850!important}
+.ps-community-editor-close-confirm-copy span {color:rgb(255 255 255 / 82%)!important;font-size:11px!important;line-height:1.35!important}
+.ps-community-editor-close-confirm-actions {
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important;
+}
+.ps-community-editor-close-confirm-actions button {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+  min-height:36px!important;padding:0 12px!important;border:1px solid rgb(255 255 255 / 24%)!important;
+  border-radius:8px!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;
+}
+.ps-community-editor-close-confirm-actions .is-keep {background:rgb(38 28 31 / 42%)!important;color:#fff!important}
+.ps-community-editor-close-confirm-actions .is-discard {background:rgb(255 255 255 / 12%)!important;color:#fff!important}
+.ps-community-editor-close-confirm-actions .is-save {background:#fff!important;color:#8e2932!important;border-color:#fff!important}
+.ps-community-editor-close-confirm-actions button:disabled {opacity:.55!important;cursor:not-allowed!important}
+@keyframes ps-community-close-confirm-enter {
+  from {opacity:0;transform:translate(-50%,34px)}
+  to {opacity:1;transform:translate(-50%,0)}
+}
+@media(max-width:760px) {
+  .ps-community-editor-v2.is-close-confirming {transform:translateX(0) scale(.995)!important}
+  .ps-community-editor-close-confirm {
+    bottom:8px!important;flex-direction:column!important;align-items:stretch!important;
+    gap:10px!important;width:calc(100% - 16px)!important;padding:12px!important;
+  }
+  .ps-community-editor-close-confirm-actions {justify-content:stretch!important}
+  .ps-community-editor-close-confirm-actions button {flex:1 1 auto!important}
+}
+
 
 `}</style>
     </div>

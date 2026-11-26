@@ -1097,7 +1097,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
       if (payload.appearanceSaved !== false) {
         onSaved();
-        if (closeConfirmationOpen) onClose();
+        setCloseConfirmationOpen(false);
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudieron guardar los cambios.");
@@ -1406,7 +1406,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
                     } as CSSProperties}
                   />                  <div className="ps-community-editor-preview-identity-line">
-                    <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
+                    {accountTag(profile.accountName) && (
+                      <>
+                        <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
+                        <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
+                      </>
+                    )}
                     <textarea
                       ref={pronounsTextareaRef}
                       className="ps-community-editor-preview-pronouns"
@@ -1463,32 +1468,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
 
-        {closeConfirmationOpen ? (
-          <div className="ps-community-editor-close-confirm" role="alertdialog" aria-live="assertive" aria-label="Cambios sin guardar">
-            <div className="ps-community-editor-close-confirm-copy">
-              <strong>¡Tienes cambios sin guardar!</strong>
-              <span>¿Quieres seguir editando o salir sin guardar?</span>
-            </div>
-            <div className="ps-community-editor-close-confirm-actions">
-              <button type="button" className="is-keep" onClick={() => setCloseConfirmationOpen(false)}>
-                Seguir editando
-              </button>
-              <button type="button" className="is-discard" onClick={() => { discardChanges(); setCloseConfirmationOpen(false); onClose(); }}>
-                Descartar
-              </button>
-              {hasUnsavedChanges && (
-                <button type="button" className="is-save" onClick={() => void saveProfile()} disabled={!canSave}>
-                  {busy ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <Save size={15}/>}
-                  {busy ? "Guardando…" : "Guardar y salir"}
-                </button>
-              )}
-            </div>
-          </div>
-        ) : hasUnsavedChanges && (
-          <div className="ps-community-editor-savebar" role="status" aria-live="polite">
-            <span>¡No te olvides de guardar los cambios!</span>
+        {(hasUnsavedChanges || hasPickerChanges) && (
+          <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
+            <span>{closeConfirmationOpen ? "Tienes cambios sin guardar. Guárdalos antes de salir." : "¡No te olvides de guardar los cambios!"}</span>
             <div>
-              <button type="button" className="is-secondary" onClick={discardChanges} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
+              <button type="button" className="is-secondary" onClick={() => { discardChanges(); setCloseConfirmationOpen(false); }} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
                 Restablecer
               </button>
               <button type="button" className="is-primary" onClick={() => void saveProfile()} disabled={!canSave || !hasUnsavedChanges} aria-label="Guardar cambios">
@@ -3241,56 +3225,53 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
   opacity:.86!important;
 }
-/* Discord-like discard prompt: the studio shifts aside while a red decision
-   bar enters from below, without closing or resetting the draft prematurely. */
+/* Premium Discord-style unsaved state: the editor shifts slightly and its
+   own footer turns red. Reset restores the last saved snapshot; Save persists it. */
 .ps-community-editor-v2 {
   position:relative!important;
-  transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s ease!important;
+  transform:translateX(0) scale(1)!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
 }
 .ps-community-editor-v2[data-close-confirming="true"] {
-  transform:translateX(-28px) scale(.992)!important;
-  box-shadow:0 0 0 1px rgb(239 68 68 / 22%),0 22px 70px rgb(0 0 0 / 42%)!important;
+  transform:translateX(-22px) translateY(-3px) scale(.994)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
 }
-.ps-community-editor-main {position:relative!important}
-.ps-community-editor-close-confirm {
-  position:absolute!important;z-index:40!important;left:50%!important;bottom:14px!important;
-  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;
-  width:min(760px,calc(100% - 32px))!important;min-height:76px!important;box-sizing:border-box!important;
-  padding:13px 16px!important;border:1px solid rgb(255 153 153 / 42%)!important;border-radius:13px!important;
-  background:linear-gradient(115deg,#9f3039 0%,#76272f 100%)!important;
-  box-shadow:0 18px 48px rgb(0 0 0 / 42%),0 5px 16px rgb(0 0 0 / 22%)!important;
-  color:#fff!important;transform:translate(-50%,28px)!important;
-  animation:ps-community-close-confirm-enter .26s cubic-bezier(.2,.8,.2,1) forwards!important;
+.ps-community-editor-savebar {
+  transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
 }
-.ps-community-editor-close-confirm-copy {
-  display:flex!important;flex-direction:column!important;gap:4px!important;min-width:180px!important;
+.ps-community-editor-savebar.is-close-warning {
+  border-color:rgb(237 82 92 / 60%)!important;
+  background:linear-gradient(110deg,#382226 0%,#292126 100%)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 13%),0 10px 30px rgb(0 0 0 / 27%)!important;
+  animation:ps-community-unsaved-bar-enter .24s cubic-bezier(.2,.8,.2,1) both!important;
 }
-.ps-community-editor-close-confirm-copy strong {color:#fff!important;font-size:13px!important;font-weight:850!important}
-.ps-community-editor-close-confirm-copy span {color:rgb(255 255 255 / 82%)!important;font-size:11px!important;line-height:1.35!important}
-.ps-community-editor-close-confirm-actions {
-  display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important;
+.ps-community-editor-savebar.is-close-warning>span {
+  color:#ffe4e6!important;
 }
-.ps-community-editor-close-confirm-actions button {
-  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
-  min-height:36px!important;padding:0 12px!important;border:1px solid rgb(255 255 255 / 24%)!important;
-  border-radius:8px!important;font-size:11px!important;font-weight:800!important;cursor:pointer!important;
+.ps-community-editor-savebar.is-close-warning .is-secondary {
+  border-color:rgb(248 113 113 / 32%)!important;
+  background:rgb(127 29 29 / 24%)!important;
+  color:#ffe4e6!important;
 }
-.ps-community-editor-close-confirm-actions .is-keep {background:rgb(38 28 31 / 42%)!important;color:#fff!important}
-.ps-community-editor-close-confirm-actions .is-discard {background:rgb(255 255 255 / 12%)!important;color:#fff!important}
-.ps-community-editor-close-confirm-actions .is-save {background:#fff!important;color:#8e2932!important;border-color:#fff!important}
-.ps-community-editor-close-confirm-actions button:disabled {opacity:.55!important;cursor:not-allowed!important}
-@keyframes ps-community-close-confirm-enter {
-  from {opacity:0;transform:translate(-50%,34px)}
-  to {opacity:1;transform:translate(-50%,0)}
+.ps-community-editor-savebar.is-close-warning .is-primary {
+  background:#e34b55!important;
+  border-color:#e34b55!important;
+  color:#fff!important;
+  box-shadow:0 3px 10px rgb(227 75 85 / 24%)!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-primary:hover:not(:disabled) {
+  background:#f05b65!important;
+  border-color:#f05b65!important;
+  transform:translateY(-1px)!important;
+}
+@keyframes ps-community-unsaved-bar-enter {
+  from {opacity:.7;transform:translateY(8px)}
+  to {opacity:1;transform:translateY(0)}
 }
 @media(max-width:760px) {
-  .ps-community-editor-v2[data-close-confirming="true"] {transform:translateX(0) scale(.995)!important}
-  .ps-community-editor-close-confirm {
-    bottom:8px!important;flex-direction:column!important;align-items:stretch!important;
-    gap:10px!important;width:calc(100% - 16px)!important;padding:12px!important;
+  .ps-community-editor-v2[data-close-confirming="true"] {
+    transform:translateX(0) translateY(-2px) scale(.995)!important;
   }
-  .ps-community-editor-close-confirm-actions {justify-content:stretch!important}
-  .ps-community-editor-close-confirm-actions button {flex:1 1 auto!important}
 }
 
 
@@ -3327,6 +3308,45 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   display:none!important;
 }
 
+
+
+/* Discord-like account identity: handle, separator and pronouns share one
+   baseline. The handle is text, not a disconnected badge. */
+.ps-community-editor-preview-identity-line {
+  display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:7px!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-tag {
+  display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;text-shadow:none!important;
+  color:var(--editor-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#202126)!important;
+  font-size:14px!important;font-weight:650!important;line-height:1.35!important;opacity:.9!important;
+}
+.ps-community-editor-preview-identity-separator {
+  display:inline-block!important;flex:0 0 auto!important;
+  color:var(--editor-theme-text,#202126)!important;opacity:.62!important;
+  font-size:13px!important;line-height:1!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 180px!important;max-width:min(190px,calc(100% - 110px))!important;
+  color:var(--editor-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#202126)!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns::placeholder {
+  color:var(--editor-theme-text,#202126)!important;opacity:.58!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.effect-plain:not(.color-custom-gradient),
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.effect-plain:not(.color-custom-gradient) {
+  color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  -webkit-text-fill-color:currentColor!important;
+  background:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.is-name-style-8bit,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.is-name-style-8bit {
+  font-size:1.04em!important;line-height:1.28!important;letter-spacing:0!important;
+  filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+}
 
 
 `}</style>

@@ -4435,7 +4435,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 @media(max-width:760px) {
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-    top:88px!important;
+    top:116px!important;
     height:96px!important;
     min-height:96px!important;
   }
@@ -4456,7 +4456,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 /* Match the public profile reference: avatar, name, identity, bio and join date. */
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-  top:105px!important;
+  top:130px!important;
   left:0!important;
   right:0!important;
   width:100%!important;
@@ -4495,7 +4495,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   max-width:calc(100% - 154px)!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-  padding:42px 32px 26px!important;
+  padding:67px 32px 26px!important;
   overflow-y:auto!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-name-input {
@@ -4548,7 +4548,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     max-width:calc(100% - 120px)!important;
   }
   .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-    padding:36px 18px 20px!important;
+    padding:64px 18px 20px!important;
   }
 }
 `}</style>

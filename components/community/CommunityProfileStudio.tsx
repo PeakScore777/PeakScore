@@ -3533,16 +3533,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:relative!important;
   display:block!important;
   flex:0 0 142px!important;
-  width:100%!important;
+  width:calc(100% + 64px)!important;
   min-height:142px!important;
   height:142px!important;
-  margin:-77px 0 22px!important;
+  margin:-77px -32px 22px!important;
   overflow:visible!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
   position:absolute!important;
   z-index:5!important;
-  left:0!important;
+  left:29px!important;
   top:0!important;
   width:142px!important;
   height:142px!important;
@@ -3586,7 +3586,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:absolute!important;
   z-index:7!important;
   left:190px!important;
-  bottom:19px!important;
+  bottom:49px!important;
   display:flex!important;
   align-items:center!important;
   gap:7px!important;

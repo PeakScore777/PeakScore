@@ -4764,6 +4764,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   height:auto!important;
   min-width:0!important;
   min-height:0!important;
+  padding:104px 22px 106px!important;
+  box-sizing:border-box!important;
   overflow-x:hidden!important;
   overflow-y:visible!important;
 }

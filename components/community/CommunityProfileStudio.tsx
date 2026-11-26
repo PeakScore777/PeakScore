@@ -4598,8 +4598,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
 
 
-/* Laptop-friendly scrollbar: fully hidden outside the preview, visible on hover.
-   Scrolling remains native (wheel, trackpad and draggable thumb). */
+/* Thin, rounded native scrollbar on the profile preview.
+   The thumb appears only while the pointer is over the preview card. */
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body {
@@ -4614,25 +4614,26 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body::-webkit-scrollbar {
   display:block!important;
-  width:9px!important;
+  width:5px!important;
   height:0!important;
   background:transparent!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body::-webkit-scrollbar-track {
-  margin:6px 0!important;
+  margin:5px 0!important;
+  border:0!important;
+  border-radius:999px!important;
   background:transparent!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
-  min-height:38px!important;
-  border:2px solid transparent!important;
+  min-height:34px!important;
+  border:0!important;
   border-radius:999px!important;
   background:transparent!important;
-  background-clip:padding-box!important;
-  transition:background-color .16s ease!important;
+  transition:background-color .14s ease!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
@@ -4641,37 +4642,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body::-webkit-scrollbar-corner {
   display:none!important;
+  width:0!important;
+  height:0!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  > .ps-community-editor-preview-body,
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body:hover,
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body:focus-within {
+  > .ps-community-editor-preview-body {
   scrollbar-width:thin!important;
-  scrollbar-color:#858c99 transparent!important;
+  scrollbar-color:#727780 transparent!important;
   -ms-overflow-style:auto!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb,
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb,
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body:focus-within::-webkit-scrollbar-thumb {
-  background:#858c99!important;
-  background-clip:padding-box!important;
+  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  background:#727780!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
-  background:#c0c5ce!important;
-  background-clip:padding-box!important;
+  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover,
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb:active {
+  background:#b5bac3!important;
 }
 @media(prefers-reduced-motion:reduce) {
   .ps-community-editor-preview-frame

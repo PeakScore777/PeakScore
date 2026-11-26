@@ -1691,10 +1691,24 @@
 }
 @media(prefers-reduced-motion:reduce){.ps-community-editor-preview-banner.is-peakscore-banner::after{animation:none!important}}
 
-/* Presence marker follows the avatar theme ring in public profile cards. */
-.ps-community-member-popout__avatar>.ps-community-editor-presence-dot,
-.ps-community-profile-avatar>.ps-community-editor-presence-dot {
-  right:-5px!important;bottom:-2px!important;width:20px!important;height:20px!important;
-  box-sizing:border-box!important;border:4px solid var(--profile-theme-color,#171b22)!important;
-  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;
+/* Public member/profile cards use plain <i> presence markers.
+   Keep their ring matched to each avatar's real outer border. */
+.ps-community-member-popout__avatar > i,
+.ps-community-profile-avatar > i {
+  right:-5px!important;
+  bottom:-2px!important;
+  width:20px!important;
+  height:20px!important;
+  box-sizing:border-box!important;
+  border:4px solid #171b22!important;
+  border-radius:50%!important;
+  background:#737b86!important;
+  box-shadow:none!important;
+}
+.ps-community-profile-avatar > i {
+  border-color:#171a20!important;
+}
+.ps-community-member-popout__avatar > i.is-online,
+.ps-community-profile-avatar > i.is-online {
+  background:#23a55a!important;
 }

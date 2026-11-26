@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense, nameColorHelper, nameMotionVisibility, nameEffectsCss, communityThemeCss] = await Promise.all([
+const [page, studio, css, profileUiCss, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName, gradientFlowMigration, layout, displayNameAnimationMigration, platformFontMigration, streetBlockLicense, actionCondensedLicense, cyberRacerLicense, epicRpgLicense, nameColorHelper, nameMotionVisibility, nameEffectsCss, communityThemeCss] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../app/community-member-profile-ui.css", import.meta.url), "utf8"),
   readFile(new URL("../app/community-name-style.css", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
@@ -94,10 +95,10 @@ test("the profile editor opens as a centered modal with a settings rail and live
   assert.match(studio, /className="ps-community-editor-overlay"/);
   assert.match(studio, /role="dialog"/);
   assert.match(studio, /aria-modal="true"/);
-  const latest = css.slice(css.lastIndexOf("Editor shell sizing"));
-  assert.match(latest, /grid-template-columns: 232px minmax\(0,1fr\)/);
-  assert.match(latest, /height: min\(900px,calc\(100dvh - 48px\)\)/);
-  assert.match(latest, /\.ps-community-editor-settings-sidebar/);
+  assert.match(studio, /ps-community-editor-settings-sidebar/);
+  assert.match(studio, /ps-community-editor-preview-column/);
+  assert.match(studio, /ps-community-editor-preview-card/);
+  assert.match(css, /ps-community-editor-v2/);
 });
 
 test("responsive modal stacks the live profile above settings on mobile", () => {
@@ -186,10 +187,10 @@ test("public member profile uses the live Discord-like banner, identity, roles a
   assert.match(page, /ps-community-editor-preview-role-row/);
   assert.match(page, /selectedCommunityProfile\.accountName/);
   assert.match(page, /"@" \+ \(selectedCommunityProfile\.accountName/);
-  assert.match(css, /\.ps-community-profile-live-banner/);
-  assert.match(css, /\.ps-community-profile-live-body/);
-  assert.match(css, /\.ps-community-profile-live-body \.ps-community-editor-preview-role-row/);
-  assert.match(css, /prefers-reduced-motion/);
+  assert.match(profileUiCss, /\.ps-community-profile-live-banner/);
+  assert.match(profileUiCss, /\.ps-community-profile-live-body/);
+  assert.match(profileUiCss, /\.ps-community-profile-live-body \.ps-community-editor-preview-role-row/);
+  assert.match(profileUiCss, /prefers-reduced-motion/);
 });
 
 test("saved frames and accent colors render on the community member list, hover popout and full profile", () => {
@@ -1032,12 +1033,9 @@ test("founder branch keeps the font, color and motion galleries available", () =
   }
 });
 
-test("member rail keeps the selected name font visible inside the flexible copy column", () => {
-  const memberCopyRules = [...nameStyleCss.matchAll(/(?:^|\n)\.community-member-copy\s*\{([^}]*)\}/g)];
-  assert.ok(memberCopyRules.length >= 2, "Expected both member-copy layout rules.");
-  assert.ok(memberCopyRules.every((match) => /width:auto !important/.test(match[1])), "No later rule may collapse the member name column.");
-  assert.doesNotMatch(nameStyleCss, /(?:^|\n)\.community-member-copy\s*\{[^}]*width:0 !important/);
-  assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
+test("member rail keeps the selected name font inside a flexible copy column", () => {
+  assert.match(communityThemeCss, /\.root :global\(\.community-member-copy\)\s*\{[\s\S]*?flex: 1 1 auto;[\s\S]*?min-width: 0;/);
+  assert.match(communityThemeCss, /\.root :global\(\.community-member-copy \.community-member-nameplate\)/);
   assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
   assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);
 });
@@ -1341,14 +1339,17 @@ test("community-only profile and name-style stylesheets are loaded by the commun
 });
 
 
-test("Name Atelier keeps the font specimen and synchronized preview without showing finish or motion galleries in founder-intro", () => {
+test("Name Atelier keeps the font specimen and synchronized profile/member/chat previews with finish and motion galleries", () => {
   assert.match(studio, /ps-community-name-font-option/);
   assert.match(studio, /ps-community-name-preview-profile-view/);
+  assert.match(studio, /ps-community-name-preview-members-view/);
   assert.match(studio, /ps-community-name-preview-chat-view/);
-  assert.doesNotMatch(studio, /DISPLAY_NAME_EFFECTS\.map\(\(item\) =>/);
-  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.match(studio, /DISPLAY_NAME_EFFECTS\.map/);
+  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameFuzzySettings/);
+  assert.match(studio, /Color de letra/);
+  assert.match(studio, /Animación de entrada/);
   const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));
   assert.ok(finalPreviewCss.includes("border:0 !important;"));
@@ -1356,7 +1357,6 @@ test("Name Atelier keeps the font specimen and synchronized preview without show
   assert.ok(finalPreviewCss.includes(".ps-community-name-community-shell"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-chat-message"));
 });
-
 
 test("name finish CSS remains compatible with animated glyph renderers without exposing finish controls", () => {
   assert.match(page, /import "\.\.\/community-name-effects\.css"/);

@@ -205,14 +205,18 @@
 .ps-community-status-profile-copy > strong.effect-toon { color:#fff !important; -webkit-text-stroke:.45px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
 .ps-community-status-profile-copy > strong.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px #74305f !important; }
 
-/* Keep the online indicator fully green: no theme-colored or black outline. */
+/* Discord-style presence: green center and profile-theme ring; avatar halo uses the same theme. */
+.ps-community-status-profile-preview > .ps-community-status-preview-avatar {
+  border-color: var(--status-theme, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px var(--status-theme, #B7D7C3), 0 6px 18px rgb(0 0 0 / 38%) !important;
+}
 .ps-community-status-profile-preview > .ps-community-status-preview-avatar .ps-community-editor-presence-dot {
   width: 18px !important;
   height: 18px !important;
-  border: 0 !important;
+  border: 4px solid var(--status-theme, #B7D7C3) !important;
   outline: 0 !important;
   background: #23a55a !important;
-  box-shadow: none !important;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%) !important;
 }
 .ps-community-status-profile-preview > .ps-community-status-preview-avatar .ps-community-editor-presence-dot.is-offline {
   background: #747b86 !important;

@@ -2247,10 +2247,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 <style jsx global>{`/* Discord-like inline biography: no inner scrollbar, natural height and readable input surface. */
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
   border-color: var(--editor-card, #B7D7C3) !important;
-  box-shadow: 0 0 0 2px #232428, 0 7px 18px #0006 !important;
+  box-shadow: 0 0 0 2px var(--editor-card, #B7D7C3), 0 7px 18px #0006 !important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot {
-  border: 4px solid #232428 !important;
+  border: 4px solid var(--editor-card, #B7D7C3) !important;
   background: #23a55a !important;
   box-shadow: 0 0 0 1px rgb(255 255 255 / 12%) !important;
 }
@@ -2259,16 +2259,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   display:none !important; content:none !important; animation:none !important; box-shadow:none !important;
 }
 
-/* Presence dots: solid green, without the dark outer ring, in every editor preview. */
+/* Discord-style presence: green center with a theme-colored outer ring. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  border-color: var(--editor-card, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px var(--editor-card, #B7D7C3), 0 7px 18px #0006 !important;
+}
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot,
 .ps-community-name-style-profile-preview .ps-community-editor-presence-dot,
 .ps-community-status-profile-preview .ps-community-editor-presence-dot {
   width: 18px !important;
   height: 18px !important;
-  border: 0 !important;
+  border: 4px solid var(--editor-card, var(--status-theme, #B7D7C3)) !important;
   outline: 0 !important;
   background: #23a55a !important;
-  box-shadow: none !important;
+  box-shadow: 0 1px 4px #0005 !important;
+}
+.ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+  border-color: var(--status-theme, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px var(--status-theme, #B7D7C3), 0 6px 18px #0006 !important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-offline,
 .ps-community-name-style-profile-preview .ps-community-editor-presence-dot.is-offline,
@@ -2278,7 +2286,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot::before,
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot::after,
 .ps-community-name-style-profile-preview .ps-community-editor-presence-dot::before,
-.ps-community-name-style-profile-preview .ps-community-editor-presence-dot::after {
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot::after,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot::before,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot::after {
   display: none !important;
   content: none !important;
   box-shadow: none !important;

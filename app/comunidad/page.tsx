@@ -2387,7 +2387,7 @@ export default function CommunityPage() {
                     <button type="button" className="community-server-chevron-button"
                       onClick={() => setCommunityServerMenuOpen((open) => !open)}
                       aria-haspopup="menu" aria-expanded={communityServerMenuOpen}
-                      aria-label="Abrir ajustes de la comunidad" title="Ajustes del servidor">
+                      aria-label={isFounder ? "Abrir control central de founder" : "Abrir ajustes de la comunidad"} title="Ajustes del servidor">
                       <ChevronDown size={15} className={"community-server-menu-chevron" + (communityServerMenuOpen ? " is-open" : "")}/>
                     </button>
                   </div>
@@ -2608,6 +2608,17 @@ export default function CommunityPage() {
         <section className="community-chat-column">
           <header className="community-chat-header">
             <div className="community-chat-title">
+              <button
+                type="button"
+                className="community-mobile-menu lg:hidden"
+                onClick={() => setMobileChannelsOpen(true)}
+                aria-label="Abrir canales"
+                aria-controls="community-channel-drawer"
+                aria-expanded={mobileChannelsOpen}
+                title="Abrir canales"
+              >
+                <Menu size={18}/>
+              </button>
               <Hash size={21} className="community-chat-hash"/>
               <h1>{activeChannel?.name ?? "Comunidad"}</h1>
               {activeChannel?.is_private && <LockKeyhole size={14} className="community-channel-lock"/>}

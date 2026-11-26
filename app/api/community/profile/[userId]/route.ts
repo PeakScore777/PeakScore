@@ -280,9 +280,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       userId: data.user_id,
       memberNumber: data.member_number,
       displayName: data.display_name,
-      accountName: typeof accountProfileResult.data?.full_name === "string"
-        ? accountProfileResult.data.full_name
-        : "",
+      accountName: typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "",
       pronouns: data.pronouns ?? "",
       statusText: data.status_expires_at && Date.parse(data.status_expires_at) <= Date.now() ? "" : data.status_text ?? "",
       statusExpiresAt: data.status_expires_at && Date.parse(data.status_expires_at) > Date.now() ? data.status_expires_at : null,

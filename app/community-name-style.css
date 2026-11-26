@@ -9288,3 +9288,19 @@ html:has(.ps-community-picker-overlay) * {
 .ps-community-name-style-profile-handle:empty {
   display:none!important;
 }
+
+/* Make the live social card use the same generous 8-bit scale as the editor. */
+.ps-community-profile-live-card .ps-community-editor-preview-name-static.is-name-style-8bit {
+  font-size:clamp(29px,2.5vw,34px)!important;
+  line-height:1.3!important;
+  letter-spacing:0!important;
+}
+/* Explicitly replace the older automatic-ink override with the chosen name
+   pigment in the name-style preview (including its plain-effect variant). */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy>.ps-community-name-preview-live.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy>strong.color-default.effect-plain,
+.ps-community-status-profile-preview .ps-community-status-profile-copy>strong.color-default.effect-plain,
+.ps-community-profile-live-card .ps-community-editor-preview-name-static.color-default.effect-plain {
+  color:var(--name-solid-color,var(--status-theme-text,var(--editor-theme-text,#202126)))!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,var(--editor-theme-text,#202126)))!important;
+}

@@ -1019,12 +1019,14 @@ export default function CommunityPage() {
   }, [userId, activeSpace?.id, activeSpace?.space_type, isFounder]);
 
   const communityMemberGroups = useMemo(() => {
+    // Keep the Discord-style staff hierarchy visible even when a role has no members.
+    // The order here is the visual order of the right-hand member rail.
     const definitions = [
-      { key: "fundador", label: "FOUNDER", color: "#8B5CF6", iconPath: "/images/community/roles/founder.png", roles: ["fundador"] },
-      { key: "administrador", label: "ADMINISTRADORES", color: "#ED4245", iconPath: "/images/community/roles/admin.png", roles: ["administrador"] },
-      { key: "moderador", label: "MODERADORES", color: "#57F287", iconPath: "/images/community/roles/moderator.png", roles: ["moderador"] },
-      { key: "profesor", label: "PROFESORES", color: "#E6B85C", iconPath: "/images/community/roles/professor.png", roles: ["profesor", "docente"] },
-      { key: "members", label: "MIEMBROS", color: "#929AA6", iconPath: "/images/community/roles/member.png", roles: [] },
+      { key: "fundador", label: "FOUNDER", shortLabel: "F", color: "#8B5CF6", iconPath: "/images/community/roles/founder.png", roles: ["fundador"] },
+      { key: "administrador", label: "ADMINS", shortLabel: "A", color: "#ED4245", iconPath: "/images/community/roles/admin.png", roles: ["administrador"] },
+      { key: "moderador", label: "MODERADORES", shortLabel: "M", color: "#57F287", iconPath: "/images/community/roles/moderator.png", roles: ["moderador"] },
+      { key: "profesor", label: "PROFESORES", shortLabel: "P", color: "#E6B85C", iconPath: "/images/community/roles/professor.png", roles: ["profesor", "docente"] },
+      { key: "members", label: "MIEMBROS", shortLabel: "Mi", color: "#929AA6", iconPath: "/images/community/roles/member.png", roles: [] },
     ];
     const groups = definitions.map((definition) => ({
       ...definition,
@@ -2984,7 +2986,12 @@ export default function CommunityPage() {
               {communityMemberGroups.map((group) => {
                 const collapsed = Boolean(collapsedMemberGroups[group.key]);
                 return (
-                  <section key={group.key} className="community-member-group" data-role={group.key}>
+                  <section
+                    key={group.key}
+                    className={"community-member-group" + (group.members.length === 0 ? " community-member-group-empty" : "")}
+                    data-role={group.key}
+                    data-empty={group.members.length === 0 ? "true" : "false"}
+                  >
                     <button
                       type="button"
                       className="community-member-group-toggle"
@@ -2992,8 +2999,9 @@ export default function CommunityPage() {
                       onClick={() => setCollapsedMemberGroups((current) => ({ ...current, [group.key]: !current[group.key] }))}
                       aria-expanded={!collapsed}
                     >
-                      <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
-                      <span className="community-member-group-role-emblem" style={{ "--member-role-color": group.color } as CSSProperties}>                        <Image
+                      <span className="community-member-group-role-emblem" style={{ "--member-role-color": group.color } as CSSProperties}>
+                        <span className="community-member-group-role-fallback" aria-hidden="true">{group.shortLabel}</span>
+                        <Image
                           src={group.iconPath}
                           alt=""
                           width={20}
@@ -3005,11 +3013,13 @@ export default function CommunityPage() {
                       </span>
                       <span className="community-member-group-label">{group.label}</span>
                       <span className="community-member-group-count">{group.members.length}</span>
+                      <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
                     </button>
-                    {!collapsed && (
+                    {!collapsed && group.members.length > 0 && (
                       <div className="community-member-group-list">
                         {group.members.map((member) => {
                           const isOnline = onlineMemberIds.includes(member.id);
+                          const avatarUrl = member.avatar_url ?? (member.id === userId ? profile?.avatar_url ?? null : null);
                           return (
                             <button type="button" key={member.id} className={"community-member-row" + (isOnline ? "" : " community-member-offline")}
                               onClick={(event) => {
@@ -3020,27 +3030,23 @@ export default function CommunityPage() {
                                 });
                               }}>
                               <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none")}>
-                                {member.avatar_url
-                                  ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                                {avatarUrl
+                                  ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
                                   : initials(member.full_name)}
                                 <i className={isOnline ? "is-online" : "is-offline"}/>
                               </span>
                               <span className="community-member-copy">
-                                {member.id === userId && isFounder ? (
-                                  <span className="community-member-name">{member.full_name}</span>
-                                ) : (
-                                  <CommunityStaticName
-                                    tag="span"
-                                    value={member.full_name}
-                                    className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
-                                    style={{
-                                      "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
-                                      "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
-                                      "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                                      "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
-                                    } as React.CSSProperties}
-                                  />
-                                )}
+                                <CommunityStaticName
+                                  tag="span"
+                                  value={member.full_name}
+                                  className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
+                                  style={{
+                                    "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
+                                    "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
+                                    "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
+                                    "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
+                                  } as React.CSSProperties}
+                                />
                                 {member.status_text && <small>{member.status_text}</small>}
                               </span>
                             </button>

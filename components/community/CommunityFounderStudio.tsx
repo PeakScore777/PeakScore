@@ -324,6 +324,17 @@ export default function CommunityFounderStudio({
       : defaultRole?.role_key ?? "administrador");
     setRoleForm((current) => current.role_key ? current : toRoleForm(defaultRole));
     setChannels((channelRows ?? []) as Channel[]);
+    const targetInitialChannel = initialChannelId
+      ? (channelRows ?? []).find((channel) => channel.id === initialChannelId)
+      : null;
+    if (targetInitialChannel) {
+      setTab("channels");
+      setIsCreatingCategory(false);
+      setIsCreatingChannel(false);
+      setSelectedCategoryId(null);
+      setSelectedChannelId(targetInitialChannel.id);
+      setChannelForm(toChannelForm(targetInitialChannel));
+    }
     const categoryRows = categoryExtended.data ?? [];
     setCategories(categoryRows.map((category) => ({
       id: String(category.id),
@@ -335,7 +346,7 @@ export default function CommunityFounderStudio({
     setCatalogReady(roleIsReady);
     setChannelsReady(channelsAreReady);
     setLoading(false);
-  }, []);
+  }, [initialChannelId]);
 
   useEffect(() => {
     let active = true;
@@ -346,20 +357,7 @@ export default function CommunityFounderStudio({
     return () => { active = false; };
   }, [load]);
 
-  useEffect(() => {
-    if (!initialChannelId || channels.length === 0) return;
-    const target = channels.find((channel) => channel.id === initialChannelId);
-    if (!target) return;
-    const frame = window.requestAnimationFrame(() => {
-      setTab("channels");
-      setIsCreatingCategory(false);
-      setIsCreatingChannel(false);
-      setSelectedCategoryId(null);
-      setSelectedChannelId(target.id);
-      setChannelForm(toChannelForm(target));
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [channels, initialChannelId]);
+
 
   const visibleMembers = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("es");

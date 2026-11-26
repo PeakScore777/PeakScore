@@ -4700,23 +4700,27 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     gap:8px!important;width:auto!important;
   }
 }
-/* The editor shell must end exactly with its workspace: no empty
-   gray rectangle remains beneath the settings and preview panes. */
+/* The workspace reaches the bottom edge of the editor shell. The profile
+   card itself keeps its existing dimensions and top offset. */
 .ps-community-editor-overlay {
   place-items:start center!important;
   padding:16px!important;
 }
 div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] {
-  height:min(906px,calc(100dvh - 32px))!important;
-  max-height:min(906px,calc(100dvh - 32px))!important;
+  display:flex!important;
+  flex-direction:column!important;
+  height:min(980px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
   min-height:0!important;
   overflow:hidden!important;
 }
 div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] > main.ps-community-editor-main {
   position:relative!important;
-  display:flex!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto minmax(0,1fr)!important;
+  align-content:stretch!important;
   flex:1 1 0!important;
-  flex-direction:column!important;
   width:100%!important;
   height:100%!important;
   min-width:0!important;
@@ -4724,17 +4728,28 @@ div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] > ma
   overflow:hidden!important;
 }
 div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-header {
-  flex:0 0 auto!important;
+  grid-row:1!important;
+  min-width:0!important;
+}
+div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-feedback-stack {
+  grid-row:2!important;
+  min-width:0!important;
 }
 div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
-  flex:1 1 0!important;
+  display:grid!important;
+  grid-row:3!important;
+  grid-template-columns:220px minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  align-self:stretch!important;
+  flex:none!important;
   width:100%!important;
-  height:auto!important;
+  height:100%!important;
   min-width:0!important;
   min-height:0!important;
   overflow:hidden!important;
 }
 div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-settings-sidebar {
+  min-width:0!important;
   min-height:0!important;
   height:100%!important;
   overflow-x:hidden!important;
@@ -4748,10 +4763,21 @@ div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-
   box-sizing:border-box!important;
   overflow:hidden!important;
 }
+@media(max-width:980px) and (min-width:761px) {
+  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
+    grid-template-columns:208px minmax(0,1fr)!important;
+  }
+}
 @media(max-width:760px) {
   div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] {
     height:calc(100dvh - 16px)!important;
     max-height:calc(100dvh - 16px)!important;
+  }
+  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] > main.ps-community-editor-main {
+    grid-template-rows:auto auto minmax(0,1fr)!important;
+  }
+  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
+    grid-template-columns:minmax(0,1fr)!important;
   }
   div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-preview-column {
     padding:10px 10px 96px!important;

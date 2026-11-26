@@ -3444,6 +3444,69 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background:none!important;filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
 }
 
+/* Final preview correction: keep the profile card at the same 458x720
+   composition as the public profile. Only the editor workspace may scroll;
+   the preview viewport itself must never crop the card or show scrollbars. */
+.ps-community-editor-preview-column {
+  display:flex!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  position:relative!important;
+  inset:auto!important;
+  flex:0 1 auto!important;
+  width:min(458px,100%)!important;
+  min-width:0!important;
+  max-width:458px!important;
+  height:min(720px,100%)!important;
+  min-height:0!important;
+  max-height:720px!important;
+  margin:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  flex:1 1 auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:none!important;
+  width:0!important;
+  height:0!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-column {overflow:hidden!important}
+  .ps-community-editor-preview-frame {padding:0!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(458px,100%)!important;
+    height:min(720px,100%)!important;
+    max-height:720px!important;
+  }
+}
+
 
 `}</style>
     </div>

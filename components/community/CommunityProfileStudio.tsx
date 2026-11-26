@@ -1,14 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
-import InklineDisplayName from "@/components/community/InklineDisplayName";
-import HaloSignalDisplayName from "@/components/community/HaloSignalDisplayName";
-import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName";
-import MistfallDisplayName from "@/components/community/MistfallDisplayName";
-import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
-import { displayNameColorForEffect, displayNameInklineStrokeColor } from "@/components/community/display-name-color";
+import { displayNameColorForEffect } from "@/components/community/display-name-color";
 import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
@@ -485,26 +478,6 @@ function accountTag(value?: string | null) {
   return "@" + (clean || "usuario");
 }
 
-function displayNameCharacters(value: string) {
-  const IntlWithSegmenter = Intl as unknown as {
-    Segmenter?: new (locale?: string, options?: { granularity: "grapheme" }) => {
-      segment: (input: string) => Iterable<{ segment: string }>;
-    };
-  };
-  if (IntlWithSegmenter.Segmenter) {
-    return Array.from(new IntlWithSegmenter.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment);
-  }
-  return Array.from(value);
-}
-
-function displayNameCharacterDelay(index: number, count: number, animation: DisplayNameAnimation) {
-  if (count <= 1) return "0ms";
-  const staggerWindow = animation === "decrypt" ? 300 : 460;
-  const stepCap = 56;
-  const step = Math.min(stepCap, staggerWindow / Math.max(1, count - 1));
-  return Math.round(index * step) + "ms";
-}
-
 function DisplayNameMotionPreview({ value, animation, className = "", style, tag = "span" }: {
   value: string;
   animation: DisplayNameAnimation;
@@ -512,145 +485,10 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
   style?: CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
 }) {
-  return (
-    <AnimatedDisplayName
-      value={value}
-      animation={animation}
-      tag={tag}
-      previewMode
-      className={className}
-      style={style}
-    />
-  );
-}
-
-function AnimatedDisplayName({ value, animation, className = "", style, tag = "strong", previewMode = false }: {
-  value: string;
-  animation: DisplayNameAnimation;
-  className?: string;
-  style?: CSSProperties;
-  tag?: "strong" | "span" | "h2" | "h3";
-  previewMode?: boolean;
-}) {
   const Tag = tag;
-  const renderedClassName = [className, previewMode ? "ps-community-name-preview-live" : ""].filter(Boolean).join(" ");
-  const characters = displayNameCharacters(value);
-  const chromaScale = Math.max(2.6, characters.length);
-  const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
-  const tagFontSize = tag === "h2" ? (fitScale * 1.5).toFixed(3) + "em"
-    : tag === "h3" ? (fitScale * 1.17).toFixed(3) + "em"
-    : tag === "span" ? undefined : (fitScale * 1).toFixed(3) + "em";
-  const safeStyle = {
-    ...style,
-    ...(tagFontSize ? { fontSize: tagFontSize } : {}),
-    "--ps-chroma-char-count": Math.max(1, characters.length),
-    "--ps-chroma-background-size": chromaScale * 100 + "%",
-    "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
-    maxWidth: "100%",
-  } as CSSProperties;
-  if (animation === "inkline") {
-    const effectName = className.split(/\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
-    const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
-    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.7} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
-  }
-  if (animation === "halo-signal") {
-    return <HaloSignalDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
-  }
-  if (animation === "domino-flow") {
-    return <DominoFlowDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
-  }
-  if (animation === "mistfall") {
-    return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode} respectReducedMotion={!previewMode}/>;
-  }
-  if (animation === "depth-lift") {
-    return <DepthLiftDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag}/>;
-  }
-  if (animation === "shuffle-blur") {
-    return <ShuffleDisplayName
-      text={value}
-      effect="blur"
-      shuffleDirection="up"
-      duration={3.6}
-      animationMode="sequence"
-      shuffleTimes={10}
-      scrambleCharset="0123456789#%&*+-=?"
-      ease="expo.out"
-      stagger={0.075}
-      threshold={0.1}
-      respectReducedMotion={!previewMode}
-      forceVisible={previewMode}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-    />;
-  }
-  if (animation === "shuffle-flip") {
-    return <ShuffleDisplayName
-      text={value}
-      effect="flip"
-      shuffleDirection="down"
-      duration={3.2}
-      animationMode="sequence"
-      shuffleTimes={previewMode ? 3 : 5}
-      ease="power2.out"
-      stagger={0.085}
-      threshold={0.1}
-      respectReducedMotion={!previewMode}
-      forceVisible={previewMode}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-    />;
-  }
-  if (animation === "shuffle") {
-    return <ShuffleDisplayName
-      text={value}
-      effect="slide"
-      shuffleDirection="right"
-      duration={2.2}
-      animationMode="evenodd"
-      shuffleTimes={1}
-      ease="power3.out"
-      stagger={0.07}
-      threshold={0.1}
-      respectReducedMotion={!previewMode}
-      forceVisible={previewMode}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-    />;
-  }
-  if (animation === "decrypt") {
-    const isGalleryDemo = className.includes("ps-name-motion-demo");
-    return <DecryptedDisplayName
-      text={value}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-      speed={previewMode ? 68 : 60}
-      maxIterations={10}
-      durationMs={previewMode ? 2800 : 3200}
-      sequential
-      revealDirection="random"
-      characters="0123456789ABCDEF"
-      scrambleColor="#2bb673"
-      animateOn={isGalleryDemo || previewMode ? "mount" : "view"}
-      forceMotion={previewMode}
-      loop={false}
-      loopDelay={3400}
-    />;
-  }
-  return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
-    <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
-      <span className="ps-name-animation-char" data-glyph={character === " " ? "\u00A0" : character} style={{
-        "--char-index": index,
-        "--char-delay": displayNameCharacterDelay(index, characters.length, animation),
-        "--char-direction": index % 2 === 0 ? "-1" : "1",
-        "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "wave" ? 8 : 7) + "deg",
-        "--ps-chroma-position": (characters.length <= 1 ? 50 : (index / (characters.length - 1)) * 100) + "%",
-      } as CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
-    ))}</span>
-  </Tag>;
+  // Retain the legacy prop shape for stored profiles, but render the name statically.
+  void animation;
+  return <Tag className={className} style={style}>{value}</Tag>;
 }
 
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
@@ -730,6 +568,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
+  const settingsSidebarRef = useRef<HTMLElement>(null);
   const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
   const appearanceModalRef = useRef<HTMLElement>(null);
   const statusModalRef = useRef<HTMLElement>(null);
@@ -825,7 +664,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       const eventPath = event.composedPath();
       const colorPickerAnchor = cardColorControlRef.current;
       const pointerIsInsideColorPicker = Boolean(colorPickerAnchor && (colorPickerAnchor.contains(target) || eventPath.includes(colorPickerAnchor)));
-      if (colorPickerOpen && !pointerIsInsideColorPicker) setColorPickerOpen(false);
+      const sidebarBounds = settingsSidebarRef.current?.getBoundingClientRect();
+      const pointerIsOnSidebarScrollbar = Boolean(
+        sidebarBounds
+        && event.clientX >= sidebarBounds.right - 16
+        && event.clientX <= sidebarBounds.right
+        && event.clientY >= sidebarBounds.top
+        && event.clientY <= sidebarBounds.bottom
+      );
+      if (colorPickerOpen && !pointerIsInsideColorPicker && !pointerIsOnSidebarScrollbar) setColorPickerOpen(false);
       if (avatarMenuOpen && !avatarMenuAnchorRef.current?.contains(target)) setAvatarMenuOpen(false);
       if (statusEditorOpen && !statusModalRef.current?.contains(target)) setStatusEditorOpen(false);
       if (statusEmojiOpen && !statusEmojiFieldRef.current?.contains(target)) setStatusEmojiOpen(false);
@@ -869,7 +716,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
   const profileThemeInk = readableThemeText(cardColor, themeColorSecondary);
-  const profileThemeOutline = profileThemeInk === "#F7F8FA" ? "rgba(0,0,0,.88)" : "rgba(255,255,255,.88)";
+  const profileThemeOutline = "transparent";
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
@@ -1378,7 +1225,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         )}
 
         <div className="ps-community-editor-workspace ps-community-editor-workspace-discord">
-          <aside className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
+          <aside ref={settingsSidebarRef} className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
 
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Placa de identificación</div>
@@ -1466,7 +1313,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className={"ps-community-editor-name-style-preview is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} onClick={() => openAppearancePicker("nameStyle")} aria-label="Cambiar estilo del nombre">
                 <strong>{displayName || "Tu nombre"}</strong><Type size={15}/>
               </button>
-              <small className="ps-community-editor-settings-hint">Tipografías seleccionadas y acabados animados en tiempo real.</small>
+              <small className="ps-community-editor-settings-hint">Tipografías seleccionadas y acabados visuales en tiempo real.</small>
             </section>
 
             <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
@@ -1892,46 +1739,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </div>
                       )}
                       {draftDisplayNameColorMode === "automatic" && (
-                        <p className="ps-community-name-color-auto-note">Este acabado administra su propia paleta para mantener el reflejo y la animación sincronizados.</p>
+                        <p className="ps-community-name-color-auto-note">Este acabado administra su propia paleta para mantener el reflejo y los colores sincronizados.</p>
                       )}
                     </section>
 
-                    <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">
-                        Animación de entrada
-                        <span>{DISPLAY_NAME_ANIMATIONS.length} MOVIMIENTOS</span>
-                      </div>
-                      <div className="ps-community-name-animation-grid" role="group" aria-label="Animaciones del nombre">
-                        {DISPLAY_NAME_ANIMATIONS.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
-                            aria-label={item.label + ". " + item.description}
-                            aria-pressed={draftDisplayNameAnimation === item.id}
-                            title={item.description}
-                            onClick={() => setDraftDisplayNameAnimation(item.id)}
-                          >
-                            <span className="ps-community-name-animation-stage">
-                              <DisplayNameMotionPreview
-                                value={displayName || "Tu nombre"}
-                                animation={item.id}
-                                tag="span"
-                                className={"ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
-                                style={{
-                                  "--name-gradient-start": draftDisplayNameGradientStart,
-                                  "--name-gradient-end": draftDisplayNameGradientEnd,
-                                  "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
-                                  "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor",
-                                } as CSSProperties}
-                              />
-                            </span>
-                            <strong>{item.label}</strong>
-                            <small>{item.hint}</small>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
+
                   </div>
                 )}
 
@@ -2986,6 +2798,189 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-default.effect-plain {
   color:var(--status-theme-text,#202126)!important;
   -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+}
+
+
+/* Stable editor geometry: the settings pane owns its scroll area. */
+.ps-community-editor-overlay {
+  position:fixed!important;inset:0!important;display:grid!important;place-items:center!important;
+  padding:16px!important;overflow:hidden!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-v2 {
+  display:flex!important;flex-direction:column!important;
+  width:min(1150px,calc(100vw - 32px))!important;
+  height:min(980px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;min-width:0!important;min-height:0!important;
+  overflow:hidden!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-main {
+  display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
+  width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-workspace-discord {
+  display:grid!important;grid-template-columns:minmax(248px,275px) minmax(0,1fr)!important;
+  flex:1 1 auto!important;width:100%!important;min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-settings-sidebar {
+  position:relative!important;align-self:stretch!important;
+  width:100%!important;height:100%!important;max-height:100%!important;min-height:0!important;
+  min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;scrollbar-gutter:stable!important;
+  -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar {width:9px!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-track {background:transparent!important}
+.ps-community-editor-settings-sidebar::-webkit-scrollbar-thumb {
+  min-height:36px!important;border:2px solid transparent!important;border-radius:999px!important;
+  background:#59616d!important;background-clip:padding-box!important;
+}
+.ps-community-editor-preview-column {
+  min-width:0!important;min-height:0!important;height:100%!important;
+  overflow:auto!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-theme-picker-anchor {position:relative!important;z-index:12!important;min-width:0!important}
+.ps-community-editor-sidebar-color-picker {
+  box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;
+}
+.ps-community-color-picker-plane {
+  width:100%!important;min-width:0!important;height:142px!important;min-height:142px!important;
+  box-sizing:border-box!important;border-radius:9px!important;touch-action:none!important;
+}
+.ps-community-color-picker-hue-wrap,
+.ps-community-color-picker-hex {width:100%!important;min-width:0!important;box-sizing:border-box!important}
+
+/* Two proper theme swatches: no wrapped "Color 1 / Color 2" labels. */
+.ps-community-editor-theme-stop-list {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:9px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-editor-theme-stop {
+  display:grid!important;grid-template-columns:36px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;align-items:center!important;
+  gap:3px 9px!important;width:100%!important;min-width:0!important;min-height:62px!important;
+  padding:9px!important;box-sizing:border-box!important;text-align:left!important;
+}
+.ps-community-editor-theme-stop>span:first-child {
+  grid-column:1!important;grid-row:1 / 3!important;width:36px!important;height:36px!important;
+  min-width:36px!important;border-radius:9px!important;
+}
+.ps-community-editor-theme-stop>span:nth-child(2) {
+  grid-column:2!important;grid-row:1!important;min-width:0!important;
+  font-size:11px!important;line-height:1.2!important;white-space:nowrap!important;
+}
+.ps-community-editor-theme-stop>small {
+  grid-column:2!important;grid-row:2!important;min-width:0!important;
+  font-size:9px!important;line-height:1.2!important;white-space:nowrap!important;
+}
+
+/* Letter-colour palette: eight equal square controls; the pipette is icon-only. */
+.ps-community-name-color-style-group .ps-community-name-colors-row {
+  display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:8px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root {
+  display:block!important;flex:none!important;width:auto!important;height:54px!important;
+  min-width:0!important;max-width:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-custom-picker-root>.ps-community-name-custom-color {
+  display:grid!important;grid-template-columns:1fr!important;place-items:center!important;
+  width:100%!important;height:54px!important;min-height:54px!important;margin:0!important;
+  padding:0!important;border:1px solid #48505e!important;border-radius:10px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {display:none!important}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;place-items:center!important;margin:0!important;
+}
+.ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid {display:contents!important}
+.ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {
+  display:block!important;width:100%!important;height:54px!important;min-height:54px!important;
+  min-width:0!important;margin:0!important;padding:0!important;border-radius:10px!important;
+}
+
+/* The chooser keeps its outer option cards; the copy area is plain text, not
+   another bordered card nested inside each option. */
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy {
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:6px!important;min-width:0!important;width:100%!important;
+  padding:0!important;border:0!important;border-radius:0!important;outline:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy::before,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy::after,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong::before,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong::after,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small::before,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small::after {
+  display:none!important;content:none!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy strong,
+.ps-community-avatar-picker-options>button .ps-community-avatar-choice-copy small {
+  display:block!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;
+  box-shadow:none!important;white-space:normal!important;overflow-wrap:break-word!important;
+}
+
+/* Move the editable name a few pixels below the avatar edge in both previews. */
+.ps-community-editor-preview-name-input {margin:7px 0 4px!important}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy {margin-top:8px!important}
+.ps-community-profile-live-readonly-body>.ps-community-editor-preview-name-static {margin-top:7px!important}
+
+/* Same foreground for every information field on the profile card. Do not add
+   a dark/white outline: choose one contrast colour for the complete gradient. */
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading *,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row * {
+  color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-stroke:0 transparent!important;text-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  background:color-mix(in srgb,var(--editor-theme-text,#17191f) 10%,transparent)!important;
+  border-color:color-mix(in srgb,var(--editor-theme-text,#17191f) 22%,transparent)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row>span {
+  color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#17191f)!important;
+  border-color:color-mix(in srgb,var(--editor-theme-text,#17191f) 30%,transparent)!important;
+  background:color-mix(in srgb,var(--editor-theme-text,#17191f) 9%,transparent)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta span,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
+  color:var(--editor-theme-text,#17191f)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#17191f)!important;
+}
+
+/* Discord-style presence marker sits slightly inside the avatar, not outside it. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:-2px!important;bottom:1px!important;width:24px!important;height:24px!important;
+  box-sizing:border-box!important;border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot {right:0!important;bottom:1px!important}
+
+/* Inset internal scrolling: dragging the sidebar scrollbar no longer closes
+   the active colour picker and cannot hand scrolling to the page behind it. */
+@media(max-width:760px) {
+  .ps-community-editor-overlay {padding:8px!important}
+  .ps-community-editor-v2 {width:calc(100vw - 16px)!important;height:calc(100dvh - 16px)!important;max-height:calc(100dvh - 16px)!important}
+  .ps-community-editor-workspace-discord {grid-template-columns:minmax(220px,42%) minmax(0,1fr)!important}
+  .ps-community-editor-theme-stop-list {grid-template-columns:1fr!important}
+  .ps-community-name-color-style-group .ps-community-name-colors-row {gap:5px!important}
+  .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color,
+  .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-preset-swatch {height:46px!important;min-height:46px!important}
 }
 
 `}</style>

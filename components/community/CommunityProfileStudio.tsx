@@ -4,7 +4,7 @@ import Image from "next/image";
 import { displayNameColorForEffect } from "@/components/community/display-name-color";
 import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Camera, Check, Copy, Film, ImagePlus, Pencil, Pipette,
   LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,

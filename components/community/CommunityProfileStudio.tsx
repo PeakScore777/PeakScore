@@ -1438,9 +1438,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
             </section>
 
-              </div>
-            </section>
-
             <section className="ps-community-editor-settings-section ps-community-editor-name-style-section">
               <div className="ps-community-editor-settings-section-title">Estilo de nombre de visualización</div>
               <span className="ps-community-editor-new-label">NUEVO</span>

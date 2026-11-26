@@ -9125,3 +9125,49 @@ html:has(.ps-community-picker-overlay) * {
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate,
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author {animation:none !important;}
 }
+
+/* Final Name Atelier layout and preview visibility pass. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option > .ps-community-name-animation-stage {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;height:48px!important;min-height:48px!important;margin:0!important;
+  padding:0!important;border:0!important;border-radius:0!important;outline:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option > .ps-community-name-animation-stage::before,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option > .ps-community-name-animation-stage::after {
+  display:none!important;content:none!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-community-name-preview-live {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:max-content!important;min-width:0!important;min-height:28px!important;height:auto!important;
+  max-height:none!important;margin:0!important;padding:0!important;border:0!important;
+  border-radius:0!important;outline:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important;visibility:visible!important;opacity:1!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-name {
+  display:inline-block!important;min-height:20px!important;color:var(--name-solid-color,#F2F3F5)!important;
+  -webkit-text-fill-color:currentColor!important;visibility:visible!important;opacity:1!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-content {
+  display:inline-block!important;white-space:pre!important;visibility:visible!important;opacity:1!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-cell.is-encrypted,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-glyph {
+  color:var(--name-solid-color,#F2F3F5)!important;-webkit-text-fill-color:currentColor!important;visibility:visible!important;opacity:1!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option.effect-plain .ps-decrypted-cell.is-revealed::after {
+  color:var(--name-solid-color,#F2F3F5)!important;-webkit-text-fill-color:currentColor!important;
+}
+/* Profile preview follows automatic contrast; member and chat rows stay readable
+   on their own dark surfaces. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.color-default {
+  color:var(--status-theme-text,#202126)!important;-webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-handle {
+  display:block!important;margin-top:3px!important;color:var(--status-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126)!important;opacity:.84!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate.color-default,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.color-default {
+  color:#F2F3F5!important;-webkit-text-fill-color:#F2F3F5!important;
+}

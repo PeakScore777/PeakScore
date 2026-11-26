@@ -340,9 +340,10 @@ type DisplayNameCustomColorPickerProps = {
   value: string;
   selected: boolean;
   onApply: (color: string) => void;
+  onReset?: () => void;
 };
 
-function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameCustomColorPickerProps) {
+function DisplayNameCustomColorPicker({ value, selected, onApply, onReset }: DisplayNameCustomColorPickerProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const [hue, setHue] = useState(hexToHsv(value).h);
@@ -450,7 +451,7 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
             ))}
           </div>
           <div className="ps-community-color-picker-actions">
-            <button type="button" onClick={() => { setLocalColor(value); setOpen(false); }}>Restablecer</button>
+            <button type="button" onClick={() => { onReset?.(); setLocalColor(value); setOpen(false); }}>Restablecer</button>
             <button type="button" onClick={() => { apply(); setOpen(false); }}>Listo</button>
           </div>
         </div>
@@ -1788,6 +1789,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                                 setDraftDisplayNameGradientStart(color);
                                 setDraftDisplayNameColor("custom-gradient");
                               }}
+                              onReset={() => setDraftDisplayNameColor("default")}
                             />
                             <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Colores de letra">
                               {DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id)).map((item) => (

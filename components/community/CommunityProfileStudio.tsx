@@ -1259,6 +1259,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         ? { ...current, avatarUrl: nextUrl }
         : { ...current, bannerUrl: nextUrl });
       setAvatarPickerOpen(false);
+      setBannerPickerOpen(false);
       onSaved();
       return true;
     } catch (cause) {
@@ -1273,10 +1274,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   function clearAssetInputs(kind: "avatar" | "banner") {
     if (kind === "avatar") {
       if (avatarInput.current) avatarInput.current.value = "";
-      if (avatarGifInput.current) avatarGifInput.current.value = "";
     } else {
       if (bannerImageInput.current) bannerImageInput.current.value = "";
-      if (bannerGifInput.current) bannerGifInput.current.value = "";
     }
   }
 

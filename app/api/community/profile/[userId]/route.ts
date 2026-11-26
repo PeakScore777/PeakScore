@@ -86,7 +86,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult, accountProfileResult] = await Promise.all([
+  const [rolesResult, appearanceResult, accountUserResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
@@ -94,10 +94,9 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
-    supabase.from("community_public_profiles")
-      .select("full_name")
-      .eq("id", userId)
-      .maybeSingle(),
+    // The legacy community_public_profiles projection is intentionally revoked.
+    // Read only the registered public name from Auth metadata via the server-side admin client.
+    supabaseAdmin.auth.admin.getUserById(userId),
   ]);
 
   // Appearance is optional metadata. A missing column, policy mismatch or a
@@ -124,11 +123,12 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       userId: profileResult.data.user_id,
       memberNumber: profileResult.data.member_number,
       displayName: profileResult.data.display_name,
-      accountName: typeof accountProfileResult.data?.full_name === "string"
-        ? accountProfileResult.data.full_name
-        : userId === user.id && typeof user.user_metadata?.full_name === "string"
-          ? user.user_metadata.full_name
-          : "",
+      accountName: (() => {
+        const metadata = accountUserResult.data.user?.user_metadata ?? {};
+        const registeredName = [metadata.full_name, metadata.name]
+          .find((value) => typeof value === "string" && value.trim().length > 0);
+        return typeof registeredName === "string" ? registeredName.trim().slice(0, 80) : "";
+      })(),
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,

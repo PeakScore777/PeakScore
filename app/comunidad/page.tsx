@@ -18,16 +18,9 @@ import "../community-member-profile-ui.css";
 import "../community-name-style.css";
 import "../community-name-effects.css";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
-import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import ShuffleDisplayName from "@/components/community/ShuffleDisplayName";
-import InklineDisplayName from "@/components/community/InklineDisplayName";
-import HaloSignalDisplayName from "@/components/community/HaloSignalDisplayName";
-import DominoFlowDisplayName from "@/components/community/DominoFlowDisplayName";
-import MistfallDisplayName from "@/components/community/MistfallDisplayName";
-import DepthLiftDisplayName from "@/components/community/DepthLiftDisplayName";
 
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
-import { displayNameColorForEffect, displayNameInklineStrokeColor, displayNameSolidColor } from "@/components/community/display-name-color";
+import { displayNameColorForEffect, displayNameSolidColor } from "@/components/community/display-name-color";
 
 type CommunitySpace = {
   id: string;
@@ -287,11 +280,6 @@ function communityThemeContrast(first: string, second: string) {
   const darkWorst = Math.min(...samples.map((sample) => ratio(darkInk, sample)));
   return lightWorst >= darkWorst ? lightInk : darkInk;
 }
-function communityThemeOutline(first: string, second: string) {
-  return communityThemeContrast(first, second) === "#F7F8FA"
-    ? "rgba(0,0,0,.88)"
-    : "rgba(255,255,255,.88)";
-}
 function communityNameCharacters(value: string) {
   const IntlWithSegmenter = Intl as unknown as {
     Segmenter?: new (locale?: string, options?: { granularity: "grapheme" }) => {
@@ -302,13 +290,6 @@ function communityNameCharacters(value: string) {
     return Array.from(new IntlWithSegmenter.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment);
   }
   return Array.from(value);
-}
-
-function communityNameCharacterDelay(index: number, count: number, animation: CommunityDisplayNameAnimation) {
-  if (count <= 1) return "0ms";
-  const window = animation === "decrypt" ? 300 : 460;
-  const step = Math.min(56, window / Math.max(1, count - 1));
-  return Math.round(index * step) + "ms";
 }
 
 function CommunityStaticName({ value, className, style, tag = "span" }: {
@@ -343,117 +324,20 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   previewMode?: boolean;
 }) {
   const Tag = tag;
-  const renderedClassName = className;
+  // Legacy animation values remain readable from existing profiles, but are
+  // intentionally not rendered on this branch. Typography and finishes remain.
+  void animation;
+  void id;
+  void previewMode;
   const characters = communityNameCharacters(value);
-  const chromaScale = Math.max(2.6, characters.length);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
   const safeStyle = {
     ...style,
     fontSize: (fitScale * tagScale).toFixed(3) + "em",
-    "--ps-chroma-char-count": Math.max(1, characters.length),
-    "--ps-chroma-background-size": chromaScale * 100 + "%",
-    "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
     maxWidth: "100%",
   } as React.CSSProperties;
-  if (animation === "inkline") {
-    const effectName = className.split(/\s+/).find((token) => token.startsWith("effect-"))?.slice(7) ?? "plain";
-    const strokeColor = displayNameInklineStrokeColor(effectName, style as Record<string, unknown> | undefined);
-    return <InklineDisplayName text={value} strokeColor={strokeColor} fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
-  }
-  if (animation === "halo-signal") {
-    return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
-  }
-  if (animation === "domino-flow") {
-    return <DominoFlowDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
-  }
-  if (animation === "mistfall") {
-    return <MistfallDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
-  }
-  if (animation === "depth-lift") {
-    return <DepthLiftDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
-  }
-  if (animation === "shuffle-blur") {
-    return <ShuffleDisplayName
-      text={value}
-      effect="blur"
-      shuffleDirection="up"
-      duration={2.75}
-      animationMode="sequence"
-      shuffleTimes={14}
-      scrambleCharset="0123456789#%&*+-=?"
-      ease="expo.out"
-      stagger={0.06}
-      threshold={0.1}
-      respectReducedMotion
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-    />;
-  }
-  if (animation === "shuffle-flip") {
-    return <ShuffleDisplayName
-      text={value}
-      effect="flip"
-      shuffleDirection="down"
-      duration={2.4}
-      animationMode="sequence"
-      shuffleTimes={7}
-      ease="power2.out"
-      stagger={0.07}
-      threshold={0.1}
-      respectReducedMotion
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-    />;
-  }
-  if (animation === "shuffle") {
-    return <ShuffleDisplayName
-      text={value}
-      effect="slide"
-      shuffleDirection="right"
-      duration={1.3}
-      animationMode="evenodd"
-      shuffleTimes={1}
-      ease="power3.out"
-      stagger={0.05}
-      threshold={0.1}
-      respectReducedMotion
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-    />;
-  }
-  if (animation === "decrypt") {
-    return <DecryptedDisplayName
-      id={id}
-      text={value}
-      tag={tag}
-      className={renderedClassName}
-      style={safeStyle}
-      speed={40}
-      maxIterations={10}
-      durationMs={2400}
-      sequential
-      revealDirection="random"
-      characters="0123456789ABCDEF"
-      scrambleColor="#2bb673"
-      animateOn="view"
-      loop={false}
-    />;
-  }
-  return <Tag id={id} className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
-    <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
-      <span className="ps-name-animation-char" data-glyph={character === " " ? "\u00A0" : character} style={{
-        "--char-index": index,
-        "--char-delay": communityNameCharacterDelay(index, characters.length, animation),
-        "--char-direction": index % 2 === 0 ? "-1" : "1",
-        "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "wave" ? 8 : 7) + "deg",
-        "--ps-chroma-position": (characters.length <= 1 ? 50 : (index / (characters.length - 1)) * 100) + "%",
-      } as React.CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
-    ))}</span>
-  </Tag>;
+  return <Tag className={className + " ps-community-name-static"} style={safeStyle}>{value}</Tag>;
 }
 
 type CommunityReadMarker = { channel_id: string; last_read_at: string };
@@ -3121,7 +3005,6 @@ export default function CommunityPage() {
                 "--community-theme-body-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-body-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-outline": communityThemeOutline(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
               } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
@@ -3249,7 +3132,6 @@ export default function CommunityPage() {
                 "--editor-theme-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-body-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-bottom-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-outline": communityThemeOutline(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF",
                 "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF",
                 "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",

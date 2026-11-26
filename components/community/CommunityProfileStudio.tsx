@@ -579,11 +579,75 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const statusInputRef = useRef<HTMLInputElement>(null);
   const avatarCropModalRef = useRef<HTMLElement>(null);
 
+  const previewBodyRef = useRef<HTMLDivElement>(null);
+  const previewScrollbarTrackRef = useRef<HTMLDivElement>(null);
+  const previewScrollbarDragOffsetRef = useRef<number | null>(null);
+  const [previewScrollbar, setPreviewScrollbar] = useState({ top: 0, height: 0, scrollTop: 0, canScroll: false });
+
+  const updatePreviewScrollbar = () => {
+    const body = previewBodyRef.current;
+    const track = previewScrollbarTrackRef.current;
+    if (!body || !track) return;
+    const trackHeight = track.clientHeight;
+    if (trackHeight <= 0) return;
+    const canScroll = body.scrollHeight > body.clientHeight + 1;
+    const thumbHeight = canScroll
+      ? Math.min(trackHeight, Math.max(30, (body.clientHeight / body.scrollHeight) * trackHeight))
+      : trackHeight;
+    const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+    const scrollRange = Math.max(1, body.scrollHeight - body.clientHeight);
+    const top = canScroll ? (body.scrollTop / scrollRange) * maxThumbTop : 0;
+    setPreviewScrollbar({ top, height: thumbHeight, scrollTop: body.scrollTop, canScroll });
+  };
+
+  const movePreviewScrollbarToPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const body = previewBodyRef.current;
+    const track = previewScrollbarTrackRef.current;
+    const dragOffset = previewScrollbarDragOffsetRef.current;
+    if (!body || !track || dragOffset === null) return;
+    const trackRect = track.getBoundingClientRect();
+    const trackHeight = track.clientHeight;
+    const thumbHeight = previewScrollbar.height;
+    const maxThumbTop = Math.max(1, trackHeight - thumbHeight);
+    const pointerTop = event.clientY - trackRect.top - dragOffset;
+    const thumbTop = Math.min(maxThumbTop, Math.max(0, pointerTop));
+    const scrollRange = Math.max(0, body.scrollHeight - body.clientHeight);
+    body.scrollTop = (thumbTop / maxThumbTop) * scrollRange;
+    updatePreviewScrollbar();
+  };
+
+  const handlePreviewScrollbarPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!previewScrollbar.canScroll) return;
+    const track = previewScrollbarTrackRef.current;
+    if (!track) return;
+    const trackRect = track.getBoundingClientRect();
+    const pointerTop = event.clientY - trackRect.top;
+    const onThumb = pointerTop >= previewScrollbar.top && pointerTop <= previewScrollbar.top + previewScrollbar.height;
+    previewScrollbarDragOffsetRef.current = onThumb ? pointerTop - previewScrollbar.top : previewScrollbar.height / 2;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    movePreviewScrollbarToPointer(event);
+  };
+
   useEffect(() => {
     return () => {
       if (avatarCropUrl) URL.revokeObjectURL(avatarCropUrl);
     };
   }, [avatarCropUrl]);
+
+  useLayoutEffect(() => {
+    const body = previewBodyRef.current;
+    if (!body) return;
+    const update = () => updatePreviewScrollbar();
+    update();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    observer?.observe(body);
+    Array.from(body.children).forEach((child) => observer?.observe(child));
+    window.addEventListener("resize", update);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [about, aboutEditing, displayName, pronouns, profile.roles.length, profile.bannerUrl]);
 
   useLayoutEffect(() => {
     if (!aboutEditing) return;
@@ -1399,7 +1463,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </button>
                   </div>
                 </div>
-                <div className="ps-community-editor-preview-body">
+                <div id="ps-community-editor-preview-scroll-area" ref={previewBodyRef} className="ps-community-editor-preview-body" onScroll={updatePreviewScrollbar}>
                     <input
                     id="ps-community-display-name-inline"
                     className={"ps-community-editor-preview-name-input ps-community-profile-name is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
@@ -1479,6 +1543,42 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <span>MIEMBRO DESDE</span>
                     <strong>{joinedLabel}</strong>
                   </section>
+                </div>
+                <div
+                  ref={previewScrollbarTrackRef}
+                  className={"ps-community-editor-preview-scrollbar" + (previewScrollbar.canScroll ? " is-scrollable" : "")}
+                  role="scrollbar"
+                  aria-label="Desplazamiento de la vista previa del perfil"
+                  aria-controls="ps-community-editor-preview-scroll-area"
+                  aria-orientation="vertical"
+                  aria-valuemin={0}
+                  aria-valuemax={Math.max(0, (previewBodyRef.current?.scrollHeight ?? 0) - (previewBodyRef.current?.clientHeight ?? 0))}
+                  aria-valuenow={Math.round(previewScrollbar.scrollTop)}
+                  tabIndex={previewScrollbar.canScroll ? 0 : -1}
+                  onPointerDown={handlePreviewScrollbarPointerDown}
+                  onPointerMove={movePreviewScrollbarToPointer}
+                  onPointerUp={(event) => { previewScrollbarDragOffsetRef.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }}
+                  onPointerCancel={() => { previewScrollbarDragOffsetRef.current = null; }}
+                  onKeyDown={(event) => {
+                    const body = previewBodyRef.current;
+                    if (!body) return;
+                    const page = Math.max(80, body.clientHeight * 0.85);
+                    const moves: Record<string, number> = {
+                      ArrowDown: body.scrollTop + 40,
+                      ArrowUp: body.scrollTop - 40,
+                      PageDown: body.scrollTop + page,
+                      PageUp: body.scrollTop - page,
+                      Home: 0,
+                      End: body.scrollHeight,
+                    };
+                    if (event.key in moves) {
+                      event.preventDefault();
+                      body.scrollTop = moves[event.key];
+                      updatePreviewScrollbar();
+                    }
+                  }}
+                >
+                  <span className="ps-community-editor-preview-scrollbar-thumb" style={{ height: previewScrollbar.height, transform: "translateY(" + previewScrollbar.top + "px)" }}/>
                 </div>
               </article>
             </div>
@@ -4720,6 +4820,85 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
   background-color:#b2bdc9!important;
+}
+
+
+/* Discord-like profile scrollbar: custom movable thumb, no native track or arrow buttons. */
+.ps-community-editor-preview-card {
+  position:relative!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body {
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  scrollbar-color:transparent transparent!important;
+  scrollbar-gutter:auto!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-button,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-corner {
+  display:none!important;
+  width:0!important;
+  height:0!important;
+}
+.ps-community-editor-preview-scrollbar {
+  position:absolute!important;
+  z-index:30!important;
+  top:184px!important;
+  right:5px!important;
+  bottom:6px!important;
+  width:7px!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  touch-action:none!important;
+  cursor:pointer!important;
+  transition:opacity .16s ease,visibility .16s ease!important;
+}
+.ps-community-editor-preview-card:hover>.ps-community-editor-preview-scrollbar,
+.ps-community-editor-preview-card:focus-within>.ps-community-editor-preview-scrollbar,
+.ps-community-editor-preview-scrollbar:focus-visible {
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-preview-scrollbar-thumb {
+  position:absolute!important;
+  top:0!important;
+  left:2px!important;
+  display:block!important;
+  width:3px!important;
+  min-height:30px!important;
+  border-radius:999px!important;
+  background:#737b86!important;
+  box-shadow:0 0 0 1px #15171b22!important;
+  transition:width .14s ease,left .14s ease,background-color .14s ease!important;
+  will-change:transform,height!important;
+}
+.ps-community-editor-preview-scrollbar:hover .ps-community-editor-preview-scrollbar-thumb,
+.ps-community-editor-preview-scrollbar:focus-visible .ps-community-editor-preview-scrollbar-thumb {
+  left:1px!important;
+  width:5px!important;
+  background:#a5afbc!important;
+}
+.ps-community-editor-preview-scrollbar:active .ps-community-editor-preview-scrollbar-thumb {
+  background:#c0c9d4!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-scrollbar {
+    top:160px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .ps-community-editor-preview-scrollbar,
+  .ps-community-editor-preview-scrollbar-thumb {
+    transition:none!important;
+  }
 }
 
 `}</style>

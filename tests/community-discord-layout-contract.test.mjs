@@ -94,7 +94,7 @@ testCase("community member profile reuses the editor preview as a read-only soci
   assert.match(page, /ps-community-member-popout/);
   assert.match(page, /ps-community-profile-dialog/);
   assert.match(page, /ps-community-editor-preview-card/);
-  assert.match(page, /className="ps-community-editor-preview-banner"/);
+  assert.match(page, /className=\{"ps-community-editor-preview-banner"/);
   assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
   assert.match(page, /ps-community-editor-preview-avatar/);
   assert.match(page, /ps-community-editor-presence-dot/);

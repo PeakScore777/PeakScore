@@ -9171,3 +9171,43 @@ html:has(.ps-community-picker-overlay) * {
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author.color-default {
   color:#F2F3F5!important;-webkit-text-fill-color:#F2F3F5!important;
 }
+
+/* Shared contrast foreground for the name-style profile, member and chat
+   surfaces. The editor computes this against both profile-theme endpoints. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy>.ps-community-name-preview-live.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-handle {
+  color:var(--status-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  justify-content:flex-start!important;text-align:left!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate {
+  margin-left:0!important;margin-right:auto!important;text-align:left!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row>.ps-community-name-member-copy {
+  flex:1 1 auto!important;min-width:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-2px!important;bottom:-1px!important;
+  width:15px!important;height:15px!important;border:3px solid #2b2d34!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  right:-6px!important;bottom:-2px!important;width:24px!important;height:24px!important;
+  box-sizing:border-box!important;border:5px solid var(--status-theme,#B7D7C3)!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;outline:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-name {
+  display:inline-flex!important;align-items:baseline!important;width:max-content!important;
+  min-width:0!important;max-width:100%!important;white-space:pre!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-content {
+  display:inline-flex!important;align-items:baseline!important;max-width:100%!important;white-space:pre!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-animation-option .ps-decrypted-cell {
+  flex:0 0 auto!important;white-space:pre!important;
+}

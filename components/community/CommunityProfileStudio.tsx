@@ -4622,6 +4622,50 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background:#a2adbb!important;
 }
 
+
+/* The profile card itself owns the vertical scroll; reveal its slim thumb on hover. */
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body {
+  overflow-x:hidden!important;
+  overflow-y:scroll!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:transparent transparent!important;
+  scrollbar-gutter:stable!important;
+  -ms-overflow-style:auto!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:block!important;
+  width:5px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-track {
+  margin:8px 0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  min-height:34px!important;
+  border:1px solid transparent!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  background-clip:padding-box!important;
+  transition:background-color .16s ease!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body {
+  scrollbar-color:#737d8b transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  background:#737d8b!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background:#aab4c1!important;
+}
+
 `}</style>
     </div>
     </div>,

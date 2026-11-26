@@ -3751,6 +3751,15 @@
 .root :global(.community-member-group[data-role="fundador"] .community-member-group-toggle) {
   color: var(--community-canvas-muted, #b5bac1) !important;
 }
+/* Empty staff ranks remain visible as Discord-style section headers. */
+.root :global(.community-member-group-empty .community-member-group-toggle) {
+  min-height: 30px;
+}
+.root :global(.community-member-group-role-fallback) {
+  pointer-events: none;
+  user-select: none;
+}
+
 /* Founder stays an ordinary member row; only the section heading carries the rank emblem. */
 .root :global(.community-member-name) {
   display: inline-block;

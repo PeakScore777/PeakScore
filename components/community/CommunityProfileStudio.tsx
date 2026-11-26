@@ -4487,8 +4487,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-color:var(--editor-card,#DDF8F3)!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
-  left:155px!important;
-  top:34.5px!important;
+  left:152px!important;
+  top:30.5px!important;
   bottom:auto!important;
   width:max-content!important;
   min-width:146px!important;

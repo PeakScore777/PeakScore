@@ -4666,6 +4666,62 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background:#aab4c1!important;
 }
 
+
+/* Final correction: remove browser arrow buttons and reveal the actual scroll thumb. */
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body {
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:transparent transparent!important;
+  scrollbar-gutter:stable!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:block!important;
+  width:5px!important;
+  height:0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-button,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-corner {
+  display:none!important;
+  width:0!important;
+  height:0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-track {
+  margin:8px 0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  min-height:36px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background-color:transparent!important;
+  transition:background-color .18s ease!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body:hover {
+  scrollbar-color:#778391 transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb {
+  background-color:#778391!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background-color:#b2bdc9!important;
+}
+
 `}</style>
     </div>
     </div>,

@@ -4784,7 +4784,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   height:100%!important;
   min-width:0!important;
   min-height:0!important;
-  padding:14px 22px 106px!important;
+  padding:28px 22px 106px!important;
   box-sizing:border-box!important;
   overflow:hidden!important;
 }
@@ -4866,9 +4866,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-savebar {
   position:absolute!important;
   z-index:30!important;
-  left:28px!important;
-  right:50px!important;
+  left:auto!important;
+  right:calc((100% - min(420px,100%))/2)!important;
   bottom:30px!important;
+  width:min(420px,calc(100% - 32px))!important;
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
@@ -4908,7 +4909,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-editor-workspace-discord {
     grid-template-columns:208px minmax(0,1fr)!important;
   }
-  .ps-community-editor-savebar {left:20px!important;right:24px!important;}
+  .ps-community-editor-savebar {
+    left:auto!important;right:calc((100% - min(420px,100%))/2)!important;
+    width:min(420px,calc(100% - 32px))!important;
+  }
 }
 @media(max-width:760px) {
   .ps-community-editor-overlay {place-items:start center!important;padding:8px!important;}
@@ -4916,7 +4920,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-editor-workspace-discord {grid-template-columns:minmax(0,1fr)!important;}
   .ps-community-editor-preview-column {padding:10px 10px 96px!important;}
   .ps-community-editor-savebar {
-    left:10px!important;right:18px!important;bottom:16px!important;
+    left:auto!important;right:10px!important;bottom:16px!important;
+    width:min(420px,calc(100% - 20px))!important;
     min-height:56px!important;padding:8px!important;gap:8px!important;
   }
   .ps-community-editor-savebar>span {font-size:10px!important}

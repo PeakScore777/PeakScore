@@ -9201,7 +9201,7 @@ html:has(.ps-community-picker-overlay) * {
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
-  right:-6px!important;bottom:-2px!important;width:24px!important;height:24px!important;
+  right:2px!important;bottom:2px!important;width:26px!important;height:26px!important;
   box-sizing:border-box!important;border:5px solid var(--status-theme,#B7D7C3)!important;
   border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;outline:0!important;
 }

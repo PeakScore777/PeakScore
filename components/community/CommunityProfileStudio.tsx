@@ -3470,7 +3470,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
   position:relative!important;
   display:flex!important;
-  flex:0 1 auto!important;
+  flex:0 0 auto!important;
   flex-direction:column!important;
   width:min(530px,100%)!important;
   min-width:0!important;

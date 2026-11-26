@@ -869,12 +869,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
   const profileThemeInk = readableThemeText(cardColor, themeColorSecondary);
+  const profileThemeOutline = profileThemeInk === "#F7F8FA" ? "rgba(0,0,0,.88)" : "rgba(255,255,255,.88)";
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
     "--editor-theme-text": profileThemeInk,
     "--editor-theme-body-text": profileThemeInk,
     "--editor-theme-bottom-text": profileThemeInk,
+    "--editor-theme-outline": profileThemeOutline,
+    "--status-theme-text": profileThemeInk,
+    "--status-theme-outline": profileThemeOutline,
   } as CSSProperties;
 
   function updateCardColor(nextColor: string) {
@@ -1472,7 +1476,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, "--editor-theme-outline": profileThemeOutline } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner" + (profile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
@@ -2236,7 +2240,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
 
-            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": profileThemeInk, "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": profileThemeInk, "--status-theme-outline": profileThemeOutline, "--editor-theme-outline": profileThemeOutline, "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
               <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
@@ -2949,6 +2953,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
 .ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
   color:var(--editor-theme-text,#f2f3f5)!important;
+}
+/* A hairline opposite-colour glyph edge preserves legibility on mixed light/dark gradients. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row * {
+  -webkit-text-stroke:.22px var(--editor-theme-outline,transparent)!important;
+  text-shadow:0 1px 1px color-mix(in srgb,var(--editor-theme-outline,transparent) 42%,transparent)!important;
 }
 
 /* One aligned, left-anchored member name row, using the same text treatment as chat. */

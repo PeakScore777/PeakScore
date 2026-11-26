@@ -124,8 +124,10 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       memberNumber: profileResult.data.member_number,
       displayName: profileResult.data.display_name,
       accountName: (() => {
-        const metadata = accountUserResult.data.user?.user_metadata ?? {};
-        const registeredName = [metadata.full_name, metadata.name]
+        const metadata = accountUserResult.data?.user?.user_metadata
+          ?? (userId === user.id ? user.user_metadata : {})
+          ?? {};
+        const registeredName = [metadata.full_name, metadata.name, metadata.user_name, metadata.preferred_username]
           .find((value) => typeof value === "string" && value.trim().length > 0);
         return typeof registeredName === "string" ? registeredName.trim().slice(0, 80) : "";
       })(),
@@ -280,7 +282,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       userId: data.user_id,
       memberNumber: data.member_number,
       displayName: data.display_name,
-      accountName: typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "",
+      accountName: (() => {
+        const metadata = user.user_metadata ?? {};
+        const registeredName = [metadata.full_name, metadata.name, metadata.user_name, metadata.preferred_username]
+          .find((value) => typeof value === "string" && value.trim().length > 0);
+        return typeof registeredName === "string" ? registeredName.trim().slice(0, 80) : "";
+      })(),
       pronouns: data.pronouns ?? "",
       statusText: data.status_expires_at && Date.parse(data.status_expires_at) <= Date.now() ? "" : data.status_text ?? "",
       statusExpiresAt: data.status_expires_at && Date.parse(data.status_expires_at) > Date.now() ? data.status_expires_at : null,

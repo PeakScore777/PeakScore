@@ -1215,6 +1215,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   };
 
+  // Keep the profile's native scroll container, but reveal its thumb only while
+  // the pointer is over the preview card (or keyboard focus is inside it).
+  const handlePreviewPointerEnter = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.pointerType === "mouse") {
+      event.currentTarget.dataset.scrollbarVisible = "true";
+    }
+  };
+
+  const handlePreviewPointerLeave = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.pointerType === "mouse") {
+      event.currentTarget.dataset.scrollbarVisible = "false";
+    }
+  };
+
   if (!portalReady) return null;
 
   return createPortal(
@@ -1358,7 +1372,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, } as CSSProperties}>
+              <article
+                className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + plateStyle}
+                data-scrollbar-visible="false"
+                onPointerEnter={handlePreviewPointerEnter}
+                onPointerLeave={handlePreviewPointerLeave}
+                style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, } as CSSProperties}
+              >
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner" + (profile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
@@ -4587,11 +4607,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
 
 
-/* Discord-like overlay scrollbar on the profile preview content. */
+/* Discord-style scrollbar for the profile preview.
+   The native scroll area stays the same size; only the thumb fades in on hover. */
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body {
   overflow-x:hidden!important;
   overflow-y:auto!important;
+  overscroll-behavior:contain!important;
   scrollbar-width:thin!important;
   scrollbar-color:transparent transparent!important;
   scrollbar-gutter:auto!important;
@@ -4600,7 +4622,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body::-webkit-scrollbar {
   display:block!important;
-  width:8px!important;
+  width:9px!important;
   height:0!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
@@ -4627,16 +4649,17 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   height:0!important;
   background:transparent!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+/* Pointer-driven visibility avoids leaving a thumb behind when the cursor exits. */
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card[data-scrollbar-visible="true"]
   >.ps-community-editor-preview-body,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body:hover {
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:focus-within
+  >.ps-community-editor-preview-body {
   scrollbar-color:#777f8b transparent!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card[data-scrollbar-visible="true"]
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb {
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:focus-within
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
   background-color:#777f8b!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card

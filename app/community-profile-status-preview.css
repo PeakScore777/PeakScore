@@ -216,7 +216,7 @@
   border: 4px solid var(--status-theme, #B7D7C3) !important;
   outline: 0 !important;
   background: #23a55a !important;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 35%) !important;
+  box-shadow: none !important;
 }
 .ps-community-status-profile-preview > .ps-community-status-preview-avatar .ps-community-editor-presence-dot.is-offline {
   background: #747b86 !important;

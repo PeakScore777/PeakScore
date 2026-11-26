@@ -3282,6 +3282,1505 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background-repeat:no-repeat!important;background-position:center!important;background-size:cover!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-frame {padding:14px 10px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(458px,calc(100vw - 36px))!important;
+    height:min(720px,calc(100dvh - 36px))!important;
+    max-height:calc(100dvh - 36px)!important;
+  }
+}
+/* The warning bar is a real footer, not unstyled content below the workspace. */
+.ps-community-editor-savebar {
+  position:relative!important;z-index:12!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:16px!important;width:min(720px,calc(100% - 32px))!important;
+  min-height:68px!important;box-sizing:border-box!important;
+  margin:0 auto 12px!important;padding:11px 14px 11px 18px!important;
+  border:1px solid #393d46!important;border-radius:13px!important;
+  background:#202126!important;color:#e8eaf0!important;
+  box-shadow:0 12px 32px rgb(0 0 0 / 24%)!important;
+  font-size:12px!important;font-weight:750!important;
+}
+.ps-community-editor-savebar>span {flex:1 1 auto!important;min-width:0!important;color:#e8eaf0!important}
+.ps-community-editor-savebar>div {display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex:0 0 auto!important}
+.ps-community-editor-savebar button {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+  min-width:96px!important;min-height:38px!important;padding:0 13px!important;
+  border:1px solid #3d424c!important;border-radius:8px!important;
+  font-size:12px!important;font-weight:800!important;cursor:pointer!important;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease!important;
+}
+.ps-community-editor-savebar .is-secondary {background:#292c33!important;color:#e7e9ef!important}
+.ps-community-editor-savebar .is-secondary:hover:not(:disabled) {background:#343842!important;border-color:#555d6b!important}
+.ps-community-editor-savebar .is-primary {background:#5865f2!important;border-color:#5865f2!important;color:#fff!important;box-shadow:0 3px 10px rgb(88 101 242 / 20%)!important}
+.ps-community-editor-savebar .is-primary:hover:not(:disabled) {background:#6978ff!important;border-color:#6978ff!important;transform:translateY(-1px)!important}
+.ps-community-editor-savebar button:disabled {opacity:.55!important;cursor:not-allowed!important}
+@media(max-width:560px) {
+  .ps-community-editor-savebar {width:calc(100% - 16px)!important;gap:8px!important;padding:9px!important}
+  .ps-community-editor-savebar>span {font-size:11px!important}
+  .ps-community-editor-savebar button {min-width:0!important;min-height:36px!important;padding:0 9px!important}
+}
+/* Premium Discord-style unsaved state: the editor shifts slightly and its
+   own footer turns red. Reset restores the last saved snapshot; Save persists it. */
+.ps-community-editor-v2 {
+  position:relative!important;
+  transform:translateX(0) scale(1)!important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
+}
+.ps-community-editor-v2[data-close-confirming="true"] {
+  transform:translateX(-64px) translateY(-4px) scale(.988)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
+}
+.ps-community-editor-savebar {
+  transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
+}
+.ps-community-editor-savebar.is-close-warning {
+  border-color:#eb4b55!important;
+  background:linear-gradient(110deg,#9f2935 0%,#7f202c 100%)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 12px 34px rgb(0 0 0 / 32%)!important;
+  animation:ps-community-unsaved-bar-enter .24s cubic-bezier(.2,.8,.2,1) both!important;
+}
+.ps-community-editor-savebar.is-close-warning>span {
+  color:#ffe4e6!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-secondary {
+  border-color:rgb(248 113 113 / 32%)!important;
+  background:rgb(127 29 29 / 24%)!important;
+  color:#ffe4e6!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-primary {
+  background:#5865f2!important;
+  border-color:#5865f2!important;
+  color:#fff!important;
+  box-shadow:0 3px 10px rgb(88 101 242 / 24%)!important;
+}
+.ps-community-editor-savebar.is-close-warning .is-primary:hover:not(:disabled) {
+  background:#6978ff!important;
+  border-color:#6978ff!important;
+  transform:translateY(-1px)!important;
+}
+@keyframes ps-community-unsaved-bar-enter {
+  from {opacity:.7;transform:translateY(8px)}
+  to {opacity:1;transform:translateY(0)}
+}
+@media(max-width:760px) {
+  .ps-community-editor-v2[data-close-confirming="true"] {
+    transform:translateX(0) translateY(-2px) scale(.995)!important;
+  }
+}
+
+
+/* Keep the editable input completely stable while it has focus. Display-name
+   motion effects belong to rendered names, never to the text-editing control. */
+#ps-community-display-name-inline,
+#ps-community-display-name-inline:focus,
+#ps-community-display-name-inline:focus-visible,
+#ps-community-display-name-inline:active {
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  color:var(--name-solid-color,var(--editor-theme-text,#f2f3f5))!important;
+  -webkit-text-fill-color:currentColor!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  outline:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+  transition:border-color .12s ease!important;
+}
+.ps-community-editor-preview-name-input.is-name-style-8bit {
+  font-size:35px!important;
+  line-height:1.25!important;
+  letter-spacing:0!important;
+}
+.ps-community-status-profile-preview .ps-community-status-profile-copy>strong.is-name-style-8bit {
+  font-size:clamp(29px,2.5vw,34px)!important;
+  line-height:1.3!important;
+  letter-spacing:0!important;
+}
+.ps-community-status-profile-preview .ps-community-status-profile-copy>small:empty {
+  display:none!important;
+}
+
+
+
+/* Discord-like account identity: handle, separator and pronouns share one
+   baseline. The handle is text, not a disconnected badge. */
+.ps-community-editor-preview-identity-line {
+  display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:7px!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-tag {
+  display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;text-shadow:none!important;
+  color:var(--editor-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#202126)!important;
+  font-size:14px!important;font-weight:650!important;line-height:1.35!important;opacity:.9!important;
+}
+.ps-community-editor-preview-identity-separator {
+  display:inline-block!important;flex:0 0 auto!important;
+  color:var(--editor-theme-text,#202126)!important;opacity:.62!important;
+  font-size:13px!important;line-height:1!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 180px!important;max-width:min(190px,calc(100% - 110px))!important;
+  color:var(--editor-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#202126)!important;
+}
+.ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns::placeholder {
+  color:var(--editor-theme-text,#202126)!important;opacity:.58!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.effect-plain:not(.color-custom-gradient),
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.effect-plain:not(.color-custom-gradient) {
+  color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  background:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+  filter:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.is-name-style-8bit,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.is-name-style-8bit {
+  font-size:1.04em!important;line-height:1.28!important;letter-spacing:0!important;
+  color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  background:none!important;filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+}
+
+/* Profile preview mirrors the public profile composition: larger card,
+   full-size avatar overlapping the banner, and the status bubble beside it. */
+.ps-community-editor-preview-column {
+  display:flex!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  position:relative!important;
+  display:flex!important;
+  flex:0 0 auto!important;
+  flex-direction:column!important;
+  width:min(530px,100%)!important;
+  min-width:0!important;
+  max-width:530px!important;
+  height:min(900px,100%)!important;
+  min-height:0!important;
+  max-height:900px!important;
+  margin:0!important;
+  padding:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:14px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;
+  z-index:2!important;
+  display:block!important;
+  flex:0 0 231px!important;
+  width:100%!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  height:231px!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:hidden!important;
+  border-radius:13px 13px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:cover!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  position:relative!important;
+  z-index:3!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:42px 32px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:none!important;
+  width:0!important;
+  height:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  position:absolute!important;
+  z-index:8!important;
+  top:138px!important;
+  left:0!important;
+  right:0!important;
+  display:block!important;
+  width:100%!important;
+  min-height:142px!important;
+  height:142px!important;
+  margin:0!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  position:absolute!important;
+  z-index:5!important;
+  left:29px!important;
+  top:0!important;
+  pointer-events:auto!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger {
+  display:block!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  position:relative!important;
+  display:grid!important;
+  width:142px!important;
+  height:142px!important;
+  box-sizing:border-box!important;
+  place-items:center!important;
+  overflow:visible!important;
+  border:8px solid var(--editor-card,#b7d7c3)!important;
+  border-radius:50%!important;
+  background:#36383f!important;
+  color:#fff!important;
+  font-size:25px!important;
+  font-weight:850!important;
+  box-shadow:0 0 0 2px #232428,0 9px 22px rgb(0 0 0 / 36%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>img {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  position:absolute!important;
+  z-index:7!important;
+  left:190px!important;
+  top:36px!important;
+  bottom:auto!important;
+  display:flex!important;
+  pointer-events:auto!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:calc(100% - 190px)!important;
+  min-height:44px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:11px 17px!important;
+  overflow:visible!important;
+  border:1px solid #454850!important;
+  border-radius:19px 19px 19px 9px!important;
+  background:linear-gradient(180deg,#32343a 0%,#292b30 100%)!important;
+  color:#f2f3f5!important;
+  font:600 14px/1.35 var(--font-geist-sans),sans-serif!important;
+  box-shadow:0 7px 18px rgb(0 0 0 / 38%),inset 0 1px 0 rgb(255 255 255 / 5%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  border-radius:50%!important;
+  background:#2b2d31!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before {
+  left:-10px!important;bottom:1px!important;width:10px!important;height:10px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  left:-17px!important;bottom:-5px!important;width:6px!important;height:6px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  position:relative!important;
+  z-index:1!important;
+  display:block!important;
+  overflow-wrap:anywhere!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-edit {
+  position:relative!important;
+  z-index:1!important;
+  flex:0 0 auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  width:max-content!important;
+  max-width:100%!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0 0 10px!important;
+  padding:2px 4px!important;
+  font-size:32px!important;
+  line-height:1.15!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0 0 32px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 auto!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  min-height:30px!important;
+  padding:0 11px!important;
+  font-size:14px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns {
+  font-size:14px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  min-height:27px!important;
+  margin:0 0 43px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {
+  margin:0 0 68px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading {
+  margin-bottom:20px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading>span {
+  font-size:15px!important;
+  font-weight:750!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading>small {
+  font-size:12px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  margin:0!important;
+  padding:0!important;
+  font-size:19px!important;
+  line-height:1.5!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {
+  margin-top:auto!important;
+  padding-top:0!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,100%)!important;
+    height:min(900px,100%)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    top:clamp(126px,26.8vw,138px)!important;
+    min-height:clamp(108px,26.8vw,142px)!important;
+    height:clamp(108px,26.8vw,142px)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:clamp(108px,26.8vw,142px)!important;
+    height:clamp(108px,26.8vw,142px)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:36%!important;
+    top:34%!important;
+    bottom:auto!important;
+    max-width:58%!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:0 6% 20px!important;
+  }
+}
+
+/* Final desktop-like composition for the editor preview. The previous
+   max-width:760 rules incorrectly treated the editor's narrow viewport as
+   a phone layout, squeezing the sidebar and shifting the avatar off-card. */
+@media(max-width:760px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:minmax(220px,275px) minmax(0,1fr)!important;
+  }
+  .ps-community-editor-preview-column {
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  .ps-community-editor-preview-frame {
+    display:grid!important;
+    place-items:center!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    padding:0 10px!important;
+    overflow:hidden!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,100%)!important;
+    max-width:530px!important;
+    height:min(900px,100%)!important;
+    max-height:900px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:0 32px 24px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    position:relative!important;
+    top:auto!important;
+    flex:0 0 142px!important;
+    width:calc(100% + 64px)!important;
+    min-height:142px!important;
+    height:142px!important;
+    margin:-77px -32px 22px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+    left:29px!important;
+    top:0!important;
+    width:142px!important;
+    height:142px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:142px!important;
+    height:142px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:190px!important;
+    top:auto!important;
+    bottom:49px!important;
+    max-width:calc(100% - 190px)!important;
+  }
+}
+
+/* Definitive profile composition — avatar/status are anchored to the banner,
+   never laid out as content inside the bio/name column. */
+.ps-community-editor-workspace-discord {
+  grid-template-columns:minmax(270px,32%) minmax(0,1fr)!important;
+}
+.ps-community-editor-preview-column {
+  display:flex!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:100%!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:0 22px!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  position:relative!important;
+  display:flex!important;
+  flex:0 1 auto!important;
+  flex-direction:column!important;
+  width:min(530px,calc(100% - 40px))!important;
+  min-width:0!important;
+  max-width:530px!important;
+  height:min(900px,100%)!important;
+  min-height:0!important;
+  max-height:900px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:14px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;
+  z-index:4!important;
+  display:block!important;
+  flex:0 0 231px!important;
+  width:100%!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:visible!important;
+  border-radius:14px 14px 0 0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  height:231px!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:hidden!important;
+  border-radius:13px 13px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  position:absolute!important;
+  z-index:8!important;
+  left:26px!important;
+  right:30px!important;
+  bottom:-77px!important;
+  display:block!important;
+  width:auto!important;
+  min-height:142px!important;
+  height:142px!important;
+  margin:0!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  position:absolute!important;
+  z-index:5!important;
+  left:0!important;
+  top:0!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger {
+  display:block!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  position:relative!important;
+  display:grid!important;
+  width:142px!important;
+  height:142px!important;
+  box-sizing:border-box!important;
+  place-items:center!important;
+  overflow:visible!important;
+  border:8px solid var(--editor-card,#b7d7c3)!important;
+  border-radius:50%!important;
+  background:#36383f!important;
+  color:#fff!important;
+  font-size:25px!important;
+  font-weight:850!important;
+  box-shadow:0 0 0 2px #232428,0 9px 22px rgb(0 0 0 / 36%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>img {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  position:absolute!important;
+  z-index:9!important;
+  left:164px!important;
+  top:36px!important;
+  bottom:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:calc(100% - 164px)!important;
+  min-height:44px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:11px 17px!important;
+  overflow:visible!important;
+  border:1px solid #454850!important;
+  border-radius:19px 19px 19px 9px!important;
+  background:linear-gradient(180deg,#32343a 0%,#292b30 100%)!important;
+  color:#f2f3f5!important;
+  font:600 14px/1.35 var(--font-geist-sans),sans-serif!important;
+  box-shadow:0 7px 18px rgb(0 0 0 / 38%),inset 0 1px 0 rgb(255 255 255 / 5%)!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  border-radius:50%!important;
+  background:#2b2d31!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before {
+  left:-10px!important;bottom:1px!important;width:10px!important;height:10px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  left:-17px!important;bottom:-5px!important;width:6px!important;height:6px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  position:relative!important;z-index:1!important;display:block!important;
+  overflow-wrap:anywhere!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-edit {
+  position:relative!important;z-index:1!important;flex:0 0 auto!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  position:relative!important;
+  z-index:2!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:82px 32px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:none!important;width:0!important;height:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  width:max-content!important;
+  max-width:100%!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0 0 10px!important;
+  padding:2px 4px!important;
+  font-size:32px!important;
+  line-height:1.15!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  gap:10px!important;width:100%!important;min-width:0!important;margin:0 0 32px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 220px!important;min-width:0!important;white-space:normal!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  min-height:27px!important;margin:0 0 43px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {margin:0 0 68px!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading {margin-bottom:20px!important}
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  margin:0!important;padding:0!important;font-size:19px!important;line-height:1.5!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {margin-top:auto!important;padding-top:0!important}
+@media(max-width:900px) {
+  .ps-community-editor-workspace-discord {grid-template-columns:minmax(220px,34%) minmax(0,1fr)!important}
+  .ps-community-editor-preview-frame {padding:0 12px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,calc(100% - 20px))!important;max-width:530px!important;height:min(900px,100%)!important;
+  }
+}
+@media(max-width:620px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:minmax(190px,auto) minmax(0,1fr)!important;
+    overflow:auto!important;
+  }
+  .ps-community-editor-settings-sidebar {height:auto!important;max-height:34vh!important}
+  .ps-community-editor-preview-column {min-height:650px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(530px,calc(100% - 16px))!important;height:min(900px,100%)!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:82px 24px 24px!important;
+  }
+}
+
+/* Match the public profile's actual 572 × 900 composition.
+   The preview pane scrolls independently instead of shrinking the card. */
+.ps-community-editor-preview-column {
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:16px 12px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  display:flex!important;
+  flex:0 0 572px!important;
+  width:572px!important;
+  min-width:572px!important;
+  max-width:572px!important;
+  height:900px!important;
+  min-height:900px!important;
+  max-height:none!important;
+  margin:0 auto!important;
+  transform:none!important;
+  box-sizing:border-box!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  left:32px!important;
+  right:32px!important;
+  bottom:-77px!important;
+  width:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  width:142px!important;
+  min-width:142px!important;
+  height:142px!important;
+  min-height:142px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  left:164px!important;
+  top:36px!important;
+  width:max-content!important;
+  min-width:178px!important;
+  max-width:calc(100% - 164px)!important;
+  min-height:44px!important;
+  padding:11px 17px!important;
+  white-space:nowrap!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  display:inline-block!important;
+  width:auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  text-overflow:clip!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  padding:82px 32px 24px!important;
+  overflow:visible!important;
+}
+@media(max-width:900px) {
+  .ps-community-editor-preview-frame {
+    padding:12px 10px 20px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    flex-basis:572px!important;
+    width:572px!important;
+    min-width:572px!important;
+    max-width:572px!important;
+    height:900px!important;
+    min-height:900px!important;
+  }
+}
+@media(max-width:620px) {
+  .ps-community-editor-preview-frame {
+    justify-content:flex-start!important;
+    padding:10px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    flex-basis:572px!important;
+    width:572px!important;
+    min-width:572px!important;
+    max-width:572px!important;
+    height:900px!important;
+    min-height:900px!important;
+  }
+}
+
+/* The preview frame must occupy the entire right grid column.
+   Previously it collapsed to a narrow intrinsic width, clipping the fixed
+   572px profile card at the left edge. */
+.ps-community-editor-preview-column {
+  display:flex!important;
+  flex:1 1 0%!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:0!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:flex!important;
+  flex:1 1 0%!important;
+  align-self:stretch!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:100%!important;
+  box-sizing:border-box!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  padding:16px 12px 24px!important;
+  overflow-x:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  scrollbar-gutter:stable!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  flex:0 0 572px!important;
+  width:572px!important;
+  min-width:572px!important;
+  max-width:572px!important;
+  height:900px!important;
+  min-height:900px!important;
+  max-height:none!important;
+  margin:0 auto!important;
+}
+@media(max-width:620px) {
+  .ps-community-editor-preview-frame {
+    justify-content:flex-start!important;
+  }
+}
+
+/* FINAL: match the compact green reference profile composition.
+   Desktop proportions: 420 × 720 CSS px, 184px banner and 116px avatar. */
+.ps-community-editor-workspace-discord {
+  grid-template-columns:220px minmax(0,1fr)!important;
+}
+.ps-community-editor-preview-column {
+  display:flex!important;
+  flex:1 1 0!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  padding:14px 24px 4px!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame {
+  display:flex!important;
+  flex:0 1 420px!important;
+  width:min(420px,100%)!important;
+  min-width:0!important;
+  max-width:420px!important;
+  height:auto!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  margin:0 auto!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  position:relative!important;
+  display:flex!important;
+  flex:0 0 420px!important;
+  flex-direction:column!important;
+  width:420px!important;
+  min-width:0!important;
+  max-width:420px!important;
+  height:720px!important;
+  min-height:720px!important;
+  max-height:720px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:14px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;
+  z-index:2!important;
+  display:block!important;
+  flex:0 0 184px!important;
+  width:100%!important;
+  min-height:184px!important;
+  max-height:184px!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  width:100%!important;
+  height:184px!important;
+  min-height:184px!important;
+  max-height:184px!important;
+  border-radius:13px 13px 0 0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  position:absolute!important;
+  z-index:8!important;
+  top:104px!important;
+  left:0!important;
+  right:0!important;
+  width:100%!important;
+  height:100px!important;
+  min-height:100px!important;
+  margin:0!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  position:absolute!important;
+  left:22px!important;
+  top:0!important;
+  width:100px!important;
+  height:100px!important;
+  pointer-events:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  width:100px!important;
+  height:100px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  position:absolute!important;
+  left:132px!important;
+  top:25px!important;
+  bottom:auto!important;
+  width:max-content!important;
+  max-width:calc(100% - 144px)!important;
+  min-height:40px!important;
+  padding:9px 14px!important;
+  white-space:nowrap!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  display:inline-block!important;
+  max-width:none!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  overflow-wrap:normal!important;
+  text-overflow:clip!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  position:relative!important;
+  z-index:1!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:72px 32px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:none!important;
+  background:var(--editor-theme-gradient,#B7D7C3)!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  margin-bottom:6px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  flex-wrap:nowrap!important;
+  gap:10px!important;
+  margin-bottom:26px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  margin-bottom:26px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {
+  margin-bottom:48px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {
+  margin-top:auto!important;
+}
+@media(max-width:980px) and (min-width:761px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:208px minmax(0,1fr)!important;
+  }
+  .ps-community-editor-preview-column {
+    padding-inline:16px!important;
+  }
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-column {
+    overflow:visible!important;
+    padding:0!important;
+  }
+  .ps-community-editor-preview-frame {
+    width:100%!important;
+    max-width:none!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    flex:0 1 458px!important;
+    width:min(458px,100%)!important;
+    max-width:100%!important;
+    height:650px!important;
+    min-height:650px!important;
+    max-height:none!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor,
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+    flex-basis:160px!important;
+    height:160px!important;
+    min-height:160px!important;
+    max-height:160px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    top:94px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+    left:18px!important;
+    width:96px!important;
+    min-width:96px!important;
+    height:96px!important;
+    min-height:96px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:84px!important;
+    height:84px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:110px!important;
+    top:22px!important;
+    max-width:calc(100% - 140px)!important;
+    min-height:38px!important;
+    padding:8px 11px!important;
+    font-size:12px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:60px 18px 20px!important;
+  }
+}
+/* Align the preview card with the red guide under the editor header. */
+@media(min-width:761px) {
+  .ps-community-editor-preview-frame {
+    margin-top:-230px!important;
+  }
+}
+/* Final profile details pass: avatar, attached status, theme ring and member date. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  top:98px!important;
+  height:116px!important;
+  min-height:116px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  left:22px!important;
+  top:0!important;
+  width:116px!important;
+  min-width:116px!important;
+  height:116px!important;
+  min-height:116px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  width:116px!important;
+  min-width:116px!important;
+  height:116px!important;
+  min-height:116px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  border:7px solid var(--editor-card,#B7D7C3)!important;
+  border-color:var(--editor-card,#B7D7C3)!important;
+  box-shadow:0 0 0 2px var(--editor-card,#B7D7C3),0 7px 18px #0006!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot {
+  border-color:var(--editor-card,#B7D7C3)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  left:150px!important;
+  top:25px!important;
+  max-width:calc(100% - 162px)!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  padding:36px 32px 26px!important;
+  overflow-y:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {
+  margin-bottom:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  flex:0 0 auto!important;
+  margin-top:34px!important;
+  padding-top:0!important;
+  min-height:42px!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    top:112px!important;
+    height:96px!important;
+    min-height:96px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:84px!important;
+    height:84px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:122px!important;
+    top:22px!important;
+    max-width:calc(100% - 134px)!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:30px 18px 20px!important;
+  }
+}
+/* Match the public profile reference: avatar, name, identity, bio and join date. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  top:136px!important;
+  left:0!important;
+  right:0!important;
+  width:100%!important;
+  height:110px!important;
+  min-height:110px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  left:22px!important;
+  top:-11px!important;
+  width:110px!important;
+  min-width:110px!important;
+  height:110px!important;
+  min-height:110px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  width:110px!important;
+  min-width:110px!important;
+  height:110px!important;
+  min-height:110px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  box-sizing:border-box!important;
+  border:6px solid var(--editor-card,#DDF8F3)!important;
+  box-shadow:0 0 0 2px var(--editor-card,#DDF8F3),0 7px 18px #0006!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot {
+  border-color:var(--editor-card,#DDF8F3)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  left:149px!important;
+  top:23.5px!important;
+  bottom:auto!important;
+  width:max-content!important;
+  min-width:146px!important;
+  max-width:calc(100% - 154px)!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  padding:71px 32px 26px!important;
+  overflow-y:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  display:block!important;
+  position:relative!important;
+  margin:0 0 7px -8px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:10px!important;
+  margin:0 0 26px -16px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  margin:0 0 34px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {
+  margin:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  flex:0 0 auto!important;
+  margin-top:48px!important;
+  padding:0!important;
+  min-height:42px!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    top:119px!important;
+    height:88px!important;
+    min-height:88px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+    top:-11px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:88px!important;
+    min-width:88px!important;
+    height:84px!important;
+    min-height:84px!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:122px!important;
+    top:16px!important;
+    min-width:0!important;
+    max-width:calc(100% - 120px)!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:91px 18px 20px!important;
+  }
+}
+
+/* Final theme swatches: compact two-card layout matching the supplied reference. */
+.ps-community-editor-theme-stop-list {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;width:100%!important;min-width:0!important;
+}
+.ps-community-editor-theme-stop {
+  display:grid!important;grid-template-columns:29px minmax(0,1fr)!important;
+  grid-template-rows:1fr 1fr!important;align-items:center!important;
+  column-gap:7px!important;row-gap:1px!important;width:100%!important;min-width:0!important;
+  min-height:52px!important;padding:6px 7px!important;box-sizing:border-box!important;
+  border:1px solid #3b3e47!important;border-radius:8px!important;
+  background:#292a30!important;color:#f2f3f5!important;text-align:left!important;box-shadow:none!important;
+}
+.ps-community-editor-theme-stop.is-active {
+  border-color:#858da1!important;box-shadow:0 0 0 1px #858da1!important;
+}
+.ps-community-editor-theme-stop>span:first-child {
+  grid-column:1!important;grid-row:1 / 3!important;width:29px!important;height:29px!important;
+  min-width:29px!important;border-radius:7px!important;
+}
+.ps-community-editor-theme-stop>span:nth-child(2) {
+  grid-column:2!important;grid-row:1!important;min-width:0!important;align-self:end!important;
+  color:#f3f4f6!important;font-size:9px!important;font-weight:700!important;
+  line-height:1.15!important;white-space:nowrap!important;
+}
+.ps-community-editor-theme-stop>small {
+  grid-column:2!important;grid-row:2!important;min-width:0!important;align-self:start!important;
+  color:#aeb2bd!important;font-size:8px!important;line-height:1.15!important;white-space:nowrap!important;
+}
+
+
+
+/* Discord-like overlay scrollbar on the profile preview content. */
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body {
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:transparent transparent!important;
+  scrollbar-gutter:auto!important;
+  -ms-overflow-style:auto!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar {
+  display:block!important;
+  width:8px!important;
+  height:0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-track {
+  margin:5px 0!important;
+  background:transparent!important;
+  border:0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  min-height:36px!important;
+  border:2px solid transparent!important;
+  border-radius:999px!important;
+  background-color:transparent!important;
+  background-clip:padding-box!important;
+  transition:background-color .16s ease!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-button,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-corner {
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body:hover {
+  scrollbar-color:#777f8b transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb {
+  background-color:#777f8b!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background-color:#aab3bf!important;
+}
+@media(prefers-reduced-motion:reduce) {
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+    >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+    transition:none!important;
+  }
+}
+/* Discord-style editor save notice: overlay the right preview pane instead
+   of reserving a full-width footer row beneath the workspace. */
+.ps-community-editor-main {
+  position:relative!important;
+}
+.ps-community-editor-savebar {
+  position:absolute!important;
+  z-index:30!important;
+  left:calc(220px + 16px)!important;
+  right:16px!important;
+  bottom:16px!important;
+  width:auto!important;
+  max-width:none!important;
+  min-height:58px!important;
+  margin:0!important;
+  padding:9px 12px 9px 18px!important;
+  border:1px solid #34363d!important;
+  border-radius:9px!important;
+  background:#18191c!important;
+  box-shadow:0 8px 24px rgb(0 0 0 / 32%)!important;
+  font-size:12px!important;
+}
+.ps-community-editor-savebar>span {
+  color:#dbdee1!important;
+  font-size:12px!important;
+  font-weight:650!important;
+}
+.ps-community-editor-savebar button {
+  min-height:38px!important;
+  border-radius:8px!important;
+}
+@media(max-width:980px) and (min-width:761px) {
+  .ps-community-editor-savebar { left:calc(208px + 12px)!important;right:12px!important; }
+}
+@media(max-width:760px) {
+  .ps-community-editor-savebar {
+    left:10px!important;right:10px!important;bottom:10px!important;
+    gap:8px!important;width:auto!important;
+  }
+}
+/* Final editor geometry: the modal ends with the workspace; no empty
+   gray footer panel is left beneath the profile editor. */
+.ps-community-editor-overlay {
+  place-items:start center!important;
+  padding:16px!important;
+}
+.ps-community-editor-v2 {
+  display:flex!important;
+  flex-direction:column!important;
+  height:min(906px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-main {
+  position:relative!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  width:100%!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-header {
+  flex:0 0 auto!important;
+}
+.ps-community-editor-workspace-discord {
+  display:grid!important;
+  grid-template-columns:220px minmax(0,1fr)!important;
+  flex:1 1 0!important;
+  width:100%!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-settings-sidebar {
+  min-height:0!important;
+  height:100%!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+}
+.ps-community-editor-preview-column {
+  position:relative!important;
+  display:flex!important;
+  flex:1 1 0!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:104px 22px 106px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:flex!important;
+  flex:0 0 auto!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  width:min(420px,100%)!important;
+  max-width:420px!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0 auto!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  display:flex!important;
+  flex:0 0 auto!important;
+  flex-direction:column!important;
+  width:min(420px,100%)!important;
+  min-width:0!important;
+  max-width:420px!important;
+  height:min(720px,calc(100dvh - 170px))!important;
+  min-height:420px!important;
+  max-height:none!important;
+  margin:0 auto!important;
+  padding:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
   position:relative!important;
   display:flex!important;
   flex:1 1 0!important;
@@ -3290,7 +4789,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   min-height:0!important;
   height:auto!important;
   padding:72px 32px 24px!important;
-  overflow:visible!important;
   background:var(--editor-theme-gradient,#B7D7C3)!important;
 }
 /* Save notice sits on the yellow guide, below the card, inside the right pane. */

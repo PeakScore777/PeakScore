@@ -3517,7 +3517,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   flex-direction:column!important;
   min-width:0!important;
   min-height:0!important;
-  padding:0 32px 24px!important;
+  padding:42px 32px 24px!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
   scrollbar-width:none!important;
@@ -3530,20 +3530,25 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   height:0!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-  position:relative!important;
+  position:absolute!important;
+  z-index:8!important;
+  top:138px!important;
+  left:0!important;
+  right:0!important;
   display:block!important;
-  flex:0 0 142px!important;
-  width:calc(100% + 64px)!important;
+  width:100%!important;
   min-height:142px!important;
   height:142px!important;
-  margin:-77px -32px 22px!important;
+  margin:0!important;
   overflow:visible!important;
+  pointer-events:none!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
   position:absolute!important;
   z-index:5!important;
   left:29px!important;
   top:0!important;
+  pointer-events:auto!important;
   width:142px!important;
   height:142px!important;
   margin:0!important;
@@ -3586,8 +3591,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:absolute!important;
   z-index:7!important;
   left:190px!important;
-  bottom:49px!important;
+  top:36px!important;
+  bottom:auto!important;
   display:flex!important;
+  pointer-events:auto!important;
   align-items:center!important;
   gap:7px!important;
   width:max-content!important;
@@ -3642,8 +3649,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   line-height:1.15!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
   gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
   margin:0 0 32px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  flex:0 1 auto!important;
+  min-width:0!important;
+  white-space:nowrap!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-tag {
   min-height:30px!important;
@@ -3686,10 +3703,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     height:min(900px,100%)!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-    flex-basis:clamp(108px,26.8vw,142px)!important;
+    top:clamp(126px,26.8vw,138px)!important;
     min-height:clamp(108px,26.8vw,142px)!important;
     height:clamp(108px,26.8vw,142px)!important;
-    margin-top:calc(clamp(108px,26.8vw,142px) * -.54)!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
@@ -3699,7 +3715,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
     left:36%!important;
-    bottom:8%!important;
+    top:34%!important;
+    bottom:auto!important;
     max-width:58%!important;
   }
   .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {

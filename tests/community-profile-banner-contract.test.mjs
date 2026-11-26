@@ -28,9 +28,8 @@ test("community member summaries keep the banner dark and apply the selected two
   assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
   assert.match(page, /backgroundImage: \"url\(\" \+ selectedCommunityProfile\.bannerUrl/);
   assert.match(page, /is-plate-/);
-  assert.match(page, /is-decoration-/);
-  assert.match(page, /is-profile-frame-/);
-  assert.match(page, /is-profile-effect-/);
+  assert.match(page, /selectedCommunityProfile\.avatarFrame \?\? "none"/);
+  assert.match(page, /frame-" \+ \(selectedCommunityProfile\.avatarFrame/);
   assert.match(css, /\.ps-community-editor-preview-banner/);
   assert.match(css, /\.ps-community-editor-preview-card/);
 });

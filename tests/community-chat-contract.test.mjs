@@ -143,7 +143,10 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(profileRoute, /consume_community_attachment_rate_limit/);
   assert.match(profileRoute, /userId !== user\.id/);
   assert.doesNotMatch(profileRoute, /from\("profiles"\)/);
-  assert.match(profileRoute, /from\("community_public_profiles"\)[\s\S]*?select\("full_name"\)/);
+  assert.match(profileRoute, /supabaseAdmin\.auth\.admin\.getUserById\(userId\)/);
+  assert.match(profileRoute, /metadata\.full_name/);
+  assert.match(profileRoute, /metadata\.name/);
+  assert.doesNotMatch(profileRoute, /from\("community_public_profiles"\)/);
   assert.match(roleBadgesView, /with \(security_invoker = true\)/);
   assert.match(roleBadgesView, /community_member_roles/);
   assert.match(livePage, /from\("community_member_profiles"\)/);

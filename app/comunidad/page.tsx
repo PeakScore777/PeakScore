@@ -287,6 +287,11 @@ function communityThemeContrast(first: string, second: string) {
   const darkWorst = Math.min(...samples.map((sample) => ratio(darkInk, sample)));
   return lightWorst >= darkWorst ? lightInk : darkInk;
 }
+function communityThemeOutline(first: string, second: string) {
+  return communityThemeContrast(first, second) === "#F7F8FA"
+    ? "rgba(0,0,0,.88)"
+    : "rgba(255,255,255,.88)";
+}
 function communityNameCharacters(value: string) {
   const IntlWithSegmenter = Intl as unknown as {
     Segmenter?: new (locale?: string, options?: { granularity: "grapheme" }) => {
@@ -3116,6 +3121,7 @@ export default function CommunityPage() {
                 "--community-theme-body-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-body-text": communityThemeContrast(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-outline": communityThemeOutline(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
               } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
@@ -3243,6 +3249,7 @@ export default function CommunityPage() {
                 "--editor-theme-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-body-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--editor-theme-bottom-text": communityThemeContrast(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
+                "--editor-theme-outline": communityThemeOutline(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
                 "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF",
                 "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF",
                 "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",

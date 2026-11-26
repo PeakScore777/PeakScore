@@ -156,6 +156,8 @@ export default function DecryptedDisplayName({
         revealed: graphemes.map(() => true),
         squeeze: graphemes.map(() => 1)
       });
+      // Keep the resolved text visible after the decode. Replaying the scramble
+      // on a short loop made the preview look as though it lost trailing letters.
       if (loop && !reducedMotion) {
         restartTimer = setTimeout(() => {
           if (!disposed) {
@@ -254,8 +256,10 @@ export default function DecryptedDisplayName({
     "--ps-decrypt-color": scrambleColor,
     "--ps-chroma-char-count": Math.max(1, graphemes.length),
     "--ps-chroma-background-size": Math.max(1, graphemes.length) * 100 + "%",
-    display: "inline-block",
-    maxWidth: "100%"
+    display: "inline-flex",
+    alignItems: "baseline",
+    maxWidth: "100%",
+    whiteSpace: "pre"
   } as CSSProperties;
 
   return (

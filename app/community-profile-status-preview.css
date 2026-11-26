@@ -49,13 +49,14 @@
 .ps-community-status-profile-preview > .ps-community-status-preview-avatar .ps-community-editor-presence-dot {
   position: absolute !important;
   z-index: 6 !important;
-  right: -4px !important;
-  bottom: -1px !important;
-  width: 17px !important;
-  height: 17px !important;
-  border: 3px solid var(--status-theme, #B7D7C3) !important;
+  right: -6px !important;
+  bottom: -2px !important;
+  width: 24px !important;
+  height: 24px !important;
+  box-sizing: border-box !important;
+  border: 5px solid var(--status-theme, #B7D7C3) !important;
   border-radius: 50% !important;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 35%), 0 2px 5px rgb(0 0 0 / 35%) !important;
+  box-shadow: none !important;
 }
 
 /* The status bubble uses the same size, typography and two-dot tail as the profile note. */
@@ -229,3 +230,11 @@
   color: var(--status-theme-text, #202126) !important;
   -webkit-text-fill-color: var(--status-theme-text, #202126) !important;
 }
+
+/* Discord-like larger presence dot with the same ring as the avatar frame. */
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar .ps-community-editor-presence-dot {
+  right:-6px!important;bottom:-2px!important;width:24px!important;height:24px!important;
+  box-sizing:border-box!important;border:5px solid var(--status-theme,#B7D7C3)!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;outline:0!important;
+}
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar .ps-community-editor-presence-dot.is-offline {background:#747b86!important}

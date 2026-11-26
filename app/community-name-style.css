@@ -9175,11 +9175,15 @@ html:has(.ps-community-picker-overlay) * {
 /* Shared contrast foreground for the name-style profile, member and chat
    surfaces. The editor computes this against both profile-theme endpoints. */
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy>.ps-community-name-preview-live.color-default.effect-plain,
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.color-default.effect-plain,
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-default.effect-plain,
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-handle {
   color:var(--status-theme-text,#202126)!important;
   -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+  -webkit-text-stroke:.22px var(--status-theme-outline,transparent)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-default.effect-plain {
+  color:#F2F3F5!important;
+  -webkit-text-fill-color:#F2F3F5!important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
   justify-content:flex-start!important;text-align:left!important;

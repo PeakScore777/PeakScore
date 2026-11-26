@@ -4373,6 +4373,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     padding:60px 18px 20px!important;
   }
 }
+/* Align the preview card with the red guide under the editor header. */
+@media(min-width:761px) {
+  .ps-community-editor-preview-frame {
+    margin-top:-150px!important;
+  }
+}
 `}</style>
     </div>
     </div>,

@@ -86,13 +86,17 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult] = await Promise.all([
+  const [rolesResult, appearanceResult, accountProfileResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
       .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
+      .maybeSingle(),
+    supabase.from("community_public_profiles")
+      .select("full_name")
+      .eq("id", userId)
       .maybeSingle(),
   ]);
 
@@ -120,6 +124,11 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       userId: profileResult.data.user_id,
       memberNumber: profileResult.data.member_number,
       displayName: profileResult.data.display_name,
+      accountName: typeof accountProfileResult.data?.full_name === "string"
+        ? accountProfileResult.data.full_name
+        : userId === user.id && typeof user.user_metadata?.full_name === "string"
+          ? user.user_metadata.full_name
+          : "",
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
@@ -179,6 +188,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     return fail("El formato de la solicitud no es válido.", 400);
   }
 
+  const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : null;
   const pronouns = typeof payload.pronouns === "string" ? payload.pronouns.trim() : "";
   const statusText = typeof payload.statusText === "string" ? payload.statusText.trim() : "";
   const statusExpiresAtInput = payload.statusExpiresAt === null ? null
@@ -201,6 +211,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const profileFrameId = typeof payload.profileFrameId === "string" ? payload.profileFrameId.trim() : DEFAULT_PROFILE_FRAME;
   const profileEffectId = typeof payload.profileEffectId === "string" ? payload.profileEffectId.trim() : DEFAULT_PROFILE_EFFECT;
 
+  if (displayName !== null && (displayName.length < 2 || displayName.length > 32 || /[<>]/.test(displayName))) {
+    return fail("El nombre de comunidad debe tener entre 2 y 32 caracteres y no puede contener HTML.", 400);
+  }
   if (pronouns.length > 32 || statusText.length > 80 || about.length > 256) {
     return fail("Revisa los límites: pronombres 32, estado 80 y biografía 256 caracteres.", 400);
   }
@@ -229,6 +242,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   // The service client is never exposed to the browser and is used only after the auth/owner gate.
   const { data, error } = await supabaseAdmin.from("community_member_profiles")
     .update({
+      ...(displayName !== null ? { display_name: displayName } : {}),
       pronouns,
       status_text: statusText,
       status_expires_at: statusText ? statusExpiresAtInput : null,
@@ -266,6 +280,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       userId: data.user_id,
       memberNumber: data.member_number,
       displayName: data.display_name,
+      accountName: typeof accountProfileResult.data?.full_name === "string"
+        ? accountProfileResult.data.full_name
+        : "",
       pronouns: data.pronouns ?? "",
       statusText: data.status_expires_at && Date.parse(data.status_expires_at) <= Date.now() ? "" : data.status_text ?? "",
       statusExpiresAt: data.status_expires_at && Date.parse(data.status_expires_at) > Date.now() ? data.status_expires_at : null,

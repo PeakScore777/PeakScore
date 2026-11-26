@@ -475,7 +475,7 @@ function initials(value: string) {
 }
 function accountTag(value?: string | null) {
   const clean = typeof value === "string" ? value.trim().replace(/^@+/, "") : "";
-  return "@" + (clean || "usuario");
+  return clean ? "@" + clean : "";
 }
 
 function DisplayNameMotionPreview({ value, animation, className = "", style, tag = "span" }: {

@@ -2020,7 +2020,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-name-preview-stage" style={{ "--status-theme-text": profileThemeInk, "--editor-theme-text": profileThemeInk } as CSSProperties}>
+                  <div className="ps-community-name-preview-stage" style={{ "--status-theme-text": profileThemeInk, "--status-theme-outline": profileThemeOutline, "--editor-theme-text": profileThemeInk, "--editor-theme-outline": profileThemeOutline } as CSSProperties}>
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
                       <article className="ps-community-name-style-profile-preview"
@@ -2029,6 +2029,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           "--status-theme": cardColor,
                           "--status-theme-secondary": themeColorSecondary,
                           "--status-theme-text": profileThemeInk,
+                          "--status-theme-outline": profileThemeOutline,
                           "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none",
                           "--name-gradient-start": draftDisplayNameGradientStart,
                           "--name-gradient-end": draftDisplayNameGradientEnd,

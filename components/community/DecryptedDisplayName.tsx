@@ -269,7 +269,20 @@ export default function DecryptedDisplayName({
       style={safeStyle}
       aria-label={text}
     >
-      <span ref={contentRef} className="ps-decrypted-content" aria-hidden="true">
+      <span
+        ref={contentRef}
+        className="ps-decrypted-content"
+        aria-hidden="true"
+        style={{
+          display: "inline-flex",
+          alignItems: "baseline",
+          maxWidth: "100%",
+          whiteSpace: "pre",
+          font: "inherit",
+          letterSpacing: "inherit",
+          lineHeight: "inherit",
+        }}
+      >
         {graphemes.map((character, index) => {
           if (isSpace(character)) return character;
           const revealed = frame.revealed[index] ?? false;

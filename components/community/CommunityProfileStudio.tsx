@@ -380,7 +380,7 @@ function DisplayNameCustomColorPicker({ value, selected, onApply }: DisplayNameC
   }
 
   return (
-    <div className="ps-community-name-custom-picker-root">
+    <div className="ps-community-name-custom-picker-root ps-community-name-color-picker">
       <button type="button"
         className={"ps-community-name-custom-color" + (selected || open ? " is-selected" : "")}
         title="Elegir un color personalizado"
@@ -1779,7 +1779,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                       {draftDisplayNameColorMode === "single" && (
                         <>
-                          <div className="ps-community-name-preset-grid" role="group" aria-label="Colores de letra">
+                          <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Colores de letra">
                             {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient").map((item) => (
                               <button
                                 key={item.id}
@@ -1827,27 +1827,27 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             })}
                           </div>
                           <div className="ps-community-name-custom-gradient-stops">
-                            <DisplayNameCustomColorPicker
+                            <div className="ps-community-name-gradient-stop"><span>Color inicial</span><DisplayNameCustomColorPicker
                               value={draftDisplayNameGradientStart}
                               selected={true}
                               onApply={(color) => {
                                 setDraftDisplayNameColor("custom-gradient");
                                 setDraftDisplayNameGradientStart(color);
                               }}
-                            />
-                            <DisplayNameCustomColorPicker
+                            /></div>
+                            <div className="ps-community-name-gradient-stop"><span>Color final</span><DisplayNameCustomColorPicker
                               value={draftDisplayNameGradientEnd}
                               selected={true}
                               onApply={(color) => {
                                 setDraftDisplayNameColor("custom-gradient");
                                 setDraftDisplayNameGradientEnd(color);
                               }}
-                            />
+                            /></div>
                           </div>
                         </>
                       )}
                       {draftDisplayNameColorMode === "spectrum" && (
-                        <div className="ps-community-name-spectrum-presets" role="group" aria-label="Paletas de letra">
+                        <div className="ps-community-name-spectrum-presets ps-community-name-prism-editor" role="group" aria-label="Paletas de letra">
                           {DISPLAY_NAME_SPECTRUM_PRESETS.map((preset) => {
                             const selected = JSON.stringify(draftDisplayNamePrismColors) === JSON.stringify(preset.colors);
                             return (

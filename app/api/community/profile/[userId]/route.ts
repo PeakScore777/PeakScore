@@ -86,7 +86,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult, accountUserResult, registeredProfileResult] = await Promise.all([
+  const [rolesResult, appearanceResult, accountUserResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
@@ -94,13 +94,9 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
-    // Auth metadata is retained as a compatibility fallback for accounts created
-    // before the registered name was projected into public.profiles.full_name.
+    // Keep the registered social identity isolated to Auth metadata; do not
+    // project the private account/profile table into community identity reads.
     supabaseAdmin.auth.admin.getUserById(userId),
-    supabaseAdmin.from("profiles")
-      .select("full_name")
-      .eq("id", userId)
-      .maybeSingle(),
   ]);
 
   // Appearance is optional metadata. A missing column, policy mismatch or a
@@ -128,16 +124,11 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       memberNumber: profileResult.data.member_number,
       displayName: profileResult.data.display_name,
       accountName: (() => {
-        const metadata = accountUserResult.data?.user?.user_metadata
-          ?? (userId === user.id ? user.user_metadata : {})
-          ?? {};
-        const registeredName = [
-          registeredProfileResult.data?.full_name,
-          metadata.full_name,
-          metadata.name,
-          metadata.user_name,
-          metadata.preferred_username,
-        ].find((value) => typeof value === "string" && value.trim().length > 0);
+        const metadata = userId === user.id
+          ? (user.user_metadata ?? {})
+          : (accountUserResult.data?.user?.user_metadata ?? {});
+        const registeredName = [metadata.full_name, metadata.name, metadata.user_name, metadata.preferred_username]
+          .find((value) => typeof value === "string" && value.trim().length > 0);
         return typeof registeredName === "string" ? registeredName.trim().slice(0, 80) : "";
       })(),
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),

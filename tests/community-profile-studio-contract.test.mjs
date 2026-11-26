@@ -638,7 +638,7 @@ test("mobile cosmetic selectors retain their live preview and the banner hue con
 });
 
 
-test("display name typography, colors and entry motion are independent saved controls", () => {
+test("display name typography and colour controls remain available without entrance animations", () => {
   assert.match(studio, /type DisplayNameStyle = "classic" \| "tempo" \| "sakura"/);
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(studio, /draftDisplayNameStyle/);
@@ -648,10 +648,9 @@ test("display name typography, colors and entry motion are independent saved con
   assert.match(studio, /ps-community-name-font-grid/);
   assert.match(studio, /ps-community-name-color-grid/);
   assert.match(studio, /ps-community-name-prism-editor/);
-  assert.match(studio, /ps-community-name-animation-grid/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
   assert.match(studio, /Color de letra/);
-  assert.match(studio, /Animación de entrada/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.doesNotMatch(studio, /Animación de entrada/);
   assert.match(studio, /className="ps-community-name-context-label">PERFIL/);
   assert.match(studio, /className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD/);
   assert.match(studio, /className="ps-community-name-context-label">CHAT/);
@@ -787,36 +786,35 @@ test("default display-name typeface is self-hosted and applied consistently", ()
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
 
-test("saved profile motion renderer exposes supported animations and Name Atelier can select them", () => {
+test("legacy display-name animation data remains readable but is not executed on founder-intro", () => {
   assert.match(page, /function CommunityAnimatedName/);
-  for (const animation of ["domino-flow","mistfall","depth-lift","inkline","halo-signal","decrypt"]) {
-    assert.match(page, new RegExp('if \\(animation === "' + animation + '"\\)'));
-  }
+  assert.match(page, /void animation;/);
+  assert.match(page, /ps-community-name-static/);
+  assert.match(studio, /function DisplayNameMotionPreview/);
+  assert.match(studio, /void animation;/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.doesNotMatch(studio, /animation=\{item\.id\}/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
-  assert.match(studio, /animation=\{item\.id\}/);
-  assert.match(studio, /aria-pressed=\{draftDisplayNameAnimation === item\.id\}/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 
-test("motion gallery styles remain responsive and the gallery is mounted in Name Atelier", () => {
-  assert.match(nameStyleCss, /\.ps-community-name-style-group > \.ps-community-name-animation-grid\s*\{[\s\S]*?display:grid !important/);
-  assert.match(nameStyleCss, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
-  assert.match(nameStyleCss, /@media \(max-width:560px\)/);
-  assert.match(studio, /ps-community-name-animation-grid/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+test("founder-intro does not mount the retired entrance-animation gallery", () => {
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.doesNotMatch(studio, /className="ps-community-name-animation-grid"/);
+  assert.doesNotMatch(studio, /Animación de entrada/);
+  assert.match(studio, /ps-community-name-font-grid/);
+  assert.match(studio, /Color de letra/);
 });
 
-test("motion gallery controls are visible in Name Atelier while profile motion renders", () => {
-  assert.match(studio, /ps-community-name-animation-grid/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+test("profile and editor names render statically while preserving the selected typeface", () => {
   assert.match(page, /function CommunityAnimatedName/);
-  for (const animation of ["shuffle-blur","shuffle-flip","inkline","halo-signal","mistfall"]) {
-    assert.ok(studio.includes('id: "' + animation + '"'));
-  }
-  assert.match(nameStyleCss, /\.ps-halo-signal__glyph/);
-  assert.match(nameStyleCss, /\.ps-mistfall-canvas/);
+  assert.match(page, /void animation;/);
+  assert.match(page, /ps-community-name-static/);
+  assert.match(studio, /function DisplayNameMotionPreview/);
+  assert.match(studio, /void animation;/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.match(studio, /ps-community-name-font-grid/);
 });
 
 test("Signal Break is retired from selectable display-name animations and legacy profiles fall back safely", () => {
@@ -936,51 +934,27 @@ test("Gradient Flow is a name finish and not a selectable profile animation", ()
   assert.match(gradientFlowMigration, /where display_name_animation in \('signal-break', 'glitch'\)/);
 });
 
-test("three Shuffle presets match the reference with distinct looping effects and no hover", () => {
-  assert.ok(studio.includes('import ShuffleDisplayName from "@/components/community/ShuffleDisplayName"'));
-  assert.ok(page.includes('import ShuffleDisplayName from "@/components/community/ShuffleDisplayName"'));
-  for (const preset of ["shuffle-blur", "shuffle-flip", "shuffle"]) {
-    assert.ok(studio.includes('id: "' + preset + '"'));
-    assert.ok(studio.includes('animation === "' + preset + '"'));
-    assert.ok(page.includes('animation === "' + preset + '"'));
-    assert.ok(route.includes('"' + preset + '"'));
-  }
-  assert.ok(studio.includes('label: "Blur Cascade"'));
-  assert.ok(studio.includes('label: "Flip Roll"'));
-  assert.ok(studio.includes('label: "Classic Slide"'));
-  assert.ok(studio.includes('duration={3.6}') && studio.includes('shuffleTimes={10}') && studio.includes('stagger={0.075}'));
-  assert.ok(studio.includes('duration={3.2}') && studio.includes('shuffleTimes={previewMode ? 3 : 5}') && studio.includes('stagger={0.085}'));
-  assert.ok(studio.includes('duration={2.2}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.07}'));
+test("legacy Shuffle animation modules remain isolated from the founder profile UI", () => {
   assert.ok(shuffleName.includes("new IntersectionObserver"));
   assert.ok(shuffleName.includes("updateVisibility(entries.some"));
   assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);
-  assert.ok(nameStyleCss.includes('data-shuffle-effect="blur"'));
-  assert.ok(nameStyleCss.includes('data-shuffle-effect="flip"'));
-  assert.ok(nameStyleCss.includes('data-shuffle-effect="slide"'));
-  assert.ok(nameStyleCss.includes('infinite'));
+  assert.doesNotMatch(studio, /ShuffleDisplayName|animation === "shuffle-/);
+  assert.doesNotMatch(page, /ShuffleDisplayName|animation === "shuffle-/);
   assert.ok(route.includes('"shuffle-blur","shuffle-flip","shuffle"'));
 });
 
-test("Hacking Decode uses a real sequential hexadecimal decrypt component", () => {
-  assert.match(studio, /id: "decrypt", label: "Hacking Decode"/);
-  assert.match(studio, /<DecryptedDisplayName/);
-  assert.match(page, /<DecryptedDisplayName/);
-  assert.match(route, /"decrypt"/);
+test("legacy Hacking Decode component remains available but is not mounted on founder-intro", () => {
   assert.match(decryptedName, /speed = 40/);
   assert.match(decryptedName, /durationMs = 2200/);
   assert.match(decryptedName, /elapsed \/ safeDuration/);
   assert.match(decryptedName, /scheduledCount = Math\.floor\(progress \* order\.length\)/);
-  assert.match(studio, /durationMs=\{previewMode \? 2800 : 3200\}/);
-  assert.match(page, /durationMs=\{2400\}/);
   assert.match(decryptedName, /sequential = true/);
   assert.match(decryptedName, /revealDirection = "random"/);
   assert.match(decryptedName, /scrambleColor = "#2bb673"/);
   assert.match(decryptedName, /animateOn === "mount"/);
-  assert.match(decryptedName, /hasPlayedRef\.current = false/);
-  assert.match(studio, /loop=\{isGalleryDemo\}/);
-  assert.match(studio, /scrambleColor="#2bb673"/);
   assert.match(decryptedName, /prefers-reduced-motion/);
-  assert.match(nameStyleCss, /\.ps-decrypted-glyph/);
+  assert.doesNotMatch(studio, /DecryptedDisplayName/);
+  assert.doesNotMatch(page, /DecryptedDisplayName/);
   assert.match(decryptedAnimationMigration, /where display_name_animation = 'glitch'/);
   assert.match(decryptedAnimationMigration, /set display_name_animation = 'decrypt'/);
 });
@@ -1021,16 +995,13 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
 });
 
 
-test("founder branch keeps the font, color and motion galleries available", () => {
-  assert.match(studio, /ps-community-name-animation-grid/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+test("founder branch keeps font and colour controls while hiding entrance animations", () => {
   assert.match(studio, /ps-community-name-font-grid/);
   assert.match(studio, /Color de letra/);
-  assert.match(studio, /Animación de entrada/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.doesNotMatch(studio, /Animación de entrada/);
   assert.match(page, /function CommunityAnimatedName/);
-  for (const animation of ["inkline","halo-signal","domino-flow","mistfall","depth-lift","decrypt"]) {
-    assert.match(page, new RegExp('if \\(animation === "' + animation + '"\\)'));
-  }
+  assert.match(page, /void animation;/);
 });
 
 test("member rail keeps the selected name font inside a flexible copy column", () => {
@@ -1040,18 +1011,18 @@ test("member rail keeps the selected name font inside a flexible copy column", (
   assert.match(page, /\+ " is-name-style-" \+ \(member\.display_name_style/);
 });
 
-test("selected entrance animation runs on profile and all three editor previews while live lists stay lightweight", () => {
+test("profile, member and chat names stay static while the selected font and finish stay synchronized", () => {
   assert.match(page, /function CommunityStaticName/);
   assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
   assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
   assert.equal((page.match(/<CommunityAnimatedName/g) ?? []).length, 1);
   assert.match(page, /<CommunityStaticName[\s\S]*?value=\{message\.author\.full_name\}/);
   assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
-  assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
-  const memberPreview = studio.slice(studio.indexOf("ps-community-name-preview-members-view"), studio.indexOf("ps-community-name-preview-chat-view"));
-  const chatPreview = studio.slice(studio.indexOf("ps-community-name-preview-chat-view"), studio.indexOf("ps-community-picker-selection"));
-  assert.match(memberPreview, /<DisplayNameMotionPreview[\s\S]*?animation=\{draftDisplayNameAnimation\}/);
-  assert.match(chatPreview, /<DisplayNameMotionPreview[\s\S]*?animation=\{draftDisplayNameAnimation\}/);
+  assert.match(studio, /function DisplayNameMotionPreview/);
+  assert.match(studio, /void animation;/);
+  assert.match(studio, /ps-community-name-preview-profile-view/);
+  assert.match(studio, /ps-community-name-preview-members-view/);
+  assert.match(studio, /ps-community-name-preview-chat-view/);
 });
 
 test("selected effects are preserved on the animated glyph layer", () => {
@@ -1126,14 +1097,11 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(nameStyleCss, /\.ps-name-shuffle\[data-shuffle-active="false"\] \.ps-name-shuffle__sizer/);
 });
 
-test("profile, member and chat preview animate with the same selected font and finish", () => {
+test("profile, member and chat previews use the same static name treatment and selected font", () => {
   assert.ok(studio.includes("ps-community-name-preview-profile-view"));
   assert.ok(studio.includes("<DisplayNameMotionPreview tag=\"strong\" value={displayName || \"Tu nombre\"}"));
-  const memberPreview = studio.slice(studio.indexOf("ps-community-name-preview-members-view"), studio.indexOf("ps-community-name-preview-chat-view"));
-  const chatPreview = studio.slice(studio.indexOf("ps-community-name-preview-chat-view"), studio.indexOf("ps-community-picker-selection"));
-  assert.match(memberPreview, /DisplayNameMotionPreview[\s\S]*?draftDisplayNameAnimation/);
-  assert.match(chatPreview, /DisplayNameMotionPreview[\s\S]*?draftDisplayNameAnimation/);
-  assert.match(nameStyleCss, /Animated names in the member\/chat preview share the chosen font and finish/);
+  assert.match(studio, /function DisplayNameMotionPreview/);
+  assert.match(studio, /void animation;/);
   assert.match(nameStyleCss, /community-member-nameplate\.is-name-style-discord-display/);
   assert.match(nameStyleCss, /community-chat-author\.is-name-style-creator-sans/);
   assert.match(nameStyleCss, /var\(--name-solid-color/);
@@ -1339,17 +1307,18 @@ test("community-only profile and name-style stylesheets are loaded by the commun
 });
 
 
-test("Name Atelier keeps the font specimen and synchronized profile/member/chat previews with finish and motion galleries", () => {
+test("Name Atelier keeps synchronized profile/member/chat previews and font controls without entrance motion", () => {
   assert.match(studio, /ps-community-name-font-option/);
   assert.match(studio, /ps-community-name-preview-profile-view/);
   assert.match(studio, /ps-community-name-preview-members-view/);
   assert.match(studio, /ps-community-name-preview-chat-view/);
   assert.match(studio, /DISPLAY_NAME_EFFECT_COLOR_MODE/);
-  assert.match(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\.map\(\(item\) =>/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameFuzzySettings/);
   assert.match(studio, /Color de letra/);
-  assert.match(studio, /Animación de entrada/);
+  assert.doesNotMatch(studio, /Animación de entrada/);
+  assert.match(studio, /function DisplayNameMotionPreview/);
   const finalPreviewCss = nameStyleCss.slice(nameStyleCss.lastIndexOf("Name-style preview: the right column is an open"));
   assert.ok(finalPreviewCss.includes(".ps-community-name-preview-stage {"));
   assert.ok(finalPreviewCss.includes("border:0 !important;"));

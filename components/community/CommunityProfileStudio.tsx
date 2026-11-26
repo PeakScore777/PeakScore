@@ -4022,6 +4022,105 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     padding:82px 24px 24px!important;
   }
 }
+
+/* Match the public profile's actual 572 × 900 composition.
+   The preview pane scrolls independently instead of shrinking the card. */
+.ps-community-editor-preview-column {
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:16px 12px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  display:flex!important;
+  flex:0 0 572px!important;
+  width:572px!important;
+  min-width:572px!important;
+  max-width:572px!important;
+  height:900px!important;
+  min-height:900px!important;
+  max-height:none!important;
+  margin:0 auto!important;
+  transform:none!important;
+  box-sizing:border-box!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  left:32px!important;
+  right:32px!important;
+  bottom:-77px!important;
+  width:auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  width:142px!important;
+  min-width:142px!important;
+  height:142px!important;
+  min-height:142px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  left:164px!important;
+  top:36px!important;
+  width:max-content!important;
+  min-width:178px!important;
+  max-width:calc(100% - 164px)!important;
+  min-height:44px!important;
+  padding:11px 17px!important;
+  white-space:nowrap!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  display:inline-block!important;
+  width:auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  text-overflow:clip!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  padding:82px 32px 24px!important;
+  overflow:visible!important;
+}
+@media(max-width:900px) {
+  .ps-community-editor-preview-frame {
+    padding:12px 10px 20px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    flex-basis:572px!important;
+    width:572px!important;
+    min-width:572px!important;
+    max-width:572px!important;
+    height:900px!important;
+    min-height:900px!important;
+  }
+}
+@media(max-width:620px) {
+  .ps-community-editor-preview-frame {
+    justify-content:flex-start!important;
+    padding:10px!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    flex-basis:572px!important;
+    width:572px!important;
+    min-width:572px!important;
+    max-width:572px!important;
+    height:900px!important;
+    min-height:900px!important;
+  }
+}
 `}</style>
     </div>
     </div>,

@@ -2735,9 +2735,10 @@ export default function CommunityPage() {
                                       "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
                                       "--name-solid-color": message.author.display_name_color === "custom-gradient" ? message.author.display_name_gradient_start ?? "#B86BFF" : message.author.display_name_color === "pink" ? "#F72585" : message.author.display_name_color === "green" ? "#25E66B" : message.author.display_name_color === "blue" ? "#269EE5" : message.author.display_name_color === "purple" ? "#A72CF0" : message.author.display_name_color === "magenta" ? "#E60063" : message.author.display_name_color === "red" ? "#F2382E" : message.author.display_name_color === "gold" ? "#D1B11B" : "currentColor",
                                     } as React.CSSProperties}>
-                                    <CommunityStaticName
+                                    <CommunityAnimatedName
                                       tag="span"
                                       value={message.author.full_name}
+                                      animation={communityNameAnimation(message.author.display_name_animation)}
                                       className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(message.author.display_name_effect, message.author.display_name_color)}
                                       style={{
                                         "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
@@ -2746,7 +2747,6 @@ export default function CommunityPage() {
                                         "--name-solid-color": displayNameSolidColor(message.author.display_name_color, message.author.display_name_gradient_start),
                                       } as React.CSSProperties}
                                     />
-                                  </button>
                                 </>
                               ) : <span className="community-chat-author">Estudiante</span>}
                               {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
@@ -3041,9 +3041,10 @@ export default function CommunityPage() {
                                 <i className={isOnline ? "is-online" : "is-offline"}/>
                               </span>
                               <span className="community-member-copy">
-                                <CommunityStaticName
+                                <CommunityAnimatedName
                                   tag="span"
                                   value={member.full_name}
+                                  animation={communityNameAnimation(member.display_name_animation)}
                                   className={"ps-community-name-render community-member-nameplate community-member-name-render is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(member.display_name_effect, member.display_name_color)}
                                   style={{
                                     "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
@@ -3051,8 +3052,7 @@ export default function CommunityPage() {
                                     "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
                                     "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
                                   } as React.CSSProperties}
-                                />
-                                {member.id === userId && isFounder && (
+                                />                                {member.id === userId && isFounder && (
                                   <span className="community-member-verified-dot" title="Founder verificado" aria-label="Founder verificado"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                           <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
                           <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>

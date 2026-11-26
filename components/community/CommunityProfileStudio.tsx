@@ -1215,20 +1215,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   };
 
-  // Keep the profile's native scroll container, but reveal its thumb only while
-  // the pointer is over the preview card (or keyboard focus is inside it).
-  const handlePreviewPointerEnter = (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.pointerType === "mouse") {
-      event.currentTarget.dataset.scrollbarVisible = "true";
-    }
-  };
-
-  const handlePreviewPointerLeave = (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.pointerType === "mouse") {
-      event.currentTarget.dataset.scrollbarVisible = "false";
-    }
-  };
-
   if (!portalReady) return null;
 
   return createPortal(
@@ -1370,12 +1356,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           </aside>
 
-          <section
-            className="ps-community-editor-preview-column"
-            aria-label="Vista previa del perfil"
-            onPointerMove={handlePickerScrollbarPointerMove}
-            onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
-          >
+          <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
+            <div
+              className="ps-community-editor-preview-scroll"
+              onPointerMove={handlePickerScrollbarPointerMove}
+              onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
+            >
             <div className="ps-community-editor-preview-frame">
               <article
                 className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + plateStyle}
@@ -1504,6 +1490,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
 
               </article>
+            </div>
             </div>
         {(hasUnsavedChanges || hasPickerChanges) && (
           <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
@@ -4756,6 +4743,21 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   display:flex!important;
   flex:1 1 0!important;
   flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-scroll {
+  position:relative!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
   align-items:center!important;
   justify-content:flex-start!important;
   width:100%!important;
@@ -4763,7 +4765,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   min-width:0!important;
   min-height:0!important;
   box-sizing:border-box!important;
-  padding:14px 14px 12px!important;
+  padding:14px 14px 96px!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
   overscroll-behavior-y:contain!important;
@@ -4772,14 +4774,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   scrollbar-color:transparent transparent!important;
   -webkit-overflow-scrolling:touch!important;
 }
-.ps-community-editor-preview-column::-webkit-scrollbar {
+.ps-community-editor-preview-scroll::-webkit-scrollbar {
   display:block!important;
   width:10px!important;
 }
-.ps-community-editor-preview-column::-webkit-scrollbar-track {
+.ps-community-editor-preview-scroll::-webkit-scrollbar-track {
   background:transparent!important;
 }
-.ps-community-editor-preview-column::-webkit-scrollbar-thumb {
+.ps-community-editor-preview-scroll::-webkit-scrollbar-thumb {
   min-height:36px!important;
   border:2px solid transparent!important;
   border-radius:999px!important;
@@ -4787,14 +4789,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background-clip:padding-box!important;
   transition:background-color .14s ease!important;
 }
-.ps-community-editor-preview-column[data-scrollbar-visible="true"] {
+.ps-community-editor-preview-scroll[data-scrollbar-visible="true"] {
   scrollbar-color:#777f8b transparent!important;
 }
-.ps-community-editor-preview-column[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
+.ps-community-editor-preview-scroll[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
   background:#777f8b!important;
   background-clip:padding-box!important;
 }
-.ps-community-editor-preview-column::-webkit-scrollbar-thumb:hover {
+.ps-community-editor-preview-scroll::-webkit-scrollbar-thumb:hover {
   background:#aab3bf!important;
   background-clip:padding-box!important;
 }
@@ -4875,7 +4877,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-radius:8px!important;
 }
 @media(max-width:760px) {
-  .ps-community-editor-preview-column { padding:10px 10px 12px!important; }
+  .ps-community-editor-preview-scroll { padding:10px 10px 96px!important; }
   .ps-community-editor-savebar {
     left:10px!important;right:18px!important;bottom:10px!important;
     min-height:58px!important;padding:8px!important;gap:8px!important;

@@ -4848,6 +4848,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-editor-savebar button {min-width:0!important;padding-inline:9px!important}
 }
 
+/* Collapse only the unused shell area beneath the editor workspace.
+   Keep the profile preview column/card dimensions and styling untouched. */
+.ps-community-editor-v2 {
+  height:fit-content!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+.ps-community-editor-main {
+  height:fit-content!important;
+  flex:0 0 auto!important;
+}
+.ps-community-editor-workspace-discord {
+  flex:0 0 auto!important;
+}
+
+
 `}</style>
     </div>
     </div>,

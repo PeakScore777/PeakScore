@@ -4487,7 +4487,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-color:var(--editor-card,#DDF8F3)!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
-  left:160px!important;
+  left:148px!important;
   top:18px!important;
   bottom:auto!important;
   width:max-content!important;
@@ -4495,20 +4495,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   max-width:calc(100% - 154px)!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-  padding:50px 32px 26px!important;
+  padding:42px 32px 26px!important;
   overflow-y:auto!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-name-input {
   display:block!important;
   position:relative!important;
-  margin:0 0 7px!important;
+  margin:0 0 7px -1px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
   display:flex!important;
   align-items:center!important;
   flex-wrap:wrap!important;
   gap:10px!important;
-  margin:0 0 26px!important;
+  margin:0 0 26px -1px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-role-row {
   margin:0 0 34px!important;

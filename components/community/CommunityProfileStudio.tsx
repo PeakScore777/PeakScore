@@ -1097,7 +1097,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
       if (payload.appearanceSaved !== false) {
         onSaved();
+        const shouldCloseAfterSave = closeConfirmationOpen;
         setCloseConfirmationOpen(false);
+        if (shouldCloseAfterSave) onClose();
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudieron guardar los cambios.");
@@ -1403,7 +1405,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       "--name-gradient-start": displayNameGradientStart,
                       "--name-gradient-end": displayNameGradientEnd,
                       "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")",
-                      "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
+                      "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : displayNameColor === "default" ? profileThemeInk : displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
                     } as CSSProperties}
                   />                  <div className="ps-community-editor-preview-identity-line">
                     {accountTag(profile.accountName) && (
@@ -1472,7 +1474,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
             <span>{closeConfirmationOpen ? "Tienes cambios sin guardar. Guárdalos antes de salir." : "¡No te olvides de guardar los cambios!"}</span>
             <div>
-              <button type="button" className="is-secondary" onClick={() => { discardChanges(); setCloseConfirmationOpen(false); }} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
+              <button type="button" className="is-secondary" onClick={() => {
+                const shouldCloseAfterReset = closeConfirmationOpen;
+                discardChanges();
+                setCloseConfirmationOpen(false);
+                if (shouldCloseAfterReset) onClose();
+              }} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
                 Restablecer
               </button>
               <button type="button" className="is-primary" onClick={() => void saveProfile()} disabled={!canSave || !hasUnsavedChanges} aria-label="Guardar cambios">
@@ -1852,7 +1859,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           "--name-gradient-start": draftDisplayNameGradientStart,
                           "--name-gradient-end": draftDisplayNameGradientEnd,
                           "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
-                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk,
+                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : draftDisplayNameColor === "default" ? profileThemeInk : draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk,
                         } as CSSProperties}>
                         <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                           {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}
@@ -3240,9 +3247,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
 }
 .ps-community-editor-savebar.is-close-warning {
-  border-color:rgb(237 82 92 / 60%)!important;
-  background:linear-gradient(110deg,#382226 0%,#292126 100%)!important;
-  box-shadow:0 0 0 1px rgb(239 68 68 / 13%),0 10px 30px rgb(0 0 0 / 27%)!important;
+  border-color:#eb4b55!important;
+  background:linear-gradient(110deg,#9f2935 0%,#7f202c 100%)!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 12px 34px rgb(0 0 0 / 32%)!important;
   animation:ps-community-unsaved-bar-enter .24s cubic-bezier(.2,.8,.2,1) both!important;
 }
 .ps-community-editor-savebar.is-close-warning>span {
@@ -3254,10 +3261,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   color:#ffe4e6!important;
 }
 .ps-community-editor-savebar.is-close-warning .is-primary {
-  background:#e34b55!important;
-  border-color:#e34b55!important;
-  color:#fff!important;
-  box-shadow:0 3px 10px rgb(227 75 85 / 24%)!important;
+  background:#fff!important;
+  border-color:#fff!important;
+  color:#a32835!important;
+  box-shadow:0 3px 10px rgb(0 0 0 / 16%)!important;
 }
 .ps-community-editor-savebar.is-close-warning .is-primary:hover:not(:disabled) {
   background:#f05b65!important;
@@ -3339,13 +3346,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.effect-plain:not(.color-custom-gradient),
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.effect-plain:not(.color-custom-gradient) {
   color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
-  -webkit-text-fill-color:currentColor!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
   background:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+  filter:none!important;
 }
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.is-name-style-8bit,
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.is-name-style-8bit {
   font-size:1.04em!important;line-height:1.28!important;letter-spacing:0!important;
-  filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
+  color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
+  background:none!important;filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
 }
 
 

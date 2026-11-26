@@ -4730,12 +4730,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background-color:#aab3bf!important;
 }
 
-/* Final editor geometry: fill the modal with the workspace so there is no
-   unused gray footer below the sidebar and preview area. */
+/* Final editor geometry: the modal ends with the workspace; no empty
+   gray footer panel is left beneath the profile editor. */
+.ps-community-editor-overlay {
+  place-items:start center!important;
+  padding:16px!important;
+}
 .ps-community-editor-v2 {
   display:flex!important;
   flex-direction:column!important;
-  height:min(980px,calc(100dvh - 32px))!important;
+  height:min(906px,calc(100dvh - 32px))!important;
   max-height:calc(100dvh - 32px)!important;
   min-height:0!important;
   overflow:hidden!important;
@@ -4907,6 +4911,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-editor-savebar {left:20px!important;right:24px!important;}
 }
 @media(max-width:760px) {
+  .ps-community-editor-overlay {place-items:start center!important;padding:8px!important;}
+  .ps-community-editor-v2 {height:calc(100dvh - 16px)!important;max-height:calc(100dvh - 16px)!important;}
   .ps-community-editor-workspace-discord {grid-template-columns:minmax(0,1fr)!important;}
   .ps-community-editor-preview-column {padding:10px 10px 96px!important;}
   .ps-community-editor-savebar {

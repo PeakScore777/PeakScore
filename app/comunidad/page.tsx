@@ -105,6 +105,7 @@ type CommunityMemberSummary = {
 type CommunityMemberProfile = {
   userId: string;
   memberNumber?: number | null;
+  accountName?: string | null;
   displayName: string;
   avatarUrl: string | null;
   bannerUrl?: string | null;
@@ -3305,7 +3306,7 @@ export default function CommunityPage() {
                   } as CSSProperties}/>
 
                 <div className="ps-community-editor-preview-identity-line">
-                  <span className="ps-community-editor-preview-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
+                  <span className="ps-community-editor-preview-tag">{"@" + (selectedCommunityProfile.accountName?.trim().replace(/^@+/, "") || "usuario")}</span>
                   <span className={"ps-community-editor-preview-pronouns ps-community-profile-readonly-pronouns" + (!selectedCommunityProfile.pronouns ? " is-empty" : "")} aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
                 </div>
 

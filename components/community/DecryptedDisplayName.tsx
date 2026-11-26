@@ -291,7 +291,7 @@ export default function DecryptedDisplayName({
               className="ps-decrypted-cell is-revealed"
               data-glyph={character}
               key={index}
-              style={{ "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
+              style={{ flex: "0 0 auto", whiteSpace: "pre", "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
             >{character}</span>;
           }
           const glyph = frame.shown[index] ?? character;
@@ -299,7 +299,7 @@ export default function DecryptedDisplayName({
             <span
               className="ps-decrypted-cell is-encrypted"
               key={index}
-              style={{ "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
+              style={{ flex: "0 0 auto", whiteSpace: "pre", "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
             >
               <span className="ps-decrypted-ghost">{character}</span>
               <span

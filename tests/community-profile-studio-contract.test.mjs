@@ -217,7 +217,7 @@ test("identity fields persist and community display name is editable", () => {
   for (const key of ["displayName", "pronouns", "statusText", "about", "cardColor", "plateStyle", "avatarFrame"]) {
     assert.ok(studio.includes(key), "Missing editor state: " + key);
   }
-  assert.match(studio, /id="ps-community-display-name"/);
+  assert.match(studio, /id="ps-community-display-name-inline"/);
   assert.match(studio, /value=\{displayName\}/);
   assert.match(studio, /setDisplayName\(event\.target\.value\.slice\(0, 32\)\)/);
   assert.match(studio, /displayName: displayName\.trim\(\)/);
@@ -291,7 +291,7 @@ test("community member numbers are stable, unique, positive public identifiers",
   assert.match(route, /memberNumber: profileResult\.data\.member_number/);
   assert.match(route, /memberNumber: data\.member_number/);
   assert.match(studio, /accountTag\(profile\.accountName\)/);
-  assert.match(studio, /id="ps-community-display-name"/);
+  assert.match(studio, /id="ps-community-display-name-inline"/);
   assert.match(route, /const displayName = typeof payload\.displayName === "string"/);
   assert.match(route, /display_name: displayName/);
 });
@@ -376,8 +376,11 @@ test("profile status is an editable Discord-style bubble and upload actions use 
   assert.match(studio, /statusDraft\.trim\(\) \?/);
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
   assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
-  assert.match(studio, /<ImagePlus size=\{15\}\/> Subir imagen/);
-  assert.match(studio, /<Film size=\{15\}\/> Subir GIF/);
+  assert.match(studio, /className="ps-community-avatar-choice-art">[\s\S]*?<ImagePlus size=\{28\}\/>/);
+  assert.match(studio, /className="ps-community-avatar-choice-art is-collection-art"><Film size=\{28\}\/>/);
+  assert.ok(studio.includes("<strong>Elegir imagen</strong>"));
+  assert.ok(studio.includes("<strong>Subir imagen</strong>"));
+  assert.ok(studio.includes("<strong>Ver colección de carteles</strong>"));
   assert.doesNotMatch(studio, /<Frame size=\{13\}\/> Marco/);
 });;
 
@@ -491,7 +494,7 @@ test("the editor keeps the settings rail permanently visible without collapse co
 test("the live profile canvas edits name, pronouns, status and biography in place", () => {
   assert.doesNotMatch(studio, /ps-community-brand-wordmark">PeakScore/);
   assert.match(studio, /ps-community-editor-preview-banner-empty" aria-hidden="true"/);
-  assert.match(studio, /ps-community-editor-preview-name-static[\s\S]*?\{displayName \|\| "Tu nombre"\}/);
+  assert.match(studio, /id="ps-community-display-name-inline"[\s\S]*?value=\{displayName\}/);
   assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.ok(studio.includes("value={pronouns}"));
   assert.ok(studio.includes("maxLength={24}"));
@@ -587,8 +590,9 @@ test("editor save and reset bar is centered below the live profile", () => {
   assert.match(latest, /bottom: 10px !important/);
 });
 
-test("profile main name is read-only while pronouns remain inline editable", () => {
-  assert.match(studio, /ps-community-editor-preview-name-static/);
+test("profile main name is editable inline while pronouns remain inline editable", () => {
+  assert.match(studio, /id="ps-community-display-name-inline"/);
+  assert.match(studio, /value=\{displayName\}/);
   assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /aria-label="Editar pronombres"/);
   assert.match(studio, /value=\{pronouns\}[\s\S]{0,120}maxLength=\{24\}/);
@@ -673,7 +677,7 @@ test("display name typography and colour controls remain available without entra
 
 test("profile display name is editable while typography remains independently customizable", () => {
   assert.match(studio, /const \[displayName, setDisplayName\] = useState/);
-  assert.match(studio, /id="ps-community-display-name"/);
+  assert.match(studio, /id="ps-community-display-name-inline"/);
   assert.match(studio, /setDisplayName\(event\.target\.value\.slice\(0, 32\)\)/);
   assert.match(studio, /displayName: displayName\.trim\(\)/);
   const patchRoute = route.slice(route.indexOf("export async function PATCH"));

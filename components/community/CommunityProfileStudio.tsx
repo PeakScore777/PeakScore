@@ -579,12 +579,108 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const statusDurationRef = useRef<HTMLDivElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
   const avatarCropModalRef = useRef<HTMLElement>(null);
+  const previewBodyRef = useRef<HTMLDivElement>(null);
+  const previewScrollbarDragRef = useRef<{ pointerId: number; trackTop: number; trackHeight: number; thumbHeight: number; grabOffset: number } | null>(null);
+  const [previewScrollMetrics, setPreviewScrollMetrics] = useState({ top: 0, scrollHeight: 0, clientHeight: 0 });
+  const [previewScrollbarDragging, setPreviewScrollbarDragging] = useState(false);
+  const previewScrollMax = Math.max(0, previewScrollMetrics.scrollHeight - previewScrollMetrics.clientHeight);
+  const previewThumbHeightPercent = previewScrollMetrics.scrollHeight > 0
+    ? Math.min(100, Math.max(7, (previewScrollMetrics.clientHeight / previewScrollMetrics.scrollHeight) * 100))
+    : 100;
+  const previewThumbTopPercent = previewScrollMax > 0
+    ? (previewScrollMetrics.top / previewScrollMax) * (100 - previewThumbHeightPercent)
+    : 0;
+
 
   useEffect(() => {
     return () => {
       if (avatarCropUrl) URL.revokeObjectURL(avatarCropUrl);
     };
   }, [avatarCropUrl]);
+
+  useEffect(() => {
+    const body = previewBodyRef.current;
+    if (!portalReady || !body) return;
+
+    const syncMetrics = () => {
+      setPreviewScrollMetrics((current) => {
+        const next = { top: body.scrollTop, scrollHeight: body.scrollHeight, clientHeight: body.clientHeight };
+        return current.top === next.top && current.scrollHeight === next.scrollHeight && current.clientHeight === next.clientHeight
+          ? current
+          : next;
+      });
+    };
+
+    syncMetrics();
+    body.addEventListener("scroll", syncMetrics, { passive: true });
+    window.addEventListener("resize", syncMetrics);
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncMetrics) : null;
+    observer?.observe(body);
+    Array.from(body.children).forEach((child) => observer?.observe(child));
+
+    return () => {
+      body.removeEventListener("scroll", syncMetrics);
+      window.removeEventListener("resize", syncMetrics);
+      observer?.disconnect();
+    };
+  }, [portalReady, displayName, pronouns, status, about, profile.avatarUrl, profile.bannerUrl, profile.roles.length, avatarMenuOpen]);
+
+  const setPreviewScrollFromPointer = (clientY: number) => {
+    const drag = previewScrollbarDragRef.current;
+    const body = previewBodyRef.current;
+    if (!drag || !body) return;
+    const travel = Math.max(1, drag.trackHeight - drag.thumbHeight);
+    const nextThumbTop = Math.min(travel, Math.max(0, clientY - drag.trackTop - drag.grabOffset));
+    const progress = nextThumbTop / travel;
+    body.scrollTop = progress * Math.max(0, body.scrollHeight - body.clientHeight);
+  };
+
+  const handlePreviewScrollbarPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const body = previewBodyRef.current;
+    if (!body) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const trackHeight = rect.height;
+    const maxScroll = Math.max(0, body.scrollHeight - body.clientHeight);
+    if (maxScroll <= 0 || trackHeight <= 0) return;
+
+    const thumbHeight = Math.max(32, trackHeight * (previewThumbHeightPercent / 100));
+    const thumbTop = (body.scrollTop / maxScroll) * Math.max(1, trackHeight - thumbHeight);
+    const pointerY = event.clientY - rect.top;
+    const isThumbTarget = (event.target as HTMLElement).closest(".ps-community-preview-scrollbar-thumb") !== null;
+    const grabOffset = isThumbTarget ? Math.min(thumbHeight, Math.max(0, pointerY - thumbTop)) : thumbHeight / 2;
+
+    previewScrollbarDragRef.current = { pointerId: event.pointerId, trackTop: rect.top, trackHeight, thumbHeight, grabOffset };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setPreviewScrollbarDragging(true);
+    setPreviewScrollFromPointer(event.clientY);
+    event.preventDefault();
+  };
+
+  const handlePreviewScrollbarPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (previewScrollbarDragRef.current?.pointerId !== event.pointerId) return;
+    setPreviewScrollFromPointer(event.clientY);
+  };
+
+  const handlePreviewScrollbarPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (previewScrollbarDragRef.current?.pointerId !== event.pointerId) return;
+    previewScrollbarDragRef.current = null;
+    setPreviewScrollbarDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  const handlePreviewScrollbarKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const body = previewBodyRef.current;
+    if (!body) return;
+    if (event.key === "ArrowDown") body.scrollTop += 40;
+    else if (event.key === "ArrowUp") body.scrollTop -= 40;
+    else if (event.key === "PageDown") body.scrollTop += body.clientHeight * 0.9;
+    else if (event.key === "PageUp") body.scrollTop -= body.clientHeight * 0.9;
+    else if (event.key === "Home") body.scrollTop = 0;
+    else if (event.key === "End") body.scrollTop = body.scrollHeight;
+    else return;
+    event.preventDefault();
+  };
+
 
   useLayoutEffect(() => {
     if (!aboutEditing) return;
@@ -1406,6 +1502,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 </div>
                 <div
+                  id="ps-community-editor-preview-scroll-content"
+                  ref={previewBodyRef}
                   className="ps-community-editor-preview-body"
                 >
                     <input
@@ -1491,6 +1589,29 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
               </article>
             </div>
+            {previewScrollMax > 0 && (
+              <div
+                className={"ps-community-preview-scrollbar" + (previewScrollbarDragging ? " is-dragging" : "")}
+                role="scrollbar"
+                aria-label="Desplazar vista previa del perfil"
+                aria-controls="ps-community-editor-preview-scroll-content"
+                aria-orientation="vertical"
+                aria-valuemin={0}
+                aria-valuemax={Math.round(previewScrollMax)}
+                aria-valuenow={Math.round(previewScrollMetrics.top)}
+                tabIndex={0}
+                onPointerDown={handlePreviewScrollbarPointerDown}
+                onPointerMove={handlePreviewScrollbarPointerMove}
+                onPointerUp={handlePreviewScrollbarPointerEnd}
+                onPointerCancel={handlePreviewScrollbarPointerEnd}
+                onKeyDown={handlePreviewScrollbarKeyDown}
+              >
+                <span
+                  className="ps-community-preview-scrollbar-thumb"
+                  style={{ top: previewThumbTopPercent + "%", height: previewThumbHeightPercent + "%" }}
+                />
+              </div>
+            )}
         {(hasUnsavedChanges || hasPickerChanges) && (
           <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
             <span>¡No te olvides de guardar los cambios!</span>
@@ -4598,8 +4719,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
 
 
-/* Thin, rounded native scrollbar on the profile preview.
-   The thumb appears only while the pointer is over the preview card. */
+/* Remove the inner native scrollbar. A single draggable control now lives
+   on the far-right edge of the preview pane. */
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body {
@@ -4607,68 +4728,61 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   overflow-y:auto!important;
   scrollbar-width:none!important;
   scrollbar-color:transparent transparent!important;
-  scrollbar-gutter:auto!important;
   -ms-overflow-style:none!important;
 }
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   > .ps-community-editor-preview-body::-webkit-scrollbar {
-  display:block!important;
-  width:5px!important;
-  height:0!important;
-  background:transparent!important;
-}
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-track {
-  margin:5px 0!important;
-  border:0!important;
-  border-radius:999px!important;
-  background:transparent!important;
-}
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
-  min-height:34px!important;
-  border:0!important;
-  border-radius:999px!important;
-  background:transparent!important;
-  transition:background-color .14s ease!important;
-}
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-button,
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-corner {
   display:none!important;
   width:0!important;
   height:0!important;
 }
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  > .ps-community-editor-preview-body {
-  scrollbar-width:thin!important;
-  scrollbar-color:#727780 transparent!important;
-  -ms-overflow-style:auto!important;
+.ps-community-editor-preview-column {
+  position:relative!important;
 }
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
-  background:#727780!important;
+.ps-community-preview-scrollbar {
+  position:absolute!important;
+  z-index:24!important;
+  top:12%!important;
+  right:10px!important;
+  bottom:12%!important;
+  width:10px!important;
+  display:block!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  touch-action:none!important;
+  cursor:pointer!important;
+  transition:opacity .14s ease!important;
 }
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover,
-.ps-community-editor-preview-frame
-  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb:active {
-  background:#b5bac3!important;
+.ps-community-editor-preview-column:hover > .ps-community-preview-scrollbar,
+.ps-community-preview-scrollbar.is-dragging {
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+.ps-community-preview-scrollbar-thumb {
+  position:absolute!important;
+  left:2px!important;
+  width:6px!important;
+  min-height:32px!important;
+  border-radius:999px!important;
+  background:#777f8b!important;
+  box-shadow:0 0 1px rgb(0 0 0 / 38%)!important;
+  transition:background-color .12s ease!important;
+  cursor:grab!important;
+}
+.ps-community-preview-scrollbar-thumb:hover {
+  background:#aeb5c0!important;
+}
+.ps-community-preview-scrollbar.is-dragging .ps-community-preview-scrollbar-thumb {
+  background:#c0c6d0!important;
+  cursor:grabbing!important;
 }
 @media(prefers-reduced-motion:reduce) {
-  .ps-community-editor-preview-frame
-    > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-    > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  .ps-community-preview-scrollbar,
+  .ps-community-preview-scrollbar-thumb {
     transition:none!important;
   }
 }

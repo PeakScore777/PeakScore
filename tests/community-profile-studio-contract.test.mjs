@@ -837,7 +837,8 @@ test("display-name animation catalogue exposes only supported profile motions", 
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
   assert.match(route, /"decrypt","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"/);
-  assert.match(studio, /animation=\{item\.id\}/);
+  assert.doesNotMatch(studio, /animation=\{item\.id\}/);
+  assert.doesNotMatch(studio, /DISPLAY_NAME_ANIMATIONS\\.map\\(\\(item\\) =>/);
 });
 
 test("final animation migration replaces GlyphStorm with Noise Reveal and normalizes stored values", () => {

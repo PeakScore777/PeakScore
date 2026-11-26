@@ -2026,7 +2026,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <div className="ps-community-name-member-row">
                           <span className={"ps-community-name-member-avatar frame-" + avatarFrame}>
                             {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
-                            <i className={isOnline ? "is-online" : "is-offline"}/>
+                            <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                           </span>
                           <div className="ps-community-name-member-copy">
                             <strong className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
@@ -2584,6 +2584,90 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
  .ps-community-name-style-group>.ps-community-name-animation-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  .ps-community-name-custom-gradient-stops{grid-template-columns:1fr!important}
 }
+
+/* Last cascade layer: consistent theme contrast and clean Name Atelier cards. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-edit-trigger,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-edit-trigger .ps-community-editor-preview-name-static.color-default,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-inline-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-edit-trigger .ps-community-editor-preview-name-static.color-default,
+.ps-community-editor-preview-card .ps-community-editor-preview-name-inline-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns {
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
+  color:var(--editor-theme-body-text,var(--editor-theme-text,#f2f3f5))!important;
+}
+/* Shared 18px Discord-style presence marker for all large profile previews. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-4px!important;bottom:0!important;
+  width:18px!important;height:18px!important;box-sizing:border-box!important;
+  border:4px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;outline:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::after,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after {display:none!important;content:none!important;box-shadow:none!important}
+/* Remove the two dividers from the image/collection chooser. */
+.ps-community-avatar-picker-modal>header {border-bottom:0!important}
+.ps-community-avatar-picker-modal>footer {border-top:0!important}
+/* Keep the collection as an explicit empty state until real posters are added. */
+.ps-community-poster-collection-empty {min-height:205px!important}
+.ps-community-editor-banner-current.is-action {cursor:pointer!important}
+/* The animation preview is one open stage, not a second framed card inside a card. */
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;height:48px!important;min-height:48px!important;margin:0!important;
+  padding:0!important;border:0!important;border-radius:0!important;outline:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage::before,
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage::after {
+  display:none!important;content:none!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.ps-community-name-style-group .ps-community-name-animation-option .ps-community-name-preview-live {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-width:0!important;min-height:28px!important;height:auto!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  outline:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-name-style-group .ps-community-name-animation-option .ps-decrypted-name {color:var(--name-solid-color,#F2F3F5)!important}
+.ps-community-name-style-group .ps-community-name-animation-option .ps-decrypted-cell.is-encrypted,
+.ps-community-name-style-group .ps-community-name-animation-option .ps-decrypted-glyph {color:var(--name-solid-color,#F2F3F5)!important;-webkit-text-fill-color:currentColor!important}
+.ps-community-name-style-group .ps-community-name-animation-option.effect-plain .ps-decrypted-cell.is-revealed::after {
+  color:var(--name-solid-color,#F2F3F5)!important;-webkit-text-fill-color:currentColor!important;
+}
+.ps-community-name-colors-row {display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
+.ps-community-name-colors-row>.ps-community-name-custom-picker-root {flex:0 0 44px!important;width:44px!important;min-width:44px!important}
+.ps-community-name-colors-row>.ps-community-name-custom-picker-root>.ps-community-name-custom-color {
+  width:44px!important;height:42px!important;min-height:42px!important;
+  display:grid!important;grid-template-columns:1fr!important;place-items:center!important;
+  padding:0!important;border-radius:9px!important;background:#252a34!important;
+}
+.ps-community-name-colors-row .ps-community-name-custom-color-copy {display:none!important}
+.ps-community-name-colors-row .ps-community-name-custom-color-mark {display:grid!important;place-items:center!important}
+.ps-community-name-colors-row>.ps-community-name-preset-grid {
+  display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  flex:1 1 auto!important;min-width:0!important;gap:7px!important;
+}
+.ps-community-name-colors-row .ps-community-name-preset-swatch {height:42px!important;min-height:42px!important;border-radius:9px!important}
+
 `}</style>
     </div>
     </div>,

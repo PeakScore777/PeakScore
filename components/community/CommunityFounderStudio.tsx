@@ -234,7 +234,7 @@ export default function CommunityFounderStudio({
         .eq("is_enabled", true)
         .maybeSingle();
       globalBrandingRow = legacyBranding.data
-        ? { ...legacyBranding.data, icon_path: null, banner_path: null }
+        ? { ...legacyBranding.data, background_color: EMPTY_GLOBAL_BRANDING.background_color, icon_path: null, banner_path: null }
         : null;
     }
     if (globalBrandingRow) {

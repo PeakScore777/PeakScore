@@ -4456,7 +4456,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 /* Match the public profile reference: avatar, name, identity, bio and join date. */
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-  top:105px!important;
+  top:136px!important;
   left:0!important;
   right:0!important;
   width:100%!important;
@@ -4495,20 +4495,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   max-width:calc(100% - 154px)!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-  padding:40px 32px 26px!important;
+  padding:71px 32px 26px!important;
   overflow-y:auto!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-name-input {
   display:block!important;
   position:relative!important;
-  margin:0 0 7px -1px!important;
+  margin:0 0 7px -8px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
   display:flex!important;
   align-items:center!important;
   flex-wrap:wrap!important;
   gap:10px!important;
-  margin:0 0 26px -2px!important;
+  margin:0 0 26px -16px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-role-row {
   margin:0 0 34px!important;
@@ -4529,7 +4529,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 @media(max-width:760px) {
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-    top:88px!important;
+    top:119px!important;
     height:88px!important;
     min-height:88px!important;
   }
@@ -4548,7 +4548,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     max-width:calc(100% - 120px)!important;
   }
   .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-    padding:60px 18px 20px!important;
+    padding:91px 18px 20px!important;
   }
 }
 `}</style>

@@ -2344,10 +2344,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-avatar-crop-modal>footer button{min-height:34px!important;padding:7px 13px!important;border:1px solid #424650!important;border-radius:8px!important;background:#2b2d31!important;color:#e4e6eb!important;font-size:11px!important;font-weight:700!important}
 .ps-community-avatar-crop-modal>footer button.is-primary{border-color:#6476f1!important;background:#5668df!important;color:white!important}
 @media(max-width:560px){.ps-community-avatar-picker-options{grid-template-columns:1fr!important}.ps-community-avatar-picker-options>button{min-height:100px!important}.ps-community-avatar-crop-controls label{grid-template-columns:92px minmax(0,1fr)!important}}
-/* The custom name-color popover reuses the exact profile-theme picker styles. */
+/* The Name Atelier custom colour panel is placed in the grid below the swatches,
+   never floated above the typography controls. */
 .ps-community-name-custom-picker-root{position:relative!important;display:flex!important;flex:1 1 auto!important;min-width:0!important}
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-width:0!important}
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker{position:absolute!important;z-index:80!important;left:0!important;bottom:calc(100% + 9px)!important;width:min(292px,calc(100vw - 48px))!important}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker{position:static!important;z-index:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;max-width:none!important;grid-column:1/-1!important;grid-row:2!important;margin:0!important;}
 
 /* Refined avatar chooser and cropper: compact, media-led and keyboard-friendly. */
 .ps-community-editor-display-name-input{display:block!important;width:100%!important;min-height:40px!important;padding:0 12px!important;border:1px solid #3a3d45!important;border-radius:9px!important;background:#1b1d22!important;color:#f2f3f5!important;font-size:13px!important;font-weight:600!important;outline:none!important;transition:border-color .14s ease,box-shadow .14s ease!important}
@@ -3060,6 +3061,117 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
     background:#65708a!important;
   }
+}
+
+
+/* Single-colour custom picker: first row holds all eight swatches; opening the
+   pipette adds a full-width second row below them, like the profile-theme picker. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row {
+  display:grid!important;
+  grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  grid-template-rows:54px auto!important;
+  align-items:stretch!important;
+  column-gap:8px!important;
+  row-gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker {
+  display:contents!important;
+  width:auto!important;height:auto!important;min-width:0!important;max-width:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color {
+  display:grid!important;
+  grid-column:1!important;grid-row:1!important;
+  place-items:center!important;
+  width:100%!important;height:54px!important;min-height:54px!important;min-width:0!important;
+  margin:0!important;padding:0!important;gap:0!important;
+  border:1px solid #48505e!important;border-radius:10px!important;
+  background:#252a34!important;box-shadow:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-color::before {
+  display:none!important;content:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-mark {
+  display:grid!important;position:static!important;place-items:center!important;
+  width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;color:#d9deed!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row .ps-community-name-custom-color-copy {
+  display:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-color-picker>.ps-community-name-custom-picker {
+  display:grid!important;position:relative!important;z-index:1!important;
+  grid-column:1/-1!important;grid-row:2!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  height:auto!important;min-height:0!important;margin:0!important;
+  padding:14px!important;gap:13px!important;
+  border:1px solid #353944!important;border-radius:12px!important;
+  background:linear-gradient(145deg,#24262e 0%,#1e2027 100%)!important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 3%),0 8px 20px rgb(0 0 0 / 13%)!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid {
+  display:contents!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-style-group .ps-community-name-colors-row>.ps-community-name-preset-grid>.ps-community-name-preset-swatch {
+  grid-row:1!important;align-self:stretch!important;
+  display:block!important;width:100%!important;height:54px!important;min-height:54px!important;
+  min-width:0!important;margin:0!important;padding:0!important;border-radius:10px!important;
+}
+/* The panel behaves like the profile-theme selector and stays fully in document flow. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-plane {
+  display:block!important;width:100%!important;height:142px!important;min-height:142px!important;
+  border-radius:9px!important;touch-action:none!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-hex {
+  display:flex!important;align-items:center!important;gap:8px!important;
+  width:100%!important;min-width:0!important;min-height:42px!important;
+  padding:0 9px!important;border:1px solid #3d424d!important;border-radius:8px!important;
+  background:#17191e!important;box-sizing:border-box!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-hex input {
+  flex:1 1 auto!important;min-width:0!important;height:36px!important;
+  border:0!important;outline:0!important;background:transparent!important;color:#f2f3f5!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-hex button {
+  display:grid!important;place-items:center!important;flex:0 0 28px!important;
+  width:28px!important;height:28px!important;border:0!important;background:transparent!important;color:#b9c1d1!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-recent {
+  display:flex!important;flex-wrap:wrap!important;gap:8px!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-recent button {
+  display:block!important;width:26px!important;height:26px!important;flex:0 0 26px!important;
+  border:1px solid rgb(255 255 255 / 28%)!important;border-radius:7px!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-actions {
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;
+  padding-top:10px!important;border-top:1px solid #343740!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-actions button {
+  min-height:36px!important;padding:0 14px!important;border:1px solid #3d424d!important;
+  border-radius:8px!important;background:#2b2e36!important;color:#dce0e8!important;font-size:11px!important;font-weight:700!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker .ps-community-color-picker-actions button:last-child {
+  border-color:#5865f2!important;background:#5865f2!important;color:#fff!important;
+}
+
+/* A consistent, slightly larger 26px presence marker in all large avatar previews. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:2px!important;bottom:2px!important;
+  width:26px!important;height:26px!important;box-sizing:border-box!important;
+  border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {
+  background:#747b86!important;
 }
 
 `}</style>

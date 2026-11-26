@@ -361,6 +361,7 @@ type CommunityReadClient = {
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [registeredAccountName, setRegisteredAccountName] = useState("");
   const [isFounder, setIsFounder] = useState(false);
   const [founderStudioOpen, setFounderStudioOpen] = useState(false);
   const [founderStudioTab, setFounderStudioTab] = useState<"branding" | "channels">("branding");
@@ -562,6 +563,7 @@ export default function CommunityPage() {
     const cached = communityProfileCacheRef.current.get(memberId);
     const instantProfile: CommunityMemberProfile = cached ?? {
       userId: memberId,
+      accountName: memberId === userId ? registeredAccountName : null,
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
       memberNumber: member?.member_number ?? null,
@@ -1443,6 +1445,9 @@ export default function CommunityPage() {
         return;
       }
       setUserId(user.id);
+      const registeredName = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.user_name, user.user_metadata?.preferred_username]
+        .find((value) => typeof value === "string" && value.trim().length > 0);
+      setRegisteredAccountName(typeof registeredName === "string" ? registeredName.trim().slice(0, 80) : "");
 
       const spaceResult = await supabase.from("community_spaces")
         .select("id,slug,name,space_type,visibility,verification_status,icon_key,accent_color,background_color,icon_path,banner_path")

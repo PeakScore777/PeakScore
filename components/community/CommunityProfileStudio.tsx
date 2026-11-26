@@ -2693,7 +2693,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   color:var(--editor-theme-text,#f2f3f5)!important;
   -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
   caret-color:var(--editor-theme-text,#f2f3f5)!important;
-  font-family:inherit!important;font-size:27px!important;font-weight:850!important;
+  font-size:27px!important;font-weight:850!important;
   line-height:1.15!important;letter-spacing:-.025em!important;text-align:left!important;
   transition:border-color .12s ease,background .12s ease!important;
 }

@@ -619,35 +619,38 @@ export default function CommunityPage() {
         }
         return;
       }
-      communityProfileCacheRef.current.set(memberId, payload.profile);
+      const resolvedProfile = memberId === userId && registeredAccountName.trim()
+        ? { ...payload.profile, accountName: registeredAccountName.trim().replace(/^@+/, "") }
+        : payload.profile;
+      communityProfileCacheRef.current.set(memberId, resolvedProfile);
       setCommunityMembers((current) => current.map((item) => item.id === memberId ? {
         ...item,
-        full_name: payload.profile!.displayName,
-        member_number: payload.profile!.memberNumber,
-        avatar_url: payload.profile!.avatarUrl,
-        status_text: payload.profile!.statusText,
-        about: payload.profile!.about,
-        joined_at: payload.profile!.joinedAt,
-        banner_url: payload.profile!.bannerUrl,
-        card_color: payload.profile!.cardColor,
-         theme_color_secondary: payload.profile!.themeColorSecondary,
-        plate_style: payload.profile!.plateStyle,
-        display_name_style: payload.profile!.displayNameStyle ?? "classic",
-        display_name_effect: payload.profile!.displayNameEffect ?? "plain",
-        display_name_animation: payload.profile!.displayNameAnimation ?? "decrypt",
-        display_name_fuzzy_settings: payload.profile!.displayNameFuzzySettings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
-        display_name_color: payload.profile!.displayNameColor ?? "default",
-        accent_color: payload.profile!.accentColor,
-        avatar_frame: payload.profile!.avatarFrame,
-        avatar_decoration_id: payload.profile!.avatarDecorationId,
-        profile_frame_id: payload.profile!.profileFrameId,
-        profile_effect_id: payload.profile!.profileEffectId,
-        display_name_prism_colors: payload.profile!.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
-        display_name_gradient_start: payload.profile!.displayNameGradientStart,
-        display_name_gradient_end: payload.profile!.displayNameGradientEnd,
-        status_expires_at: payload.profile!.statusExpiresAt,
+        full_name: resolvedProfile..displayName,
+        member_number: resolvedProfile..memberNumber,
+        avatar_url: resolvedProfile..avatarUrl,
+        status_text: resolvedProfile..statusText,
+        about: resolvedProfile..about,
+        joined_at: resolvedProfile..joinedAt,
+        banner_url: resolvedProfile..bannerUrl,
+        card_color: resolvedProfile..cardColor,
+         theme_color_secondary: resolvedProfile..themeColorSecondary,
+        plate_style: resolvedProfile..plateStyle,
+        display_name_style: resolvedProfile..displayNameStyle ?? "classic",
+        display_name_effect: resolvedProfile..displayNameEffect ?? "plain",
+        display_name_animation: resolvedProfile..displayNameAnimation ?? "decrypt",
+        display_name_fuzzy_settings: resolvedProfile..displayNameFuzzySettings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
+        display_name_color: resolvedProfile..displayNameColor ?? "default",
+        accent_color: resolvedProfile..accentColor,
+        avatar_frame: resolvedProfile..avatarFrame,
+        avatar_decoration_id: resolvedProfile..avatarDecorationId,
+        profile_frame_id: resolvedProfile..profileFrameId,
+        profile_effect_id: resolvedProfile..profileEffectId,
+        display_name_prism_colors: resolvedProfile..displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
+        display_name_gradient_start: resolvedProfile..displayNameGradientStart,
+        display_name_gradient_end: resolvedProfile..displayNameGradientEnd,
+        status_expires_at: resolvedProfile..statusExpiresAt,
       } : item));
-      setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
+      setSelectedCommunityProfile((current) => current?.userId === memberId ? resolvedProfile : current);
       setCommunityProfileLoading(false);
       setCommunityProfileError("");
     } catch {
@@ -1530,7 +1533,7 @@ export default function CommunityPage() {
           .select("role_key,label,badge_color,display_as_badge,position,hoist"),
         supabase.from("community_member_roles")
           .select("user_id,role_key").eq("user_id", user.id),
-        supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+        supabase.from("profiles").select("role,full_name").eq("id", user.id).maybeSingle(),
         supabase.from("community_channel_categories")
           .select("id,name,position")
           .eq("space_id", resolvedSpace.id)
@@ -1564,6 +1567,9 @@ export default function CommunityPage() {
       }
       if (!alive) return;
       setIsFounder(platformProfile?.role === "admin");
+      if (typeof platformProfile?.full_name === "string" && platformProfile.full_name.trim()) {
+        setRegisteredAccountName(platformProfile.full_name.trim().replace(/^@+/, "").slice(0, 80));
+      }
       const catalog = (compatibleRoles ?? []) as CommunityRole[];
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))

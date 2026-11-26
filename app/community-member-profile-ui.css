@@ -1695,8 +1695,8 @@
    Keep their ring matched to each avatar's real outer border. */
 .ps-community-member-popout__avatar > i,
 .ps-community-profile-avatar > i {
-  right:-5px!important;
-  bottom:-2px!important;
+  right:3px!important;
+  bottom:3px!important;
   width:20px!important;
   height:20px!important;
   box-sizing:border-box!important;
@@ -1713,17 +1713,16 @@
   background:#23a55a!important;
 }
 
-/* Keep the single selected foreground readable over both ends of custom
-   profile gradients. The fine opposite-colour edge is only a contrast aid. */
-.ps-community-profile-live-card .ps-community-editor-preview-name-static.color-default,
+/* Keep the same theme-selected ink from the handle through the biography and role rows. */
 .ps-community-profile-live-card .ps-community-editor-preview-tag,
 .ps-community-profile-live-card .ps-community-editor-preview-pronouns,
 .ps-community-profile-live-card .ps-community-editor-preview-about-heading,
+.ps-community-profile-live-card .ps-community-editor-preview-about-heading *,
 .ps-community-profile-live-card .ps-community-editor-preview-meta,
 .ps-community-profile-live-card .ps-community-editor-preview-meta *,
 .ps-community-profile-live-card .ps-community-editor-bio-display,
 .ps-community-profile-live-card .ps-community-editor-preview-role-row,
 .ps-community-profile-live-card .ps-community-editor-preview-role-row * {
-  -webkit-text-stroke:.22px var(--editor-theme-outline,transparent)!important;
-  text-shadow:0 1px 1px color-mix(in srgb,var(--editor-theme-outline,transparent) 42%,transparent)!important;
+  -webkit-text-stroke:0 transparent!important;
+  text-shadow:none!important;
 }

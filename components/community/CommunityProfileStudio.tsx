@@ -3804,7 +3804,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   margin:0 0 68px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-about-heading {
-  margin-bottom:-270px!important;
+  margin-bottom:-320px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-about-heading>span {
   font-size:15px!important;
@@ -4906,7 +4906,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:absolute!important;
   z-index:30!important;
   left:auto!important;
-  right:calc((100% - min(420px,100%))/2 - 212px)!important;
+  right:calc((100% - min(420px,100%))/2 - 210px)!important;
   bottom:20px!important;
   width:min(420px,calc(100% - 32px))!important;
   max-width:420px!important;
@@ -4950,7 +4950,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     grid-template-columns:208px minmax(0,1fr)!important;
   }
   .ps-community-editor-savebar {
-    left:auto!important;right:calc((100% - min(420px,100%))/2 - 212px)!important;
+    left:auto!important;right:calc((100% - min(420px,100%))/2 - 210px)!important;
     width:min(420px,calc(100% - 32px))!important;
   }
 }

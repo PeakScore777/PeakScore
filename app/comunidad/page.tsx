@@ -3202,7 +3202,12 @@ export default function CommunityPage() {
                   } as CSSProperties}/>
 
                 <div className="ps-community-editor-preview-identity-line">
-                  <span className="ps-community-editor-preview-tag">{"@" + (selectedCommunityProfile.accountName?.trim().replace(/^@+/, "") || "usuario")}</span>
+                  {selectedCommunityProfile.accountName?.trim() && (
+                    <>
+                      <span className="ps-community-editor-preview-tag">{"@" + selectedCommunityProfile.accountName.trim().replace(/^@+/, "")}</span>
+                      <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
+                    </>
+                  )}
                   <span className={"ps-community-editor-preview-pronouns ps-community-profile-readonly-pronouns" + (!selectedCommunityProfile.pronouns ? " is-empty" : "")} aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
                 </div>
 

@@ -1517,6 +1517,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     id="ps-community-display-name-inline"
                     className={"ps-community-editor-preview-name-input ps-community-profile-name is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
                     value={displayName}
+                    size={Math.max(8, Math.min(32, displayName.length + 1))}
                     maxLength={32}
                     minLength={2}
                     autoComplete="off"
@@ -2881,6 +2882,93 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   flex:1 1 auto!important;min-width:0!important;gap:7px!important;
 }
 .ps-community-name-colors-row .ps-community-name-preset-swatch {height:42px!important;min-height:42px!important;border-radius:9px!important}
+
+
+/* Final scale pass for the Discord-style presence ring on all large avatar previews. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-6px!important;bottom:-2px!important;
+  width:24px!important;height:24px!important;box-sizing:border-box!important;
+  border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
+  border-radius:50%!important;background:#23a55a!important;
+  outline:0!important;box-shadow:none!important;
+}
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-6px!important;bottom:-2px!important;
+  width:24px!important;height:24px!important;box-sizing:border-box!important;
+  border:5px solid var(--status-theme,#B7D7C3)!important;
+  border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline {background:#747b86!important}
+.ps-community-name-member-avatar>.ps-community-editor-presence-dot {
+  position:absolute!important;right:-2px!important;bottom:-1px!important;
+  width:15px!important;height:15px!important;border:3px solid #2b2d34!important;
+  border-radius:50%!important;background:#23a55a!important;box-shadow:none!important;
+}
+
+/* The live name input behaves like the pronoun field: fixed line box, text-sized
+   width, no layout jump when focused, and an understated focus treatment. */
+.ps-community-editor-preview-name-input {
+  width:auto!important;min-width:8ch!important;max-width:100%!important;
+  height:34px!important;min-height:34px!important;margin:0 0 4px!important;
+  padding:3px 4px!important;border:1px solid transparent!important;border-radius:6px!important;
+  background:transparent!important;outline:none!important;box-shadow:none!important;
+  font-size:27px!important;font-weight:850!important;line-height:1.15!important;
+}
+.ps-community-editor-preview-name-input:hover {
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 25%,transparent)!important;
+}
+.ps-community-editor-preview-name-input:focus {
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 42%,transparent)!important;
+  background:color-mix(in srgb,var(--editor-theme-text,#fff) 5%,transparent)!important;
+  outline:none!important;box-shadow:none!important;
+}
+
+/* Apply theme-selected ink to the whole profile card, including the lower
+   member-since block; do not independently choose white/black per gradient stop. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input,
+.ps-community-editor-preview-card .ps-community-editor-preview-tag,
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta,
+.ps-community-editor-preview-card .ps-community-editor-preview-meta *,
+.ps-community-editor-preview-card .ps-community-editor-bio-display,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row,
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row *,
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+  -webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  background:color-mix(in srgb,var(--editor-theme-text,#fff) 12%,transparent)!important;
+  border-color:color-mix(in srgb,var(--editor-theme-text,#fff) 24%,transparent)!important;
+  text-shadow:none!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta strong,
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small {
+  color:var(--editor-theme-text,#f2f3f5)!important;
+}
+
+/* One aligned, left-anchored member name row, using the same text treatment as chat. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-row {
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy {
+  display:flex!important;flex:1 1 auto!important;align-items:center!important;
+  justify-content:flex-start!important;min-width:0!important;margin:0!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate {
+  display:inline-block!important;width:max-content!important;max-width:100%!important;
+  margin:0!important;text-align:left!important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy>.ps-community-name-preview-live.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.color-default.effect-plain,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-default.effect-plain {
+  color:var(--status-theme-text,#202126)!important;
+  -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
+}
 
 `}</style>
     </div>

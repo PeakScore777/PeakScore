@@ -4760,12 +4760,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   flex-direction:column!important;
   align-items:center!important;
   justify-content:flex-start!important;
-  width:100%!important;
+  align-self:center!important;
+  width:min(432px,100%)!important;
+  max-width:432px!important;
   height:100%!important;
   min-width:0!important;
   min-height:0!important;
   box-sizing:border-box!important;
-  padding:14px 14px 96px!important;
+  padding:14px 0 96px!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
   overscroll-behavior-y:contain!important;
@@ -4840,14 +4842,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   z-index:30!important;
   left:16px!important;
   right:20px!important;
-  bottom:18px!important;
+  bottom:112px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
   gap:14px!important;
   width:auto!important;
   max-width:none!important;
-  min-height:64px!important;
+  min-height:76px!important;
   box-sizing:border-box!important;
   margin:0!important;
   padding:10px 14px 10px 18px!important;
@@ -4877,10 +4879,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-radius:8px!important;
 }
 @media(max-width:760px) {
-  .ps-community-editor-preview-scroll { padding:10px 10px 96px!important; }
+  .ps-community-editor-preview-scroll { width:min(432px,100%)!important;padding:10px 0 120px!important; }
   .ps-community-editor-savebar {
-    left:10px!important;right:18px!important;bottom:10px!important;
-    min-height:58px!important;padding:8px!important;gap:8px!important;
+    left:10px!important;right:18px!important;bottom:112px!important;
+    min-height:68px!important;padding:8px!important;gap:8px!important;
   }
   .ps-community-editor-savebar>span {font-size:10px!important}
   .ps-community-editor-savebar button {min-width:0!important;padding-inline:9px!important}

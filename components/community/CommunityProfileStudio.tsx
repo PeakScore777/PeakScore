@@ -4465,7 +4465,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
   left:22px!important;
-  top:-6px!important;
+  top:-8px!important;
   width:110px!important;
   min-width:110px!important;
   height:110px!important;
@@ -4534,7 +4534,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     min-height:88px!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
-    top:-6px!important;
+    top:-8px!important;
   }
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
   .ps-community-editor-preview-card .ps-community-editor-preview-avatar {

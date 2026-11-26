@@ -4866,7 +4866,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
    inside the editor pane, while preserving its width and internal design. */
 .ps-community-editor-preview-frame
   > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
-  transform:translateY(-10px) scaleY(.92)!important;
+  transform:translateY(-18px) scaleY(.92)!important;
   transform-origin:top center!important;
 }
 

@@ -3213,7 +3213,7 @@ export default function CommunityPage() {
                   )}
                 </section>
 
-                {communityProfileLoading && <p className="ps-community-profile-sync" role="status">Actualizando perfil…</p>}
+                
                 {communityProfileError && (
                   <div className="ps-community-profile-retry" role="status">
                     <span>No se pudieron actualizar algunos datos. Se conserva la información disponible.</span>

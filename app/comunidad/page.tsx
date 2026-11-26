@@ -561,7 +561,10 @@ export default function CommunityPage() {
     setMemberProfileMenuOpen(false);
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
-    const instantProfile: CommunityMemberProfile = cached ?? {
+    const cachedWithRegisteredName = cached && memberId === userId && !cached.accountName?.trim() && registeredAccountName
+      ? { ...cached, accountName: registeredAccountName }
+      : cached;
+    const instantProfile: CommunityMemberProfile = cachedWithRegisteredName ?? {
       userId: memberId,
       accountName: memberId === userId ? registeredAccountName : null,
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",

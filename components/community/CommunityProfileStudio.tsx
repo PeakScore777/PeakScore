@@ -4870,12 +4870,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   right:calc((100% - min(420px,100%))/2)!important;
   bottom:30px!important;
   width:min(420px,calc(100% - 32px))!important;
+  max-width:420px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
   gap:14px!important;
-  width:auto!important;
-  max-width:none!important;
+  width:min(420px,calc(100% - 32px))!important;
+  max-width:420px!important;
   min-height:60px!important;
   box-sizing:border-box!important;
   margin:0!important;

@@ -1067,21 +1067,21 @@ test("member rail keeps the selected name font visible inside the flexible copy 
   assert.ok(memberCopyRules.every((match) => /width:auto !important/.test(match[1])), "No later rule may collapse the member name column.");
   assert.doesNotMatch(nameStyleCss, /(?:^|\n)\.community-member-copy\s*\{[^}]*width:0 !important/);
   assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
-  assert.match(page, /<CommunityAnimatedName[\s\S]*?value=\{member\.full_name\}[\s\S]*?animation=\{communityNameAnimation\(member\.display_name_animation\)\}/);
+  assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
   assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);
 });
 
-test("saved entrance animations run consistently in profile, member rail, chat and all three editor previews", () => {
+test("selected entrance animation runs on the profile while member/chat retain lightweight font styling", () => {
   assert.match(page, /function CommunityStaticName/);
   assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
   assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
-  assert.match(page, /<CommunityAnimatedName[\s\S]*?message\.author\.full_name[\s\S]*?animation=\{communityNameAnimation\(message\.author\.display_name_animation\)\}/);
-  assert.match(page, /<CommunityAnimatedName[\s\S]*?member\.full_name[\s\S]*?animation=\{communityNameAnimation\(member\.display_name_animation\)\}/);
-  assert.ok((page.match(/<CommunityAnimatedName/g) ?? []).length >= 3);
+  assert.equal((page.match(/<CommunityAnimatedName/g) ?? []).length, 1);
   const chatSurface = page.slice(page.indexOf("community-chat-author-link"), page.indexOf("community-member-sidebar-header"));
   const memberSurface = page.slice(page.indexOf("community-member-sidebar-scroll"), page.indexOf("community-member-sidebar-footer"));
-  assert.match(chatSurface, /<CommunityAnimatedName/);
-  assert.match(memberSurface, /<CommunityAnimatedName/);
+  assert.match(chatSurface, /<CommunityStaticName[\s\S]*?message\.author\.full_name/);
+  assert.match(memberSurface, /<CommunityStaticName[\s\S]*?member\.full_name/);
+  assert.doesNotMatch(chatSurface, /<CommunityAnimatedName/);
+  assert.doesNotMatch(memberSurface, /<CommunityAnimatedName/);
   assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
   const memberPreview = studio.slice(studio.indexOf("ps-community-name-preview-members-view"), studio.indexOf("ps-community-name-preview-chat-view"));
   const chatPreview = studio.slice(studio.indexOf("ps-community-name-preview-chat-view"), studio.indexOf("ps-community-picker-selection"));

@@ -4587,7 +4587,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
 
 
-/* Discord-style scrollbar: native scrolling, slim thumb, transparent track. */
+/* Discord-like overlay scrollbar on the profile preview content. */
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body {
   overflow-x:hidden!important;
@@ -4600,21 +4600,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body::-webkit-scrollbar {
   display:block!important;
-  width:4px!important;
+  width:8px!important;
   height:0!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body::-webkit-scrollbar-track {
-  margin:6px 0!important;
+  margin:5px 0!important;
   background:transparent!important;
   border:0!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
-  min-height:34px!important;
-  border:0!important;
+  min-height:36px!important;
+  border:2px solid transparent!important;
   border-radius:999px!important;
   background-color:transparent!important;
+  background-clip:padding-box!important;
   transition:background-color .16s ease!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
@@ -4627,14 +4628,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background:transparent!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  >.ps-community-editor-preview-body {
+  >.ps-community-editor-preview-body,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body:hover {
   scrollbar-color:#777f8b transparent!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb,
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  >.ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb {
   background-color:#777f8b!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
   background-color:#aab3bf!important;
 }
@@ -4644,7 +4649,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     transition:none!important;
   }
 }
-
 `}</style>
     </div>
     </div>,

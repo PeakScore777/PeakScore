@@ -641,6 +641,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
+  const [displayNameEditing, setDisplayNameEditing] = useState(false);
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
@@ -685,6 +686,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [statusDurationOpen, setStatusDurationOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
+  const [posterCollectionOpen, setPosterCollectionOpen] = useState(false);
+  const [posterCollectionTarget, setPosterCollectionTarget] = useState<"avatar" | "banner" | null>(null);
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
   const [avatarCropUrl, setAvatarCropUrl] = useState<string | null>(null);
   const [avatarCropZoom, setAvatarCropZoom] = useState(1);
@@ -706,9 +710,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
   const [error, setError] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
-  const avatarGifInput = useRef<HTMLInputElement>(null);
   const bannerImageInput = useRef<HTMLInputElement>(null);
-  const bannerGifInput = useRef<HTMLInputElement>(null);
+  const displayNameInputRef = useRef<HTMLInputElement>(null);
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
@@ -750,6 +753,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (posterCollectionOpen) { setPosterCollectionOpen(false); setPosterCollectionTarget(null); return; }
+      if (bannerPickerOpen) { setBannerPickerOpen(false); return; }
       if (avatarPickerOpen) { setAvatarPickerOpen(false); return; }
       if (avatarCropUrl) {
         closeAvatarCrop();
@@ -779,7 +784,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, colorPickerOpen, avatarMenuOpen]);
+  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, avatarPickerOpen, bannerPickerOpen, posterCollectionOpen, colorPickerOpen, avatarMenuOpen]);
 
   useEffect(() => {
     if (!appearancePicker) return;
@@ -848,10 +853,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
+  const profileThemeInk = readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55));
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
-    "--editor-theme-text": readableThemeText(cardColor),
+    "--editor-theme-text": profileThemeInk,
     "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)),
     "--editor-theme-bottom-text": readableThemeText(themeColorSecondary),
   } as CSSProperties;
@@ -1357,21 +1363,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <aside className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
 
             <section className="ps-community-editor-settings-section">
-              <label className="ps-community-editor-settings-section-title" htmlFor="ps-community-display-name">Nombre en la comunidad</label>
-              <input
-                id="ps-community-display-name"
-                className="ps-community-editor-display-name-input"
-                value={displayName}
-                onChange={(event) => setDisplayName(event.target.value.slice(0, 32))}
-                maxLength={32}
-                minLength={2}
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="Tu nombre"
-              />
-            </section>
-
-            <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Placa de identificación</div>
               <button
                 type="button"
@@ -1434,21 +1425,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
               <div className="ps-community-editor-settings-section-title">Decorar cartel de perfil</div>
               <div className="ps-community-editor-banner-tools">
-                <div className="ps-community-editor-banner-current">
-                  <span className="ps-community-editor-banner-current-preview" style={profile.bannerUrl
-                    ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" }
-                    : { background: "linear-gradient(120deg,#142831,#173f37 58%,#1c272e)" }}/>
-                  <span><strong>{profile.bannerUrl ? "Cartel personalizado" : "Diseño PeakScore"}</strong><small>{profile.bannerUrl ? "Imagen o GIF cargado" : "Fondo original de PeakScore"}</small></span>
-                  {profile.bannerUrl && <button type="button" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || Boolean(uploading)} aria-label="Quitar cartel"><Trash2 size={15}/></button>}
-                </div>
-                <div className="ps-community-editor-banner-upload-actions">
-                  <button type="button" className="ps-community-editor-banner-upload-button" onClick={() => bannerImageInput.current?.click()} disabled={Boolean(uploading) || busy}>
-                    <ImagePlus size={15}/> Subir imagen
+                <div className="ps-community-editor-banner-current-row">
+                  <button type="button" className="ps-community-editor-banner-current is-action" onClick={() => setBannerPickerOpen(true)} disabled={Boolean(uploading) || busy} aria-label="Cambiar cartel de perfil">
+                    <span className="ps-community-editor-banner-current-preview" style={profile.bannerUrl
+                      ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" }
+                      : { background: "linear-gradient(120deg,#142831,#173f37 58%,#1c272e)" }}/>
+                    <span><strong>{profile.bannerUrl ? "Cartel personalizado" : "Diseño PeakScore"}</strong><small>{profile.bannerUrl ? "Cambiar imagen o ver colección" : "Elige una imagen o explora carteles"}</small></span>
+                    <PlusCircle size={17}/>
                   </button>
-                  <button type="button" className="ps-community-editor-banner-upload-button" onClick={() => bannerGifInput.current?.click()} disabled={Boolean(uploading) || busy}>
-                    <Film size={15}/> Subir GIF
-                  </button>
+                  {profile.bannerUrl && <button type="button" className="ps-community-editor-banner-remove" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || Boolean(uploading)} aria-label="Quitar cartel"><Trash2 size={15}/></button>}
                 </div>
+              </div>
+            </section>
+
               </div>
             </section>
 
@@ -1462,15 +1451,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </section>
 
             <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
-            <input ref={avatarGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
             <input ref={bannerImageInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
-            <input ref={bannerGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
 
           </aside>
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner" + (profile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
@@ -1511,8 +1498,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? readableThemeText(cardColor) } as CSSProperties}/>
-                  <div className="ps-community-editor-preview-identity-line">
+                  {displayNameEditing ? (
+                    <input ref={displayNameInputRef} id="ps-community-display-name-inline"
+                      className={"ps-community-editor-preview-name-inline-input is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
+                      value={displayName} maxLength={32} minLength={2} autoFocus autoComplete="off" spellCheck={false}
+                      onChange={(event) => setDisplayName(event.target.value.slice(0, 32))}
+                      onBlur={() => setDisplayNameEditing(false)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") { event.preventDefault(); setDisplayNameEditing(false); }
+                        if (event.key === "Escape") { setDisplayName(savedSnapshot.displayName ?? ""); setDisplayNameEditing(false); }
+                      }}
+                      aria-label="Nombre en la comunidad"/>
+                  ) : (
+                    <button type="button" className="ps-community-editor-preview-name-edit-trigger" onClick={() => setDisplayNameEditing(true)} aria-label="Editar nombre en la comunidad">
+                      <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk } as CSSProperties}/>
+                      <Pencil size={12} aria-hidden="true"/>
+                    </button>
+                  )}                  <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
                     <textarea
                       ref={pronounsTextareaRef}
@@ -1779,28 +1781,26 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                       {draftDisplayNameColorMode === "single" && (
                         <>
-                          <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Colores de letra">
-                            {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient").map((item) => (
-                              <button
-                                key={item.id}
-                                type="button"
-                                className={"ps-community-name-preset-swatch" + (draftDisplayNameColor === item.id ? " is-selected" : "")}
-                                style={{ background: item.value === "currentColor" ? "linear-gradient(135deg,#f0f2f6 0 46%,#5865f2 46% 54%,#25272d 54%)" : item.value }}
-                                aria-label={item.label}
-                                aria-pressed={draftDisplayNameColor === item.id}
-                                title={item.label}
-                                onClick={() => setDraftDisplayNameColor(item.id)}
-                              />
-                            ))}
+                          <div className="ps-community-name-colors-row">
+                            <DisplayNameCustomColorPicker
+                              value={draftDisplayNameGradientStart}
+                              selected={draftDisplayNameColor === "custom-gradient"}
+                              onApply={(color) => {
+                                setDraftDisplayNameGradientStart(color);
+                                setDraftDisplayNameColor("custom-gradient");
+                              }}
+                            />
+                            <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Colores de letra">
+                              {DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id)).map((item) => (
+                                <button key={item.id} type="button"
+                                  className={"ps-community-name-preset-swatch" + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                                  style={{ background: item.value }}
+                                  aria-label={item.label} aria-pressed={draftDisplayNameColor === item.id} title={item.label}
+                                  onClick={() => setDraftDisplayNameColor(item.id)}
+                                />
+                              ))}
+                            </div>
                           </div>
-                          <DisplayNameCustomColorPicker
-                            value={draftDisplayNameGradientStart}
-                            selected={draftDisplayNameColor === "custom-gradient"}
-                            onApply={(color) => {
-                              setDraftDisplayNameGradientStart(color);
-                              setDraftDisplayNameColor("custom-gradient");
-                            }}
-                          />
                         </>
                       )}
                       {draftDisplayNameColorMode === "gradient" && (
@@ -2014,7 +2014,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
                         <div className="ps-community-name-style-profile-copy">
-                          <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                          <strong className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                          <small className="ps-community-name-style-profile-handle">{accountTag(profile.accountName)}</small>
                         </div>
                       </article>
                     </section>
@@ -2029,12 +2030,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
                           <div className="ps-community-name-member-copy">
-                            <DisplayNameMotionPreview
-                              tag="span"
-                              value={displayName || "Tu nombre"}
-                              animation={draftDisplayNameAnimation}
-                              className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <strong className={"ps-community-name-render community-member-nameplate is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                           </div>
                         </div>
                       </div>
@@ -2047,12 +2043,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </span>
                         <div className="ps-community-name-chat-content">
                           <div className="ps-community-name-chat-meta">
-                            <DisplayNameMotionPreview
-                              tag="span"
-                              value={displayName || "Tu nombre"}
-                              animation={draftDisplayNameAnimation}
-                              className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <strong className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>
                         </div>
@@ -2097,20 +2088,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         }}>
           <section className="ps-community-avatar-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-picker-title">
             <header>
-              <div><h2 id="ps-community-avatar-picker-title">Cambiar avatar</h2><p>Elige cómo quieres actualizar tu imagen.</p></div>
+              <div><h2 id="ps-community-avatar-picker-title">Cambiar avatar</h2><p>Elige una imagen o explora tu colección de carteles.</p></div>
               <button type="button" onClick={() => setAvatarPickerOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
             </header>
             <div className="ps-community-avatar-picker-options">
               <button type="button" className="is-image-choice" onClick={() => avatarInput.current?.click()} disabled={Boolean(uploading)}>
-                <span className="ps-community-avatar-choice-art">
-                  {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : <ImagePlus size={28}/>}
-                </span>
+                <span className="ps-community-avatar-choice-art">{profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : <ImagePlus size={28}/>}</span>
                 <span className="ps-community-avatar-choice-copy"><strong>Elegir imagen</strong><small>PNG, JPG o WebP</small></span>
                 <span className="ps-community-avatar-choice-arrow"><Camera size={17}/></span>
               </button>
-              <button type="button" className="is-gif-choice" onClick={() => avatarGifInput.current?.click()} disabled={Boolean(uploading)}>
-                <span className="ps-community-avatar-choice-art is-gif-art"><Film size={28}/><i>GIF</i></span>
-                <span className="ps-community-avatar-choice-copy"><strong>Elegir GIF</strong><small>Animación propia</small></span>
+              <button type="button" className="is-collection-choice" onClick={() => { setAvatarPickerOpen(false); setPosterCollectionTarget("avatar"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>
                 <span className="ps-community-avatar-choice-arrow"><Plus size={17}/></span>
               </button>
             </div>
@@ -2119,7 +2108,55 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
       )}
-
+      {bannerPickerOpen && (
+        <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) setBannerPickerOpen(false);
+        }}>
+          <section className="ps-community-avatar-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-banner-picker-title">
+            <header>
+              <div><h2 id="ps-community-banner-picker-title">Decorar cartel de perfil</h2><p>Sube una imagen o consulta tu colección de carteles.</p></div>
+              <button type="button" onClick={() => setBannerPickerOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
+            </header>
+            <div className="ps-community-avatar-picker-options">
+              <button type="button" className="is-image-choice" onClick={() => bannerImageInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art">{profile.bannerUrl ? <span className="ps-community-banner-choice-thumbnail" style={{ backgroundImage: "url(" + profile.bannerUrl + ")" }}/> : <ImagePlus size={28}/>}</span>
+                <span className="ps-community-avatar-choice-copy"><strong>Subir imagen</strong><small>PNG, JPG o WebP</small></span>
+                <span className="ps-community-avatar-choice-arrow"><Camera size={17}/></span>
+              </button>
+              <button type="button" className="is-collection-choice" onClick={() => { setBannerPickerOpen(false); setPosterCollectionTarget("banner"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>
+                <span className="ps-community-avatar-choice-arrow"><Plus size={17}/></span>
+              </button>
+            </div>
+            {uploading === "banner" && <div className="ps-community-avatar-picker-progress"><LoaderCircle size={15}/> Actualizando cartel…</div>}
+            <footer><button type="button" onClick={() => setBannerPickerOpen(false)}>Cancelar</button></footer>
+          </section>
+        </div>
+      )}
+      {posterCollectionOpen && (
+        <div className="ps-community-avatar-picker-overlay" onPointerDown={(event) => {
+          if (event.target === event.currentTarget) { setPosterCollectionOpen(false); setPosterCollectionTarget(null); }
+        }}>
+          <section className="ps-community-avatar-picker-modal ps-community-poster-collection-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-poster-collection-title">
+            <header>
+              <div><h2 id="ps-community-poster-collection-title">Colección de carteles</h2><p>Tu espacio para guardar y elegir carteles de perfil.</p></div>
+              <button type="button" onClick={() => { setPosterCollectionOpen(false); setPosterCollectionTarget(null); }} aria-label="Cerrar colección"><X size={19}/></button>
+            </header>
+            <div className="ps-community-poster-collection-empty" role="status">
+              <Film size={30}/>
+              <strong>Tu colección está vacía</strong>
+              <p>Todavía no hay carteles disponibles. Aquí aparecerán cuando agreguemos contenido a la colección.</p>
+            </div>
+            <footer><button type="button" onClick={() => {
+              const target = posterCollectionTarget;
+              setPosterCollectionOpen(false); setPosterCollectionTarget(null);
+              if (target === "avatar") setAvatarPickerOpen(true);
+              if (target === "banner") setBannerPickerOpen(true);
+            }}>Volver</button></footer>
+          </section>
+        </div>
+      )}
       {avatarCropUrl && (
         <div className="ps-community-avatar-crop-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) closeAvatarCrop();
@@ -2163,7 +2200,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
 
-            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor), "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": profileThemeInk, "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
               <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
@@ -2244,7 +2281,36 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         </div>
       )}
 
-<style jsx global>{`/* Discord-like inline biography: no inner scrollbar, natural height and readable input surface. */
+<style jsx global>{`
+/* PeakScore final pass: editable identity, shared theme ink and consistent presence. */
+.ps-community-editor-preview-name-edit-trigger{display:inline-flex!important;align-items:center!important;gap:7px!important;max-width:100%!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--editor-theme-text,#f2f3f5)!important;text-align:left!important;cursor:text!important}
+.ps-community-editor-preview-name-edit-trigger>svg{flex:0 0 auto!important;opacity:0!important;color:var(--editor-theme-text,#f2f3f5)!important;transition:opacity .12s ease!important}
+.ps-community-editor-preview-name-edit-trigger:hover>svg,.ps-community-editor-preview-name-edit-trigger:focus-visible>svg{opacity:.72!important}
+.ps-community-editor-preview-name-inline-input{display:block!important;width:min(100%,420px)!important;max-width:100%!important;min-height:34px!important;margin:0!important;padding:0 2px!important;border:0!important;border-bottom:1px solid color-mix(in srgb,var(--editor-theme-text,#fff) 55%,transparent)!important;border-radius:0!important;background:transparent!important;color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;caret-color:var(--editor-theme-text,#f2f3f5)!important;font:inherit!important;font-size:inherit!important;font-weight:850!important;outline:none!important;box-shadow:none!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-static.color-default{color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag{color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;background:color-mix(in srgb,var(--editor-theme-text,#f2f3f5) 12%,transparent)!important;border-color:color-mix(in srgb,var(--editor-theme-text,#f2f3f5) 24%,transparent)!important;text-shadow:none!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns{color:var(--editor-theme-text,#f2f3f5)!important;-webkit-text-fill-color:var(--editor-theme-text,#f2f3f5)!important;caret-color:var(--editor-theme-text,#f2f3f5)!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading,.ps-community-editor-preview-card .ps-community-editor-preview-meta,.ps-community-editor-preview-card .ps-community-editor-bio-display{color:var(--editor-theme-body-text,var(--editor-theme-text,#f2f3f5))!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading small,.ps-community-editor-preview-card .ps-community-editor-preview-meta strong{color:var(--editor-theme-body-text,var(--editor-theme-text,#f2f3f5))!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot{position:absolute!important;right:-4px!important;bottom:0!important;width:18px!important;height:18px!important;box-sizing:border-box!important;border:4px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot.is-offline,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot.is-offline{background:#747b86!important}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::before,.ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot::after,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,.ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::before,.ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot::after{display:none!important;content:none!important;box-shadow:none!important}
+.ps-community-avatar-picker-modal>header{border-bottom:0!important}
+.ps-community-avatar-picker-modal>footer{border-top:0!important}
+.ps-community-avatar-choice-art.is-collection-art{background:linear-gradient(145deg,#202932,#252b35)!important;color:#bdc8e0!important}
+.ps-community-avatar-choice-art .ps-community-banner-choice-thumbnail{position:absolute;inset:0;background-size:cover;background-position:center}
+.ps-community-editor-banner-current-row{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
+.ps-community-editor-banner-current.is-action{flex:1 1 auto!important;width:100%!important;text-align:left!important;cursor:pointer!important}
+.ps-community-editor-banner-current.is-action>svg{margin-left:auto!important;flex:0 0 auto!important;color:#bdc8e0!important}
+.ps-community-editor-banner-current.is-action:hover{border-color:#687cf2!important;background:#2b2e38!important}
+.ps-community-editor-banner-remove{display:grid!important;flex:0 0 32px!important;width:32px!important;height:32px!important;place-items:center!important;border:1px solid #444850!important;border-radius:8px!important;background:#292b31!important;color:#ed777d!important}
+.ps-community-poster-collection-modal{min-height:320px!important}
+.ps-community-poster-collection-empty{display:flex!important;min-height:205px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:10px!important;padding:26px!important;text-align:center!important;color:#aeb7c8!important}
+.ps-community-poster-collection-empty>svg{color:#9eabc1!important;opacity:.8!important}
+.ps-community-poster-collection-empty>strong{color:#eef1f6!important;font-size:14px!important}
+.ps-community-poster-collection-empty>p{max-width:320px!important;margin:0!important;color:#9ea8b9!important;font-size:11px!important;line-height:1.55!important}
+
+/* Discord-like inline biography: no inner scrollbar, natural height and readable input surface. */
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
   border-color: var(--editor-card, #B7D7C3) !important;
   box-shadow: 0 0 0 2px var(--editor-card, #B7D7C3), 0 7px 18px #0006 !important;

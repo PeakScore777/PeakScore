@@ -1226,7 +1226,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         ? "Selecciona una imagen PNG, JPG, WebP o GIF de máximo 5 MB."
         : "Selecciona una imagen o GIF de máximo 8 MB.");
       clearAssetInputs(kind);
-      return;
+      return false;
     }
 
     setUploading(kind);

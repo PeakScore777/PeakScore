@@ -161,7 +161,7 @@ testCase("community profile popout keeps member actions separate from the owner'
 
 
 testCase("PeakScore role rail always shows the five fixed groups and profile badges include inherited base roles", () => {
-  for (const label of ["FOUNDER", "ADMINISTRADORES", "MODERADORES", "PROFESORES", "MIEMBROS"]) {
+  for (const label of ["FOUNDER", "ADMINS", "MODERADORES", "PROFESORES", "MIEMBROS"]) {
     assert.ok(page.includes('label: "' + label + '"'), "Missing fixed role group: " + label);
   }
   assert.match(page, /\/images\/community\/roles\/founder\.png/);
@@ -186,4 +186,26 @@ testCase("member rail is role-grouped, collapsible, and uses a clean Discord-sty
     page.indexOf("{founderStudioOpen && isFounder && ("),
   );
   assert.doesNotMatch(memberRail, /MIEMBROS|conectados de|community-member-sidebar-header|community-member-sidebar-footer/);
+});
+
+
+testCase("role rail preserves exact rank order, empty groups and the founder's normal avatar row", () => {
+  const founder = page.indexOf('{ key: "fundador"');
+  const admins = page.indexOf('{ key: "administrador"');
+  const moderators = page.indexOf('{ key: "moderador"');
+  const teachers = page.indexOf('{ key: "profesor"');
+  const members = page.indexOf('{ key: "members"');
+  assert.ok(founder >= 0 && founder < admins && admins < moderators && moderators < teachers && teachers < members);
+  assert.match(page, /community-member-group-empty/);
+  assert.match(page, /group\.members\.length === 0 \? " community-member-group-empty" : ""/);
+  assert.match(page, /!collapsed && group\.members\.length > 0/);
+  assert.match(page, /const avatarUrl = member\.avatar_url \?\? \(member\.id === userId \? profile\?\.avatar_url \?\? null : null\)/);
+  const memberRail = page.slice(
+    page.indexOf('<aside className="community-member-sidebar"'),
+    page.indexOf("{founderStudioOpen && isFounder && ("),
+  );
+  assert.doesNotMatch(memberRail, /member\.id === userId && isFounder/);
+  assert.match(memberRail, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
+  assert.match(memberRail, /src=\{group\.iconPath\}/);
+  assert.match(memberRail, /community-member-group-role-fallback/);
 });

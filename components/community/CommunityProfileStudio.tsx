@@ -1472,7 +1472,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
         {(hasUnsavedChanges || hasPickerChanges) && (
           <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
-            <span>{closeConfirmationOpen ? "Tienes cambios sin guardar. Guárdalos antes de salir." : "¡No te olvides de guardar los cambios!"}</span>
+            <span>"¡No te olvides de guardar los cambios!"</span>
             <div>
               <button type="button" className="is-secondary" onClick={() => {
                 const shouldCloseAfterReset = closeConfirmationOpen;
@@ -3240,7 +3240,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
 }
 .ps-community-editor-v2[data-close-confirming="true"] {
-  transform:translateX(-22px) translateY(-3px) scale(.994)!important;
+  transform:translateX(-64px) translateY(-4px) scale(.988)!important;
   box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
 }
 .ps-community-editor-savebar {
@@ -3261,14 +3261,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   color:#ffe4e6!important;
 }
 .ps-community-editor-savebar.is-close-warning .is-primary {
-  background:#fff!important;
-  border-color:#fff!important;
-  color:#a32835!important;
-  box-shadow:0 3px 10px rgb(0 0 0 / 16%)!important;
+  background:#5865f2!important;
+  border-color:#5865f2!important;
+  color:#fff!important;
+  box-shadow:0 3px 10px rgb(88 101 242 / 24%)!important;
 }
 .ps-community-editor-savebar.is-close-warning .is-primary:hover:not(:disabled) {
-  background:#f05b65!important;
-  border-color:#f05b65!important;
+  background:#6978ff!important;
+  border-color:#6978ff!important;
   transform:translateY(-1px)!important;
 }
 @keyframes ps-community-unsaved-bar-enter {

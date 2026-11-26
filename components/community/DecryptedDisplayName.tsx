@@ -42,7 +42,7 @@ function splitGraphemes(value: string) {
 }
 
 function isSpace(character: string) {
-  return /^\\s+$/u.test(character);
+  return /^\s+$/u.test(character);
 }
 
 function glyphWidth(font: string, character: string) {

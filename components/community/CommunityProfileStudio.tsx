@@ -4649,16 +4649,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   height:0!important;
   background:transparent!important;
 }
-/* Pointer-driven visibility avoids leaving a thumb behind when the cursor exits. */
+/* The thumb is visible strictly while the pointer is over the preview card. */
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card[data-scrollbar-visible="true"]
-  >.ps-community-editor-preview-body,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:focus-within
   >.ps-community-editor-preview-body {
   scrollbar-color:#777f8b transparent!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card[data-scrollbar-visible="true"]
-  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:focus-within
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
   background-color:#777f8b!important;
 }

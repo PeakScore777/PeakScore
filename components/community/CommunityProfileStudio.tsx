@@ -1357,11 +1357,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </aside>
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
-            <div
-              className="ps-community-editor-preview-scroll"
-              onPointerMove={handlePickerScrollbarPointerMove}
-              onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
-            >
             <div className="ps-community-editor-preview-frame">
               <article
                 className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + plateStyle}
@@ -1407,7 +1402,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </button>
                   </div>
                 </div>
-                <div className="ps-community-editor-preview-body">
+                <div
+                  className="ps-community-editor-preview-body"
+                  onPointerMove={handlePickerScrollbarPointerMove}
+                  onPointerLeave={(event) => { event.currentTarget.dataset.scrollbarVisible = "false"; }}
+                >
                     <input
                     id="ps-community-display-name-inline"
                     className={"ps-community-editor-preview-name-input ps-community-profile-name is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
@@ -1490,7 +1489,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
 
               </article>
-            </div>
             </div>
         {(hasUnsavedChanges || hasPickerChanges) && (
           <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
@@ -4731,76 +4729,60 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
   background-color:#aab3bf!important;
 }
-/* Final layout: the changes notice lives inside the yellow-marked lower
-   area of the right preview pane; no separate footer row remains. */
-.ps-community-editor-main { position:relative!important; }
-.ps-community-editor-workspace-discord {
-  flex:1 1 auto!important;
+
+/* Final editor geometry: fill the modal with the workspace so there is no
+   unused gray footer below the sidebar and preview area. */
+.ps-community-editor-v2 {
+  display:flex!important;
+  flex-direction:column!important;
+  height:min(980px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
   min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-main {
+  position:relative!important;
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  width:100%!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-header {
+  flex:0 0 auto!important;
+}
+.ps-community-editor-workspace-discord {
+  display:grid!important;
+  grid-template-columns:220px minmax(0,1fr)!important;
+  flex:1 1 0!important;
+  width:100%!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-settings-sidebar {
+  min-height:0!important;
+  height:100%!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
 }
 .ps-community-editor-preview-column {
   position:relative!important;
   display:flex!important;
   flex:1 1 0!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  justify-content:flex-start!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
   width:100%!important;
   height:100%!important;
   min-width:0!important;
   min-height:0!important;
+  padding:14px 22px 106px!important;
   box-sizing:border-box!important;
-  padding:0!important;
   overflow:hidden!important;
-}
-.ps-community-editor-preview-scroll {
-  position:relative!important;
-  display:flex!important;
-  flex:1 1 auto!important;
-  flex-direction:column!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  align-self:center!important;
-  width:min(432px,100%)!important;
-  max-width:432px!important;
-  height:100%!important;
-  min-width:0!important;
-  min-height:0!important;
-  box-sizing:border-box!important;
-  padding:14px 0 96px!important;
-  overflow-x:hidden!important;
-  overflow-y:auto!important;
-  overscroll-behavior-y:contain!important;
-  scrollbar-gutter:stable!important;
-  scrollbar-width:thin!important;
-  scrollbar-color:transparent transparent!important;
-  -webkit-overflow-scrolling:touch!important;
-}
-.ps-community-editor-preview-scroll::-webkit-scrollbar {
-  display:block!important;
-  width:10px!important;
-}
-.ps-community-editor-preview-scroll::-webkit-scrollbar-track {
-  background:transparent!important;
-}
-.ps-community-editor-preview-scroll::-webkit-scrollbar-thumb {
-  min-height:36px!important;
-  border:2px solid transparent!important;
-  border-radius:999px!important;
-  background:transparent!important;
-  background-clip:padding-box!important;
-  transition:background-color .14s ease!important;
-}
-.ps-community-editor-preview-scroll[data-scrollbar-visible="true"] {
-  scrollbar-color:#777f8b transparent!important;
-}
-.ps-community-editor-preview-scroll[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
-  background:#777f8b!important;
-  background-clip:padding-box!important;
-}
-.ps-community-editor-preview-scroll::-webkit-scrollbar-thumb:hover {
-  background:#aab3bf!important;
-  background-clip:padding-box!important;
 }
 .ps-community-editor-preview-frame {
   display:flex!important;
@@ -4813,46 +4795,86 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   height:auto!important;
   min-height:0!important;
   margin:0 auto!important;
-  padding:0 0 18px!important;
+  padding:0!important;
   overflow:visible!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  display:flex!important;
   flex:0 0 auto!important;
+  flex-direction:column!important;
   width:min(420px,100%)!important;
   min-width:0!important;
   max-width:420px!important;
-  height:auto!important;
-  min-height:720px!important;
+  height:min(720px,calc(100dvh - 170px))!important;
+  min-height:420px!important;
   max-height:none!important;
+  margin:0 auto!important;
+  padding:0!important;
   overflow:hidden!important;
+  box-sizing:border-box!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-  flex:0 0 auto!important;
+  position:relative!important;
+  display:flex!important;
+  flex:1 1 0!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
   height:auto!important;
-  min-height:536px!important;
-  overflow:visible!important;
-  scrollbar-width:auto!important;
+  padding:72px 32px 24px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:stable!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:transparent transparent!important;
+  -webkit-overflow-scrolling:touch!important;
   background:var(--editor-theme-gradient,#B7D7C3)!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
-  display:none!important;
+  display:block!important;
+  width:10px!important;
+  height:0!important;
 }
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar-track {
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  min-height:36px!important;
+  border:2px solid transparent!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  background-clip:padding-box!important;
+  transition:background-color .14s ease!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body[data-scrollbar-visible="true"] {
+  scrollbar-color:#777f8b transparent!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body[data-scrollbar-visible="true"]::-webkit-scrollbar-thumb {
+  background:#777f8b!important;
+  background-clip:padding-box!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background:#aab3bf!important;
+  background-clip:padding-box!important;
+}
+/* Save notice sits on the yellow guide, below the card, inside the right pane. */
 .ps-community-editor-savebar {
   position:absolute!important;
   z-index:30!important;
-  left:16px!important;
-  right:20px!important;
-  bottom:112px!important;
+  left:28px!important;
+  right:50px!important;
+  bottom:30px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
   gap:14px!important;
   width:auto!important;
   max-width:none!important;
-  min-height:76px!important;
+  min-height:60px!important;
   box-sizing:border-box!important;
   margin:0!important;
-  padding:10px 14px 10px 18px!important;
+  padding:9px 14px 9px 18px!important;
   border:1px solid #34363d!important;
   border-radius:9px!important;
   background:#18191c!important;
@@ -4878,11 +4900,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   min-height:40px!important;
   border-radius:8px!important;
 }
+@media(max-width:980px) and (min-width:761px) {
+  .ps-community-editor-workspace-discord {
+    grid-template-columns:208px minmax(0,1fr)!important;
+  }
+  .ps-community-editor-savebar {left:20px!important;right:24px!important;}
+}
 @media(max-width:760px) {
-  .ps-community-editor-preview-scroll { width:min(432px,100%)!important;padding:10px 0 120px!important; }
+  .ps-community-editor-workspace-discord {grid-template-columns:minmax(0,1fr)!important;}
+  .ps-community-editor-preview-column {padding:10px 10px 96px!important;}
   .ps-community-editor-savebar {
-    left:10px!important;right:18px!important;bottom:112px!important;
-    min-height:68px!important;padding:8px!important;gap:8px!important;
+    left:10px!important;right:18px!important;bottom:16px!important;
+    min-height:56px!important;padding:8px!important;gap:8px!important;
   }
   .ps-community-editor-savebar>span {font-size:10px!important}
   .ps-community-editor-savebar button {min-width:0!important;padding-inline:9px!important}

@@ -3699,3 +3699,29 @@
   background: #737b87;
   background-clip: padding-box;
 }
+
+/* Role emblems replace colored text chips in the member rail. */
+.root :global(.community-member-role-badges > span) {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.root :global(.community-member-role-badges > span img) {
+  display: block;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.root :global(.community-member-group-role-fallback),
+.root :global(.community-member-group-toggle > i) {
+  display: none;
+}

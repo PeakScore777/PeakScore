@@ -193,6 +193,15 @@ const CHANNEL_ICON_KEYS: Record<string, typeof Hash> = {
 };
 
 
+const COMMUNITY_ROLE_ICON_PATHS: Record<string, string> = {
+  fundador: "/images/community/roles/founder.png",
+  administrador: "/images/community/roles/admin.png",
+  moderador: "/images/community/roles/moderator.png",
+  profesor: "/images/community/roles/professor.png",
+  docente: "/images/community/roles/professor.png",
+  miembro: "/images/community/roles/member.png",
+};
+
 const COMMUNITY_ROLE_PRESENTATION: Record<string, { label: string; badgeColor: string; position: number }> = {
   fundador: { label: "Founder", badgeColor: "#8B5CF6", position: 0 },
   administrador: { label: "Admin", badgeColor: "#ED4245", position: 10 },
@@ -2984,9 +2993,7 @@ export default function CommunityPage() {
                       aria-expanded={!collapsed}
                     >
                       <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
-                      <span className="community-member-group-role-emblem" style={{ "--member-role-color": group.color } as CSSProperties}>
-                        <span className="community-member-group-role-fallback" aria-hidden="true">{group.key === "members" ? "M" : group.key === "fundador" ? "F" : group.key === "administrador" ? "A" : group.key === "moderador" ? "M" : "P"}</span>
-                        <Image
+                      <span className="community-member-group-role-emblem" style={{ "--member-role-color": group.color } as CSSProperties}>                        <Image
                           src={group.iconPath}
                           alt=""
                           width={20}
@@ -3030,20 +3037,18 @@ export default function CommunityPage() {
                                     "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
                                   } as React.CSSProperties}
                                 />
-                                {member.id === userId && isFounder && (
-                                  <span className="community-member-verified-dot" title="Founder verificado" aria-label="Founder verificado"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                          <path d="M12 1.2c1.8 0 3 2.1 4.7 2.5 1.8.4 4.1-.4 5.1 1.2 1 1.6-.1 3.7.5 5.4.6 1.7 2.7 3.1 2.2 4.9-.5 1.8-2.9 2.3-4 3.8-1.1 1.5-.9 4-2.6 4.9-1.7.9-3.7-.5-5.5-.5s-3.8 1.4-5.5.5c-1.7-.9-1.5-3.4-2.6-4.9-1.1-1.5-3.5-2-4-3.8-.5-1.8 1.6-3.2 2.2-4.9.6-1.7-.5-3.8.5-5.4 1-1.6 3.3-.8 5.1-1.2C9 3.3 10.2 1.2 12 1.2Z" fill="currentColor"/>
-                          <path d="m6.9 12.2 3.3 3.3 7-7" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg></span>
-                                )}
                                 {member.status_text && <small>{member.status_text}</small>}
                                 {member.roles && member.roles.filter((role) => role.display_as_badge).slice(0, 2).length > 0 && (
                                   <span className="community-member-role-badges" aria-label="Roles">
-                                    {member.roles.filter((role) => role.display_as_badge).slice(0, 2).map((role) => (
-                                      <span key={role.role_key} style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(role.badge_color) ? role.badge_color : "#929aa6" } as CSSProperties}>
-                                        {role.label}
-                                      </span>
-                                    ))}
+                                    {member.roles.filter((role) => role.display_as_badge).slice(0, 2).map((role) => {
+                                      const iconPath = COMMUNITY_ROLE_ICON_PATHS[role.role_key];
+                                      return (
+                                        <span key={role.role_key} title={role.label} aria-label={role.label}
+                                          style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(role.badge_color) ? role.badge_color : "#929aa6" } as CSSProperties}>
+                                          {iconPath ? <Image src={iconPath} alt="" width={18} height={18} unoptimized /> : role.label}
+                                        </span>
+                                      );
+                                    })}
                                   </span>
                                 )}
                               </span>

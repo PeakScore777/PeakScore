@@ -4456,7 +4456,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 /* Match the public profile reference: avatar, name, identity, bio and join date. */
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
-  top:126px!important;
+  top:105px!important;
   left:0!important;
   right:0!important;
   width:100%!important;
@@ -4487,7 +4487,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-color:var(--editor-card,#DDF8F3)!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
-  left:146px!important;
+  left:177px!important;
   top:42.5px!important;
   bottom:auto!important;
   width:max-content!important;
@@ -4495,7 +4495,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   max-width:calc(100% - 154px)!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
-  padding:63px 32px 26px!important;
+  padding:40px 32px 26px!important;
   overflow-y:auto!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-name-input {

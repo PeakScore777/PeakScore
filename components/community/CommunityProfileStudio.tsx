@@ -53,6 +53,7 @@ type CommunityIdentity = {
   profileEffectId?: ProfileEffectId;
   statusExpiresAt?: string | null;
   memberNumber?: number | null;
+  accountName?: string | null;
   pronouns?: string;
   statusText: string;
   about: string;
@@ -462,10 +463,9 @@ function initials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : (parts[0] ?? "P").slice(0, 2)).toUpperCase();
 }
-function memberTag(value?: number | null) {
-  return Number.isFinite(value) && Number(value) > 0
-    ? "Miembro " + String(value).padStart(4, "0")
-    : "Miembro nuevo";
+function accountTag(value?: string | null) {
+  const clean = typeof value === "string" ? value.trim().replace(/^@+/, "") : "";
+  return "@" + (clean || "usuario");
 }
 
 function displayNameCharacters(value: string) {
@@ -640,7 +640,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [portalReady, setPortalReady] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
-  const displayName = profile.displayName ?? initialProfile.displayName ?? "";
+  const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
@@ -690,6 +690,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropZoom, setAvatarCropZoom] = useState(1);
   const [avatarCropX, setAvatarCropX] = useState(50);
   const [avatarCropY, setAvatarCropY] = useState(50);
+  const avatarCropDragRef = useRef<{ pointerId: number; startX: number; startY: number; cropX: number; cropY: number } | null>(null);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -704,7 +705,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
   const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
   const avatarGifInput = useRef<HTMLInputElement>(null);
   const bannerImageInput = useRef<HTMLInputElement>(null);
@@ -802,7 +802,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       if (!(target instanceof Node)) return;
 
       // Capture phase makes dismissal reliable even when a child control stops bubbling.
-      if (colorPickerOpen && !cardColorControlRef.current?.contains(target)) setColorPickerOpen(false);
+      const eventPath = event.composedPath();
+      const colorPickerAnchor = cardColorControlRef.current;
+      const pointerIsInsideColorPicker = Boolean(colorPickerAnchor && (colorPickerAnchor.contains(target) || eventPath.includes(colorPickerAnchor)));
+      if (colorPickerOpen && !pointerIsInsideColorPicker) setColorPickerOpen(false);
       if (avatarMenuOpen && !avatarMenuAnchorRef.current?.contains(target)) setAvatarMenuOpen(false);
       if (statusEditorOpen && !statusModalRef.current?.contains(target)) setStatusEditorOpen(false);
       if (statusEmojiOpen && !statusEmojiFieldRef.current?.contains(target)) setStatusEmojiOpen(false);
@@ -825,7 +828,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle
     : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameAnimation !== displayNameAnimation || JSON.stringify(draftDisplayNameFuzzySettings) !== JSON.stringify(displayNameFuzzySettings) || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd || JSON.stringify(draftDisplayNamePrismColors) !== JSON.stringify(displayNamePrismColors) : false;
-  const hasUnsavedChanges = pronouns !== (savedSnapshot.pronouns ?? "")
+  const hasUnsavedChanges = displayName !== (savedSnapshot.displayName ?? "")
+    || pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
     || cardColor !== safeColor(savedSnapshot.cardColor)
@@ -927,7 +931,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setAppearancePicker(kind);
     setAvatarMenuOpen(false);
     setError("");
-    setNotice("");
   }
 
   function applyAppearancePicker() {
@@ -943,6 +946,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   function handleAvatarFileSelection(file: File | null) {
     if (!file) return;
     if (file.type === "image/gif") {
+      setAvatarPickerOpen(false);
       void uploadAsset("avatar", file);
       return;
     }
@@ -950,6 +954,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setError("Selecciona PNG, JPG, WebP o GIF.");
       return;
     }
+    setAvatarPickerOpen(false);
     setAvatarCropFile(file);
     setAvatarCropZoom(1);
     setAvatarCropX(50);
@@ -962,7 +967,35 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     void uploadAsset("banner", file);
   }
 
+  function handleAvatarCropPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    avatarCropDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      cropX: avatarCropX,
+      cropY: avatarCropY,
+    };
+  }
+
+  function handleAvatarCropPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = avatarCropDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const deltaX = ((event.clientX - drag.startX) / bounds.width) * 100;
+    const deltaY = ((event.clientY - drag.startY) / bounds.height) * 100;
+    setAvatarCropX(Math.max(0, Math.min(100, drag.cropX - deltaX)));
+    setAvatarCropY(Math.max(0, Math.min(100, drag.cropY - deltaY)));
+  }
+
+  function handleAvatarCropPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    if (avatarCropDragRef.current?.pointerId === event.pointerId) avatarCropDragRef.current = null;
+  }
+
   function closeAvatarCrop() {
+    avatarCropDragRef.current = null;
     setAvatarCropFile(null);
     setAvatarCropUrl(null);
     setAvatarCropZoom(1);
@@ -1065,6 +1098,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }
 
   function discardChanges() {
+    setDisplayName(savedSnapshot.displayName ?? "");
     setPronouns(savedSnapshot.pronouns ?? "");
     setStatus(savedSnapshot.statusText ?? "");
     setStatusDraft(savedSnapshot.statusText ?? "");
@@ -1088,20 +1122,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setProfileEffectId(savedSnapshot.profileEffectId ?? "none");
     setProfile(savedSnapshot);
     setError("");
-    setNotice("");
   }
 
   async function saveProfile() {
     if (!canSave) return;
     setBusy(true);
     setError("");
-    setNotice("");
     try {
       const response = await fetch("/api/community/profile/" + userId, {
         method: "PATCH",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          displayName: displayName.trim(),
           pronouns: pronouns.trim(),
           statusText: status.trim(),
           about: about.trim(),
@@ -1155,6 +1188,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         accentColor: payload.appearanceSaved === false ? accentColor : safeAccent(payload.profile.accentColor ?? accentColor),
         avatarFrame: payload.appearanceSaved === false ? avatarFrame : safeFrame(payload.profile.avatarFrame ?? avatarFrame),
       };
+      setDisplayName(updated.displayName);
       setProfile(updated);
       setSavedSnapshot(updated);
       updateCardColor(updated.cardColor ?? cardColor);
@@ -1175,12 +1209,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setProfileEffectId(updated.profileEffectId ?? "none");
       setStatusExpiresAt(updated.statusExpiresAt ?? null);
 
-      if (payload.appearanceSaved === false) {
-        setNotice("El perfil básico se guardó. Los controles visuales quedarán persistidos al aplicar la migración de esta rama.");
-      } else {
-        setNotice("Perfil actualizado correctamente.");
-        onSaved();
-      }
+      if (payload.appearanceSaved !== false) onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudieron guardar los cambios.");
     } finally {
@@ -1202,7 +1231,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
     setUploading(kind);
     setError("");
-    setNotice("");
     try {
       const form = new FormData();
       form.set("kind", kind);
@@ -1224,9 +1252,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setSavedSnapshot((current) => kind === "avatar"
         ? { ...current, avatarUrl: nextUrl }
         : { ...current, bannerUrl: nextUrl });
-      setNotice(kind === "avatar"
-        ? (payload?.animated ? "GIF de avatar actualizado." : "Avatar actualizado.")
-        : (payload?.animated ? "GIF del cartel actualizado." : "Cartel actualizado."));
       setAvatarPickerOpen(false);
       onSaved();
       return true;
@@ -1253,7 +1278,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (!profile.isOwnProfile || busy || uploading || deleting) return;
     setDeleting(kind);
     setError("");
-    setNotice("");
     try {
       const response = await fetch("/api/community/profile/" + userId, {
         method: "DELETE",
@@ -1269,7 +1293,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setSavedSnapshot((current) => kind === "avatar"
         ? { ...current, avatarUrl: null }
         : { ...current, bannerUrl: null });
-      setNotice(kind === "avatar" ? "Avatar retirado." : "Cartel retirado.");
       onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo retirar la imagen.");
@@ -1319,10 +1342,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </div>
         </header>
 
-        {(error || notice || !profile.appearanceReady) && (
+        {(error || !profile.appearanceReady) && (
           <div className="ps-community-editor-feedback-stack">
             {error && <div className="ps-community-editor-feedback is-error" role="alert">{error}</div>}
-            {notice && <div className="ps-community-editor-feedback is-success" role="status">{notice}</div>}
             {!profile.appearanceReady && (
               <div className="ps-community-editor-feedback is-pending" role="status">
                 Para guardar la apariencia, la placa y el estilo de nombre, aplica las migraciones de identidad comunitaria de esta rama en Supabase.
@@ -1333,6 +1355,21 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
         <div className="ps-community-editor-workspace ps-community-editor-workspace-discord">
           <aside className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
+
+            <section className="ps-community-editor-settings-section">
+              <label className="ps-community-editor-settings-section-title" htmlFor="ps-community-display-name">Nombre en la comunidad</label>
+              <input
+                id="ps-community-display-name"
+                className="ps-community-editor-display-name-input"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value.slice(0, 32))}
+                maxLength={32}
+                minLength={2}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Tu nombre"
+              />
+            </section>
 
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Placa de identificación</div>
@@ -1349,7 +1386,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </span>
                 <span className="ps-community-editor-nameplate-copy">
                   <strong className={"is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
-                  <small>{memberTag(profile.memberNumber)}</small>
+                  <small>{accountTag(profile.accountName)}</small>
                 </span>
                 <PlusCircle size={20}/>
               </button>
@@ -1412,7 +1449,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <Film size={15}/> Subir GIF
                   </button>
                 </div>
-                <small className="ps-community-editor-settings-hint">PNG, JPG, WebP o GIF · máximo 8 MB. Usa imágenes propias o con licencia.</small>
               </div>
             </section>
 
@@ -1477,7 +1513,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                   <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                   <div className="ps-community-editor-preview-identity-line">
-                    <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
+                    <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
                     <textarea
                       ref={pronounsTextareaRef}
                       className="ps-community-editor-preview-pronouns"
@@ -1777,7 +1813,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className={"ps-community-picker-avatar-large frame-" + draftAvatarFrame}>
                       {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    <strong>{displayName || "Tu nombre"}</strong><small>{memberTag(profile.memberNumber)}</small>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{accountTag(profile.accountName)}</small>
                   </div>
                 )}
                 {appearancePicker === "avatarDecoration" && (
@@ -1785,7 +1821,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className={"ps-community-picker-avatar-large is-decoration-" + draftDecorationId}>
                       {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    <strong>{displayName || "Tu nombre"}</strong><small>{memberTag(profile.memberNumber)}</small>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{accountTag(profile.accountName)}</small>
                   </div>
                 )}
                 {appearancePicker === "profileFrame" && (
@@ -1798,7 +1834,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           : initials(displayName || "PeakScore")}
                       </span>
                       <strong>{displayName || "Tu nombre"}</strong>
-                      <small>{memberTag(profile.memberNumber)}</small>
+                      <small>{accountTag(profile.accountName)}</small>
                       <span>PERFIL DE COMUNIDAD</span>
                     </div>
                   </article>
@@ -1813,7 +1849,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           : initials(displayName || "PeakScore")}
                       </span>
                       <strong>{displayName || "Tu nombre"}</strong>
-                      <small>{memberTag(profile.memberNumber)}</small>
+                      <small>{accountTag(profile.accountName)}</small>
                       <span>VISTA PREVIA DEL EFECTO</span>
                     </div>
                     <span className="ps-community-picker-card-preview-art" aria-hidden="true">
@@ -1922,18 +1958,25 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         }}>
           <section className="ps-community-avatar-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-picker-title">
             <header>
-              <div><span>PEAKSCORE / IDENTIDAD</span><h2 id="ps-community-avatar-picker-title">Cambiar avatar</h2><p>Elige una imagen fija o un GIF propio.</p></div>
+              <div><h2 id="ps-community-avatar-picker-title">Cambiar avatar</h2><p>Elige cómo quieres actualizar tu imagen.</p></div>
               <button type="button" onClick={() => setAvatarPickerOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
             </header>
             <div className="ps-community-avatar-picker-options">
-              <button type="button" onClick={() => { setAvatarPickerOpen(false); avatarInput.current?.click(); }} disabled={Boolean(uploading)}>
-                <span><ImagePlus size={22}/></span><strong>Subir imagen</strong><small>PNG, JPG o WebP</small>
+              <button type="button" className="is-image-choice" onClick={() => avatarInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art">
+                  {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : <ImagePlus size={28}/>}
+                </span>
+                <span className="ps-community-avatar-choice-copy"><strong>Elegir imagen</strong><small>PNG, JPG o WebP</small></span>
+                <span className="ps-community-avatar-choice-arrow"><Camera size={17}/></span>
               </button>
-              <button type="button" onClick={() => { setAvatarPickerOpen(false); avatarGifInput.current?.click(); }} disabled={Boolean(uploading)}>
-                <span><Film size={22}/></span><strong>Subir GIF</strong><small>Animación propia · máximo 5 MB</small>
+              <button type="button" className="is-gif-choice" onClick={() => avatarGifInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art is-gif-art"><Film size={28}/><i>GIF</i></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Elegir GIF</strong><small>Animación propia</small></span>
+                <span className="ps-community-avatar-choice-arrow"><Plus size={17}/></span>
               </button>
             </div>
-            <footer><span>Tu archivo se valida y optimiza antes de guardarse.</span><button type="button" onClick={() => setAvatarPickerOpen(false)}>Cancelar</button></footer>
+            {uploading === "avatar" && <div className="ps-community-avatar-picker-progress"><LoaderCircle size={15}/> Actualizando avatar…</div>}
+            <footer><button type="button" onClick={() => setAvatarPickerOpen(false)}>Cancelar</button></footer>
           </section>
         </div>
       )}
@@ -1944,11 +1987,17 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         }}>
           <section ref={avatarCropModalRef} className="ps-community-avatar-crop-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-crop-title">
             <header>
-              <div><span>PEAKSCORE / AVATAR</span><h2 id="ps-community-avatar-crop-title">Ajustar imagen</h2></div>
+              <div><h2 id="ps-community-avatar-crop-title">Ajustar avatar</h2><p>Arrastra la imagen para encuadrarla.</p></div>
               <button type="button" onClick={closeAvatarCrop} aria-label="Cerrar recorte"><X size={18}/></button>
             </header>
-            <div className="ps-community-avatar-crop-stage">
-              <Image src={avatarCropUrl} alt="Vista previa del recorte" fill unoptimized sizes="252px" style={{
+            <div
+              className="ps-community-avatar-crop-stage"
+              onPointerDown={handleAvatarCropPointerDown}
+              onPointerMove={handleAvatarCropPointerMove}
+              onPointerUp={handleAvatarCropPointerUp}
+              onPointerCancel={handleAvatarCropPointerUp}
+            >
+              <Image src={avatarCropUrl} alt="Vista previa del recorte" fill unoptimized sizes="320px" draggable={false} style={{
                 transform: "scale(" + avatarCropZoom + ")",
                 transformOrigin: avatarCropX + "% " + avatarCropY + "%",
               }}/>
@@ -1956,13 +2005,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </div>
             <div className="ps-community-avatar-crop-controls">
               <label><span>Zoom</span><input type="range" min="1" max="3" step="0.05" value={avatarCropZoom} onChange={(event) => setAvatarCropZoom(Number(event.target.value))}/></label>
-              <label><span>Ajuste horizontal</span><input type="range" min="0" max="100" value={avatarCropX} onChange={(event) => setAvatarCropX(Number(event.target.value))}/></label>
-              <label><span>Ajuste vertical</span><input type="range" min="0" max="100" value={avatarCropY} onChange={(event) => setAvatarCropY(Number(event.target.value))}/></label>
             </div>
-            <p>Los GIF mantienen su animación y se cargan sin este recorte estático.</p>
             <footer>
               <button type="button" onClick={closeAvatarCrop}>Cancelar</button>
-              <button type="button" className="is-primary" onClick={confirmAvatarCrop}>Aplicar recorte</button>
+              <button type="button" className="is-primary" onClick={confirmAvatarCrop}>Aplicar</button>
             </footer>
           </section>
         </div>
@@ -1991,7 +2037,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
               <div className="ps-community-status-profile-copy" style={{ color: "var(--status-theme-text)" }}>
                 <strong className={"is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd } as CSSProperties}>{displayName || "Tu perfil"}</strong>
-                <small>{memberTag(profile.memberNumber)}</small>
+                <small>{accountTag(profile.accountName)}</small>
                 {pronouns && <small>{pronouns}</small>}
               </div>
             </div>
@@ -2209,6 +2255,51 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-name-custom-picker-root{position:relative!important;display:flex!important;flex:1 1 auto!important;min-width:0!important}
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-width:0!important}
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-custom-picker{position:absolute!important;z-index:80!important;left:0!important;bottom:calc(100% + 9px)!important;width:min(292px,calc(100vw - 48px))!important}
+
+/* Refined avatar chooser and cropper: compact, media-led and keyboard-friendly. */
+.ps-community-editor-display-name-input{display:block!important;width:100%!important;min-height:40px!important;padding:0 12px!important;border:1px solid #3a3d45!important;border-radius:9px!important;background:#1b1d22!important;color:#f2f3f5!important;font-size:13px!important;font-weight:600!important;outline:none!important;transition:border-color .14s ease,box-shadow .14s ease!important}
+.ps-community-editor-display-name-input:focus{border-color:#697cf1!important;box-shadow:0 0 0 3px rgb(88 101 242 / 17%)!important}
+.ps-community-avatar-picker-modal{width:min(500px,calc(100vw - 32px))!important;border-radius:16px!important;background:#202127!important}
+.ps-community-avatar-picker-modal>header{align-items:center!important;padding:20px 22px!important}
+.ps-community-avatar-picker-modal>header h2{font-size:19px!important;letter-spacing:-.02em!important}
+.ps-community-avatar-picker-modal>header p{margin-top:5px!important;font-size:12px!important}
+.ps-community-avatar-picker-options{grid-template-columns:1fr 1fr!important;gap:12px!important;padding:18px 20px 20px!important}
+.ps-community-avatar-picker-options>button{position:relative!important;display:grid!important;grid-template-columns:76px minmax(0,1fr) 30px!important;align-items:center!important;justify-items:stretch!important;gap:12px!important;min-height:104px!important;padding:12px!important;border:1px solid #3a3d46!important;border-radius:12px!important;background:#272930!important;text-align:left!important}
+.ps-community-avatar-picker-options>button:hover{transform:none!important;border-color:#687cf2!important;background:#2b2e38!important}
+.ps-community-avatar-choice-art{position:relative!important;display:grid!important;width:76px!important;height:76px!important;place-items:center!important;overflow:hidden!important;border:1px solid #454a55!important;border-radius:10px!important;background:#1a1c21!important;color:#c9d0dd!important}
+.ps-community-avatar-choice-art>img{width:100%!important;height:100%!important;object-fit:cover!important}
+.ps-community-avatar-choice-art.is-gif-art{background:linear-gradient(140deg,#353849,#242631)!important;color:#e2e6f7!important}
+.ps-community-avatar-choice-art.is-gif-art i{position:absolute!important;right:5px!important;bottom:5px!important;padding:2px 5px!important;border-radius:4px!important;background:#5865f2!important;color:#fff!important;font-size:9px!important;font-style:normal!important;font-weight:800!important;letter-spacing:.04em!important}
+.ps-community-avatar-choice-copy{display:grid!important;gap:5px!important;min-width:0!important}
+.ps-community-avatar-choice-copy strong{color:#f2f3f5!important;font-size:13px!important;font-weight:750!important}
+.ps-community-avatar-choice-copy small{color:#9da4b1!important;font-size:10px!important;line-height:1.3!important}
+.ps-community-avatar-choice-arrow{display:grid!important;width:28px!important;height:28px!important;place-items:center!important;border:1px solid #414652!important;border-radius:50%!important;background:#202229!important;color:#bfc6d4!important}
+.ps-community-avatar-picker-progress{display:flex!important;align-items:center!important;gap:8px!important;padding:0 22px 12px!important;color:#c4c9d3!important;font-size:11px!important}
+.ps-community-avatar-picker-progress svg{animation:ps-community-avatar-spin .9s linear infinite!important}
+@keyframes ps-community-avatar-spin{to{transform:rotate(360deg)}}
+.ps-community-avatar-picker-modal>footer{justify-content:flex-end!important}
+.ps-community-avatar-picker-modal>footer button{min-width:84px!important;min-height:34px!important;border-radius:8px!important}
+.ps-community-avatar-crop-modal{width:min(540px,calc(100vw - 28px))!important;border-radius:16px!important}
+.ps-community-avatar-crop-modal>header{align-items:center!important;padding:18px 21px!important}
+.ps-community-avatar-crop-modal>header h2{font-size:19px!important;letter-spacing:-.02em!important}
+.ps-community-avatar-crop-modal>header p{margin:4px 0 0!important;color:#969eab!important;font-size:11px!important}
+.ps-community-avatar-crop-stage{width:min(340px,calc(100vw - 84px))!important;height:min(340px,calc(100vw - 84px))!important;margin:22px auto 18px!important;border:1px solid #4b5260!important;border-radius:50%!important;background:#121419!important;touch-action:none!important;cursor:grab!important;user-select:none!important}
+.ps-community-avatar-crop-stage:active{cursor:grabbing!important}
+.ps-community-avatar-crop-stage>img{width:100%!important;height:100%!important;object-fit:cover!important;pointer-events:none!important;user-select:none!important}
+.ps-community-avatar-crop-stage>span{border:2px solid rgb(255 255 255 / 85%)!important;border-radius:50%!important;box-shadow:0 0 0 999px rgb(0 0 0 / 48%),inset 0 0 0 1px rgb(0 0 0 / 20%)!important}
+.ps-community-avatar-crop-controls{padding:0 26px 20px!important}
+.ps-community-avatar-crop-controls label{grid-template-columns:54px minmax(0,1fr)!important;font-size:12px!important}
+.ps-community-avatar-crop-controls input[type=range]{accent-color:#5865f2!important;cursor:pointer!important;touch-action:pan-y!important}
+.ps-community-avatar-crop-modal>footer{padding:15px 20px!important}
+.ps-community-avatar-crop-modal>footer button{min-height:38px!important;padding-inline:16px!important;border-radius:9px!important}
+.ps-community-avatar-crop-modal>footer button.is-primary{border-color:#5865f2!important;background:#5865f2!important}
+@media(max-width:560px){
+ .ps-community-avatar-picker-options{grid-template-columns:1fr!important}
+ .ps-community-avatar-picker-options>button{min-height:92px!important}
+ .ps-community-avatar-choice-art{width:64px!important;height:64px!important}
+ .ps-community-avatar-picker-options>button{grid-template-columns:64px minmax(0,1fr) 28px!important}
+ .ps-community-avatar-crop-stage{width:min(300px,calc(100vw - 72px))!important;height:min(300px,calc(100vw - 72px))!important}
+}
 `}</style>
     </div>
     </div>,

@@ -350,12 +350,15 @@ export default function CommunityFounderStudio({
     if (!initialChannelId || channels.length === 0) return;
     const target = channels.find((channel) => channel.id === initialChannelId);
     if (!target) return;
-    setTab("channels");
-    setIsCreatingCategory(false);
-    setIsCreatingChannel(false);
-    setSelectedCategoryId(null);
-    setSelectedChannelId(target.id);
-    setChannelForm(toChannelForm(target));
+    const frame = window.requestAnimationFrame(() => {
+      setTab("channels");
+      setIsCreatingCategory(false);
+      setIsCreatingChannel(false);
+      setSelectedCategoryId(null);
+      setSelectedChannelId(target.id);
+      setChannelForm(toChannelForm(target));
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [channels, initialChannelId]);
 
   const visibleMembers = useMemo(() => {

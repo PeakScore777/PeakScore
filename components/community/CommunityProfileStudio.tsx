@@ -716,17 +716,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
     || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
   const profileThemeInk = readableThemeText(cardColor, themeColorSecondary);
-  const profileThemeOutline = "transparent";
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
     "--editor-theme-text": profileThemeInk,
     "--editor-theme-body-text": profileThemeInk,
     "--editor-theme-bottom-text": profileThemeInk,
-    "--editor-theme-outline": profileThemeOutline,
-    "--status-theme-text": profileThemeInk,
-    "--status-theme-outline": profileThemeOutline,
-  } as CSSProperties;
+        "--status-theme-text": profileThemeInk,
+      } as CSSProperties;
 
   function updateCardColor(nextColor: string) {
     if (!/^#[0-9a-f]{6}$/i.test(nextColor)) return;
@@ -1323,7 +1320,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, "--editor-theme-outline": profileThemeOutline } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner" + (profile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
@@ -1832,7 +1829,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-name-preview-stage" style={{ "--status-theme-text": profileThemeInk, "--status-theme-outline": profileThemeOutline, "--editor-theme-text": profileThemeInk, "--editor-theme-outline": profileThemeOutline } as CSSProperties}>
+                  <div className="ps-community-name-preview-stage" style={{ "--status-theme-text": profileThemeInk, "--editor-theme-text": profileThemeInk, } as CSSProperties}>
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
                       <article className="ps-community-name-style-profile-preview"
@@ -1841,8 +1838,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           "--status-theme": cardColor,
                           "--status-theme-secondary": themeColorSecondary,
                           "--status-theme-text": profileThemeInk,
-                          "--status-theme-outline": profileThemeOutline,
-                          "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none",
+                                                    "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none",
                           "--name-gradient-start": draftDisplayNameGradientStart,
                           "--name-gradient-end": draftDisplayNameGradientEnd,
                           "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
@@ -2053,7 +2049,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
 
-            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": profileThemeInk, "--status-theme-outline": profileThemeOutline, "--editor-theme-outline": profileThemeOutline, "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": profileThemeInk, "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
               <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
@@ -2555,7 +2551,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
 }
 .ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
-  right:-5px!important;bottom:-1px!important;width:20px!important;height:20px!important;
+  right:3px!important;bottom:3px!important;width:20px!important;height:20px!important;
   box-sizing:border-box!important;border:4px solid var(--status-theme,#B7D7C3)!important;
   border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
 }
@@ -2777,8 +2773,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-bio-display,
 .ps-community-editor-preview-card .ps-community-editor-preview-role-row,
 .ps-community-editor-preview-card .ps-community-editor-preview-role-row * {
-  -webkit-text-stroke:.22px var(--editor-theme-outline,transparent)!important;
-  text-shadow:0 1px 1px color-mix(in srgb,var(--editor-theme-outline,transparent) 42%,transparent)!important;
+  -webkit-text-stroke:0 transparent!important;text-shadow:none!important;
 }
 
 /* One aligned, left-anchored member name row, using the same text treatment as chat. */
@@ -2965,7 +2960,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar>.ps-community-editor-presence-dot,
 .ps-community-name-style-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot,
 .ps-community-status-profile-preview>.ps-community-status-preview-avatar>.ps-community-editor-presence-dot {
-  right:-2px!important;bottom:1px!important;width:24px!important;height:24px!important;
+  right:3px!important;bottom:3px!important;width:24px!important;height:24px!important;
   box-sizing:border-box!important;border:5px solid var(--editor-card,var(--status-theme,#B7D7C3))!important;
   border-radius:50%!important;background:#23a55a!important;outline:0!important;box-shadow:none!important;
 }

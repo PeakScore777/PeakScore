@@ -4700,88 +4700,84 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     gap:8px!important;width:auto!important;
   }
 }
-/* The workspace reaches the bottom edge of the editor shell. The profile
-   card itself keeps its existing dimensions and top offset. */
+/* Discord-style editor shell: size the dialog to the actual workspace.
+   The old fixed 980px shell left an empty panel below the two editor columns. */
 .ps-community-editor-overlay {
   place-items:start center!important;
   padding:16px!important;
 }
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] {
+.ps-community-editor-v2 {
   display:flex!important;
   flex-direction:column!important;
-  height:min(980px,calc(100dvh - 32px))!important;
+  height:auto!important;
   max-height:calc(100dvh - 32px)!important;
   min-height:0!important;
   overflow:hidden!important;
 }
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] > main.ps-community-editor-main {
+.ps-community-editor-main {
   position:relative!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr)!important;
-  grid-template-rows:auto auto minmax(0,1fr)!important;
-  align-content:stretch!important;
-  flex:1 1 0!important;
+  display:flex!important;
+  flex:0 1 auto!important;
+  flex-direction:column!important;
   width:100%!important;
-  height:100%!important;
+  height:auto!important;
   min-width:0!important;
   min-height:0!important;
+  margin:0!important;
+  padding:0!important;
   overflow:hidden!important;
 }
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-header {
-  grid-row:1!important;
-  min-width:0!important;
+.ps-community-editor-header {
+  flex:0 0 auto!important;
+  margin:0!important;
+  border:0!important;
+  border-bottom:0!important;
+  box-shadow:none!important;
 }
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-feedback-stack {
-  grid-row:2!important;
-  min-width:0!important;
-}
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
+.ps-community-editor-workspace-discord {
   display:grid!important;
-  grid-row:3!important;
   grid-template-columns:220px minmax(0,1fr)!important;
-  grid-template-rows:minmax(0,1fr)!important;
+  flex:0 1 auto!important;
   align-self:stretch!important;
-  flex:none!important;
   width:100%!important;
-  height:100%!important;
+  height:auto!important;
   min-width:0!important;
   min-height:0!important;
+  margin:0!important;
+  border-top:0!important;
+  box-shadow:none!important;
   overflow:hidden!important;
 }
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-settings-sidebar {
+.ps-community-editor-settings-sidebar {
+  align-self:stretch!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:calc(100dvh - 120px)!important;
   min-width:0!important;
   min-height:0!important;
-  height:100%!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
 }
-div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-preview-column {
+.ps-community-editor-preview-column {
+  align-self:stretch!important;
+  width:100%!important;
+  height:auto!important;
   min-width:0!important;
   min-height:0!important;
-  height:100%!important;
-  padding:104px 22px 106px!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
+  overflow-x:hidden!important;
+  overflow-y:visible!important;
 }
 @media(max-width:980px) and (min-width:761px) {
-  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
+  .ps-community-editor-workspace-discord {
     grid-template-columns:208px minmax(0,1fr)!important;
   }
 }
 @media(max-width:760px) {
-  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] {
-    height:calc(100dvh - 16px)!important;
-    max-height:calc(100dvh - 16px)!important;
-  }
-  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] > main.ps-community-editor-main {
-    grid-template-rows:auto auto minmax(0,1fr)!important;
-  }
-  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-workspace-discord {
-    grid-template-columns:minmax(0,1fr)!important;
-  }
-  div.ps-community-editor-overlay > div.ps-community-editor-v2[role="dialog"] .ps-community-editor-preview-column {
-    padding:10px 10px 96px!important;
-  }
+  .ps-community-editor-overlay {padding:8px!important;}
+  .ps-community-editor-v2 {width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)!important;}
+  .ps-community-editor-workspace-discord {grid-template-columns:minmax(0,1fr)!important;}
+  .ps-community-editor-settings-sidebar {max-height:34vh!important;}
+  .ps-community-editor-preview-column {overflow:visible!important;}
 }
 /* Save notice sits on the yellow guide, below the card, inside the right pane. */
 .ps-community-editor-savebar {

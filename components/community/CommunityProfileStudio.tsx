@@ -4901,13 +4901,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   .ps-community-editor-settings-sidebar {max-height:34vh!important;}
   .ps-community-editor-preview-column {overflow:visible!important;}
 }
-/* Save notice sits on the yellow guide, below the card, inside the right pane. */
+/* Save notice sits on the blue guide at the bottom-right of the preview pane. */
 .ps-community-editor-savebar {
   position:absolute!important;
   z-index:30!important;
   left:auto!important;
-  right:calc((100% - min(420px,100%))/2 - 209px)!important;
-  bottom:20px!important;
+  right:32px!important;
+  bottom:12px!important;
   width:min(420px,calc(100% - 32px))!important;
   max-width:420px!important;
   display:flex!important;
@@ -4950,7 +4950,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     grid-template-columns:208px minmax(0,1fr)!important;
   }
   .ps-community-editor-savebar {
-    left:auto!important;right:calc((100% - min(420px,100%))/2 - 209px)!important;
+    left:auto!important;right:32px!important;bottom:12px!important;
     width:min(420px,calc(100% - 32px))!important;
   }
 }

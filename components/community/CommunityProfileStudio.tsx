@@ -1203,14 +1203,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
   return createPortal(
     <div
-      className={"ps-community-editor-overlay" + (closeConfirmationOpen ? " is-close-confirming" : "")}
+      className="ps-community-editor-overlay"
+      data-close-confirming={closeConfirmationOpen ? "true" : undefined}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestEditorClose();
       }}
     >
     <div
-      className={"ps-community-editor-v2" + (closeConfirmationOpen ? " is-close-confirming" : "")}
+      className="ps-community-editor-v2"
+      data-close-confirming={closeConfirmationOpen ? "true" : undefined}
       style={previewStyle}
       role="dialog"
       aria-modal="true"
@@ -3253,7 +3255,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:relative!important;
   transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s ease!important;
 }
-.ps-community-editor-v2.is-close-confirming {
+.ps-community-editor-v2[data-close-confirming="true"] {
   transform:translateX(-28px) scale(.992)!important;
   box-shadow:0 0 0 1px rgb(239 68 68 / 22%),0 22px 70px rgb(0 0 0 / 42%)!important;
 }
@@ -3290,7 +3292,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   to {opacity:1;transform:translate(-50%,0)}
 }
 @media(max-width:760px) {
-  .ps-community-editor-v2.is-close-confirming {transform:translateX(0) scale(.995)!important}
+  .ps-community-editor-v2[data-close-confirming="true"] {transform:translateX(0) scale(.995)!important}
   .ps-community-editor-close-confirm {
     bottom:8px!important;flex-direction:column!important;align-items:stretch!important;
     gap:10px!important;width:calc(100% - 16px)!important;padding:12px!important;

@@ -1344,7 +1344,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, } as CSSProperties}>
+              <article className={"ps-community-profile-dialog ps-community-profile-live-card ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": profileThemeInk, "--editor-theme-body-text": profileThemeInk, "--editor-theme-bottom-text": profileThemeInk, } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner" + (profile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
@@ -1410,7 +1410,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   />                  <div className="ps-community-editor-preview-identity-line">
                     {accountTag(profile.accountName) && (
                       <>
-                        <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
+                        <span className="ps-community-editor-preview-tag">{"@" + accountTag(profile.accountName)}</span>
                         <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
                       </>
                     )}
@@ -1472,7 +1472,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
         {(hasUnsavedChanges || hasPickerChanges) && (
           <div className={"ps-community-editor-savebar" + (closeConfirmationOpen ? " is-close-warning" : "")} role="status" aria-live="polite">
-            <span>"¡No te olvides de guardar los cambios!"</span>
+            <span>¡No te olvides de guardar los cambios!</span>
             <div>
               <button type="button" className="is-secondary" onClick={() => {
                 const shouldCloseAfterReset = closeConfirmationOpen;
@@ -3231,6 +3231,78 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   color:var(--status-theme-text,#202126)!important;
   -webkit-text-fill-color:var(--status-theme-text,#202126)!important;
   opacity:.86!important;
+}
+/* The preview reuses the exact dimensions, rounded shell and child geometry
+   of the published profile dialog. The card no longer stretches to fill the pane. */
+.ps-community-editor-preview-frame {
+  display:flex!important;align-items:flex-start!important;justify-content:center!important;
+  width:100%!important;min-width:0!important;min-height:100%!important;
+  box-sizing:border-box!important;padding:22px 16px!important;
+  overflow:auto!important;overscroll-behavior:contain!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  display:flex!important;flex:0 0 auto!important;flex-direction:column!important;
+  width:min(458px,calc(100vw - 24px))!important;max-width:458px!important;
+  height:min(720px,calc(100dvh - 24px))!important;
+  min-height:0!important;max-height:calc(100dvh - 24px)!important;
+  margin:0 auto!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #363941!important;border-radius:16px!important;
+  background:#202126!important;box-shadow:0 24px 65px rgb(0 0 0 / 30%)!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;z-index:2!important;display:block!important;
+  flex:0 0 184px!important;width:100%!important;min-height:184px!important;max-height:184px!important;
+  overflow:visible!important;border-radius:15px 15px 0 0!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;display:block!important;width:100%!important;
+  height:184px!important;min-height:184px!important;max-height:184px!important;
+  overflow:hidden!important;border-radius:15px 15px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;background-position:center!important;background-size:cover!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-preview-frame {padding:14px 10px!important}
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+    width:min(458px,calc(100vw - 36px))!important;
+    height:min(720px,calc(100dvh - 36px))!important;
+    max-height:calc(100dvh - 36px)!important;
+  }
+}
+/* The warning bar is a real footer, not unstyled content below the workspace. */
+.ps-community-editor-savebar {
+  position:relative!important;z-index:12!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:16px!important;width:min(720px,calc(100% - 32px))!important;
+  min-height:68px!important;box-sizing:border-box!important;
+  margin:0 auto 12px!important;padding:11px 14px 11px 18px!important;
+  border:1px solid #393d46!important;border-radius:13px!important;
+  background:#202126!important;color:#e8eaf0!important;
+  box-shadow:0 12px 32px rgb(0 0 0 / 24%)!important;
+  font-size:12px!important;font-weight:750!important;
+}
+.ps-community-editor-savebar>span {flex:1 1 auto!important;min-width:0!important;color:#e8eaf0!important}
+.ps-community-editor-savebar>div {display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex:0 0 auto!important}
+.ps-community-editor-savebar button {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+  min-width:96px!important;min-height:38px!important;padding:0 13px!important;
+  border:1px solid #3d424c!important;border-radius:8px!important;
+  font-size:12px!important;font-weight:800!important;cursor:pointer!important;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease!important;
+}
+.ps-community-editor-savebar .is-secondary {background:#292c33!important;color:#e7e9ef!important}
+.ps-community-editor-savebar .is-secondary:hover:not(:disabled) {background:#343842!important;border-color:#555d6b!important}
+.ps-community-editor-savebar .is-primary {background:#5865f2!important;border-color:#5865f2!important;color:#fff!important;box-shadow:0 3px 10px rgb(88 101 242 / 20%)!important}
+.ps-community-editor-savebar .is-primary:hover:not(:disabled) {background:#6978ff!important;border-color:#6978ff!important;transform:translateY(-1px)!important}
+.ps-community-editor-savebar button:disabled {opacity:.55!important;cursor:not-allowed!important}
+@media(max-width:560px) {
+  .ps-community-editor-savebar {width:calc(100% - 16px)!important;gap:8px!important;padding:9px!important}
+  .ps-community-editor-savebar>span {font-size:11px!important}
+  .ps-community-editor-savebar button {min-width:0!important;min-height:36px!important;padding:0 9px!important}
 }
 /* Premium Discord-style unsaved state: the editor shifts slightly and its
    own footer turns red. Reset restores the last saved snapshot; Save persists it. */

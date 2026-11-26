@@ -4121,6 +4121,53 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     min-height:900px!important;
   }
 }
+
+/* The preview frame must occupy the entire right grid column.
+   Previously it collapsed to a narrow intrinsic width, clipping the fixed
+   572px profile card at the left edge. */
+.ps-community-editor-preview-column {
+  display:flex!important;
+  flex:1 1 0%!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:0!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  overflow:hidden!important;
+}
+.ps-community-editor-preview-frame {
+  display:flex!important;
+  flex:1 1 0%!important;
+  align-self:stretch!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:100%!important;
+  box-sizing:border-box!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  padding:16px 12px 24px!important;
+  overflow-x:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  scrollbar-gutter:stable!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
+  flex:0 0 572px!important;
+  width:572px!important;
+  min-width:572px!important;
+  max-width:572px!important;
+  height:900px!important;
+  min-height:900px!important;
+  max-height:none!important;
+  margin:0 auto!important;
+}
+@media(max-width:620px) {
+  .ps-community-editor-preview-frame {
+    justify-content:flex-start!important;
+  }
+}
 `}</style>
     </div>
     </div>,

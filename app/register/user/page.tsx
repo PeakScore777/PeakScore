@@ -248,7 +248,7 @@ export default function RegisterPage() {
         password,
         options: {
           captchaToken,
-          data: { full_name: cleanName },
+          data: { full_name: cleanName, name: cleanName },
         },
       });
 

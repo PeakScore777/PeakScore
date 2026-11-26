@@ -4991,6 +4991,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 
 
+/* Anchor the save notice to the OUTER editor dialog, not the preview workspace.
+   This places it in the empty bottom band marked in blue. */
+.ps-community-editor-v2 {
+  position:relative!important;
+}
+.ps-community-editor-main {
+  position:static!important;
+}
+.ps-community-editor-savebar {
+  right:32px!important;
+  bottom:12px!important;
+}
+
+
 `}</style>
     </div>
     </div>,

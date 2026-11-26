@@ -4488,7 +4488,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
   left:148px!important;
-  top:18px!important;
+  top:42px!important;
   bottom:auto!important;
   width:max-content!important;
   min-width:146px!important;
@@ -4508,7 +4508,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   align-items:center!important;
   flex-wrap:wrap!important;
   gap:10px!important;
-  margin:0 0 26px -1px!important;
+  margin:0 0 26px -2px!important;
 }
 .ps-community-editor-preview-card .ps-community-editor-preview-role-row {
   margin:0 0 34px!important;

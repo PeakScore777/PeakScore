@@ -1511,7 +1511,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                  <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? readableThemeText(cardColor) } as CSSProperties}/>
                   <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{accountTag(profile.accountName)}</span>
                     <textarea
@@ -2258,6 +2258,47 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after {
   display:none !important; content:none !important; animation:none !important; box-shadow:none !important;
 }
+
+/* Presence dots: solid green, without the dark outer ring, in every editor preview. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot {
+  width: 18px !important;
+  height: 18px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: #23a55a !important;
+  box-shadow: none !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-offline,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot.is-offline,
+.ps-community-status-profile-preview .ps-community-editor-presence-dot.is-offline {
+  background: #747b86 !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot::after,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot::before,
+.ps-community-name-style-profile-preview .ps-community-editor-presence-dot::after {
+  display: none !important;
+  content: none !important;
+  box-shadow: none !important;
+}
+/* Theme-aware identity ink: the name and account handle follow the card contrast. */
+.ps-community-editor-preview-card .ps-community-editor-preview-name-static.color-default {
+  color: var(--editor-theme-text, #f2f3f5) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #f2f3f5) !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  color: var(--editor-theme-text, #f2f3f5) !important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy {
+  color: var(--status-theme-text, #202126) !important;
+}
+.ps-community-name-style-profile-preview .ps-community-name-style-profile-copy > strong.color-default {
+  color: var(--status-theme-text, #202126) !important;
+  -webkit-text-fill-color: var(--status-theme-text, #202126) !important;
+}
+
 /* Pronouns behave like a compact, theme-integrated multiline identity field. */
 .ps-community-editor-preview-identity-line {
   display: flex !important;

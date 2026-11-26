@@ -949,7 +949,7 @@ export default function CommunityPage() {
           roleRows = (legacyRoles.data ?? []) as typeof roleRows;
         }
       }
-      if (isFounder && activeSpace?.space_type !== "preicfes" && ids.includes(userId)) {
+      if (isFounder && typeof userId === "string" && activeSpace?.space_type !== "preicfes" && ids.includes(userId)) {
         // Founder is a reserved platform role and must always be hoisted above
         // configurable community roles in the Discord-style member list.
         roleRows = roleRows.filter((role) => !(role.user_id === userId && role.role_key === "fundador"));

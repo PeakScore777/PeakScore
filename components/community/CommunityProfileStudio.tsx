@@ -3444,9 +3444,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   background:none!important;filter:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;
 }
 
-/* Final preview correction: keep the profile card at the same 458x720
-   composition as the public profile. Only the editor workspace may scroll;
-   the preview viewport itself must never crop the card or show scrollbars. */
+/* Profile preview mirrors the public profile composition: larger card,
+   full-size avatar overlapping the banner, and the status bubble beside it. */
 .ps-community-editor-preview-column {
   display:flex!important;
   align-items:stretch!important;
@@ -3470,44 +3469,243 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
   position:relative!important;
-  inset:auto!important;
+  display:flex!important;
   flex:0 1 auto!important;
-  width:min(458px,100%)!important;
+  flex-direction:column!important;
+  width:min(530px,100%)!important;
   min-width:0!important;
-  max-width:458px!important;
-  height:min(720px,100%)!important;
+  max-width:530px!important;
+  height:min(900px,100%)!important;
   min-height:0!important;
-  max-height:720px!important;
+  max-height:900px!important;
   margin:0!important;
+  padding:0!important;
   transform:none!important;
   overflow:hidden!important;
   box-sizing:border-box!important;
+  border-radius:14px!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor {
+  position:relative!important;
+  z-index:2!important;
+  display:block!important;
+  flex:0 0 231px!important;
+  width:100%!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-banner-anchor>.ps-community-editor-preview-banner {
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  height:231px!important;
+  min-height:231px!important;
+  max-height:231px!important;
+  overflow:hidden!important;
+  border-radius:13px 13px 0 0!important;
+  background-color:var(--editor-banner-background,#20242d)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:cover!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+  position:relative!important;
+  z-index:3!important;
+  display:flex!important;
   flex:1 1 auto!important;
+  flex-direction:column!important;
   min-width:0!important;
   min-height:0!important;
+  padding:0 32px 24px!important;
   overflow-x:hidden!important;
   overflow-y:auto!important;
   scrollbar-width:none!important;
   -ms-overflow-style:none!important;
+  overscroll-behavior:contain!important;
 }
 .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body::-webkit-scrollbar {
   display:none!important;
   width:0!important;
   height:0!important;
 }
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+  position:relative!important;
+  display:block!important;
+  flex:0 0 142px!important;
+  width:100%!important;
+  min-height:142px!important;
+  height:142px!important;
+  margin:-77px 0 22px!important;
+  overflow:visible!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor {
+  position:absolute!important;
+  z-index:5!important;
+  left:0!important;
+  top:0!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger {
+  display:block!important;
+  width:142px!important;
+  height:142px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  position:relative!important;
+  display:grid!important;
+  width:142px!important;
+  height:142px!important;
+  box-sizing:border-box!important;
+  place-items:center!important;
+  overflow:visible!important;
+  border:8px solid var(--editor-card,#b7d7c3)!important;
+  border-radius:50%!important;
+  background:#36383f!important;
+  color:#fff!important;
+  font-size:25px!important;
+  font-weight:850!important;
+  box-shadow:0 0 0 2px #232428,0 9px 22px rgb(0 0 0 / 36%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar>img {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+  position:absolute!important;
+  z-index:7!important;
+  left:190px!important;
+  bottom:19px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:calc(100% - 190px)!important;
+  min-height:44px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:11px 17px!important;
+  overflow:visible!important;
+  border:1px solid #454850!important;
+  border-radius:19px 19px 19px 9px!important;
+  background:linear-gradient(180deg,#32343a 0%,#292b30 100%)!important;
+  color:#f2f3f5!important;
+  font:600 14px/1.35 var(--font-geist-sans),sans-serif!important;
+  box-shadow:0 7px 18px rgb(0 0 0 / 38%),inset 0 1px 0 rgb(255 255 255 / 5%)!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  border-radius:50%!important;
+  background:#2b2d31!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::before {
+  left:-10px!important;bottom:1px!important;width:10px!important;height:10px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble::after {
+  left:-17px!important;bottom:-5px!important;width:6px!important;height:6px!important;
+  box-shadow:0 0 0 2px #232428!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-text {
+  position:relative!important;
+  z-index:1!important;
+  display:block!important;
+  overflow-wrap:anywhere!important;
+}
+.ps-community-editor-preview-card .ps-community-note-bubble-edit {
+  position:relative!important;
+  z-index:1!important;
+  flex:0 0 auto!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-name-input {
+  width:max-content!important;
+  max-width:100%!important;
+  height:38px!important;
+  min-height:38px!important;
+  margin:0 0 10px!important;
+  padding:2px 4px!important;
+  font-size:32px!important;
+  line-height:1.15!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  gap:10px!important;
+  margin:0 0 32px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-tag {
+  min-height:30px!important;
+  padding:0 11px!important;
+  font-size:14px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-pronouns {
+  font-size:14px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-role-row {
+  min-height:27px!important;
+  margin:0 0 43px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about {
+  margin:0 0 68px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading {
+  margin-bottom:20px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading>span {
+  font-size:15px!important;
+  font-weight:750!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-about-heading>small {
+  font-size:12px!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-bio-display {
+  margin:0!important;
+  padding:0!important;
+  font-size:19px!important;
+  line-height:1.5!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-meta {
+  margin-top:auto!important;
+  padding-top:0!important;
+}
 @media(max-width:760px) {
-  .ps-community-editor-preview-column {overflow:hidden!important}
-  .ps-community-editor-preview-frame {padding:0!important}
   .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card {
-    width:min(458px,100%)!important;
-    height:min(720px,100%)!important;
-    max-height:720px!important;
+    width:min(530px,100%)!important;
+    height:min(900px,100%)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
+    flex-basis:clamp(108px,26.8vw,142px)!important;
+    min-height:clamp(108px,26.8vw,142px)!important;
+    height:clamp(108px,26.8vw,142px)!important;
+    margin-top:calc(clamp(108px,26.8vw,142px) * -.54)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-anchor,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-trigger,
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+    width:clamp(108px,26.8vw,142px)!important;
+    height:clamp(108px,26.8vw,142px)!important;
+  }
+  .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row>.ps-community-note-bubble {
+    left:36%!important;
+    bottom:8%!important;
+    max-width:58%!important;
+  }
+  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card>.ps-community-editor-preview-body {
+    padding:0 6% 20px!important;
   }
 }
-
-
 `}</style>
     </div>
     </div>,

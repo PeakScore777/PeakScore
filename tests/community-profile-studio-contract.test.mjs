@@ -295,7 +295,10 @@ test("community member numbers are stable, unique, positive public identifiers",
   assert.match(route, /member_number,display_name/);
   assert.match(route, /memberNumber: profileResult\.data\.member_number/);
   assert.match(route, /memberNumber: data\.member_number/);
-  assert.match(studio, /memberTag\(profile\.memberNumber\)/);
+  assert.match(studio, /accountTag\(profile\.accountName\)/);
+  assert.match(studio, /id="ps-community-display-name"/);
+  assert.match(route, /const displayName = typeof payload\.displayName === "string"/);
+  assert.match(route, /display_name: displayName/);
 });
 
 test("profile update is atomic and owner-scoped", () => {
@@ -1064,25 +1067,26 @@ test("member rail keeps the selected name font visible inside the flexible copy 
   assert.ok(memberCopyRules.every((match) => /width:auto !important/.test(match[1])), "No later rule may collapse the member name column.");
   assert.doesNotMatch(nameStyleCss, /(?:^|\n)\.community-member-copy\s*\{[^}]*width:0 !important/);
   assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
-  assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
+  assert.match(page, /<CommunityAnimatedName[\s\S]*?value=\{member\.full_name\}[\s\S]*?animation=\{communityNameAnimation\(member\.display_name_animation\)\}/);
   assert.match(page, /is-name-style-\\" \+ \(member\.display_name_style/);
 });
 
-test("only the profile runs the selected entrance animation; member and chat names stay static but styled", () => {
+test("saved entrance animations run consistently in profile, member rail, chat and all three editor previews", () => {
   assert.match(page, /function CommunityStaticName/);
-  assert.match(page, /<CommunityStaticName[\s\S]*?message\.author\.full_name/);
-  assert.match(page, /<CommunityStaticName[\s\S]*?member\.full_name/);
   assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
   assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
-  assert.equal((page.match(/<CommunityAnimatedName/g) ?? []).length, 1);
+  assert.match(page, /<CommunityAnimatedName[\s\S]*?message\.author\.full_name[\s\S]*?animation=\{communityNameAnimation\(message\.author\.display_name_animation\)\}/);
+  assert.match(page, /<CommunityAnimatedName[\s\S]*?member\.full_name[\s\S]*?animation=\{communityNameAnimation\(member\.display_name_animation\)\}/);
+  assert.ok((page.match(/<CommunityAnimatedName/g) ?? []).length >= 3);
   const chatSurface = page.slice(page.indexOf("community-chat-author-link"), page.indexOf("community-member-sidebar-header"));
   const memberSurface = page.slice(page.indexOf("community-member-sidebar-scroll"), page.indexOf("community-member-sidebar-footer"));
-  assert.doesNotMatch(chatSurface, /<CommunityAnimatedName/);
-  assert.doesNotMatch(memberSurface, /<CommunityAnimatedName/);
-  assert.match(page, /ps-community-name-static/);
+  assert.match(chatSurface, /<CommunityAnimatedName/);
+  assert.match(memberSurface, /<CommunityAnimatedName/);
   assert.match(studio, /<DisplayNameMotionPreview tag="strong" value=\{displayName \|\| "Tu nombre"\} animation=\{draftDisplayNameAnimation\}/);
-  assert.match(studio, /ps-community-name-static community-member-nameplate/);
-  assert.match(studio, /ps-community-name-static community-chat-author/);
+  const memberPreview = studio.slice(studio.indexOf("ps-community-name-preview-members-view"), studio.indexOf("ps-community-name-preview-chat-view"));
+  const chatPreview = studio.slice(studio.indexOf("ps-community-name-preview-chat-view"), studio.indexOf("ps-community-picker-selection"));
+  assert.match(memberPreview, /<DisplayNameMotionPreview[\s\S]*?animation=\{draftDisplayNameAnimation\}/);
+  assert.match(chatPreview, /<DisplayNameMotionPreview[\s\S]*?animation=\{draftDisplayNameAnimation\}/);
 });
 
 test("selected effects are preserved on the animated glyph layer", () => {
@@ -1157,19 +1161,33 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(nameStyleCss, /\.ps-name-shuffle\[data-shuffle-active="false"\] \.ps-name-shuffle__sizer/);
 });
 
-test("profile preview keeps full animation while members and chat preview the saved style statically", () => {
+test("profile, member and chat preview animate with the same selected font and finish", () => {
   assert.ok(studio.includes("ps-community-name-preview-profile-view"));
   assert.ok(studio.includes("<DisplayNameMotionPreview tag=\"strong\" value={displayName || \"Tu nombre\"}"));
   const memberPreview = studio.slice(studio.indexOf("ps-community-name-preview-members-view"), studio.indexOf("ps-community-name-preview-chat-view"));
   const chatPreview = studio.slice(studio.indexOf("ps-community-name-preview-chat-view"), studio.indexOf("ps-community-picker-selection"));
-  assert.doesNotMatch(memberPreview, /DisplayNameMotionPreview/);
-  assert.doesNotMatch(chatPreview, /DisplayNameMotionPreview/);
-  assert.ok(memberPreview.includes("ps-community-name-static community-member-nameplate"));
-  assert.ok(chatPreview.includes("ps-community-name-static community-chat-author"));
+  assert.match(memberPreview, /DisplayNameMotionPreview[\s\S]*?draftDisplayNameAnimation/);
+  assert.match(chatPreview, /DisplayNameMotionPreview[\s\S]*?draftDisplayNameAnimation/);
+  assert.match(nameStyleCss, /Animated names in the member\/chat preview share the chosen font and finish/);
+  assert.match(nameStyleCss, /community-member-nameplate\.is-name-style-discord-display/);
+  assert.match(nameStyleCss, /community-chat-author\.is-name-style-creator-sans/);
+  assert.match(nameStyleCss, /var\(--name-solid-color/);
   assert.ok(nameStyleCss.includes("@media (max-width:780px)"));
   assert.ok(nameStyleCss.includes(".ps-community-picker-preview"));
 });
 
+
+
+test("profile editor stays silent on successful saves and uses a quiet Discord-like avatar flow", () => {
+  assert.doesNotMatch(studio, /setNotice\(|notice &&|is-success/);
+  assert.doesNotMatch(studio, /PEAKSCORE \/ AVATAR|PEAKSCORE \/ IDENTIDAD|Tu archivo se valida y optimiza antes de guardarse|PNG, JPG, WebP o GIF · máximo 8 MB/);
+  assert.match(studio, /onClick=\{\(\) => avatarInput\.current\?\.click\(\)\}/);
+  assert.match(studio, /onClick=\{\(\) => avatarGifInput\.current\?\.click\(\)\}/);
+  assert.match(studio, /setAvatarPickerOpen\(false\);\s*setAvatarCropFile\(file\)/);
+  assert.match(studio, /handleAvatarCropPointerMove/);
+  assert.match(studio, /Aplicar<\/button>/);
+  assert.match(studio, /ps-community-editor-banner-upload-button>svg/);
+});
 
 test("every font card uses the same Aa specimen so typefaces can be compared fairly", () => {
   const catalogueStart = studio.indexOf("const DISPLAY_NAME_STYLES");

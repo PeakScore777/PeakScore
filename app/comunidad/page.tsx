@@ -2984,15 +2984,18 @@ export default function CommunityPage() {
                       aria-expanded={!collapsed}
                     >
                       <ChevronDown size={13} className="community-member-group-chevron" aria-hidden="true"/>
-                      <Image
-                        src={group.iconPath}
-                        alt=""
-                        width={18}
-                        height={18}
-                        unoptimized
-                        className="community-member-group-role-icon"
-                        onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
-                      />
+                      <span className="community-member-group-role-emblem" style={{ "--member-role-color": group.color } as CSSProperties}>
+                        <span className="community-member-group-role-fallback" aria-hidden="true">{group.key === "members" ? "M" : group.key === "fundador" ? "F" : group.key === "administrador" ? "A" : group.key === "moderador" ? "M" : "P"}</span>
+                        <Image
+                          src={group.iconPath}
+                          alt=""
+                          width={20}
+                          height={20}
+                          unoptimized
+                          className="community-member-group-role-icon"
+                          onError={(event) => { event.currentTarget.style.display = "none"; }}
+                        />
+                      </span>
                       <span className="community-member-group-label">{group.label}</span>
                       <span className="community-member-group-count">{group.members.length}</span>
                     </button>

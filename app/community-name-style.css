@@ -9304,3 +9304,43 @@ html:has(.ps-community-picker-overlay) * {
   color:var(--name-solid-color,var(--status-theme-text,var(--editor-theme-text,#202126)))!important;
   -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,var(--editor-theme-text,#202126)))!important;
 }
+
+
+/* The display-name picker is rendered in a body portal. Keep the editor shell
+   out of sight while it is open so the user sees one dialog, not two stacked
+   frames. Give the standalone picker a solid, full-viewport backdrop. */
+body:has(.ps-community-picker-modal.is-name-style-modal) .ps-community-editor-overlay {
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+.ps-community-picker-overlay {
+  position:fixed !important;
+  inset:0 !important;
+  z-index:2147483000 !important;
+  width:100vw !important;
+  height:100dvh !important;
+  min-height:100dvh !important;
+  padding:clamp(8px,2.5vh,22px) !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+  background:rgb(4 5 8 / 88%) !important;
+  backdrop-filter:blur(5px) saturate(.85) !important;
+  -webkit-backdrop-filter:blur(5px) saturate(.85) !important;
+}
+.ps-community-picker-modal.is-name-style-modal {
+  width:min(1000px,calc(100vw - 32px)) !important;
+  height:min(790px,calc(100dvh - 32px)) !important;
+  max-height:calc(100dvh - 32px) !important;
+  min-height:0 !important;
+  flex:0 1 auto !important;
+  box-sizing:border-box !important;
+}
+@media (max-height:840px) and (min-width:781px) {
+  .ps-community-picker-modal.is-name-style-modal {
+    height:calc(100dvh - 32px) !important;
+    max-height:calc(100dvh - 32px) !important;
+  }
+}

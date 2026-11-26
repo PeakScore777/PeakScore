@@ -758,7 +758,9 @@ export default function CommunityPage() {
     }
   }
 
-  openCommunityProfileRef.current = openCommunityProfile;
+  useEffect(() => {
+    openCommunityProfileRef.current = openCommunityProfile;
+  }, [openCommunityProfile]);
 
   function communityMemberProfileUrl(memberId: string) {
     const url = new URL(window.location.href);

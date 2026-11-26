@@ -1771,7 +1771,142 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         ))}
                       </div>
                     </section>
-                                      </div>
+
+                    <section className="ps-community-name-style-group ps-community-name-color-style-group">
+                      <div className="ps-community-name-style-heading">
+                        Color de letra
+                        <span>{draftDisplayNameColorMode === "single" ? "TONO" : draftDisplayNameColorMode === "gradient" ? "DEGRADADO" : draftDisplayNameColorMode === "spectrum" ? "ESPECTRO" : "AUTOMÁTICO"}</span>
+                      </div>
+                      {draftDisplayNameColorMode === "single" && (
+                        <>
+                          <div className="ps-community-name-preset-grid" role="group" aria-label="Colores de letra">
+                            {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient").map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className={"ps-community-name-preset-swatch" + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                                style={{ background: item.value === "currentColor" ? "linear-gradient(135deg,#f0f2f6 0 46%,#5865f2 46% 54%,#25272d 54%)" : item.value }}
+                                aria-label={item.label}
+                                aria-pressed={draftDisplayNameColor === item.id}
+                                title={item.label}
+                                onClick={() => setDraftDisplayNameColor(item.id)}
+                              />
+                            ))}
+                          </div>
+                          <DisplayNameCustomColorPicker
+                            value={draftDisplayNameGradientStart}
+                            selected={draftDisplayNameColor === "custom-gradient"}
+                            onApply={(color) => {
+                              setDraftDisplayNameGradientStart(color);
+                              setDraftDisplayNameColor("custom-gradient");
+                            }}
+                          />
+                        </>
+                      )}
+                      {draftDisplayNameColorMode === "gradient" && (
+                        <>
+                          <div className="ps-community-name-preset-grid" role="group" aria-label="Degradados de letra">
+                            {DISPLAY_NAME_GRADIENT_PRESETS.map((preset) => {
+                              const selected = draftDisplayNameGradientStart.toUpperCase() === preset.start && draftDisplayNameGradientEnd.toUpperCase() === preset.end;
+                              return (
+                                <button
+                                  key={preset.id}
+                                  type="button"
+                                  className={"ps-community-name-preset-swatch" + (selected ? " is-selected" : "")}
+                                  style={{ background: "linear-gradient(110deg," + preset.start + "," + preset.end + ")" }}
+                                  aria-label={preset.label}
+                                  aria-pressed={selected}
+                                  title={preset.label}
+                                  onClick={() => {
+                                    setDraftDisplayNameColor("custom-gradient");
+                                    setDraftDisplayNameGradientStart(preset.start);
+                                    setDraftDisplayNameGradientEnd(preset.end);
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                          <div className="ps-community-name-custom-gradient-stops">
+                            <DisplayNameCustomColorPicker
+                              value={draftDisplayNameGradientStart}
+                              selected={true}
+                              onApply={(color) => {
+                                setDraftDisplayNameColor("custom-gradient");
+                                setDraftDisplayNameGradientStart(color);
+                              }}
+                            />
+                            <DisplayNameCustomColorPicker
+                              value={draftDisplayNameGradientEnd}
+                              selected={true}
+                              onApply={(color) => {
+                                setDraftDisplayNameColor("custom-gradient");
+                                setDraftDisplayNameGradientEnd(color);
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
+                      {draftDisplayNameColorMode === "spectrum" && (
+                        <div className="ps-community-name-spectrum-presets" role="group" aria-label="Paletas de letra">
+                          {DISPLAY_NAME_SPECTRUM_PRESETS.map((preset) => {
+                            const selected = JSON.stringify(draftDisplayNamePrismColors) === JSON.stringify(preset.colors);
+                            return (
+                              <button
+                                key={preset.id}
+                                type="button"
+                                className={"ps-community-name-spectrum-swatch" + (selected ? " is-selected" : "")}
+                                style={{ background: "linear-gradient(90deg," + preset.colors.join(",") + ")" }}
+                                aria-label={preset.label}
+                                aria-pressed={selected}
+                                title={preset.label}
+                                onClick={() => setDraftDisplayNamePrismColors(preset.colors.slice())}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                      {draftDisplayNameColorMode === "automatic" && (
+                        <p className="ps-community-name-color-auto-note">Este acabado administra su propia paleta para mantener el reflejo y la animación sincronizados.</p>
+                      )}
+                    </section>
+
+                    <section className="ps-community-name-style-group">
+                      <div className="ps-community-name-style-heading">
+                        Animación de entrada
+                        <span>{DISPLAY_NAME_ANIMATIONS.length} MOVIMIENTOS</span>
+                      </div>
+                      <div className="ps-community-name-animation-grid" role="group" aria-label="Animaciones del nombre">
+                        {DISPLAY_NAME_ANIMATIONS.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
+                            aria-label={item.label + ". " + item.description}
+                            aria-pressed={draftDisplayNameAnimation === item.id}
+                            title={item.description}
+                            onClick={() => setDraftDisplayNameAnimation(item.id)}
+                          >
+                            <span className="ps-community-name-animation-stage">
+                              <DisplayNameMotionPreview
+                                value="Aa"
+                                animation={item.id}
+                                tag="span"
+                                className={"ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
+                                style={{
+                                  "--name-gradient-start": draftDisplayNameGradientStart,
+                                  "--name-gradient-end": draftDisplayNameGradientEnd,
+                                  "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
+                                  "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor",
+                                } as CSSProperties}
+                              />
+                            </span>
+                            <strong>{item.label}</strong>
+                            <small>{item.hint}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
                 )}
 
                 {appearancePicker === "plate" && (
@@ -2312,6 +2447,27 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-banner-upload-button>svg{flex:0 0 32px!important;width:32px!important;height:32px!important;padding:8px!important;border:1px solid #454b59!important;border-radius:8px!important;background:#1c1f26!important;color:#c6ceea!important}
 .ps-community-editor-banner-upload-button:disabled{opacity:.55!important;cursor:wait!important}
 @media(max-width:560px){.ps-community-editor-banner-upload-actions{grid-template-columns:1fr!important}}
+
+/* Name Atelier: compact color and motion controls with a synchronized live preview. */
+.ps-community-name-color-style-group{display:grid!important;gap:10px!important;padding-bottom:16px!important;border-bottom:1px solid #343740!important}
+.ps-community-name-style-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;color:#e7e9ef!important;font-size:12px!important;font-weight:750!important}
+.ps-community-name-style-heading>span{color:#8e97a8!important;font-size:9px!important;font-weight:750!important;letter-spacing:.08em!important}
+.ps-community-name-preset-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:9px!important}
+.ps-community-name-preset-swatch{height:34px!important;min-height:34px!important;border-radius:8px!important}
+.ps-community-name-preset-swatch:hover,.ps-community-name-spectrum-swatch:hover{transform:translateY(-1px)!important}
+.ps-community-name-custom-picker-root{width:100%!important}
+.ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-height:39px!important;grid-template-columns:30px minmax(0,1fr)!important;justify-items:start!important;gap:9px!important;padding:0 10px!important;border-radius:9px!important}
+.ps-community-name-custom-gradient-stops{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
+.ps-community-name-color-auto-note{margin:0!important;color:#9ca4b2!important;font-size:10px!important;line-height:1.5!important}
+.ps-community-name-style-group>.ps-community-name-animation-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option{min-height:108px!important}
+.ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option>.ps-community-name-animation-stage{display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;min-height:48px!important;max-width:100%!important;overflow:hidden!important}
+.ps-community-name-animation-sample{display:inline-block!important;width:max-content!important;max-width:100%!important;font-size:17px!important;line-height:1.1!important;white-space:nowrap!important}
+@media(max-width:560px){
+ .ps-community-name-preset-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+ .ps-community-name-style-group>.ps-community-name-animation-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .ps-community-name-custom-gradient-stops{grid-template-columns:1fr!important}
+}
 `}</style>
     </div>
     </div>,

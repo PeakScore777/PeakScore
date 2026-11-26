@@ -3854,7 +3854,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar-row {
   position:absolute!important;
   z-index:8!important;
-  left:29px!important;
+  left:26px!important;
   right:30px!important;
   bottom:-77px!important;
   display:block!important;
@@ -3913,7 +3913,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   position:absolute!important;
   z-index:9!important;
   left:164px!important;
-  top:19px!important;
+  top:36px!important;
   bottom:auto!important;
   display:flex!important;
   align-items:center!important;

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution, profileRoute, roleBadgesView, livePage, communityStyles, legacyProjection] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution, profileRoute, roleBadgesView, livePage, communityStyles, profileUiStyles, legacyProjection] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
@@ -19,6 +19,7 @@ const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, so
   readFile(new URL("../supabase/migrations/20261121023000_community_public_role_badges_view.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/comunidad/en-vivo/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../app/community-member-profile-ui.css", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121027000_retire_legacy_game_profile_community_projection.sql", import.meta.url), "utf8"),
 ]);
 
@@ -130,7 +131,8 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /ps-community-member-popout__actions/);
   assert.match(page, /aria-label="Mencionar miembro"/);
   assert.match(page, /insertMention\(\{/);
-  assert.match(page, /community-profile-roles/);
+  assert.match(page, /ps-community-editor-preview-role-row/);
+  assert.match(profileUiStyles, /\.ps-community-editor-preview-role-row/);
   assert.match(page, /onlineMemberIds/);
   assert.match(page, /community-presence/);
   assert.match(page, /community-user-presence/);
@@ -140,7 +142,8 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(profileRoute, /sanitizeRasterImage\(/);
   assert.match(profileRoute, /consume_community_attachment_rate_limit/);
   assert.match(profileRoute, /userId !== user\.id/);
-  assert.doesNotMatch(profileRoute, /from\("profiles"\)|community_public_profiles/);
+  assert.doesNotMatch(profileRoute, /from\("profiles"\)/);
+  assert.match(profileRoute, /from\("community_public_profiles"\)[\s\S]*?select\("full_name"\)/);
   assert.match(roleBadgesView, /with \(security_invoker = true\)/);
   assert.match(roleBadgesView, /community_member_roles/);
   assert.match(livePage, /from\("community_member_profiles"\)/);
@@ -205,7 +208,8 @@ testCase("the final Community skin uses GameCode palette and reserves pixel type
   assert.match(finalSkin, /font-family: var\(--font-silkscreen\), monospace/);
   assert.match(finalSkin, /community-chat-message-pending/);
   assert.match(finalSkin, /background-image: none !important/);
-  assert.match(page, /community-chat-pending-label/);
+  assert.doesNotMatch(page, /community-chat-pending-label/);
+  assert.match(page, /community-chat-message-pending/);
 });
 
 

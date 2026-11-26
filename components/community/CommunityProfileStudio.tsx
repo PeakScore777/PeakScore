@@ -4598,65 +4598,85 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
 
 
-/* Discord-like overlay scrollbar on the profile preview content. */
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body {
+/* Laptop-friendly scrollbar: fully hidden outside the preview, visible on hover.
+   Scrolling remains native (wheel, trackpad and draggable thumb). */
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body {
   overflow-x:hidden!important;
   overflow-y:auto!important;
-  scrollbar-width:thin!important;
+  scrollbar-width:none!important;
   scrollbar-color:transparent transparent!important;
   scrollbar-gutter:auto!important;
-  -ms-overflow-style:auto!important;
+  -ms-overflow-style:none!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body::-webkit-scrollbar {
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar {
   display:block!important;
-  width:8px!important;
+  width:9px!important;
   height:0!important;
-}
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body::-webkit-scrollbar-track {
-  margin:5px 0!important;
   background:transparent!important;
-  border:0!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
-  min-height:36px!important;
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar-track {
+  margin:6px 0!important;
+  background:transparent!important;
+}
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  min-height:38px!important;
   border:2px solid transparent!important;
   border-radius:999px!important;
-  background-color:transparent!important;
+  background:transparent!important;
   background-clip:padding-box!important;
   transition:background-color .16s ease!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body::-webkit-scrollbar-button,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body::-webkit-scrollbar-corner {
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar-button,
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar-corner {
   display:none!important;
-  width:0!important;
-  height:0!important;
-  background:transparent!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  >.ps-community-editor-preview-body,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body:hover {
-  scrollbar-color:#777f8b transparent!important;
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  > .ps-community-editor-preview-body,
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body:hover,
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body:focus-within {
+  scrollbar-width:thin!important;
+  scrollbar-color:#858c99 transparent!important;
+  -ms-overflow-style:auto!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
-  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb,
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb {
-  background-color:#777f8b!important;
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card:hover
+  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb,
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body:hover::-webkit-scrollbar-thumb,
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body:focus-within::-webkit-scrollbar-thumb {
+  background:#858c99!important;
+  background-clip:padding-box!important;
 }
-.ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-  >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
-  background-color:#aab3bf!important;
+.ps-community-editor-preview-frame
+  > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+  > .ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
+  background:#c0c5ce!important;
+  background-clip:padding-box!important;
 }
 @media(prefers-reduced-motion:reduce) {
-  .ps-community-editor-preview-frame>.ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
-    >.ps-community-editor-preview-body::-webkit-scrollbar-thumb {
+  .ps-community-editor-preview-frame
+    > .ps-community-profile-dialog.ps-community-profile-live-card.ps-community-editor-preview-card
+    > .ps-community-editor-preview-body::-webkit-scrollbar-thumb {
     transition:none!important;
   }
 }

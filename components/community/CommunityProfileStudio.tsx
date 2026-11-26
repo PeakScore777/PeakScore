@@ -4668,7 +4668,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     transition:none!important;
   }
 }
-`}
 /* Discord-style editor save notice: overlay the right preview pane instead
    of reserving a full-width footer row beneath the workspace. */
 .ps-community-editor-main {
@@ -4744,8 +4743,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   >.ps-community-editor-preview-body::-webkit-scrollbar-thumb:hover {
   background-color:#aab3bf!important;
 }
-
-</style>
+`}</style>
     </div>
     </div>,
     document.body,

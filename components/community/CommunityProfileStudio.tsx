@@ -4,7 +4,7 @@ import Image from "next/image";
 import { displayNameColorForEffect } from "@/components/community/display-name-color";
 import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import {
   Camera, Check, Copy, Film, ImagePlus, Pencil, Pipette,
   LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
@@ -668,7 +668,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  const handlePreviewScrollbarKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handlePreviewScrollbarKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     const body = previewBodyRef.current;
     if (!body) return;
     if (event.key === "ArrowDown") body.scrollTop += 40;

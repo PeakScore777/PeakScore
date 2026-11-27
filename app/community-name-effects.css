@@ -486,3 +486,21 @@
 .ps-community-name-render.effect-toon .ps-depth-lift__face {
   -webkit-text-stroke:.35px rgb(255 255 255 / 55%);
 }
+
+
+/* Solid swatches must remain a single ink on every community surface.
+/* The selected swatch is already resolved into --name-solid-color by the
+   community renderer. Keep that exact pigment and clear inherited gradient,
+   text-fill, shadow and filter treatments on the real member list and chat. */
+:is(.community-member-nameplate,.community-chat-author).effect-plain:not(.color-custom-gradient) {
+  color:var(--name-solid-color,currentColor)!important;
+  -webkit-text-fill-color:var(--name-solid-color,currentColor)!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  background-clip:border-box!important;
+  -webkit-background-clip:border-box!important;
+  text-shadow:none!important;
+  -webkit-text-stroke:0 transparent!important;
+  filter:none!important;
+}

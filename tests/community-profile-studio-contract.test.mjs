@@ -185,12 +185,12 @@ test("profile fields update in the center while font, plate and theme settings s
 test("public member profile uses the live Discord-like banner, identity, roles and theme", () => {
   assert.match(page, /ps-community-editor-preview-banner/);
   assert.match(page, /is-peakscore-banner/);
-  assert.match(page, /ps-community-editor-preview-role-row/);
+  assert.match(page, /ps-community-profile-role-section/);
   assert.match(page, /selectedCommunityProfile\.accountName/);
-  assert.match(page, /"@" \+ \(selectedCommunityProfile\.accountName/);
+  assert.match(page, /"@" \+ selectedCommunityProfile\.accountName\.trim\(\)/);
   assert.match(profileUiCss, /\.ps-community-profile-live-banner/);
   assert.match(profileUiCss, /\.ps-community-profile-live-body/);
-  assert.match(profileUiCss, /\.ps-community-profile-live-body \.ps-community-editor-preview-role-row/);
+  assert.match(profileUiCss, /\.ps-community-profile-role-section/);
   assert.match(profileUiCss, /prefers-reduced-motion/);
 });
 
@@ -1098,7 +1098,7 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-canvas-hue/);
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-word-hue/);
   assert.doesNotMatch(studio, /ps-name-animation-char/);
-  assert.match(page, /ps-name-animation-char/);
+  assert.doesNotMatch(page, /ps-name-animation-char/);
   assert.match(nameEffectsCss, /\.ps-name-animation-char::after/);
   const dominoKeyframes = nameStyleCss.slice(nameStyleCss.lastIndexOf("@keyframes ps-domino-flow-topple"));
   assert.match(dominoKeyframes, /rotateZ\(12deg\)/);

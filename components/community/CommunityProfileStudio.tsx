@@ -1764,24 +1764,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               );
                             })}
                           </div>
-                          <div className="ps-community-name-custom-gradient-stops">
-                            <div className="ps-community-name-gradient-stop"><span>Color inicial</span><DisplayNameCustomColorPicker
-                              value={draftDisplayNameGradientStart}
-                              selected={true}
-                              onApply={(color) => {
-                                setDraftDisplayNameColor("custom-gradient");
-                                setDraftDisplayNameGradientStart(color);
-                              }}
-                            /></div>
-                            <div className="ps-community-name-gradient-stop"><span>Color final</span><DisplayNameCustomColorPicker
-                              value={draftDisplayNameGradientEnd}
-                              selected={true}
-                              onApply={(color) => {
-                                setDraftDisplayNameColor("custom-gradient");
-                                setDraftDisplayNameGradientEnd(color);
-                              }}
-                            /></div>
-                          </div>
+
                         </>
                       )}
                       {draftDisplayNameColorMode === "spectrum" && (

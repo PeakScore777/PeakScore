@@ -55,11 +55,13 @@ testCase("the profile dialog is responsive, accessible and respects reduced moti
 
 
 testCase("every community member handle is loaded before profile opening", async () => {
-  const [communityPage, profileRoute, handleMigration, backfillMigration] = await Promise.all([
+  const [communityPage, profileRoute, handleMigration, backfillMigration, profileStyles, profileStudio] = await Promise.all([
     readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../supabase/migrations/20261127133000_community_member_account_handles.sql", import.meta.url), "utf8"),
     readFile(new URL("../supabase/migrations/20261127134000_backfill_missing_community_member_handles.sql", import.meta.url), "utf8"),
+    readFile(new URL("../app/community-member-profile-ui.css", import.meta.url), "utf8"),
+    readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(communityPage, /\.select\("user_id,account_name"\)/);
@@ -69,6 +71,11 @@ testCase("every community member handle is loaded before profile opening", async
   assert.match(communityPage, /account_name: memberAccountNames\.get\(member\.user_id\) \?\? null/);
   assert.match(communityPage, /selectedCommunityProfile\.accountName/);
   assert.match(communityPage, /"@" \+ selectedCommunityProfile\.accountName\.trim\(\)/);
+  assert.match(communityPage, /ps-community-profile-account-handle/);
+  assert.match(communityPage, /ps-community-editor-preview-identity-line/);
+  assert.match(profileStyles, /\.ps-community-profile-live-readonly-body \.ps-community-editor-preview-identity-line[\s\S]*?flex-direction: row[\s\S]*?flex-wrap: nowrap/);
+  assert.match(profileStyles, /\.ps-community-profile-live-readonly-body \.ps-community-profile-account-handle[\s\S]*?background: transparent/);
+  assert.match(profileStudio, /ps-community-profile-account-handle/);
   assert.match(profileRoute, /\.select\("user_id,display_name,avatar_path,pronouns,status_text,about,created_at"\)/);
   assert.match(profileRoute, /\.select\("account_name"\)/);
   assert.match(profileRoute, /accountName: accountNameResult\.error \? "" : accountNameResult\.data\?\.account_name \?\? ""/);

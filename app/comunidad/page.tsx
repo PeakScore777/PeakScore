@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
-  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus, Trash2, Star,
+  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus, Trash2, Star, UserPlus,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import communityTheme from "./peakscore-community-theme.module.css";
@@ -579,6 +579,7 @@ export default function CommunityPage() {
     const preview: CommunityMemberProfile = cached ?? {
       userId: member.id,
       displayName: member.full_name,
+      accountName: member.id === userId ? registeredAccountName : null,
       avatarUrl: member.avatar_url,
       bannerUrl: member.banner_url ?? null,
       cardColor: member.card_color ?? "#B7D7C3",
@@ -3115,9 +3116,7 @@ export default function CommunityPage() {
                 {hoverCommunityProfile.bannerUrl ? (
                   <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-member-popout__banner-image"/>
                 ) : (
-                  <div className="ps-community-member-popout__banner-fallback">
-                    <span>PEAK<span>SCORE</span></span>
-                  </div>
+                  <div className="ps-community-member-popout__banner-fallback" aria-hidden="true"/>
                 )}
               </div>
               <div className="ps-community-member-popout__body">
@@ -3132,6 +3131,17 @@ export default function CommunityPage() {
                     <div className="ps-community-member-popout__status-bubble">{hoverCommunityProfile.statusText}</div>
                   )}
                   <div className="ps-community-member-popout__actions">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
+                        setHoverCommunityProfile(null);
+                      }}
+                      aria-label="Mencionar miembro"
+                      title="Mencionar en el chat"
+                    >
+                      <UserPlus size={17}/>
+                    </button>
                     <div className="ps-community-member-popout__menu-anchor">
                       <button
                         type="button"
@@ -3141,7 +3151,7 @@ export default function CommunityPage() {
                         aria-haspopup="menu"
                         aria-expanded={memberProfileMenuOpen}
                       >
-                        <MoreHorizontal size={17}/>
+                        <MoreHorizontal size={18}/>
                       </button>
                       {memberProfileMenuOpen && (
                         <div className="ps-community-member-popout__menu" role="menu" aria-label="Opciones del perfil">
@@ -3149,14 +3159,17 @@ export default function CommunityPage() {
                             <ArrowUpRight size={15}/> Ver perfil completo
                           </button>
                           <button type="button" role="menuitem" onClick={() => {
+                            void shareCommunityMemberProfile(hoverCommunityProfile.userId, hoverCommunityProfile.displayName);
+                            setMemberProfileMenuOpen(false);
+                          }}>
+                            <Share2 size={15}/> Compartir perfil
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => {
                             insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
                             setHoverCommunityProfile(null);
                             setMemberProfileMenuOpen(false);
                           }}>
                             <AtSign size={15}/> Mencionar
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => void shareCommunityMemberProfile(hoverCommunityProfile.userId, hoverCommunityProfile.displayName)}>
-                            <Share2 size={15}/> Compartir perfil
                           </button>
                           <button type="button" role="menuitem" onClick={() => {
                             void navigator.clipboard.writeText(communityMemberProfileUrl(hoverCommunityProfile.userId))
@@ -3175,23 +3188,18 @@ export default function CommunityPage() {
                         </div>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
-                        setHoverCommunityProfile(null);
-                      }}
-                      aria-label="Mencionar miembro"
-                      title="Mencionar"
-                    >
-                      <AtSign size={16}/>
-                    </button>
                   </div>
                 </div>
 
+                <div className="ps-community-member-popout__identity">                </div>
+
                 <div className="ps-community-member-popout__identity">
                   <CommunityStaticName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} className={"ps-community-name-render is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(hoverCommunityProfile.displayNameEffect, hoverCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")", "--name-solid-color": displayNameSolidColor(hoverCommunityProfile.displayNameColor, hoverCommunityProfile.displayNameGradientStart) } as React.CSSProperties}/>
-                  <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
+                  {hoverCommunityProfile.accountName?.trim() ? (
+                    <span className="ps-community-member-popout__handle">{"@" + hoverCommunityProfile.accountName.trim().replace(/^@+/, "")}</span>
+                  ) : (
+                    <span className="ps-community-member-popout__member-number">{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
+                  )}
                 </div>
 
                 {hoverCommunityProfile.about && (

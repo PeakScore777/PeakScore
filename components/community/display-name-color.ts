@@ -18,16 +18,57 @@ const DISPLAY_NAME_SOLID_PALETTE: Record<string, string> = {
 };
 
 /** Resolve one canonical swatch value for profile, member-list and chat renderers. */
+function safeProfileThemeColor(value: string | null | undefined, fallback: string) {
+  return /^#[0-9a-f]{6}$/i.test(value ?? "") ? value! : fallback;
+}
+
+function themeLuminance(hex: string) {
+  const clean = safeProfileThemeColor(hex, "#B7D7C3").slice(1);
+  const channels = [0, 2, 4].map((index) => parseInt(clean.slice(index, index + 2), 16) / 255)
+    .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+}
+
+function blendProfileThemeColors(first: string, second: string, amount: number) {
+  const a = safeProfileThemeColor(first, "#B7D7C3").slice(1);
+  const b = safeProfileThemeColor(second, "#8FB9A6").slice(1);
+  const channels = [0, 2, 4].map((index) => {
+    const av = parseInt(a.slice(index, index + 2), 16);
+    const bv = parseInt(b.slice(index, index + 2), 16);
+    return Math.round(av * (1 - amount) + bv * amount).toString(16).padStart(2, "0");
+  });
+  return "#" + channels.join("");
+}
+
+/** Same shared contrast foreground used by the profile-card editor preview. */
+export function readableProfileTextColor(cardColor?: string | null, secondaryColor?: string | null) {
+  const first = safeProfileThemeColor(cardColor, "#B7D7C3");
+  const second = safeProfileThemeColor(secondaryColor, "#8FB9A6");
+  const samples = Array.from({ length: 9 }, (_, index) => blendProfileThemeColors(first, second, index / 8));
+  const contrast = (ink: string, sample: string) => {
+    const a = themeLuminance(ink);
+    const b = themeLuminance(sample);
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  };
+  const lightInk = "#F7F8FA";
+  const darkInk = "#17191F";
+  const lightWorst = Math.min(...samples.map((sample) => contrast(lightInk, sample)));
+  const darkWorst = Math.min(...samples.map((sample) => contrast(darkInk, sample)));
+  return lightWorst >= darkWorst ? lightInk : darkInk;
+}
+
 export function displayNameSolidColor(
   color: string | null | undefined,
-  customGradientStart?: string | null
+  customGradientStart?: string | null,
+  automaticColor = "currentColor"
 ): string {
   if (color === "custom-gradient") {
     return /^#[0-9a-f]{6}$/i.test(customGradientStart ?? "")
       ? customGradientStart!
       : "#B86BFF";
   }
-  return DISPLAY_NAME_SOLID_PALETTE[color ?? ""] ?? "currentColor";
+  if (!color || color === "default") return automaticColor;
+  return DISPLAY_NAME_SOLID_PALETTE[color] ?? automaticColor;
 }
 
 

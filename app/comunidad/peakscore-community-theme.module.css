@@ -3799,6 +3799,16 @@
     transform .34s cubic-bezier(.2,.75,.25,1),
     filter .28s ease;
 }
+/* Override the generic green status-dot rule for the two text layers. */
+.root :global(.community-user-presence-swap > .community-user-presence-line),
+.root :global(.community-user-presence-swap > .community-user-handle-line) {
+  flex:0 1 auto!important;
+  width:auto!important;
+  height:auto!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
 .root :global(.community-user-presence-swap .community-user-presence-line) {
   opacity:1;
   transform:translate3d(0,0,0);

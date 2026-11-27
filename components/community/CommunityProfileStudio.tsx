@@ -3452,11 +3452,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
 }
 .ps-community-editor-v2[data-close-confirming="true"] {
-  /* Discord-style warning motion: move sideways only; never shrink the editor. */
-  width:min(1150px,calc(100vw - 32px))!important;
-  height:min(980px,calc(100dvh - 32px))!important;
-  transform:translateX(-64px) translateY(0) scale(1)!important;
+  /* Shake in place like Discord's invalid-action feedback: no lasting offset or scaling. */
+  animation:ps-community-editor-error-shake .42s cubic-bezier(.36,.07,.19,.97) both!important;
   box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
+}
+@keyframes ps-community-editor-error-shake {
+  0%,100% {transform:translateX(0) scale(1)}
+  15%,45%,75% {transform:translateX(-6px) scale(1)}
+  30%,60%,90% {transform:translateX(6px) scale(1)}
 }
 .ps-community-editor-savebar {
   transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
@@ -3492,9 +3495,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 @media(max-width:760px) {
   .ps-community-editor-v2[data-close-confirming="true"] {
-    width:calc(100vw - 32px)!important;
-    height:calc(100dvh - 32px)!important;
-    transform:translateX(-12px) translateY(0) scale(1)!important;
+    animation:ps-community-editor-error-shake .42s cubic-bezier(.36,.07,.19,.97) both!important;
   }
 }
 

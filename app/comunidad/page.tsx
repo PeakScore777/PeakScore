@@ -199,7 +199,7 @@ const COMMUNITY_ROLE_ICON_PATHS: Record<string, string> = {
   moderador: "/images/community/roles/moderator.png",
   profesor: "/images/community/roles/professor.png",
   docente: "/images/community/roles/professor.png",
-  miembro: "/images/community/roles/member.png",
+  miembro: "/images/community/roles/miembro.png",
 };
 
 const COMMUNITY_ROLE_PRESENTATION: Record<string, { label: string; badgeColor: string; position: number }> = {
@@ -1026,7 +1026,7 @@ export default function CommunityPage() {
       { key: "administrador", label: "ADMINS", shortLabel: "A", color: "#ED4245", iconPath: "/images/community/roles/admin.png", roles: ["administrador"] },
       { key: "moderador", label: "MODERADORES", shortLabel: "M", color: "#57F287", iconPath: "/images/community/roles/moderator.png", roles: ["moderador"] },
       { key: "profesor", label: "PROFESORES", shortLabel: "P", color: "#E6B85C", iconPath: "/images/community/roles/professor.png", roles: ["profesor", "docente"] },
-      { key: "members", label: "MIEMBROS", shortLabel: "Mi", color: "#929AA6", iconPath: "/images/community/roles/member.png", roles: [] },
+      { key: "members", label: "MIEMBROS", shortLabel: "Mi", color: "#929AA6", iconPath: "/images/community/roles/miembro.png", roles: [] },
     ];
     const groups = definitions.map((definition) => ({
       ...definition,

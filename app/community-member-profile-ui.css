@@ -1802,6 +1802,8 @@
   filter:drop-shadow(0 18px 42px rgb(0 0 0 / 38%))!important;
 }
 .ps-community-member-popout__card {
+  /* Let the avatar overlap the cover like Discord; the cover clips its own image. */
+  overflow:visible!important;
   border:1px solid rgb(0 0 0 / 16%)!important;
   border-radius:12px!important;
   background:#202127!important;
@@ -1822,16 +1824,23 @@
     linear-gradient(120deg,#10141a,#1d2830 56%,#11171e)!important;
 }
 .ps-community-member-popout__body {
+  /* overflow:auto clipped the overlapping avatar and buttons at the cover edge. */
+  overflow:visible!important;
   padding:0 17px 16px!important;
+  border-radius:0 0 11px 11px!important;
   background:var(--community-theme-gradient,linear-gradient(180deg,#e7e8ea,#d8dade))!important;
   color:var(--community-theme-text,#202126)!important;
-  scrollbar-color:rgb(40 44 52 / 35%) transparent!important;
 }
 .ps-community-member-popout__top {
+  position:relative!important;
+  z-index:4!important;
   min-height:76px!important;
   align-items:flex-start!important;
+  overflow:visible!important;
 }
 .ps-community-member-popout__avatar {
+  position:relative!important;
+  z-index:5!important;
   flex-basis:88px!important;
   width:88px!important;
   height:88px!important;
@@ -1847,6 +1856,8 @@
   border-color:var(--community-card-color,#e5e7eb)!important;
 }
 .ps-community-member-popout__actions {
+  position:relative!important;
+  z-index:6!important;
   gap:8px!important;
   margin-top:9px!important;
 }

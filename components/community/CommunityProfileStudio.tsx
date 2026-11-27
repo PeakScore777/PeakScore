@@ -4998,7 +4998,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   z-index:10050!important;
   left:auto!important;
   right:max(0px,calc((100vw - 1150px)/2 - 564px))!important;
-  bottom:max(14px,calc((100vh - 995px)/2 + 20px))!important;
+  bottom:max(14px,calc((100vh - 995px)/2 + 12px))!important;
   width:min(490px,calc(100vw - 40px))!important;
   max-width:490px!important;
   transform:translateX(-10px)!important;

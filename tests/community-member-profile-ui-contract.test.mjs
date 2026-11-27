@@ -52,3 +52,24 @@ testCase("the profile dialog is responsive, accessible and respects reduced moti
   assert.match(styles, /@media \(max-width: 560px\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
+
+
+testCase("every community member handle is loaded before profile opening", async () => {
+  const [communityPage, profileRoute, handleMigration, backfillMigration] = await Promise.all([
+    readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/migrations/20261127133000_community_member_account_handles.sql", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/migrations/20261127134000_backfill_missing_community_member_handles.sql", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(communityPage, /account_name,display_name,avatar_path/);
+  assert.match(communityPage, /accountName: member\.account_name\?\.trim\(\) \?\? ""/);
+  assert.match(communityPage, /accountNameReady: Boolean\(member\.account_name\?\.trim\(\)\)/);
+  assert.match(communityPage, /account_name: member\.account_name/);
+  assert.match(communityPage, /selectedCommunityProfile\.accountName/);
+  assert.match(communityPage, /"@" \+ selectedCommunityProfile\.accountName\.trim\(\)/);
+  assert.match(profileRoute, /accountName: profileResult\.data\.account_name \?\? ""/);
+  assert.match(handleMigration, /alter column account_name set not null/);
+  assert.match(handleMigration, /create unique index if not exists community_member_profiles_account_name_lower_uidx/);
+  assert.match(backfillMigration, /insert into public\.community_member_profiles \(user_id, display_name, account_name\)/);
+});

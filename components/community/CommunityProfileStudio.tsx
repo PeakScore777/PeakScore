@@ -3452,7 +3452,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
 }
 .ps-community-editor-v2[data-close-confirming="true"] {
-  transform:translateX(-64px) translateY(-4px) scale(.988)!important;
+  transform:translateX(-64px)!important;
   box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
 }
 .ps-community-editor-savebar {
@@ -3460,8 +3460,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-savebar.is-close-warning {
   border-color:#eb4b55!important;
-  background:linear-gradient(110deg,#9f2935 0%,#7f202c 100%)!important;
-  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 12px 34px rgb(0 0 0 / 32%)!important;
+  background:linear-gradient(110deg,rgba(159,41,53,.18) 0%,rgba(127,32,44,.12) 100%),#202126!important;
+  box-shadow:0 0 0 1px rgb(239 68 68 / 24%),0 0 18px rgb(239 68 68 / 10%),0 12px 34px rgb(0 0 0 / 32%)!important;
   animation:ps-community-unsaved-bar-enter .24s cubic-bezier(.2,.8,.2,1) both!important;
 }
 .ps-community-editor-savebar.is-close-warning>span {
@@ -3469,7 +3469,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 .ps-community-editor-savebar.is-close-warning .is-secondary {
   border-color:rgb(248 113 113 / 32%)!important;
-  background:rgb(127 29 29 / 24%)!important;
+  background:rgb(127 29 29 / 10%)!important;
   color:#ffe4e6!important;
 }
 .ps-community-editor-savebar.is-close-warning .is-primary {

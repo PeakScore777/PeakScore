@@ -3049,11 +3049,11 @@ export default function CommunityPage() {
                       </span>
                     </span>
                   </div>
-                  <span className={"ps-community-note-bubble" + (selectedCommunityProfile.statusText ? " has-status" : " is-empty")} aria-label="Estado personalizado">
-                    {!selectedCommunityProfile.statusText && <Plus size={13} aria-hidden="true"/>}
-                    <span className="ps-community-note-bubble-text">{selectedCommunityProfile.statusText || "Añadir estado"}</span>
-                    <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
-                  </span>
+                  {selectedCommunityProfile.statusText?.trim() && (
+                    <span className="ps-community-note-bubble has-status" aria-label="Estado personalizado">
+                      <span className="ps-community-note-bubble-text">{selectedCommunityProfile.statusText.trim()}</span>
+                    </span>
+                  )}
                 </div>
 
                 <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title"
@@ -3068,15 +3068,21 @@ export default function CommunityPage() {
                     "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart),
                   } as CSSProperties}/>
 
-                <div className="ps-community-editor-preview-identity-line">
-                  {selectedCommunityProfile.accountName?.trim() && (
-                    <>
-                      <span className="ps-community-editor-preview-tag">{"@" + (selectedCommunityProfile.accountName?.trim().replace(/^@+/, "") || "")}</span>
+                {(selectedCommunityProfile.accountName?.trim() || selectedCommunityProfile.pronouns?.trim()) && (
+                  <div className="ps-community-editor-preview-identity-line">
+                    {selectedCommunityProfile.accountName?.trim() && (
+                      <span className="ps-community-editor-preview-tag">{"@" + selectedCommunityProfile.accountName.trim().replace(/^@+/, "")}</span>
+                    )}
+                    {selectedCommunityProfile.accountName?.trim() && selectedCommunityProfile.pronouns?.trim() && (
                       <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
-                    </>
-                  )}
-                  <span className={"ps-community-editor-preview-pronouns ps-community-profile-readonly-pronouns" + (!selectedCommunityProfile.pronouns ? " is-empty" : "")} aria-label="Pronombres">{selectedCommunityProfile.pronouns || "Añadir pronombres"}</span>
-                </div>
+                    )}
+                    {selectedCommunityProfile.pronouns?.trim() && (
+                      <span className="ps-community-editor-preview-pronouns ps-community-profile-readonly-pronouns" aria-label="Pronombres">
+                        {selectedCommunityProfile.pronouns.trim()}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <section className="ps-community-editor-preview-about">
                   <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{selectedCommunityProfile.about.length}/256</small></div>

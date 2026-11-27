@@ -2060,6 +2060,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <span className="ps-community-avatar-choice-art"><Film size={28}/></span>
                 <span className="ps-community-avatar-choice-copy"><strong>Elegir GIF</strong><small>GIF animado</small></span>
               </button>
+              {profile.bannerUrl && (
+                <button type="button" className="is-image-choice" onClick={() => { setBannerPickerOpen(false); void removeAsset("banner"); }} disabled={Boolean(uploading) || Boolean(deleting) || busy}>
+                  <span className="ps-community-avatar-choice-art"><Trash2 size={25}/></span>
+                  <span className="ps-community-avatar-choice-copy"><strong>Quitar cartel</strong><small>Eliminar la imagen actual</small></span>
+                </button>
+              )}
               <button type="button" className="is-collection-choice" onClick={() => { setBannerPickerOpen(false); setPosterCollectionTarget("banner"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>
                 <span className="ps-community-avatar-choice-copy"><strong>Ver colección de carteles</strong><small>Explora tus carteles guardados</small></span>

@@ -1723,14 +1723,14 @@
   text-shadow:none!important;
 }
 
-/* Discord-inspired profile roles: a clear section heading and compact icon labels. */
+/* Discord-inspired profile roles: icon + label, without generic badge boxes. */
 .ps-community-profile-role-section {
   display:flex!important;
   flex-direction:column!important;
   align-items:stretch!important;
-  gap:10px!important;
+  gap:4px!important;
   width:100%!important;
-  margin:20px 0 26px!important;
+  margin:12px 0 26px!important;
 }
 .ps-community-profile-role-section > .ps-community-editor-preview-about-heading {
   display:flex!important;
@@ -1750,30 +1750,31 @@
   display:flex!important;
   flex-wrap:wrap!important;
   align-items:center!important;
-  gap:7px!important;
+  column-gap:16px!important;
+  row-gap:8px!important;
   width:100%!important;
 }
 .ps-community-profile-role-item {
   display:inline-flex!important;
   align-items:center!important;
   justify-content:flex-start!important;
-  gap:7px!important;
-  min-height:30px!important;
+  gap:8px!important;
+  min-height:26px!important;
   max-width:100%!important;
   box-sizing:border-box!important;
-  padding:4px 10px 4px 7px!important;
-  border:1px solid color-mix(in srgb,var(--role-color,#929aa6) 38%,transparent)!important;
-  border-radius:8px!important;
-  background:color-mix(in srgb,var(--role-color,#929aa6) 9%,transparent)!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
   color:inherit!important;
-  font:700 11px/1.2 Inter,"DM Sans",sans-serif!important;
+  font:700 12px/1.25 Inter,"DM Sans",sans-serif!important;
   white-space:nowrap!important;
 }
 .ps-community-profile-role-icon {
   display:block!important;
-  flex:0 0 18px!important;
-  width:18px!important;
-  height:18px!important;
+  flex:0 0 22px!important;
+  width:22px!important;
+  height:22px!important;
   object-fit:contain!important;
   image-rendering:auto!important;
 }
@@ -1782,9 +1783,9 @@
   color:var(--editor-theme-text,var(--profile-live-text,#202126))!important;
 }
 @media(max-width:560px) {
-  .ps-community-profile-role-section {gap:8px!important;margin:17px 0 22px!important}
-  .ps-community-profile-role-list {gap:6px!important}
-  .ps-community-profile-role-item {min-height:28px!important;padding:3px 8px 3px 6px!important;font-size:10px!important}
-  .ps-community-profile-role-icon {width:17px!important;height:17px!important;flex-basis:17px!important}
+  .ps-community-profile-role-section {gap:3px!important;margin:10px 0 22px!important}
+  .ps-community-profile-role-list {column-gap:13px!important;row-gap:7px!important}
+  .ps-community-profile-role-item {min-height:24px!important;font-size:11.5px!important}
+  .ps-community-profile-role-icon {width:20px!important;height:20px!important;flex-basis:20px!important}
 }
 

@@ -874,12 +874,14 @@ export default function CommunityPage() {
         });
       }
       let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings: FuzzyTextSettings | null; display_name_gradient_start: string | null; display_name_gradient_end: string | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
+      let memberAppearanceReady = true;
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
           .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
+          memberAppearanceReady = false;
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
         } else {
           appearanceRows = (appearanceData ?? []) as typeof appearanceRows;
@@ -964,7 +966,7 @@ export default function CommunityPage() {
           profileEffectId: member.profile_effect_id ?? "none",
           statusExpiresAt: member.status_expires_at ?? null,
           pronouns: member.pronouns ?? "",
-          appearanceReady: true,
+          appearanceReady: memberAppearanceReady,
           statusText: member.status_text ?? "",
           about: member.about ?? "",
           joinedAt: member.joined_at ?? "",

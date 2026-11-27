@@ -85,14 +85,15 @@ testCase("community visual system uses Discord charcoal surfaces with GameCode t
 });
 
 
-testCase("community member profile reuses the editor preview as a read-only social card", () => {
+testCase("community member profile reuses the editor preview as a read-only social dialog", () => {
   assert.match(page, /openCommunityProfile\(memberId: string\)/);
-  assert.match(page, /openMemberHoverPreview\(member, \{/);
-  assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(hoverCommunityProfile\.userId\)\}/);
-  assert.match(page, /Ver perfil completo/);
+  // Member rail and chat author controls open the canonical profile dialog directly.
+  assert.match(page, /void openCommunityProfile\(member\.id\)/);
   assert.match(page, /onClick=\{\(\) => message\.author && void openCommunityProfile\(message\.author\.id\)\}/);
-  assert.match(page, /ps-community-member-popout/);
+  assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(message\.author!\.id\)\}/);
+  assert.match(page, /ps-community-profile-overlay/);
   assert.match(page, /ps-community-profile-dialog/);
+  assert.match(page, /ps-community-profile-live-card/);
   assert.match(page, /ps-community-editor-preview-card/);
   assert.match(page, /className=\{"ps-community-editor-preview-banner"/);
   assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
@@ -107,7 +108,7 @@ testCase("community member profile reuses the editor preview as a read-only soci
   assert.match(page, /Abrir editor de perfil/);
   assert.match(page, /CommunityProfileStudio/);
   assert.doesNotMatch(page, /community-profile-tabs|Actividad|Mutuales|Lista de deseos/);
-  assert.match(styles, /ps-community-member-popout__card/);
+  assert.match(styles, /ps-community-profile-live-card/);
   assert.match(styles, /ps-community-profile-live-readonly-body/);
   assert.match(styles, /ps-community-profile-bio-readonly/);
   assert.match(styles, /width: min\(458px, calc\(100vw - 24px\)\)/);

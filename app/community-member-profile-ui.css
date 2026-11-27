@@ -1783,10 +1783,15 @@
 .ps-community-member-popout .ps-community-profile-role-section {
   color:var(--editor-theme-text,var(--profile-live-text,#202126))!important;
 }
+/* The public profile sits 2px lower than the editor preview, matching the reference spacing. */
+.ps-community-profile-overlay .ps-community-profile-role-list {
+  margin-top:-6px!important;
+}
 @media(max-width:560px) {
   .ps-community-profile-role-section {gap:3px!important;margin:10px 0 22px!important}
   .ps-community-profile-role-list {column-gap:13px!important;row-gap:7px!important;margin-top:-7px!important}
   .ps-community-profile-role-item {min-height:24px!important;font-size:11.5px!important}
   .ps-community-profile-role-icon {width:20px!important;height:20px!important;flex-basis:20px!important}
+  .ps-community-profile-overlay .ps-community-profile-role-list {margin-top:-5px!important}
 }
 

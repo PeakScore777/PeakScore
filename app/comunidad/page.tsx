@@ -3128,7 +3128,7 @@ export default function CommunityPage() {
                 
                 {communityProfileError && (
                   <div className="ps-community-profile-retry" role="status">
-                    <span>No se pudieron actualizar algunos datos. Se conserva la información disponible.</span>
+                    <span>{communityProfileError}</span>
                     <button type="button" onClick={() => void openCommunityProfile(selectedCommunityProfile.userId)}>Reintentar</button>
                   </div>
                 )}

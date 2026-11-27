@@ -62,7 +62,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   // Read the core public identity with the authenticated client and the
   // stable base columns only. Optional profile migrations must not break it.
   let profileResult = await supabase.from("community_member_profiles")
-    .select("user_id,account_name,display_name,avatar_path,pronouns,status_text,about,created_at")
+    .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -88,7 +88,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult, memberNumberResult] = await Promise.all([
+  const [rolesResult, appearanceResult, memberNumberResult, accountNameResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
@@ -99,6 +99,11 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
     // Member number is optional: do not fail a public profile if its migration is pending.
     supabase.from("community_member_profiles")
       .select("member_number")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    // A handle migration may be rolling out independently; never let it block the profile.
+    supabase.from("community_member_profiles")
+      .select("account_name")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -127,8 +132,8 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       userId: profileResult.data.user_id,
       memberNumber: memberNumberResult.error ? null : memberNumberResult.data?.member_number ?? null,
       displayName: profileResult.data.display_name,
-      // Stable public handle, stored independently from editable display_name.
-      accountName: profileResult.data.account_name ?? "",
+      // Stable public handle, fetched independently so a pending migration cannot break the card.
+      accountName: accountNameResult.error ? "" : accountNameResult.data?.account_name ?? "",
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,

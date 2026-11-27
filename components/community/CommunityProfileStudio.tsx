@@ -486,6 +486,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const avatarInput = useRef<HTMLInputElement>(null);
   const avatarGifInput = useRef<HTMLInputElement>(null);
   const bannerImageInput = useRef<HTMLInputElement>(null);
+  const bannerGifInput = useRef<HTMLInputElement>(null);
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
@@ -1216,6 +1217,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       if (avatarGifInput.current) avatarGifInput.current.value = "";
     } else {
       if (bannerImageInput.current) bannerImageInput.current.value = "";
+      if (bannerGifInput.current) bannerGifInput.current.value = "";
     }
   }
 
@@ -1396,6 +1398,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
             <input ref={avatarGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
             <input ref={bannerImageInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
+            <input ref={bannerGifInput} hidden type="file" accept="image/gif" onChange={(event) => { handleBannerFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
 
           </aside>
 
@@ -2052,6 +2055,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className="is-image-choice" onClick={() => bannerImageInput.current?.click()} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art">{profile.bannerUrl ? <span className="ps-community-banner-choice-thumbnail" style={{ backgroundImage: "url(" + profile.bannerUrl + ")" }}/> : <ImagePlus size={28}/>}</span>
                 <span className="ps-community-avatar-choice-copy"><strong>Subir imagen</strong><small>PNG, JPG o WebP</small></span>
+              </button>
+              <button type="button" className="is-gif-choice" onClick={() => bannerGifInput.current?.click()} disabled={Boolean(uploading)}>
+                <span className="ps-community-avatar-choice-art"><Film size={28}/></span>
+                <span className="ps-community-avatar-choice-copy"><strong>Elegir GIF</strong><small>GIF animado</small></span>
               </button>
               <button type="button" className="is-collection-choice" onClick={() => { setBannerPickerOpen(false); setPosterCollectionTarget("banner"); setPosterCollectionOpen(true); }} disabled={Boolean(uploading)}>
                 <span className="ps-community-avatar-choice-art is-collection-art"><Film size={28}/></span>

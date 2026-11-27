@@ -36,6 +36,9 @@ alter table public.community_member_profiles
     'magenta',
     'fuchsia',
     'silver',
+    'white',
+    'gray',
+    'brown',
     'custom-gradient'
   ));
 

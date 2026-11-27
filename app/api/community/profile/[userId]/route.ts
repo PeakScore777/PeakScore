@@ -133,13 +133,11 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       userId: profileResult.data.user_id,
       memberNumber: memberNumberResult.error ? null : memberNumberResult.data?.member_number ?? null,
       displayName: profileResult.data.display_name,
-      accountName: (typeof registeredProfileResult.data?.full_name === "string" && registeredProfileResult.data.full_name.trim()
-        ? registeredProfileResult.data.full_name.trim()
-        : typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()
-          ? user.user_metadata.full_name.trim()
-          : typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()
-            ? user.user_metadata.name.trim()
-            : "").replace(/^@+/, "").slice(0, 80),
+      // Canonical @identity = the exact name entered in the PeakScore register form.
+      // Do not substitute the editable community display name or derive a slug.
+      accountName: typeof registeredProfileResult.data?.full_name === "string"
+        ? registeredProfileResult.data.full_name.trim().replace(/^@+/, "").slice(0, 80)
+        : "",
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,

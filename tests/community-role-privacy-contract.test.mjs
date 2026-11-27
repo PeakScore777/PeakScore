@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [migration, communityPage, privateChannelMigration] = await Promise.all([
+const [migration, communityPageRaw, privateChannelMigration] = await Promise.all([
   readFile(
     new URL("../supabase/migrations/20261121013500_community_role_privacy_projection.sql", import.meta.url),
     "utf8",
@@ -13,6 +13,9 @@ const [migration, communityPage, privateChannelMigration] = await Promise.all([
     "utf8",
   ),
 ]);
+
+// Normalize Windows checkouts so source-boundary assertions work with CRLF and LF.
+const communityPage = communityPageRaw.replace(/\r\n/g, "\n");
 
 testCase("community role assignments are readable only by their owner", () => {
   assert.match(

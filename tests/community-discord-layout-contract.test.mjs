@@ -147,15 +147,22 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
   assert.match(styles, /peakstyle-picker-preview-card/);
 });
 
-testCase("community profile popout keeps member actions separate from the owner's editor action", () => {
-  const profileMarkup = page.slice(page.indexOf("ps-community-member-popout"));
+testCase("community profile dialog is read-only for other members and exposes the editor only to its owner", () => {
+  const profileDialogStart = page.indexOf("!communityProfileStudioOpen && selectedCommunityProfile && (");
+  assert.ok(profileDialogStart >= 0, "Could not locate the community profile dialog.");
+  const profileMarkup = page.slice(profileDialogStart);
   assert.doesNotMatch(profileMarkup, /[🌟✨⭐]/u);
   assert.doesNotMatch(profileMarkup, /\/perfil\/estilo/);
-  assert.doesNotMatch(profileMarkup, /PeakStyle|Tablero|Actividad|Lista de deseos/);
-  assert.match(profileMarkup, /ps-community-member-popout__actions/);
-  assert.match(profileMarkup, /Mencionar/);
+  assert.match(profileMarkup, /ps-community-profile-overlay/);
+  assert.match(profileMarkup, /ps-community-profile-dialog[^\n]*role="dialog"/);
+  assert.match(profileMarkup, /ps-community-profile-close/);
+  assert.match(profileMarkup, /ps-community-profile-live-readonly-body/);
+  assert.match(profileMarkup, /ps-community-profile-bio-readonly/);
+  assert.match(
+    profileMarkup,
+    /selectedCommunityProfile\.isOwnProfile\s*&&\s*\(\s*<button[^>]*className="ps-community-profile-editor-button"/,
+  );
   assert.match(profileMarkup, /Abrir editor de perfil/);
-  assert.match(profileMarkup, /ps-community-profile-editor-button/);
   assert.doesNotMatch(profileMarkup, /community-profile-tabs/);
 });
 

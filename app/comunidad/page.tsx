@@ -1503,9 +1503,18 @@ export default function CommunityPage() {
         return;
       }
       setUserId(user.id);
-      const registeredName = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.user_name, user.user_metadata?.preferred_username]
-        .find((value) => typeof value === "string" && value.trim().length > 0);
-      setRegisteredAccountName(typeof registeredName === "string" ? registeredName.trim().slice(0, 80) : "");
+      const registeredHandle = [
+        user.user_metadata?.user_name,
+        user.user_metadata?.preferred_username,
+        user.user_metadata?.username,
+        user.user_metadata?.handle,
+      ].find((value) => typeof value === "string" && value.trim().length > 0);
+      const registeredName = [
+        registeredHandle,
+        user.user_metadata?.full_name,
+        user.user_metadata?.name,
+      ].find((value) => typeof value === "string" && value.trim().length > 0);
+      setRegisteredAccountName(communityAccountHandle(typeof registeredName === "string" ? registeredName : ""));
 
       const spaceResult = await supabase.from("community_spaces")
         .select("id,slug,name,space_type,visibility,verification_status,icon_key,accent_color,background_color,icon_path,banner_path")
@@ -1620,7 +1629,7 @@ export default function CommunityPage() {
       if (!alive) return;
       setIsFounder(platformProfile?.role === "admin");
       if (typeof platformProfile?.full_name === "string" && platformProfile.full_name.trim()) {
-        setRegisteredAccountName(platformProfile.full_name.trim().replace(/^@+/, "").slice(0, 80));
+        setRegisteredAccountName((current) => current || communityAccountHandle(platformProfile.full_name));
       }
       const catalog = (compatibleRoles ?? []) as CommunityRole[];
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
@@ -2500,7 +2509,18 @@ export default function CommunityPage() {
               </span>
               <span className="community-user-copy">
                 <span className="community-user-name">{profile?.full_name || "Mi perfil social"}</span>
-                <span className="community-user-presence"><span/>En línea</span>
+                <span
+                  className="community-user-presence community-user-presence-swap"
+                  data-has-handle={registeredAccountName.trim() ? "true" : "false"}
+                  aria-label={registeredAccountName.trim() ? "En línea · " + registeredAccountName : "En línea"}
+                >
+                  <span className="community-user-presence-line">
+                    <i aria-hidden="true"/>En línea
+                  </span>
+                  {registeredAccountName.trim() && (
+                    <span className="community-user-handle-line">{registeredAccountName}</span>
+                  )}
+                </span>
               </span>
             </button>
 

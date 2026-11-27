@@ -60,7 +60,7 @@ type Props = {
   userId: string;
   initialProfile: CommunityIdentity;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (assetUpdate?: { avatarUrl?: string | null; bannerUrl?: string | null }) => void;
   isOnline: boolean;
 };
 const COMMUNITY_PROFILE_ROLE_ICON_PATHS: Record<string, string> = {
@@ -1292,7 +1292,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         : { ...current, bannerUrl: nextUrl });
       setAvatarPickerOpen(false);
       setBannerPickerOpen(false);
-      onSaved();
+      onSaved(kind === "avatar" ? { avatarUrl: nextUrl } : { bannerUrl: nextUrl });
       return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar la imagen.");
@@ -1331,7 +1331,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setSavedSnapshot((current) => kind === "avatar"
         ? { ...current, avatarUrl: null }
         : { ...current, bannerUrl: null });
-      onSaved();
+      onSaved(kind === "avatar" ? { avatarUrl: null } : { bannerUrl: null });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo retirar la imagen.");
     } finally {

@@ -63,6 +63,15 @@ type Props = {
   onSaved: () => void;
   isOnline: boolean;
 };
+const COMMUNITY_PROFILE_ROLE_ICON_PATHS: Record<string, string> = {
+  fundador: "/images/community/roles/founder.png",
+  administrador: "/images/community/roles/admin.png",
+  moderador: "/images/community/roles/moderator.png",
+  profesor: "/images/community/roles/professor.png",
+  docente: "/images/community/roles/professor.png",
+  miembro: "/images/community/roles/miembro.png",
+};
+
 
 const FRAMES: { id: AvatarFrame; label: string; description: string }[] = [
   { id: "none", label: "Ninguno", description: "Avatar limpio" },
@@ -1576,13 +1585,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       aria-label="Editar pronombres"
                     />
                   </div>
-                  <div className="ps-community-editor-preview-role-row">
-                    {profile.roles.slice(0, 3).map((role) => (
-                      <span key={role.roleKey} style={{
-                        "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor,
-                      } as CSSProperties}>{role.label}</span>
-                    ))}
-                  </div>
                   <section className="ps-community-editor-preview-about">
                     <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/256</small></div>
                     {aboutEditing ? (
@@ -1609,6 +1611,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </button>
                     )}
                   </section>
+                  {profile.roles.length > 0 && (
+                    <section className="ps-community-editor-preview-roles-section" aria-label="Roles de comunidad">
+                      <div className="ps-community-editor-preview-about-heading"><span>Roles</span></div>
+                      <div className="ps-community-editor-preview-role-list">
+                        {profile.roles.map((role) => (
+                          <span key={role.roleKey} className="ps-community-editor-preview-role-pill" style={{
+                            "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor,
+                          } as CSSProperties}>
+                            <Image
+                              src={COMMUNITY_PROFILE_ROLE_ICON_PATHS[role.roleKey] ?? COMMUNITY_PROFILE_ROLE_ICON_PATHS.miembro}
+                              alt=""
+                              aria-hidden="true"
+                              width={18}
+                              height={18}
+                              className="ps-community-editor-preview-role-icon"
+                            />
+                            <span>{role.label}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+                  )}
                   <section className="ps-community-editor-preview-meta">
                     <span>MIEMBRO DESDE</span>
                     <strong>{joinedLabel}</strong>

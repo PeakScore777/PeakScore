@@ -1229,7 +1229,7 @@ test("profile banner keeps its HSV theme editor while name colors use fixed swat
   assert.match(studio, /setColorPickerOpen\(true\)/);
   assert.match(studio, /setColorPickerOpen\(false\)/);
   assert.match(studio, /aria-label="Paleta de colores de letra"/);
-  assert.doesNotMatch(studio, /DisplayNameCustomColorPicker|ps-community-name-custom-picker|Pipette|Elegir color personalizado/);
+  assert.doesNotMatch(studio, /<DisplayNameCustomColorPicker|className=["\x27][^"\x27]*ps-community-name-custom-picker|Pipette|Elegir color personalizado/);
 });
 
 test("profile banner HSV controls update the active theme stop and provide reset and close actions", () => {

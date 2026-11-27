@@ -1975,3 +1975,9 @@
 .ps-community-profile-dialog {
   animation:ps-profile-dialog-in 140ms cubic-bezier(.2,.8,.2,1) both!important;
 }
+@media(prefers-reduced-motion:reduce) {
+  .ps-community-profile-overlay,
+  .ps-community-profile-dialog {
+    animation:none!important;
+  }
+}

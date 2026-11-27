@@ -1628,9 +1628,8 @@ export default function CommunityPage() {
       }
       if (!alive) return;
       setIsFounder(platformProfile?.role === "admin");
-      if (typeof platformProfile?.full_name === "string" && platformProfile.full_name.trim()) {
-        setRegisteredAccountName((current) => current || communityAccountHandle(platformProfile.full_name));
-      }
+      // Keep the @handle from auth.users metadata. profiles.full_name is the
+      // display name, not the account handle shown in the public profile.
       const catalog = (compatibleRoles ?? []) as CommunityRole[];
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))

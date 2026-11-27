@@ -142,7 +142,12 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
           .find((value) => typeof value === "string" && value.trim().length > 0);
         const candidate = typeof directHandle === "string" ? directHandle : displayHandle;
         if (typeof candidate !== "string") return "";
-        return candidate.trim().replace(/^@+/, "").slice(0, 80);
+        const cleaned = candidate.trim().replace(/^@+/, "").normalize("NFKD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9._-]+/g, ".")
+          .replace(/^[._-]+|[._-]+$/g, "");
+        return cleaned.slice(0, 32);
       })(),
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,

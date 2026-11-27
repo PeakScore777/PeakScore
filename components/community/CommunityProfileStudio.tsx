@@ -341,19 +341,9 @@ function safeDisplayNameAnimation(value?: string): DisplayNameAnimation {
   return DISPLAY_NAME_ANIMATIONS.some((item) => item.id === value) ? value as DisplayNameAnimation : "decrypt";
 }
 function safeDisplayNameColor(value?: string): DisplayNameColor {
-  return DISPLAY_N} aria-label={"Usar " + color} onClick={() => apply(color)}/>
-            )) : ["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"].map((color) => (
-              <button key={color} type="button" style={{ background: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>
-            ))}
-          </div>
-          <div className="ps-community-color-picker-actions">
-            <button type="button" onClick={() => { onReset?.(); setLocalColor(value); setOpen(false); }}>Restablecer</button>
-            <button type="button" onClick={() => { apply(); setOpen(false); }}>Listo</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return DISPLAY_NAME_COLORS.some((item) => item.id === value)
+    ? value as DisplayNameColor
+    : "default";
 }
 
 function initials(value: string) {

@@ -3970,3 +3970,23 @@
   background:rgb(255 255 255 / 6%)!important;
 }
 
+/* Opaque idle dock card: prevent channel labels from showing through its surface. */
+.root :global(.community-user-panel-shell.community-user-panel-dock > button.community-user-panel-button) {
+  position:relative!important;
+  z-index:2!important;
+  isolation:isolate!important;
+  opacity:1!important;
+  background:#1e2025!important;
+  background-color:#1e2025!important;
+  background-image:none!important;
+  border:1px solid #30343b!important;
+  box-shadow:0 1px 3px rgb(0 0 0 / 24%)!important;
+}
+.root :global(.community-user-panel-shell.community-user-panel-dock > button.community-user-panel-button:hover),
+.root :global(.community-user-panel-shell.community-user-panel-dock > button.community-user-panel-button:focus-visible) {
+  background:#282b31!important;
+  background-color:#282b31!important;
+  border-color:#414650!important;
+  box-shadow:0 2px 8px rgb(0 0 0 / 22%)!important;
+}
+

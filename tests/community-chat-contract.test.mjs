@@ -128,7 +128,11 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /community-profile-overlay/);
   assert.match(page, /CommunityProfileStudio/);
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
-  assert.match(page, /ps-community-member-popout__actions/);
+  // Profile cards are now a read-only dialog; only the profile owner gets edit access.
+  assert.match(page, /ps-community-profile-overlay/);
+  assert.match(page, /ps-community-profile-dialog/);
+  assert.match(page, /selectedCommunityProfile\.isOwnProfile &&/);
+  assert.match(page, /ps-community-profile-editor-button/);
   assert.match(page, /aria-label="Mencionar miembro"/);
   assert.match(page, /insertMention\(\{/);
   assert.match(page, /ps-community-editor-preview-role-row/);

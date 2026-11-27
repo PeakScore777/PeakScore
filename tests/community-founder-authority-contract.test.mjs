@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [migration, roleRoute, moderationRoute, lifecycleRoute, page, styles] = await Promise.all([
+const [migration, roleRoute, moderationRoute, lifecycleRoute, page, theme] = await Promise.all([
   readFile(new URL("../supabase/migrations/20261124230000_peakscore_community_authority_consolidated.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/roles/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/moderation/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/lifecycle/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../app/comunidad/peakscore-community-theme.module.css", import.meta.url), "utf8"),
 ]);
 
 testCase("founder identity is immutable and bootstrapped only by the unique platform admin", () => {
@@ -97,13 +97,14 @@ testCase("founder control uses a scoped, non-generic dialog and the new communit
 });
 
 testCase("mobile community reserves the channel drawer and safe-area spacing", () => {
-  assert.match(page, /community-mobile-menu/);
+  assert.match(page, /className="community-mobile-menu"/);
+  assert.match(page, /setMobileChannelsOpen\(\(open\) => !open\)/);
   assert.match(page, /community-sidebar-open/);
   assert.match(page, /setMobileChannelsOpen\(false\)/);
   assert.match(page, /event\.key === "Escape"/);
-  assert.match(styles, /community-mobile-header-height/);
-  assert.match(styles, /community-mobile-bottom-nav-height/);
-  assert.match(styles, /env\(safe-area-inset-bottom/);
-  assert.match(styles, /community-chat-composer-wrap/);
-  assert.match(styles, /@media \(max-width: 700px\)/);
+  assert.match(theme, /community-mobile-header-height/);
+  assert.match(theme, /community-mobile-bottom-nav-height/);
+  assert.match(theme, /env\(safe-area-inset-bottom/);
+  assert.match(theme, /community-chat-composer-wrap/);
+  assert.match(theme, /@media \(max-width: 700px\)/);
 });

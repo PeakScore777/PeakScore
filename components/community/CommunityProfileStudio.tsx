@@ -832,23 +832,31 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setCloseConfirmationOpen(true);
       const dialog = editorDialogRef.current;
       if (dialog && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        // Use the independent translate property so the editor's !important
-        // transform styles cannot suppress the shake. Replay on every attempt.
+        // Independent translate/rotate properties keep the editor's layout and
+        // dimensions untouched. The shrinking orbital path feels like an object
+        // rolling around the inside of a cup, then settling back at dead center.
         editorShakeAnimationRef.current?.cancel();
         editorShakeAnimationRef.current = dialog.animate(
           [
-            { translate: "0px 0", offset: 0 },
-            { translate: "-16px 0", offset: 0.08 },
-            { translate: "14px 0", offset: 0.17 },
-            { translate: "-12px 0", offset: 0.26 },
-            { translate: "10px 0", offset: 0.35 },
-            { translate: "-8px 0", offset: 0.44 },
-            { translate: "7px 0", offset: 0.53 },
-            { translate: "-6px 0", offset: 0.62 },
-            { translate: "4px 0", offset: 0.71 },
-            { translate: "-3px 0", offset: 0.8 },
-            { translate: "2px 0", offset: 0.9 },
-            { translate: "0px 0", offset: 1 },
+            { translate: "0px 0px", rotate: "0deg", offset: 0 },
+            { translate: "-7px -4px", rotate: "-0.35deg", offset: 0.045 },
+            { translate: "-13px -1px", rotate: "-0.7deg", offset: 0.09 },
+            { translate: "-10px 5px", rotate: "-0.55deg", offset: 0.145 },
+            { translate: "-2px 8px", rotate: "-0.18deg", offset: 0.20 },
+            { translate: "8px 5px", rotate: "0.38deg", offset: 0.255 },
+            { translate: "13px -1px", rotate: "0.72deg", offset: 0.31 },
+            { translate: "9px -6px", rotate: "0.5deg", offset: 0.365 },
+            { translate: "1px -7px", rotate: "0.12deg", offset: 0.42 },
+            { translate: "-6px -3px", rotate: "-0.32deg", offset: 0.475 },
+            { translate: "-7px 3px", rotate: "-0.38deg", offset: 0.53 },
+            { translate: "-1px 5px", rotate: "-0.08deg", offset: 0.59 },
+            { translate: "5px 2px", rotate: "0.28deg", offset: 0.65 },
+            { translate: "5px -3px", rotate: "0.24deg", offset: 0.71 },
+            { translate: "0px -4px", rotate: "0deg", offset: 0.77 },
+            { translate: "-3px 0px", rotate: "-0.16deg", offset: 0.83 },
+            { translate: "0px 2px", rotate: "-0.02deg", offset: 0.89 },
+            { translate: "1px -1px", rotate: "0.04deg", offset: 0.945 },
+            { translate: "0px 0px", rotate: "0deg", offset: 1 },
           ],
           { duration: 1100, easing: "linear", fill: "none" },
         );

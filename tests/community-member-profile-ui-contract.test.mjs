@@ -62,13 +62,16 @@ testCase("every community member handle is loaded before profile opening", async
     readFile(new URL("../supabase/migrations/20261127134000_backfill_missing_community_member_handles.sql", import.meta.url), "utf8"),
   ]);
 
-  assert.match(communityPage, /account_name,display_name,avatar_path/);
+  assert.match(communityPage, /\.select\("user_id,account_name"\)/);
+  assert.match(communityPage, /memberAccountNames\.set\(row\.user_id, row\.account_name\.trim\(\)\)/);
   assert.match(communityPage, /accountName: member\.account_name\?\.trim\(\) \?\? ""/);
   assert.match(communityPage, /accountNameReady: Boolean\(member\.account_name\?\.trim\(\)\)/);
-  assert.match(communityPage, /account_name: member\.account_name/);
+  assert.match(communityPage, /account_name: memberAccountNames\.get\(member\.user_id\) \?\? null/);
   assert.match(communityPage, /selectedCommunityProfile\.accountName/);
   assert.match(communityPage, /"@" \+ selectedCommunityProfile\.accountName\.trim\(\)/);
-  assert.match(profileRoute, /accountName: profileResult\.data\.account_name \?\? ""/);
+  assert.match(profileRoute, /\.select\("user_id,display_name,avatar_path,pronouns,status_text,about,created_at"\)/);
+  assert.match(profileRoute, /\.select\("account_name"\)/);
+  assert.match(profileRoute, /accountName: accountNameResult\.error \? "" : accountNameResult\.data\?\.account_name \?\? ""/);
   assert.match(handleMigration, /alter column account_name set not null/);
   assert.match(handleMigration, /create unique index if not exists community_member_profiles_account_name_lower_uidx/);
   assert.match(backfillMigration, /insert into public\.community_member_profiles \(user_id, display_name, account_name\)/);

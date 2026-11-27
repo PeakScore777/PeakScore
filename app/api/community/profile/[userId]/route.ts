@@ -62,7 +62,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   // Read the core public identity with the authenticated client and the
   // stable base columns only. Optional profile migrations must not break it.
   let profileResult = await supabase.from("community_member_profiles")
-    .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
+    .select("user_id,account_name,display_name,avatar_path,pronouns,status_text,about,created_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -77,7 +77,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       display_name: displayName.length >= 2 ? displayName : "Miembro",
     }, { onConflict: "user_id", ignoreDuplicates: true });
     profileResult = await supabase.from("community_member_profiles")
-      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
+      .select("user_id,account_name,display_name,avatar_path,pronouns,status_text,about,created_at")
       .eq("user_id", userId)
       .maybeSingle();
   }
@@ -88,7 +88,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult, registeredAuthUserResult, memberNumberResult] = await Promise.all([
+  const [rolesResult, appearanceResult, memberNumberResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
@@ -96,9 +96,6 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
-    // Resolve only the public account-name fields from Auth metadata. Do not query
-    // public.profiles or expose the rest of the user's private Auth metadata.
-    supabaseAdmin.auth.admin.getUserById(userId),
     // Member number is optional: do not fail a public profile if its migration is pending.
     supabase.from("community_member_profiles")
       .select("member_number")
@@ -130,15 +127,8 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       userId: profileResult.data.user_id,
       memberNumber: memberNumberResult.error ? null : memberNumberResult.data?.member_number ?? null,
       displayName: profileResult.data.display_name,
-      // Canonical @identity comes from the registration fields in Auth metadata,
-      // independently from the editable community display name.
-      accountName: (() => {
-        const metadata = registeredAuthUserResult.data.user?.user_metadata ?? {};
-        const registeredName = typeof metadata.full_name === "string" && metadata.full_name.trim()
-          ? metadata.full_name
-          : typeof metadata.name === "string" ? metadata.name : "";
-        return registeredName.trim().replace(/^@+/, "").slice(0, 80);
-      })(),
+      // Stable public handle, stored independently from editable display_name.
+      accountName: profileResult.data.account_name ?? "",
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,

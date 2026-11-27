@@ -3452,16 +3452,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
 }
 .ps-community-editor-v2[data-close-confirming="true"] {
-  transform:translateX(-64px)!important;
+  /* Discord-style warning motion: move sideways only; never shrink the editor. */
+  width:min(1150px,calc(100vw - 32px))!important;
+  height:min(980px,calc(100dvh - 32px))!important;
+  transform:translateX(-64px) translateY(0) scale(1)!important;
   box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
 }
 .ps-community-editor-savebar {
   transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
 }
 .ps-community-editor-savebar.is-close-warning {
-  border-color:#eb4b55!important;
-  background:linear-gradient(110deg,rgba(159,41,53,.18) 0%,rgba(127,32,44,.12) 100%),#202126!important;
-  box-shadow:0 0 0 1px rgb(239 68 68 / 24%),0 0 18px rgb(239 68 68 / 10%),0 12px 34px rgb(0 0 0 / 32%)!important;
+  border:1px solid rgba(239,68,78,.82)!important;
+  background:linear-gradient(110deg,rgba(159,41,53,.09) 0%,rgba(127,32,44,.055) 100%),#202126!important;
+  box-shadow:0 0 0 1px rgb(239 68 78 / 16%),0 0 14px rgb(239 68 78 / 6%),0 12px 34px rgb(0 0 0 / 32%)!important;
   animation:ps-community-unsaved-bar-enter .24s cubic-bezier(.2,.8,.2,1) both!important;
 }
 .ps-community-editor-savebar.is-close-warning>span {
@@ -3489,7 +3492,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 @media(max-width:760px) {
   .ps-community-editor-v2[data-close-confirming="true"] {
-    transform:translateX(0) translateY(-2px) scale(.995)!important;
+    width:calc(100vw - 32px)!important;
+    height:calc(100dvh - 32px)!important;
+    transform:translateX(-12px) translateY(0) scale(1)!important;
   }
 }
 

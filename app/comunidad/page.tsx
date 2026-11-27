@@ -70,6 +70,7 @@ type CommunityProfileEffect = "none" | "aurora" | "embers" | "starlight" | "scan
 type CommunityMemberSummary = {
   id: string;
   member_number?: number | null;
+  account_name?: string | null;
   full_name: string;
   avatar_url: string | null;
   status_text: string;
@@ -557,8 +558,8 @@ export default function CommunityPage() {
       : cached;
     const instantProfile: CommunityMemberProfile = cachedWithRegisteredName ?? {
       userId: memberId,
-      accountName: memberId === userId ? registeredAccountName.trim() : "",
-      accountNameReady: memberId === userId && Boolean(registeredAccountName.trim()),
+      accountName: member?.account_name?.trim() || (memberId === userId ? registeredAccountName.trim() : ""),
+      accountNameReady: Boolean(member?.account_name?.trim() || (memberId === userId && registeredAccountName.trim())),
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
       memberNumber: member?.member_number ?? null,
@@ -774,7 +775,7 @@ export default function CommunityPage() {
     let active = true;
     async function loadCommunityMembers() {
       type MemberRow = {
-        user_id: string; member_number: number | null; display_name: string; avatar_path: string | null;
+        user_id: string; member_number: number | null; account_name: string; display_name: string; avatar_path: string | null;
         pronouns: string | null; status_text: string | null; about: string | null; created_at: string; status_expires_at: string | null;
       };
       let memberData: MemberRow[] = [];
@@ -788,7 +789,7 @@ export default function CommunityPage() {
         if (memberIds.length) {
           const { data: spaceProfiles, error: spaceProfilesError } = await supabase
             .from("community_member_profiles")
-            .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
+            .select("user_id,member_number,account_name,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
             .in("user_id", memberIds)
             .order("display_name", { ascending: true });
           if (!active || spaceProfilesError) return;
@@ -797,7 +798,7 @@ export default function CommunityPage() {
       } else {
         const { data: globalProfiles, error: memberError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
+          .select("user_id,member_number,account_name,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
           .order("display_name", { ascending: true })
           .limit(100);
         if (!active || memberError) return;
@@ -806,7 +807,7 @@ export default function CommunityPage() {
         // window would otherwise omit their profile from the right-hand roster.
         if (!memberData.some((member) => member.user_id === userId)) {
           const { data: ownProfile } = await supabase.from("community_member_profiles")
-            .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
+            .select("user_id,member_number,account_name,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
             .eq("user_id", userId)
             .maybeSingle();
           if (active && ownProfile) memberData.push(ownProfile as MemberRow);
@@ -904,6 +905,7 @@ export default function CommunityPage() {
       const memberRows = memberData.map((member) => ({
         id: member.user_id,
         member_number: member.member_number,
+        account_name: member.account_name,
         full_name: member.display_name,
         avatar_url: member.avatar_path
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl
@@ -935,6 +937,8 @@ export default function CommunityPage() {
         roles: withInheritedCommunityMemberRoles(rolesByMember.get(member.user_id) ?? []),
       }));
       setCommunityMembers(memberRows);
+      const ownMember = memberRows.find((member) => member.id === userId);
+      if (ownMember?.account_name) setRegisteredAccountName(ownMember.account_name);
 
       // Prebuild complete profile cards while the member rail is loaded.
       // A click now opens from this cache instead of waiting for a profile API round-trip.
@@ -942,8 +946,8 @@ export default function CommunityPage() {
         communityProfileCacheRef.current.set(member.id, {
           userId: member.id,
           memberNumber: member.member_number ?? null,
-          accountName: member.id === userId ? registeredAccountName.trim() : "",
-          accountNameReady: member.id === userId && Boolean(registeredAccountName.trim()),
+          accountName: member.account_name?.trim() ?? "",
+          accountNameReady: Boolean(member.account_name?.trim()),
           displayName: member.full_name,
           avatarUrl: member.avatar_url,
           bannerUrl: member.banner_url ?? null,
@@ -1505,7 +1509,7 @@ export default function CommunityPage() {
         return;
       }
       setUserId(user.id);
-      const registeredName = [user.user_metadata?.full_name, user.user_metadata?.name]
+      const registeredName = [user.user_metadata?.user_name, user.user_metadata?.preferred_username, user.user_metadata?.username, user.user_metadata?.nickname]
         .find((value) => typeof value === "string" && value.trim().length > 0);
       setRegisteredAccountName(typeof registeredName === "string"
         ? registeredName.trim().replace(/^@+/, "").slice(0, 80)

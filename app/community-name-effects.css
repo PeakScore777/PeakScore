@@ -509,7 +509,7 @@
 }
 \n\n
 /* A custom tone in Solid mode is one colour, not the legacy two-stop gradient.
-/* The custom HSV picker stores its selected hex in the gradient-start field and
+   The custom HSV picker stores its selected hex in the gradient-start field and
    uses the legacy color-custom-gradient token. In effect-plain that token means
    ONE custom solid tone; only effect-gradient is allowed to paint two stops. */
 :is(.ps-community-name-render,.community-member-nameplate,.community-chat-author).effect-plain.color-custom-gradient {

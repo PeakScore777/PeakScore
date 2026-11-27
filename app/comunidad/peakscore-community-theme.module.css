@@ -3990,3 +3990,55 @@
   box-shadow:0 2px 8px rgb(0 0 0 / 22%)!important;
 }
 
+/* Final dock palette from Discord reference: black rail, hover only on identity. */
+.root :global(.community-user-panel-shell.community-user-panel-dock) {
+  background:#111214!important;
+  background-color:#111214!important;
+  border:1px solid #24262b!important;
+  border-top:1px solid #24262b!important;
+  border-radius:10px!important;
+  box-shadow:0 2px 10px rgb(0 0 0 / 22%)!important;
+}
+.root :global(.community-user-panel-shell.community-user-panel-dock > button.community-user-panel-button) {
+  background:transparent!important;
+  background-color:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.root :global(.community-user-panel-shell.community-user-panel-dock > button.community-user-panel-button:hover),
+.root :global(.community-user-panel-shell.community-user-panel-dock > button.community-user-panel-button:focus-visible) {
+  background:#2b2d31!important;
+  background-color:#2b2d31!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls) {
+  background:transparent!important;
+  background-color:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.root :global(.community-user-panel-dock .community-user-control-group) {
+  background:transparent!important;
+  background-color:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.root :global(.community-user-panel-dock .community-user-control-group:hover),
+.root :global(.community-user-panel-dock .community-user-control-group:has(button.is-active)) {
+  background:#24262b!important;
+  background-color:#24262b!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls .community-user-control-group button) {
+  background:transparent!important;
+  color:#b5bac1!important;
+  box-shadow:none!important;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls .community-user-control-group button:hover),
+.root :global(.community-user-panel-dock .community-user-audio-controls .community-user-control-group button.is-active) {
+  background:rgb(255 255 255 / 7%)!important;
+  color:#fff!important;
+}
+

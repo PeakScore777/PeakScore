@@ -73,6 +73,7 @@ type CommunityMemberSummary = {
   full_name: string;
   avatar_url: string | null;
   status_text: string;
+  pronouns?: string;
   roles?: CommunityRole[];
   about?: string;
   joined_at?: string;
@@ -583,8 +584,8 @@ export default function CommunityPage() {
       profileFrameId: member?.profile_frame_id ?? "none",
       profileEffectId: member?.profile_effect_id ?? "none",
       statusExpiresAt: member?.status_expires_at ?? null,
-      pronouns: "",
-      appearanceReady: false,
+      pronouns: member?.pronouns ?? "",
+      appearanceReady: Boolean(member),
       statusText: getVisibleCommunityStatus(member?.status_text, member?.status_expires_at),
       about: member?.about ?? "",
       joinedAt: member?.joined_at ?? "",
@@ -596,10 +597,14 @@ export default function CommunityPage() {
 
     // Open the complete profile shell immediately from the member list/chat snapshot.
     // The detail request enriches it in the background without a blocking spinner.
-    setCommunityProfileLoading(true);
+    setCommunityProfileLoading(false);
     setCommunityProfileError("");
     setSelectedCommunityProfile(instantProfile);
 
+    // Profile data was prepared with the roster query; do not wait for Supabase on click.
+    if (cachedWithRegisteredName?.appearanceReady) return;
+
+    setCommunityProfileLoading(true);
     try {
       const response = await fetch("/api/community/profile/" + memberId, {
         method: "GET",
@@ -772,7 +777,7 @@ export default function CommunityPage() {
     async function loadCommunityMembers() {
       type MemberRow = {
         user_id: string; member_number: number | null; display_name: string; avatar_path: string | null;
-        status_text: string | null; about: string | null; created_at: string; status_expires_at: string | null;
+        pronouns: string | null; status_text: string | null; about: string | null; created_at: string; status_expires_at: string | null;
       };
       let memberData: MemberRow[] = [];
       if (activeSpace?.space_type === "preicfes") {
@@ -785,7 +790,7 @@ export default function CommunityPage() {
         if (memberIds.length) {
           const { data: spaceProfiles, error: spaceProfilesError } = await supabase
             .from("community_member_profiles")
-            .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
+            .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
             .in("user_id", memberIds)
             .order("display_name", { ascending: true });
           if (!active || spaceProfilesError) return;
@@ -794,7 +799,7 @@ export default function CommunityPage() {
       } else {
         const { data: globalProfiles, error: memberError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
+          .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
           .order("display_name", { ascending: true })
           .limit(100);
         if (!active || memberError) return;
@@ -803,7 +808,7 @@ export default function CommunityPage() {
         // window would otherwise omit their profile from the right-hand roster.
         if (!memberData.some((member) => member.user_id === userId)) {
           const { data: ownProfile } = await supabase.from("community_member_profiles")
-            .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
+            .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
             .eq("user_id", userId)
             .maybeSingle();
           if (active && ownProfile) memberData.push(ownProfile as MemberRow);
@@ -904,6 +909,7 @@ export default function CommunityPage() {
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl
           : null,
         status_text: getVisibleCommunityStatus(member.status_text, member.status_expires_at),
+        pronouns: member.pronouns ?? "",
         about: member.about ?? "",
         joined_at: member.created_at,
         banner_url: appearanceByMember.get(member.user_id)?.banner_path
@@ -929,6 +935,45 @@ export default function CommunityPage() {
         roles: withInheritedCommunityMemberRoles(rolesByMember.get(member.user_id) ?? []),
       }));
       setCommunityMembers(memberRows);
+
+      // Prebuild complete profile cards while the member rail is loaded.
+      // A click now opens from this cache instead of waiting for a profile API round-trip.
+      for (const member of memberRows) {
+        communityProfileCacheRef.current.set(member.id, {
+          userId: member.id,
+          memberNumber: member.member_number ?? null,
+          accountName: communityAccountHandle(member.full_name),
+          displayName: member.full_name,
+          avatarUrl: member.avatar_url,
+          bannerUrl: member.banner_url ?? null,
+          cardColor: member.card_color ?? "#B7D7C3",
+          themeColorSecondary: member.theme_color_secondary ?? "#8FB9A6",
+          plateStyle: member.plate_style ?? "classic",
+          displayNameStyle: member.display_name_style ?? "classic",
+          displayNameEffect: member.display_name_effect ?? "plain",
+          displayNameAnimation: member.display_name_animation ?? "decrypt",
+          displayNameFuzzySettings: member.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
+          displayNameColor: member.display_name_color ?? "default",
+          displayNameGradientStart: member.display_name_gradient_start ?? "#B86BFF",
+          displayNameGradientEnd: member.display_name_gradient_end ?? "#4E9BFF",
+          displayNamePrismColors: member.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
+          accentColor: member.accent_color ?? "#3987FF",
+          avatarFrame: member.avatar_frame ?? "none",
+          avatarDecorationId: member.avatar_decoration_id ?? "none",
+          profileFrameId: member.profile_frame_id ?? "none",
+          profileEffectId: member.profile_effect_id ?? "none",
+          statusExpiresAt: member.status_expires_at ?? null,
+          pronouns: member.pronouns ?? "",
+          appearanceReady: true,
+          statusText: member.status_text ?? "",
+          about: member.about ?? "",
+          joinedAt: member.joined_at ?? "",
+          roles: (member.roles ?? []).map((role) => ({
+            roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
+          })),
+          isOwnProfile: member.id === userId,
+        });
+      }
 
     }
     void loadCommunityMembers();
@@ -2999,6 +3044,7 @@ export default function CommunityPage() {
             onClose={() => setCommunityProfileStudioOpen(false)}
             onSaved={() => {
               const memberId = selectedCommunityProfile.userId;
+              communityProfileCacheRef.current.delete(memberId);
               void openCommunityProfile(memberId);
             }}
           />

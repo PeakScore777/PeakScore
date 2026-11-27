@@ -1493,7 +1493,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   />                  <div className="ps-community-editor-preview-identity-line">
                     {accountTag(profile.accountName) && (
                       <>
-                        <span className="ps-community-editor-preview-tag">{"@" + accountTag(profile.accountName)}</span>
+                        <span className="ps-community-editor-preview-tag ps-community-profile-account-handle">{"@" + accountTag(profile.accountName)}</span>
                         <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
                       </>
                     )}
@@ -4975,4 +4975,27 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     </div>,
     document.body,
   );
+}
+
+
+/* The editor preview mirrors the public Discord-style identity line. */
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line {
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start!important;flex-wrap:nowrap!important;gap:7px!important;
+  width:100%!important;min-width:0!important;
+}
+.ps-community-editor-preview-card .ps-community-profile-account-handle {
+  display:inline!important;flex:0 0 auto!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+  font:600 14px/1.35 Inter,"DM Sans",sans-serif!important;white-space:nowrap!important;
+  opacity:.9!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-separator {
+  display:inline!important;flex:0 0 auto!important;margin:0!important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns {
+  display:inline!important;flex:0 1 auto!important;min-width:0!important;
+  margin:0!important;padding:0!important;white-space:nowrap!important;
+  font:italic 500 14px/1.35 Inter,"DM Sans",sans-serif!important;
 }

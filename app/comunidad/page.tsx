@@ -683,7 +683,6 @@ export default function CommunityPage() {
       } else {
         await navigator.clipboard.writeText(url);
       }
-      setMemberProfileMenuOpen(false);
     } catch (shareError) {
       if (shareError instanceof Error && shareError.name !== "AbortError") {
         setCommunityProfileError("No se pudo compartir el perfil.");

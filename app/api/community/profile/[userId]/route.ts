@@ -88,7 +88,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult, accountUserResult, memberNumberResult] = await Promise.all([
+  const [rolesResult, appearanceResult, registeredProfileResult, memberNumberResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
@@ -96,8 +96,12 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
-    // Community-wide identity must not read the retired PeakScore profile projection.
-    supabaseAdmin.auth.admin.getUserById(userId),
+    // The registration form stores its "Nombre completo" field in public.profiles.full_name.
+    // This is the account @name; community_member_profiles.display_name is the editable card name.
+    supabaseAdmin.from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .maybeSingle(),
     // Member number is optional: do not fail a public profile if its migration is pending.
     supabase.from("community_member_profiles")
       .select("member_number")
@@ -129,26 +133,13 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       userId: profileResult.data.user_id,
       memberNumber: memberNumberResult.error ? null : memberNumberResult.data?.member_number ?? null,
       displayName: profileResult.data.display_name,
-      accountName: (() => {
-        const metadata = userId === user.id
-          ? (user.user_metadata ?? {})
-          : (accountUserResult.data?.user?.user_metadata ?? {});
-        // Prefer a real account handle. Older signups only have full_name/name,
-        // so derive a stable display handle from that registered name instead
-        // of returning an empty @ identity.
-        const directHandle = [metadata.user_name, metadata.preferred_username, metadata.username, metadata.handle]
-          .find((value) => typeof value === "string" && value.trim().length > 0);
-        const displayHandle = [metadata.full_name, metadata.name, profileResult.data.display_name]
-          .find((value) => typeof value === "string" && value.trim().length > 0);
-        const candidate = typeof directHandle === "string" ? directHandle : displayHandle;
-        if (typeof candidate !== "string") return "";
-        const cleaned = candidate.trim().replace(/^@+/, "").normalize("NFKD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .replace(/[^a-z0-9._-]+/g, ".")
-          .replace(/^[._-]+|[._-]+$/g, "");
-        return cleaned.slice(0, 32);
-      })(),
+      accountName: (typeof registeredProfileResult.data?.full_name === "string" && registeredProfileResult.data.full_name.trim()
+        ? registeredProfileResult.data.full_name.trim()
+        : typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()
+          ? user.user_metadata.full_name.trim()
+          : typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()
+            ? user.user_metadata.name.trim()
+            : "").replace(/^@+/, "").slice(0, 80),
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,

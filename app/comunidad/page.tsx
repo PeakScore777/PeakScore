@@ -417,6 +417,16 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   return <Tag className={className + " ps-community-name-static"} style={safeStyle}>{value}</Tag>;
 }
 
+function communityAccountHandle(value?: string | null) {
+  if (!value?.trim()) return "";
+  return value.trim().replace(/^@+/, "").normalize("NFKD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "")
+    .slice(0, 32);
+}
+
 type CommunityReadMarker = { channel_id: string; last_read_at: string };
 type CommunityReadClient = {
   from(table: string): {
@@ -551,11 +561,11 @@ export default function CommunityPage() {
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
     const cachedWithRegisteredName = cached && memberId === userId && !cached.accountName?.trim() && registeredAccountName
-      ? { ...cached, accountName: registeredAccountName }
+      ? { ...cached, accountName: communityAccountHandle(registeredAccountName) }
       : cached;
     const instantProfile: CommunityMemberProfile = cachedWithRegisteredName ?? {
       userId: memberId,
-      accountName: memberId === userId ? registeredAccountName : null,
+      accountName: memberId === userId ? communityAccountHandle(registeredAccountName) : null,
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
       memberNumber: member?.member_number ?? null,
@@ -613,7 +623,7 @@ export default function CommunityPage() {
         roles: withInheritedCommunityProfileRoles(payload.profile.roles ?? []),
       };
       const resolvedProfile = memberId === userId && registeredAccountName.trim()
-        ? { ...profileWithRoleStack, accountName: registeredAccountName.trim().replace(/^@+/, "") }
+        ? { ...profileWithRoleStack, accountName: communityAccountHandle(registeredAccountName) }
         : profileWithRoleStack;
       communityProfileCacheRef.current.set(memberId, resolvedProfile);
       setCommunityMembers((current) => current.map((item) => item.id === memberId ? {

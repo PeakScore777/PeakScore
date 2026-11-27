@@ -37,6 +37,9 @@ const DISPLAY_NAME_SOLID_PALETTE: Record<string, string> = {
   magenta: "#D96BCB",
   fuchsia: "#E879F9",
   silver: "#CBD5E1",
+  white: "#F8FAFC",
+  gray: "#94A3B8",
+  brown: "#A16207",
 };
 
 /** Resolve one canonical swatch value for profile, member-list and chat renderers. */

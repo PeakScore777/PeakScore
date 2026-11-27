@@ -775,7 +775,7 @@ export default function CommunityPage() {
     let active = true;
     async function loadCommunityMembers() {
       type MemberRow = {
-        user_id: string; member_number: number | null; account_name: string; display_name: string; avatar_path: string | null;
+        user_id: string; member_number: number | null; account_name?: string | null; display_name: string; avatar_path: string | null;
         pronouns: string | null; status_text: string | null; about: string | null; created_at: string; status_expires_at: string | null;
       };
       let memberData: MemberRow[] = [];
@@ -789,7 +789,7 @@ export default function CommunityPage() {
         if (memberIds.length) {
           const { data: spaceProfiles, error: spaceProfilesError } = await supabase
             .from("community_member_profiles")
-            .select("user_id,member_number,account_name,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
+            .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at,status_expires_at")
             .in("user_id", memberIds)
             .order("display_name", { ascending: true });
           if (!active || spaceProfilesError) return;
@@ -814,6 +814,24 @@ export default function CommunityPage() {
         }
       }
       const ids = memberData.map((member) => member.user_id);
+      const memberAccountNames = new Map<string, string>();
+      if (ids.length) {
+        const { data: accountNameRows, error: accountNameError } = await supabase
+          .from("community_member_profiles")
+          .select("user_id,account_name")
+          .in("user_id", ids);
+        if (!accountNameError) {
+          (accountNameRows ?? []).forEach((row) => {
+            if (typeof row.account_name === "string" && row.account_name.trim()) {
+              memberAccountNames.set(row.user_id, row.account_name.trim());
+            }
+          });
+        } else {
+          // Handle rollout is optional; keep the roster and profile cards usable meanwhile.
+          console.warn("[Community] Public member handles are not available yet.", { code: accountNameError.code });
+        }
+      }
+      if (!active) return;
       let roleRows: Array<{
         user_id: string; role_key: string; label: string; badge_color: string;
         position?: number; mentionable?: boolean; hoist?: boolean;
@@ -905,7 +923,7 @@ export default function CommunityPage() {
       const memberRows = memberData.map((member) => ({
         id: member.user_id,
         member_number: member.member_number,
-        account_name: member.account_name,
+        account_name: memberAccountNames.get(member.user_id) ?? null,
         full_name: member.display_name,
         avatar_url: member.avatar_path
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl

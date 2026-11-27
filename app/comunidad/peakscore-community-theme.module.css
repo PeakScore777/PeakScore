@@ -3938,3 +3938,35 @@
   }
 }
 
+/* Restore Discord-like base surfaces after splitting the hover targets. */
+.root :global(.community-user-panel-dock .community-user-panel-button) {
+  border:1px solid #30343b!important;
+  background:#1e2025!important;
+  box-shadow:0 1px 2px rgb(0 0 0 / 18%)!important;
+}
+.root :global(.community-user-panel-dock .community-user-panel-button:hover),
+.root :global(.community-user-panel-dock .community-user-panel-button:focus-visible) {
+  border-color:#3b4049!important;
+  background:#282b31!important;
+  box-shadow:0 2px 7px rgb(0 0 0 / 18%)!important;
+}
+.root :global(.community-user-panel-dock .community-user-control-group) {
+  border:1px solid #30343b!important;
+  background:#1e2025!important;
+  box-shadow:0 1px 2px rgb(0 0 0 / 18%)!important;
+}
+.root :global(.community-user-panel-dock .community-user-control-group:hover),
+.root :global(.community-user-panel-dock .community-user-control-group:has(button.is-active)) {
+  border-color:#414752!important;
+  background:#2a2d33!important;
+  box-shadow:0 2px 7px rgb(0 0 0 / 16%)!important;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls .community-user-control-group button) {
+  color:#b7bbc4!important;
+}
+.root :global(.community-user-panel-dock .community-user-audio-controls .community-user-control-group button:hover),
+.root :global(.community-user-panel-dock .community-user-audio-controls .community-user-control-group button.is-active) {
+  color:#fff!important;
+  background:rgb(255 255 255 / 6%)!important;
+}
+

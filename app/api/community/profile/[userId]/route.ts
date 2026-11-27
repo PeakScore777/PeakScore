@@ -59,8 +59,11 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   const { userId } = await context.params;
   if (!UUID_PATTERN.test(userId)) return fail("El miembro solicitado no es válido.", 400);
 
-  let profileResult = await supabase.from("community_member_profiles")
-    .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at")
+  // Read the public community identity through the server-only client. Keep
+  // optional cosmetic/member-number columns out of this required query so a
+  // partially applied local migration cannot make the whole profile disappear.
+  let profileResult = await supabaseAdmin.from("community_member_profiles")
+    .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -74,8 +77,8 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       user_id: user.id,
       display_name: displayName.length >= 2 ? displayName : "Miembro",
     }, { onConflict: "user_id", ignoreDuplicates: true });
-    profileResult = await supabase.from("community_member_profiles")
-      .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at")
+    profileResult = await supabaseAdmin.from("community_member_profiles")
+      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
       .eq("user_id", userId)
       .maybeSingle();
   }
@@ -86,16 +89,21 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  const [rolesResult, appearanceResult, accountUserResult] = await Promise.all([
+  const [rolesResult, appearanceResult, accountUserResult, memberNumberResult] = await Promise.all([
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
-    supabase.from("community_member_profiles")
+    supabaseAdmin.from("community_member_profiles")
       .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
     // Community-wide identity must not read the retired PeakScore profile projection.
     supabaseAdmin.auth.admin.getUserById(userId),
+    // Member number is optional: do not fail a public profile if its migration is pending.
+    supabaseAdmin.from("community_member_profiles")
+      .select("member_number")
+      .eq("user_id", userId)
+      .maybeSingle(),
   ]);
 
   // Appearance is optional metadata. A missing column, policy mismatch or a
@@ -120,7 +128,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   return NextResponse.json({
     profile: {
       userId: profileResult.data.user_id,
-      memberNumber: profileResult.data.member_number,
+      memberNumber: memberNumberResult.error ? null : memberNumberResult.data?.member_number ?? null,
       displayName: profileResult.data.display_name,
       accountName: (() => {
         const metadata = userId === user.id

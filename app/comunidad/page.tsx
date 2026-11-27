@@ -3199,13 +3199,19 @@ export default function CommunityPage() {
                 )}
 
                 {hoverCommunityProfile.roles.length > 0 && (
-                  <div className="ps-community-member-popout__roles" aria-label="Roles de comunidad">
-                    {hoverCommunityProfile.roles.map((role) => (
-                      <span key={role.roleKey} style={{
-                        "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#8c95a3",
-                      } as CSSProperties}>{role.label}</span>
-                    ))}
-                  </div>
+                  <section className="ps-community-profile-role-section" aria-label="Roles de comunidad">
+                    <div className="ps-community-editor-preview-about-heading"><span>Roles</span></div>
+                    <div className="ps-community-profile-role-list">
+                      {hoverCommunityProfile.roles.map((role) => (
+                        <span key={role.roleKey} className="ps-community-profile-role-item" style={{
+                          "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#8c95a3",
+                        } as CSSProperties}>
+                          <Image src={COMMUNITY_ROLE_ICON_PATHS[role.roleKey] ?? COMMUNITY_ROLE_ICON_PATHS.miembro} alt="" aria-hidden="true" width={18} height={18} className="ps-community-profile-role-icon"/>
+                          <span>{role.label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </section>
                 )}
 
                 <footer className="ps-community-member-popout__footer">
@@ -3306,11 +3312,21 @@ export default function CommunityPage() {
                   <div className="ps-community-editor-bio-display ps-community-profile-bio-readonly">{selectedCommunityProfile.about || "Cuéntanos un poco sobre ti…"}</div>
                 </section>
 
-                <div className="ps-community-editor-preview-role-row" aria-label="Roles de comunidad">
-                  {selectedCommunityProfile.roles.map((role) => (
-                    <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : (selectedCommunityProfile.accentColor ?? "#3987FF") } as CSSProperties}>{role.label}</span>
-                  ))}
-                </div>
+                {selectedCommunityProfile.roles.length > 0 && (
+                  <section className="ps-community-profile-role-section" aria-label="Roles de comunidad">
+                    <div className="ps-community-editor-preview-about-heading"><span>Roles</span></div>
+                    <div className="ps-community-profile-role-list">
+                      {selectedCommunityProfile.roles.map((role) => (
+                        <span key={role.roleKey} className="ps-community-profile-role-item" style={{
+                          "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : (selectedCommunityProfile.accentColor ?? "#929AA6"),
+                        } as CSSProperties}>
+                          <Image src={COMMUNITY_ROLE_ICON_PATHS[role.roleKey] ?? COMMUNITY_ROLE_ICON_PATHS.miembro} alt="" aria-hidden="true" width={18} height={18} className="ps-community-profile-role-icon"/>
+                          <span>{role.label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 <section className="ps-community-editor-preview-meta">
                   <span>MIEMBRO DESDE</span>

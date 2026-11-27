@@ -494,6 +494,7 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
   const [portalReady, setPortalReady] = useState(false);
   const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
+  const editorDialogRef = useRef<HTMLDivElement | null>(null);
   const closeDirtyRef = useRef(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
@@ -826,8 +827,30 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }, [hasPendingCloseChanges]);
   function requestEditorClose() {
     if (busy || uploading || deleting) return;
-    if (hasPendingCloseChanges) setCloseConfirmationOpen(true);
-    else onClose();
+    if (hasPendingCloseChanges) {
+      setCloseConfirmationOpen(true);
+      const dialog = editorDialogRef.current;
+      if (dialog && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        // Discord-style unsaved-change feedback: a damped horizontal shake.
+        // Cancel and replay so every blocked close attempt triggers the motion.
+        dialog.getAnimations().forEach((animation) => animation.cancel());
+        dialog.animate(
+          [
+            { transform: "translateX(0)" },
+            { transform: "translateX(-6px)" },
+            { transform: "translateX(5px)" },
+            { transform: "translateX(-4px)" },
+            { transform: "translateX(3px)" },
+            { transform: "translateX(-2px)" },
+            { transform: "translateX(1px)" },
+            { transform: "translateX(0)" },
+          ],
+          { duration: 560, easing: "cubic-bezier(.36,.07,.19,.97)", fill: "none" },
+        );
+      }
+    } else {
+      onClose();
+    }
   }
 
   const profileThemeInk = readableThemeText(cardColor, themeColorSecondary);
@@ -1326,6 +1349,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       }}
     >
     <div
+      ref={editorDialogRef}
       className="ps-community-editor-v2"
       data-close-confirming={closeConfirmationOpen ? "true" : undefined}
       style={previewStyle}
@@ -3452,14 +3476,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important;
 }
 .ps-community-editor-v2[data-close-confirming="true"] {
-  /* Shake in place like Discord's invalid-action feedback: no lasting offset or scaling. */
-  animation:ps-community-editor-error-shake .42s cubic-bezier(.36,.07,.19,.97) both!important;
-  box-shadow:0 0 0 1px rgb(239 68 68 / 20%),0 22px 70px rgb(0 0 0 / 42%)!important;
-}
-@keyframes ps-community-editor-error-shake {
-  0%,100% {transform:translateX(0) scale(1)}
-  15%,45%,75% {transform:translateX(-6px) scale(1)}
-  30%,60%,90% {transform:translateX(6px) scale(1)}
+  /* Motion is replayed by requestEditorClose through the Web Animations API. */
 }
 .ps-community-editor-savebar {
   transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important;
@@ -3495,7 +3512,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 @media(max-width:760px) {
   .ps-community-editor-v2[data-close-confirming="true"] {
-    animation:ps-community-editor-error-shake .42s cubic-bezier(.36,.07,.19,.97) both!important;
+    /* Same short horizontal nudge on mobile; no resize or persistent offset. */
   }
 }
 

@@ -136,7 +136,7 @@ test("editor exposes image and GIF upload controls plus independent profile them
   assert.match(studio, /Editar primer color del tema/);
   assert.match(studio, /ps-community-avatar-picker-modal/);
   assert.match(studio, /Subir imagen/);
-  assert.match(studio, /Subir GIF/);
+  assert.match(studio, /Elegir GIF/);
   assert.match(studio, /bannerImageInput/);
   assert.match(studio, /bannerGifInput/);
   assert.match(studio, /uploadAsset\("banner"/);
@@ -286,7 +286,7 @@ test("community member numbers are stable, unique, positive public identifiers",
   assert.match(memberNumberMigration, /create unique index if not exists community_member_profiles_member_number_uidx/);
   assert.match(memberNumberMigration, /check \(member_number > 0\)/);
   assert.match(route, /member_number,display_name/);
-  assert.match(route, /memberNumber: profileResult\.data\.member_number/);
+  assert.match(route, /memberNumber: memberNumberResult\.error \? null : memberNumberResult\.data\?\.member_number \?\? null/);
   assert.match(route, /memberNumber: data\.member_number/);
   assert.match(studio, /accountTag\(profile\.accountName\)/);
   assert.match(studio, /id="ps-community-display-name-inline"/);

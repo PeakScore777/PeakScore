@@ -3044,8 +3044,48 @@ export default function CommunityPage() {
             initialProfile={selectedCommunityProfile}
             isOnline={onlineMemberIds.includes(selectedCommunityProfile.userId)}
             onClose={() => setCommunityProfileStudioOpen(false)}
-            onSaved={() => {
+            onSaved={(assetUpdate) => {
               const memberId = selectedCommunityProfile.userId;
+              if (assetUpdate) {
+                const hasAvatarUpdate = Object.prototype.hasOwnProperty.call(assetUpdate, "avatarUrl");
+                const hasBannerUpdate = Object.prototype.hasOwnProperty.call(assetUpdate, "bannerUrl");
+                const nextAvatarUrl = assetUpdate.avatarUrl;
+                const nextBannerUrl = assetUpdate.bannerUrl;
+
+                // Keep the signed-in user card, member rail and already-rendered
+                // chat messages in sync immediately with the asset URL returned by storage.
+                if (hasAvatarUpdate) {
+                  setProfile((current) => current ? { ...current, avatar_url: nextAvatarUrl ?? null } : current);
+                  setCommunityMembers((current) => current.map((member) => member.id === memberId
+                    ? { ...member, avatar_url: nextAvatarUrl ?? null }
+                    : member));
+                  setMessages((current) => current.map((message) => message.author_id === memberId && message.author
+                    ? { ...message, author: { ...message.author, avatar_url: nextAvatarUrl ?? null } }
+                    : message));
+                }
+                if (hasBannerUpdate) {
+                  setCommunityMembers((current) => current.map((member) => member.id === memberId
+                    ? { ...member, banner_url: nextBannerUrl ?? null }
+                    : member));
+                }
+
+                setSelectedCommunityProfile((current) => current?.userId === memberId ? {
+                  ...current,
+                  ...(hasAvatarUpdate ? { avatarUrl: nextAvatarUrl ?? null } : {}),
+                  ...(hasBannerUpdate ? { bannerUrl: nextBannerUrl ?? null } : {}),
+                } : current);
+                const cached = communityProfileCacheRef.current.get(memberId);
+                if (cached) {
+                  communityProfileCacheRef.current.set(memberId, {
+                    ...cached,
+                    ...(hasAvatarUpdate ? { avatarUrl: nextAvatarUrl ?? null } : {}),
+                    ...(hasBannerUpdate ? { bannerUrl: nextBannerUrl ?? null } : {}),
+                  });
+                }
+                return;
+              }
+
+              // Text and appearance saves still refresh the canonical profile payload.
               communityProfileCacheRef.current.delete(memberId);
               void openCommunityProfile(memberId);
             }}

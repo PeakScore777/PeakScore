@@ -1981,3 +1981,58 @@
     animation:none!important;
   }
 }
+
+
+/* Discord profile identity order: @username first, then dot, then pronouns.
+   Keep this style on the read-only public card, not only inside the editor portal. */
+.ps-community-profile-live-readonly-body .ps-community-editor-preview-identity-line {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  gap: 7px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 0 22px !important;
+  line-height: 1.35 !important;
+}
+.ps-community-profile-live-readonly-body .ps-community-profile-account-handle {
+  display: inline !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--editor-theme-text, #202126) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #202126) !important;
+  font: 600 14px/1.35 Inter, "DM Sans", sans-serif !important;
+  white-space: nowrap !important;
+  opacity: .9 !important;
+}
+.ps-community-profile-live-readonly-body .ps-community-editor-preview-identity-separator {
+  display: inline !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  color: var(--editor-theme-text, #202126) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #202126) !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  opacity: .62 !important;
+}
+.ps-community-profile-live-readonly-body .ps-community-editor-preview-pronouns {
+  display: inline !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--editor-theme-text, #202126) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #202126) !important;
+  font: italic 500 14px/1.35 Inter, "DM Sans", sans-serif !important;
+  white-space: nowrap !important;
+}

@@ -40,6 +40,13 @@ const DISPLAY_NAME_SOLID_PALETTE: Record<string, string> = {
   white: "#F8FAFC",
   gray: "#94A3B8",
   brown: "#A16207",
+  black: "#000000",
+  charcoal: "#242424",
+  graphite: "#3A3A3A",
+  slate: "#64748B",
+  navy: "#172554",
+  midnight: "#0B1020",
+  cream: "#FFF7E6",
 };
 
 /** Resolve one canonical swatch value for profile, member-list and chat renderers. */

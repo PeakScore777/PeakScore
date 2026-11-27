@@ -133,7 +133,7 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /ps-community-profile-dialog/);
   assert.match(page, /selectedCommunityProfile\.isOwnProfile &&/);
   assert.match(page, /ps-community-profile-editor-button/);
-  assert.match(page, /aria-label="Mencionar miembro"/);
+  assert.match(page, /role="listbox" aria-label="Personas para mencionar"/);
   assert.match(page, /insertMention\(\{/);
   assert.match(page, /ps-community-editor-preview-role-row/);
   assert.match(profileUiStyles, /\.ps-community-editor-preview-role-row/);

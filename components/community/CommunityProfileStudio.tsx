@@ -286,6 +286,14 @@ function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
 }
 
+function safeDisplayNamePrismColors(value?: string[] | null): string[] {
+  if (!Array.isArray(value) || value.length !== 5) return [...DEFAULT_DISPLAY_NAME_PRISM_COLORS];
+  const colors = value.map((color) => typeof color === "string" ? color.trim() : "");
+  return colors.every((color) => /^#[0-9a-f]{6}$/i.test(color))
+    ? colors
+    : [...DEFAULT_DISPLAY_NAME_PRISM_COLORS];
+}
+
 /** Convert a hex colour into the HSV values used by the profile banner picker. */
 function hexToHsv(hex: string): { h: number; s: number; v: number } {
   const clean = safeColor(hex).slice(1);
@@ -1473,7 +1481,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       "--name-gradient-start": displayNameGradientStart,
                       "--name-gradient-end": displayNameGradientEnd,
                       "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")",
-                      "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : displayNameColor === "default" ? profileThemeInk : displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
+                      "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : displayNameColor === "default" ? profileThemeInk : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
                     } as CSSProperties}
                   />                  <div className="ps-community-editor-preview-identity-line">
                     {accountTag(profile.accountName) && (
@@ -1928,7 +1936,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           "--name-gradient-start": draftDisplayNameGradientStart,
                           "--name-gradient-end": draftDisplayNameGradientEnd,
                           "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
-                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : draftDisplayNameColor === "default" ? profileThemeInk : draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk,
+                          "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : draftDisplayNameColor === "default" ? profileThemeInk : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk,
                         } as CSSProperties}>
                         <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame}>
                           {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="104px"/> : initials(displayName || "PeakScore")}

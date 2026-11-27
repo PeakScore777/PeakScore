@@ -6,7 +6,7 @@ import { normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, Film, ImagePlus, Pencil, Pipette,
+  Camera, Check, Copy, Film, ImagePlus, Pencil,
   LoaderCircle, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
@@ -15,7 +15,7 @@ type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" 
 type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic";
 type DisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
-type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
+type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "coral" | "salmon" | "orange" | "amber" | "yellow" | "lime" | "emerald" | "mint" | "teal" | "cyan" | "sky" | "ice" | "indigo" | "violet" | "lavender" | "fuchsia" | "plum" | "crimson" | "peach" | "periwinkle" | "orchid" | "silver" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
@@ -207,13 +207,35 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
   { id: "pink", label: "Rosa", value: "#F06AA8" },
-  { id: "green", label: "Jade", value: "#55CFA3" },
-  { id: "blue", label: "Zafiro", value: "#63A9F5" },
-  { id: "purple", label: "Amatista", value: "#A88AF2" },
+  { id: "coral", label: "Coral", value: "#FB7185" },
+  { id: "salmon", label: "Salmón", value: "#F97373" },
+  { id: "red", label: "Rojo", value: "#E46E79" },
+  { id: "crimson", label: "Carmesí", value: "#DC4568" },
+  { id: "orange", label: "Naranja", value: "#F97316" },
+  { id: "peach", label: "Melocotón", value: "#FDBA74" },
+  { id: "amber", label: "Ámbar", value: "#F59E0B" },
+  { id: "gold", label: "Dorado", value: "#D8B875" },
+  { id: "yellow", label: "Amarillo", value: "#EAB308" },
+  { id: "lime", label: "Lima", value: "#A3E635" },
+  { id: "green", label: "Verde jade", value: "#55CFA3" },
+  { id: "emerald", label: "Esmeralda", value: "#10B981" },
+  { id: "mint", label: "Menta", value: "#6EE7B7" },
+  { id: "teal", label: "Turquesa", value: "#14B8A6" },
+  { id: "cyan", label: "Cian", value: "#06B6D4" },
+  { id: "ice", label: "Hielo", value: "#67E8F9" },
+  { id: "sky", label: "Celeste", value: "#38BDF8" },
+  { id: "blue", label: "Azul", value: "#63A9F5" },
+  { id: "indigo", label: "Índigo", value: "#6366F1" },
+  { id: "periwinkle", label: "Azul lavanda", value: "#818CF8" },
+  { id: "violet", label: "Violeta", value: "#8B5CF6" },
+  { id: "purple", label: "Morado", value: "#A88AF2" },
+  { id: "lavender", label: "Lavanda", value: "#C4B5FD" },
+  { id: "orchid", label: "Orquídea", value: "#C084FC" },
+  { id: "plum", label: "Ciruela", value: "#A855F7" },
   { id: "magenta", label: "Fucsia", value: "#D96BCB" },
-  { id: "red", label: "Granate", value: "#E46E79" },
-  { id: "gold", label: "Champán", value: "#D8B875" },
-  { id: "custom-gradient", label: "Personalizado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
+  { id: "fuchsia", label: "Frambuesa", value: "#E879F9" },
+  { id: "silver", label: "Plata", value: "#CBD5E1" },
+  { id: "custom-gradient", label: "Degradado guardado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
 ];
 const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"];
 const DISPLAY_NAME_GRADIENT_PRESETS = [
@@ -316,154 +338,7 @@ function safeDisplayNameAnimation(value?: string): DisplayNameAnimation {
   return DISPLAY_NAME_ANIMATIONS.some((item) => item.id === value) ? value as DisplayNameAnimation : "decrypt";
 }
 function safeDisplayNameColor(value?: string): DisplayNameColor {
-  return DISPLAY_NAME_COLORS.some((item) => item.id === value) ? value as DisplayNameColor : "default";
-}
-function safeDisplayNamePrismColors(value?: string[] | null): string[] {
-  return Array.isArray(value) && value.length === 5 && value.every((color) => /^#[0-9a-f]{6}$/i.test(color))
-    ? value.map((color) => color.toUpperCase())
-    : [...DEFAULT_DISPLAY_NAME_PRISM_COLORS];
-}
-function hexToHsv(hex: string) {
-  const raw = hex.replace("#", "");
-  const r = parseInt(raw.slice(0, 2), 16) / 255;
-  const g = parseInt(raw.slice(2, 4), 16) / 255;
-  const b = parseInt(raw.slice(4, 6), 16) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const delta = max - min;
-  let h = 0;
-  if (delta > 0) {
-    if (max === r) h = 60 * (((g - b) / delta) % 6);
-    else if (max === g) h = 60 * ((b - r) / delta + 2);
-    else h = 60 * ((r - g) / delta + 4);
-  }
-  if (h < 0) h += 360;
-  return { h, s: max === 0 ? 0 : delta / max, v: max };
-}
-
-function hsvToHex(h: number, s: number, v: number) {
-  const chroma = v * s;
-  const section = h / 60;
-  const x = chroma * (1 - Math.abs((section % 2) - 1));
-  const rgb = section < 1 ? [chroma, x, 0]
-    : section < 2 ? [x, chroma, 0]
-    : section < 3 ? [0, chroma, x]
-    : section < 4 ? [0, x, chroma]
-    : section < 5 ? [x, 0, chroma] : [chroma, 0, x];
-  const m = v - chroma;
-  return "#" + rgb.map((channel) => Math.round((channel + m) * 255).toString(16).padStart(2, "0")).join("").toUpperCase();
-}
-
-type DisplayNameCustomColorPickerProps = {
-  value: string;
-  selected: boolean;
-  onApply: (color: string) => void;
-  onReset?: () => void;
-};
-
-function DisplayNameCustomColorPicker({ value, selected, onApply, onReset }: DisplayNameCustomColorPickerProps) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(value);
-  const [hue, setHue] = useState(hexToHsv(value).h);
-  const [hexDraft, setHexDraft] = useState(value.slice(1));
-  const [recent, setRecent] = useState<string[]>([]);
-
-  function setLocalColor(color: string) {
-    if (!/^#[0-9a-f]{6}$/i.test(color)) return;
-    const normalized = color.toUpperCase();
-    setDraft(normalized);
-    setHexDraft(normalized.slice(1));
-  }
-
-  function apply(color = draft) {
-    if (!/^#[0-9a-f]{6}$/i.test(color)) return;
-    const normalized = color.toUpperCase();
-    onApply(normalized);
-    setRecent((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
-  }
-
-  function updateFromPlane(event: ReactPointerEvent<HTMLDivElement>): string | null {
-    const rect = event.currentTarget.getBoundingClientRect();
-    if (!rect.width || !rect.height) return null;
-    const saturation = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-    const brightness = 1 - Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-    const nextColor = hsvToHex(hue, saturation, brightness);
-    setLocalColor(nextColor);
-    return nextColor;
-  }
-
-  function updateFromHue(nextHue: number) {
-    setHue(nextHue);
-    const hsv = hexToHsv(draft);
-    setLocalColor(hsvToHex(nextHue, hsv.s, hsv.v));
-  }
-
-  return (
-    <div className="ps-community-name-custom-picker-root ps-community-name-color-picker">
-      <button type="button"
-        className={"ps-community-name-custom-color" + (selected || open ? " is-selected" : "")}
-        title="Elegir un color personalizado"
-        aria-label="Elegir un color personalizado"
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        onClick={() => {
-          if (open) { setOpen(false); return; }
-          setLocalColor(value);
-          setHexDraft(value.slice(1));
-          setHue(hexToHsv(value).h);
-          setOpen(true);
-        }}
-        style={{ "--name-color-swatch": value } as CSSProperties}
-      >
-        <span className="ps-community-name-custom-color-mark"><Pipette size={15}/></span>
-        <span className="ps-community-name-custom-color-copy">
-          <strong>Personalizar</strong>
-          <small>{value.toUpperCase()}</small>
-        </span>
-      </button>
-      {open && (
-        <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker ps-community-name-custom-picker" role="dialog" aria-label="Elegir color personalizado">
-          <div
-            className="ps-community-color-picker-plane"
-            style={{ backgroundColor: "hsl(" + hue + " 100% 50%)" }}
-            onPointerDown={(event) => {
-              event.currentTarget.setPointerCapture(event.pointerId);
-              updateFromPlane(event);
-            }}
-            onPointerMove={(event) => { if (event.buttons === 1) updateFromPlane(event); }}
-            onPointerUp={(event) => {
-              const nextColor = updateFromPlane(event);
-              if (nextColor) requestAnimationFrame(() => apply(nextColor));
-            }}
-          >
-            <span className="ps-community-color-picker-cursor" style={{
-              left: (hexToHsv(draft).s * 100) + "%",
-              top: ((1 - hexToHsv(draft).v) * 100) + "%",
-            }}/>
-          </div>
-          <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de colores">
-            <input className="ps-community-color-picker-hue" aria-label="Tono" type="range" min="0" max="360" value={hue}
-              onChange={(event) => updateFromHue(Number(event.target.value))}
-              onPointerUp={() => apply()}
-              onKeyUp={() => apply()}/>
-          </label>
-          <label className="ps-community-color-picker-hex">
-            <span>#</span>
-            <input value={hexDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text"
-              onChange={(event) => {
-                const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase();
-                setHexDraft(next);
-                if (next.length === 6) setLocalColor("#" + next);
-              }}
-              onBlur={() => { if (/^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); else setHexDraft(draft.slice(1)); }}
-              onKeyDown={(event) => { if (event.key === "Enter" && /^[0-9a-f]{6}$/i.test(hexDraft)) apply("#" + hexDraft); }}/>
-            <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(draft)}>
-              <Copy size={14}/>
-            </button>
-          </label>
-          <div className="ps-community-color-picker-recent" aria-label="Colores recientes">
-            {recent.length > 0 ? recent.map((color) => (
-              <button key={color} type="button" style={{ background: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>
+  return DISPLAY_N} aria-label={"Usar " + color} onClick={() => apply(color)}/>
             )) : ["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"].map((color) => (
               <button key={color} type="button" style={{ background: color }} aria-label={"Usar " + color} onClick={() => apply(color)}/>
             ))}
@@ -1854,26 +1729,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                       {draftDisplayNameColorMode === "single" && (
                         <>
-                          <div className="ps-community-name-colors-row">
-                            <DisplayNameCustomColorPicker
-                              value={draftDisplayNameGradientStart}
-                              selected={draftDisplayNameColor === "custom-gradient"}
-                              onApply={(color) => {
-                                setDraftDisplayNameGradientStart(color);
-                                setDraftDisplayNameColor("custom-gradient");
-                              }}
-                              onReset={() => setDraftDisplayNameColor("default")}
-                            />
-                            <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Colores de letra">
-                              {DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id)).map((item) => (
-                                <button key={item.id} type="button"
-                                  className={"ps-community-name-preset-swatch" + (draftDisplayNameColor === item.id ? " is-selected" : "")}
-                                  style={{ background: item.value }}
-                                  aria-label={item.label} aria-pressed={draftDisplayNameColor === item.id} title={item.label}
-                                  onClick={() => setDraftDisplayNameColor(item.id)}
-                                />
-                              ))}
-                            </div>
+                          <div className="ps-community-name-preset-grid ps-community-name-color-grid" role="group" aria-label="Paleta de colores de letra">
+                            {DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id)).map((item) => (
+                              <button key={item.id} type="button"
+                                className={"ps-community-name-preset-swatch" + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                                style={{ background: item.value }}
+                                aria-label={item.label} aria-pressed={draftDisplayNameColor === item.id} title={item.label}
+                                onClick={() => setDraftDisplayNameColor(item.id)}
+                              />
+                            ))}
                           </div>
                         </>
                       )}

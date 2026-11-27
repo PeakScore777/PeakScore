@@ -57,7 +57,7 @@ testCase("public member badges respect configured hierarchy without exposing wri
   assert.match(migration, /with \(security_invoker = true\)/);
   assert.match(migration, /revoke all on public\.community_public_role_badges from public, anon/);
   assert.match(communityPage, /position\?: number/);
-  assert.match(communityPage, /a\.position \?\? priority/);
+  assert.match(communityPage, /a\.position \?\? COMMUNITY_ROLE_PRESENTATION\[a\.role_key\]\?\.position/);
 });
 
 testCase("founder verification is anchored to the unique platform admin, never client metadata", () => {

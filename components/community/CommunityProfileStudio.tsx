@@ -5065,22 +5065,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
 
 
-/* Display-name swatches are authoritative in the member and chat previews.
-   Do not let a typography/effect class paint a second dark-blue gradient over
-   the selected solid colour. The profile preview keeps its existing styling. */
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .community-member-nameplate,
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .community-chat-author {
-  color:var(--name-solid-color,#F2F3F5)!important;
-  -webkit-text-fill-color:var(--name-solid-color,#F2F3F5)!important;
-  background-color:transparent!important;
-  background-image:none!important;
-  background-clip:border-box!important;
-  -webkit-background-clip:border-box!important;
-  text-shadow:none!important;
-  -webkit-text-stroke:0 transparent!important;
-  filter:none!important;
-}
-
 `}</style>
     </div>
     </div>,

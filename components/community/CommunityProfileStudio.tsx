@@ -15,7 +15,7 @@ type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" 
 type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic";
 type DisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
-type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "coral" | "salmon" | "orange" | "amber" | "yellow" | "lime" | "emerald" | "mint" | "teal" | "cyan" | "sky" | "ice" | "indigo" | "violet" | "lavender" | "fuchsia" | "plum" | "crimson" | "peach" | "periwinkle" | "orchid" | "silver" | "custom-gradient";
+type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "coral" | "salmon" | "orange" | "amber" | "yellow" | "lime" | "emerald" | "mint" | "teal" | "cyan" | "sky" | "ice" | "indigo" | "violet" | "lavender" | "fuchsia" | "plum" | "crimson" | "peach" | "periwinkle" | "orchid" | "silver" | "white" | "gray" | "brown" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
@@ -235,6 +235,9 @@ const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string 
   { id: "magenta", label: "Fucsia", value: "#D96BCB" },
   { id: "fuchsia", label: "Frambuesa", value: "#E879F9" },
   { id: "silver", label: "Plata", value: "#CBD5E1" },
+  { id: "white", label: "Blanco", value: "#F8FAFC" },
+  { id: "gray", label: "Gris", value: "#94A3B8" },
+  { id: "brown", label: "Marrón", value: "#A16207" },
   { id: "custom-gradient", label: "Degradado guardado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
 ];
 const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"];

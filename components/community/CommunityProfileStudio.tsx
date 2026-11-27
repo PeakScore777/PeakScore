@@ -1612,11 +1612,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     )}
                   </section>
                   {profile.roles.length > 0 && (
-                    <section className="ps-community-editor-preview-roles-section" aria-label="Roles de comunidad">
+                    <section className="ps-community-profile-role-section" aria-label="Roles de comunidad">
                       <div className="ps-community-editor-preview-about-heading"><span>Roles</span></div>
-                      <div className="ps-community-editor-preview-role-list">
+                      <div className="ps-community-profile-role-list">
                         {profile.roles.map((role) => (
-                          <span key={role.roleKey} className="ps-community-editor-preview-role-pill" style={{
+                          <span key={role.roleKey} className="ps-community-profile-role-item" style={{
                             "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor,
                           } as CSSProperties}>
                             <Image
@@ -1625,7 +1625,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               aria-hidden="true"
                               width={18}
                               height={18}
-                              className="ps-community-editor-preview-role-icon"
+                              className="ps-community-profile-role-icon"
                             />
                             <span>{role.label}</span>
                           </span>

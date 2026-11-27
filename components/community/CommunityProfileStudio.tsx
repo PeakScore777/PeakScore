@@ -3605,8 +3605,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-identity-line .ps-community-editor-preview-pronouns::placeholder {
   color:var(--editor-theme-text,#202126)!important;opacity:.58!important;
 }
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.effect-plain,
-.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.effect-plain {
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy>.community-member-nameplate.color-custom-gradient:not(.effect-gradient),
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta>.community-chat-author.color-custom-gradient:not(.effect-gradient) {
   color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
   -webkit-text-fill-color:var(--name-solid-color,var(--status-theme-text,#202126))!important;
   background:none!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;

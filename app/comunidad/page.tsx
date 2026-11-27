@@ -2573,7 +2573,6 @@ export default function CommunityPage() {
                 aria-label="Abrir canales"
                 aria-controls="community-channel-drawer"
                 aria-expanded={mobileChannelsOpen}
-                title="Abrir canales"
               >
                 <Menu size={18}/>
               </button>

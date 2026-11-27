@@ -2569,6 +2569,14 @@ export default function CommunityPage() {
         <section className="community-chat-column">
           <header className="community-chat-header">
             <div className="community-chat-title">
+              <button type="button"
+                className="community-mobile-menu"
+                aria-label={mobileChannelsOpen ? "Cerrar menú de canales" : "Abrir menú de canales"}
+                aria-controls="community-channel-drawer"
+                aria-expanded={mobileChannelsOpen}
+                onClick={() => setMobileChannelsOpen((open) => !open)}>
+                <Menu size={19}/>
+              </button>
               <Hash size={21} className="community-chat-hash"/>
               <h1>{activeChannel?.name ?? "Comunidad"}</h1>
               {activeChannel?.is_private && <LockKeyhole size={14} className="community-channel-lock"/>}

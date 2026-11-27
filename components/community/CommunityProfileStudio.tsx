@@ -2056,9 +2056,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"}
                             animation={draftDisplayNameAnimation}
                             className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
-                            style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
+                            style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "default" ? profileThemeInk : draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
                           />
-                          <small className="ps-community-name-style-profile-handle">{accountTag(profile.accountName)}</small>
+                          <small className="ps-community-name-style-profile-handle">{accountTag(profile.accountName) ? "@" + accountTag(profile.accountName) : ""}</small>
                         </div>
                       </article>
                     </section>

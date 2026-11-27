@@ -4991,17 +4991,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 
 
-/* Anchor the save notice to the OUTER editor dialog, not the preview workspace.
-   This places it in the empty bottom band marked in blue. */
-.ps-community-editor-v2 {
-  position:relative!important;
-}
-.ps-community-editor-main {
-  position:static!important;
-}
+/* Anchor the save notice to the lower-right blue guide, in the empty footer band.
+   Fixed positioning avoids transformed preview ancestors shifting the bar upward. */
 .ps-community-editor-savebar {
-  right:32px!important;
-  bottom:12px!important;
+  position:fixed!important;
+  z-index:10050!important;
+  left:auto!important;
+  right:max(24px,calc((100vw - 1150px)/2 + 36px))!important;
+  bottom:max(24px,calc((100vh - 995px)/2 + 30px))!important;
+  width:min(490px,calc(100vw - 40px))!important;
+  max-width:490px!important;
+}
+@media(max-width:760px) {
+  .ps-community-editor-savebar {
+    right:10px!important;
+    bottom:12px!important;
+    width:calc(100vw - 20px)!important;
+    max-width:none!important;
+  }
 }
 
 

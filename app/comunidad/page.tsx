@@ -448,11 +448,6 @@ export default function CommunityPage() {
   const communityServerMenuRef = useRef<HTMLDivElement | null>(null);
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
-  const [hoverCommunityProfile, setHoverCommunityProfile] = useState<CommunityMemberProfile | null>(null);
-  const [memberProfileMenuOpen, setMemberProfileMenuOpen] = useState(false);
-  const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
-  const hoverProfileCloseTimerRef = useRef<number | null>(null);
-  const memberPopoutRef = useRef<HTMLDivElement | null>(null);
   const profileFromUrlRef = useRef<string | null>(null);
   const openCommunityProfileRef = useRef<(memberId: string) => Promise<void>>(async () => {});
   const communityProfileRequestRef = useRef(0);
@@ -518,27 +513,6 @@ export default function CommunityPage() {
       document.removeEventListener("keydown", closeServerMenuEscape);
     };
   }, [communityServerMenuOpen]);
-  useEffect(() => {
-    if (!hoverCommunityProfile) return;
-    function handleOutsidePointer(event: PointerEvent) {
-      if (event.target instanceof Node && !memberPopoutRef.current?.contains(event.target)) {
-        setHoverCommunityProfile(null);
-        setMemberProfileMenuOpen(false);
-      }
-    }
-    function handleProfileCardKey(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setHoverCommunityProfile(null);
-        setMemberProfileMenuOpen(false);
-      }
-    }
-    document.addEventListener("pointerdown", handleOutsidePointer);
-    document.addEventListener("keydown", handleProfileCardKey);
-    return () => {
-      document.removeEventListener("pointerdown", handleOutsidePointer);
-      document.removeEventListener("keydown", handleProfileCardKey);
-    };
-  }, [hoverCommunityProfile]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -572,75 +546,8 @@ export default function CommunityPage() {
     [messages],
   );
 
-  function openMemberHoverPreview(member: CommunityMemberSummary, event: { clientX: number; clientY: number }) {
-    if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
-    setMemberProfileMenuOpen(false);
-    const cached = communityProfileCacheRef.current.get(member.id);
-    const preview: CommunityMemberProfile = cached ?? {
-      userId: member.id,
-      displayName: member.full_name,
-      accountName: member.id === userId ? registeredAccountName : null,
-      avatarUrl: member.avatar_url,
-      bannerUrl: member.banner_url ?? null,
-      cardColor: member.card_color ?? "#B7D7C3",
-      themeColorSecondary: member.theme_color_secondary ?? "#8FB9A6",
-      plateStyle: member.plate_style ?? "classic",
-      displayNameStyle: member.display_name_style ?? "classic",
-      displayNameAnimation: communityNameAnimation(member.display_name_animation),
-      displayNameFuzzySettings: normalizeFuzzyTextSettings(member.display_name_fuzzy_settings),
-      accentColor: member.accent_color ?? "#3987FF",
-      avatarFrame: member.avatar_frame ?? "none",
-      avatarDecorationId: member.avatar_decoration_id ?? "none",
-      profileFrameId: member.profile_frame_id ?? "none",
-      profileEffectId: member.profile_effect_id ?? "none",
-      statusExpiresAt: member.status_expires_at ?? null,
-      pronouns: "",
-      appearanceReady: false,
-      statusText: getVisibleCommunityStatus(member.status_text, member.status_expires_at),
-      about: member.about ?? "",
-      joinedAt: member.joined_at ?? "",
-      roles: (member.roles ?? []).map((role) => ({
-        roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
-      })),
-      isOwnProfile: member.id === userId,
-    };
-    setHoverProfilePosition({
-      left: Math.max(12, Math.min(event.clientX - 405, window.innerWidth - 400)),
-      top: Math.max(12, Math.min(event.clientY - 105, window.innerHeight - 545)),
-    });
-    setHoverCommunityProfile(preview);
-    if (cached) return;
-    void fetch("/api/community/profile/" + member.id, {
-      method: "GET", credentials: "same-origin", cache: "no-store",
-    }).then((response) => response.ok ? response.json() : null)
-      .then((payload: { profile?: CommunityMemberProfile } | null) => {
-        if (!payload?.profile) return;
-        const enrichedProfile = {
-          ...payload.profile,
-          roles: withInheritedCommunityProfileRoles(payload.profile.roles ?? []),
-        };
-        communityProfileCacheRef.current.set(member.id, enrichedProfile);
-        setHoverCommunityProfile((current) => current?.userId === member.id ? enrichedProfile : current);
-      }).catch(() => undefined);
-  }
-
-  function scheduleCloseMemberHoverPreview() {
-    if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
-    hoverProfileCloseTimerRef.current = window.setTimeout(() => {
-      setHoverCommunityProfile(null);
-      setMemberProfileMenuOpen(false);
-    }, 180);
-  }
-
-  function keepMemberHoverPreviewOpen() {
-    if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
-    hoverProfileCloseTimerRef.current = null;
-  }
-
   async function openCommunityProfile(memberId: string) {
     const requestId = ++communityProfileRequestRef.current;
-    setHoverCommunityProfile(null);
-    setMemberProfileMenuOpen(false);
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
     const cachedWithRegisteredName = cached && memberId === userId && !cached.accountName?.trim() && registeredAccountName
@@ -3023,12 +2930,8 @@ export default function CommunityPage() {
                           const avatarUrl = member.avatar_url ?? (member.id === userId ? profile?.avatar_url ?? null : null);
                           return (
                             <button type="button" key={member.id} className={"community-member-row" + (isOnline ? "" : " community-member-offline")}
-                              onClick={(event) => {
-                                const rect = event.currentTarget.getBoundingClientRect();
-                                openMemberHoverPreview(member, {
-                                  clientX: rect.left + Math.min(rect.width, 220),
-                                  clientY: rect.top + Math.min(rect.height, 28),
-                                });
+                              onClick={() => {
+                                void openCommunityProfile(member.id);
                               }}>
                               <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none")}>
                                 {avatarUrl
@@ -3090,143 +2993,6 @@ export default function CommunityPage() {
               void openCommunityProfile(memberId);
             }}
           />
-        )}
-
-        {hoverCommunityProfile && (
-          <div
-            ref={memberPopoutRef}
-            className="ps-community-member-popout"
-            style={{ left: hoverProfilePosition.left, top: hoverProfilePosition.top }}
-            onMouseEnter={keepMemberHoverPreviewOpen}
-            onMouseLeave={scheduleCloseMemberHoverPreview}
-          >
-            <article
-              className="ps-community-member-popout__card"
-              style={{
-                "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF",
-                "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3",
-                "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")",
-                "--community-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--community-theme-body-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-                "--editor-theme-body-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6"),
-              } as CSSProperties}
-            >
-              <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
-                {hoverCommunityProfile.bannerUrl ? (
-                  <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-member-popout__banner-image"/>
-                ) : (
-                  <div className="ps-community-member-popout__banner-fallback" aria-hidden="true"/>
-                )}
-              </div>
-              <div className="ps-community-member-popout__body">
-                <div className="ps-community-member-popout__top">
-                  <div className={"ps-community-member-popout__avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none")}>
-                    {hoverCommunityProfile.avatarUrl
-                      ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/>
-                      : <span>{initials(hoverCommunityProfile.displayName)}</span>}
-                    <i className={onlineMemberIds.includes(hoverCommunityProfile.userId) ? "is-online" : ""}/>
-                  </div>
-                  {hoverCommunityProfile.statusText && (
-                    <div className="ps-community-member-popout__status-bubble">{hoverCommunityProfile.statusText}</div>
-                  )}
-                  <div className="ps-community-member-popout__actions">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
-                        setHoverCommunityProfile(null);
-                      }}
-                      aria-label="Mencionar miembro"
-                      title="Mencionar"
-                    >
-                      <AtSign size={17}/>
-                    </button>
-                    <div className="ps-community-member-popout__menu-anchor">
-                      <button
-                        type="button"
-                        onClick={() => setMemberProfileMenuOpen((open) => !open)}
-                        aria-label="Más opciones del miembro"
-                        title="Más opciones"
-                        aria-haspopup="menu"
-                        aria-expanded={memberProfileMenuOpen}
-                      >
-                        <MoreHorizontal size={18}/>
-                      </button>
-                      {memberProfileMenuOpen && (
-                        <div className="ps-community-member-popout__menu" role="menu" aria-label="Opciones del perfil">
-                          <button type="button" role="menuitem" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)}>
-                            <ArrowUpRight size={15}/> Ver perfil completo
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => {
-                            void shareCommunityMemberProfile(hoverCommunityProfile.userId, hoverCommunityProfile.displayName);
-                            setMemberProfileMenuOpen(false);
-                          }}>
-                            <Share2 size={15}/> Compartir perfil
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => {
-                            insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
-                            setHoverCommunityProfile(null);
-                            setMemberProfileMenuOpen(false);
-                          }}>
-                            <AtSign size={15}/> Mencionar
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => {
-                            void navigator.clipboard.writeText(communityMemberProfileUrl(hoverCommunityProfile.userId))
-                              .then(() => setMemberProfileMenuOpen(false))
-                              .catch(() => setCommunityProfileError("No se pudo copiar el enlace."));
-                          }}>
-                            <Copy size={15}/> Copiar enlace
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => {
-                            void navigator.clipboard.writeText(hoverCommunityProfile.displayName)
-                              .then(() => setMemberProfileMenuOpen(false))
-                              .catch(() => setCommunityProfileError("No se pudo copiar el nombre."));
-                          }}>
-                            <Copy size={15}/> Copiar nombre
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ps-community-member-popout__identity">
-                  <CommunityStaticName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} className={"ps-community-name-render is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(hoverCommunityProfile.displayNameEffect, hoverCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")", "--name-solid-color": displayNameSolidColor(hoverCommunityProfile.displayNameColor, hoverCommunityProfile.displayNameGradientStart) } as React.CSSProperties}/>
-                  {hoverCommunityProfile.accountName?.trim() ? (
-                    <span className="ps-community-member-popout__handle">{"@" + hoverCommunityProfile.accountName.trim().replace(/^@+/, "")}</span>
-                  ) : (
-                    <span className="ps-community-member-popout__member-number">{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
-                  )}
-                </div>
-
-                {hoverCommunityProfile.about && (
-                  <p className="ps-community-member-popout__about">{hoverCommunityProfile.about}</p>
-                )}
-
-                {hoverCommunityProfile.roles.length > 0 && (
-                  <section className="ps-community-profile-role-section" aria-label="Roles de comunidad">
-                    <div className="ps-community-editor-preview-about-heading"><span>Roles</span></div>
-                    <div className="ps-community-profile-role-list">
-                      {hoverCommunityProfile.roles.map((role) => (
-                        <span key={role.roleKey} className="ps-community-profile-role-item" style={{
-                          "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#8c95a3",
-                        } as CSSProperties}>
-                          <Image src={COMMUNITY_ROLE_ICON_PATHS[role.roleKey] ?? COMMUNITY_ROLE_ICON_PATHS.miembro} alt="" aria-hidden="true" width={18} height={18} className="ps-community-profile-role-icon"/>
-                          <span>{role.label}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                <footer className="ps-community-member-popout__footer">
-                  <span>MIEMBRO DESDE</span>
-                  <strong>{hoverCommunityProfile.joinedAt ? new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "short", year: "numeric" }) : "Fecha no disponible"}</strong>
-                </footer>
-              </div>
-            </article>
-          </div>
         )}
 
         {!communityProfileStudioOpen && selectedCommunityProfile && (

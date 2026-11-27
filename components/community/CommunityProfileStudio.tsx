@@ -2479,7 +2479,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-name-preset-swatch:hover,.ps-community-name-spectrum-swatch:hover{transform:translateY(-1px)!important}
 .ps-community-name-custom-picker-root{width:100%!important}
 .ps-community-name-custom-picker-root>.ps-community-name-custom-color{width:100%!important;min-height:39px!important;grid-template-columns:30px minmax(0,1fr)!important;justify-items:start!important;gap:9px!important;padding:0 10px!important;border-radius:9px!important}
-.ps-community-name-custom-gradient-stops{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
 .ps-community-name-color-auto-note{margin:0!important;color:#9ca4b2!important;font-size:10px!important;line-height:1.5!important}
 .ps-community-name-style-group>.ps-community-name-animation-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
 .ps-community-name-style-group>.ps-community-name-animation-grid>.ps-community-name-animation-option{min-height:108px!important}
@@ -2488,7 +2487,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 @media(max-width:560px){
  .ps-community-name-preset-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
  .ps-community-name-style-group>.ps-community-name-animation-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
- .ps-community-name-custom-gradient-stops{grid-template-columns:1fr!important}
 }
 
 /* Refined profile controls: compact Discord-like choices with no trailing camera/plus affordances. */

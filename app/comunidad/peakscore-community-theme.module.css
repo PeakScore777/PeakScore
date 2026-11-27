@@ -3769,3 +3769,76 @@
   text-shadow: none;
   text-transform: none;
 }
+
+/* Premium Discord-like dock identity swap: online presence <-> account handle. */
+.root :global(.community-user-presence-swap) {
+  position:relative;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr);
+  align-items:center;
+  justify-items:start;
+  min-height:1.3em;
+  width:fit-content;
+  max-width:100%;
+  margin-top:2px;
+  overflow:hidden;
+  isolation:isolate;
+  vertical-align:top;
+}
+.root :global(.community-user-presence-swap .community-user-presence-line),
+.root :global(.community-user-presence-swap .community-user-handle-line) {
+  grid-area:1 / 1;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  max-width:100%;
+  white-space:nowrap;
+  will-change:transform,opacity,filter;
+  transition:
+    opacity .24s ease,
+    transform .34s cubic-bezier(.2,.75,.25,1),
+    filter .28s ease;
+}
+.root :global(.community-user-presence-swap .community-user-presence-line) {
+  opacity:1;
+  transform:translate3d(0,0,0);
+  filter:blur(0);
+}
+.root :global(.community-user-presence-swap .community-user-presence-line > i) {
+  display:block;
+  flex:0 0 7px;
+  width:7px;
+  height:7px;
+  margin-right:6px;
+  border-radius:50%;
+  background:#23a55a;
+  box-shadow:0 0 0 2px rgb(35 165 90 / 12%),0 0 8px rgb(35 165 90 / 20%);
+}
+.root :global(.community-user-presence-swap .community-user-handle-line) {
+  overflow:hidden;
+  color:#a2a7b0;
+  font:500 10px/1.2 Inter,"DM Sans",sans-serif;
+  text-overflow:ellipsis;
+  opacity:0;
+  transform:translate3d(0,7px,0);
+  filter:blur(2px);
+}
+.root :global(.community-user-panel-button:hover .community-user-presence-swap[data-has-handle="true"] .community-user-presence-line),
+.root :global(.community-user-panel-button:focus-visible .community-user-presence-swap[data-has-handle="true"] .community-user-presence-line) {
+  opacity:0;
+  transform:translate3d(0,-7px,0);
+  filter:blur(2px);
+}
+.root :global(.community-user-panel-button:hover .community-user-presence-swap[data-has-handle="true"] .community-user-handle-line),
+.root :global(.community-user-panel-button:focus-visible .community-user-presence-swap[data-has-handle="true"] .community-user-handle-line) {
+  opacity:1;
+  transform:translate3d(0,0,0);
+  filter:blur(0);
+}
+@media(prefers-reduced-motion:reduce) {
+  .root :global(.community-user-presence-swap .community-user-presence-line),
+  .root :global(.community-user-presence-swap .community-user-handle-line) {
+    transition:none!important;
+  }
+}
+

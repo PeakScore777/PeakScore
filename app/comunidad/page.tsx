@@ -1516,6 +1516,22 @@ export default function CommunityPage() {
       ].find((value) => typeof value === "string" && value.trim().length > 0);
       setRegisteredAccountName(communityAccountHandle(typeof registeredName === "string" ? registeredName : ""));
 
+      // Read the same canonical accountName used by the public profile card.
+      // The dock must never invent a handle from profiles.full_name or email.
+      void fetch("/api/community/profile/" + user.id, {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+      }).then(async (response) => {
+        if (!response.ok) return null;
+        return await response.json().catch(() => null) as { profile?: { accountName?: string | null } } | null;
+      }).then((payload) => {
+        const profileHandle = payload?.profile?.accountName?.trim().replace(/^@+/, "");
+        if (alive && profileHandle) setRegisteredAccountName(profileHandle);
+      }).catch(() => {
+        // Keep auth metadata as a quick fallback if the profile endpoint is unavailable.
+      });
+
       const spaceResult = await supabase.from("community_spaces")
         .select("id,slug,name,space_type,visibility,verification_status,icon_key,accent_color,background_color,icon_path,banner_path")
         .eq("is_enabled", true)
@@ -2511,13 +2527,13 @@ export default function CommunityPage() {
                 <span
                   className="community-user-presence community-user-presence-swap"
                   data-has-handle={registeredAccountName.trim() ? "true" : "false"}
-                  aria-label={registeredAccountName.trim() ? "En línea · " + registeredAccountName : "En línea"}
+                  aria-label={registeredAccountName.trim() ? "En línea · @" + registeredAccountName.replace(/^@+/, "") : "En línea"}
                 >
                   <span className="community-user-presence-line">
                     <i aria-hidden="true"/>En línea
                   </span>
                   {registeredAccountName.trim() && (
-                    <span className="community-user-handle-line">{registeredAccountName}</span>
+                    <span className="community-user-handle-line">{"@" + registeredAccountName.replace(/^@+/, "")}</span>
                   )}
                 </span>
               </span>

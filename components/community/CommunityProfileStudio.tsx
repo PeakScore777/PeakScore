@@ -5001,6 +5001,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   bottom:max(14px,calc((100vh - 995px)/2 + 20px))!important;
   width:min(490px,calc(100vw - 40px))!important;
   max-width:490px!important;
+  transform:translateX(270px)!important;
 }
 @media(max-width:760px) {
   .ps-community-editor-savebar {
@@ -5008,6 +5009,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     bottom:12px!important;
     width:calc(100vw - 20px)!important;
     max-width:none!important;
+    transform:none!important;
   }
 }
 

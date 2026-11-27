@@ -278,6 +278,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     return fail("No se pudo guardar tu identidad comunitaria.", 503);
   }
 
+  const accountNameAfterSave = await supabaseAdmin.from("community_member_profiles")
+    .select("account_name")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+
   return NextResponse.json({
     success: true,
     appearanceSaved: true,
@@ -285,12 +291,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       userId: data.user_id,
       memberNumber: data.member_number,
       displayName: data.display_name,
-      accountName: (() => {
-        const metadata = user.user_metadata ?? {};
-        const registeredName = [metadata.full_name, metadata.name, metadata.user_name, metadata.preferred_username]
-          .find((value) => typeof value === "string" && value.trim().length > 0);
-        return typeof registeredName === "string" ? registeredName.trim().replace(/^@+/, "").slice(0, 80) : "";
-      })(),
+      // Return the canonical handle from the community identity row; never substitute display_name.
+      accountName: accountNameAfterSave.error ? "" : accountNameAfterSave.data?.account_name ?? "",
       pronouns: data.pronouns ?? "",
       statusText: data.status_expires_at && Date.parse(data.status_expires_at) <= Date.now() ? "" : data.status_text ?? "",
       statusExpiresAt: data.status_expires_at && Date.parse(data.status_expires_at) > Date.now() ? data.status_expires_at : null,

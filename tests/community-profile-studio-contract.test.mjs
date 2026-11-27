@@ -74,7 +74,7 @@ test("profile editor imports semantic Lucide icons for inline controls", () => {
   assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Pencil[\s\S]*?\} from "lucide-react"/);
   assert.doesNotMatch(studio, /Pipette|DisplayNameCustomColorPicker/);
   assert.doesNotMatch(studio, /<Frame size=\{13\}\/>/);
-  assert.match(studio, /<ImagePlus size=\{15\}\/>/);
+  assert.match(studio, /<ImagePlus size=\{28\}\/>/);
 });
 
 test("music player scopes local fallback state to the selected track without setState effects", () => {
@@ -307,7 +307,7 @@ test("profile update is atomic and owner-scoped", () => {
 test("avatar editor offers separate image and GIF uploads and no decoration control on founder branch", () => {
   assert.match(studio, /ps-community-avatar-picker-modal/);
   assert.match(studio, /Subir imagen/);
-  assert.match(studio, /Subir GIF/);
+  assert.match(studio, /Elegir GIF/);
   assert.match(studio, /avatarGifInput/);
   assert.doesNotMatch(studio, /openAppearancePicker\("avatarDecoration"\)/);
   assert.doesNotMatch(studio, /ps-community-editor-decoration-tile/);

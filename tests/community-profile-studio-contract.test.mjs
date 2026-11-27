@@ -1093,7 +1093,7 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(fuzzyText, /createLinearGradient/);
   assert.match(nameStyleCss, /background-size:var\(--ps-chroma-background-size,260%\) 100%/);
   assert.match(nameStyleCss, /--ps-chromaflow-shift: var\(--ps-chroma-shift-end,100%\)/);
-  assert.match(studio, /--ps-chroma-shift-end/);
+  assert.match(studio, /draftDisplayNamePrismColors\.join\(","\)/);
   assert.match(page, /--ps-chroma-shift-end/);
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-canvas-hue/);
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-word-hue/);

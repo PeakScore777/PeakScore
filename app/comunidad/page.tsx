@@ -100,6 +100,7 @@ type CommunityMemberProfile = {
   userId: string;
   memberNumber?: number | null;
   accountName?: string | null;
+  accountNameReady?: boolean;
   displayName: string;
   avatarUrl: string | null;
   bannerUrl?: string | null;
@@ -418,16 +419,6 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   return <Tag className={className + " ps-community-name-static"} style={safeStyle}>{value}</Tag>;
 }
 
-function communityAccountHandle(value?: string | null) {
-  if (!value?.trim()) return "";
-  return value.trim().replace(/^@+/, "").normalize("NFKD")
-    .replace(/[\\u0300-\\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, ".")
-    .replace(/^[._-]+|[._-]+$/g, "")
-    .slice(0, 32);
-}
-
 type CommunityReadMarker = { channel_id: string; last_read_at: string };
 type CommunityReadClient = {
   from(table: string): {
@@ -562,11 +553,12 @@ export default function CommunityPage() {
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
     const cachedWithRegisteredName = cached && memberId === userId && !cached.accountName?.trim() && registeredAccountName
-      ? { ...cached, accountName: communityAccountHandle(registeredAccountName) }
+      ? { ...cached, accountName: registeredAccountName.trim(), accountNameReady: true }
       : cached;
     const instantProfile: CommunityMemberProfile = cachedWithRegisteredName ?? {
       userId: memberId,
-      accountName: memberId === userId ? communityAccountHandle(registeredAccountName) : null,
+      accountName: memberId === userId ? registeredAccountName.trim() : "",
+      accountNameReady: memberId === userId && Boolean(registeredAccountName.trim()),
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
       memberNumber: member?.member_number ?? null,
@@ -597,14 +589,15 @@ export default function CommunityPage() {
 
     // Open the complete profile shell immediately from the member list/chat snapshot.
     // The detail request enriches it in the background without a blocking spinner.
-    setCommunityProfileLoading(false);
+    const cachedAppearanceReady = Boolean(cachedWithRegisteredName?.appearanceReady);
+    setCommunityProfileLoading(!cachedAppearanceReady);
     setCommunityProfileError("");
     setSelectedCommunityProfile(instantProfile);
 
-    // Profile data was prepared with the roster query; do not wait for Supabase on click.
-    if (cachedWithRegisteredName?.appearanceReady) return;
-
-    setCommunityProfileLoading(true);
+    // The card renders from the roster cache immediately. If only its @identity
+    // is missing, resolve it quietly in the background without delaying the card.
+    if (cachedAppearanceReady && cachedWithRegisteredName?.accountNameReady) return;
+    if (!cachedAppearanceReady) setCommunityProfileLoading(true);
     try {
       const response = await fetch("/api/community/profile/" + memberId, {
         method: "GET",
@@ -627,9 +620,14 @@ export default function CommunityPage() {
         ...payload.profile,
         roles: withInheritedCommunityProfileRoles(payload.profile.roles ?? []),
       };
-      const resolvedProfile = memberId === userId && registeredAccountName.trim()
-        ? { ...profileWithRoleStack, accountName: communityAccountHandle(registeredAccountName) }
-        : profileWithRoleStack;
+      const resolvedProfile: CommunityMemberProfile = {
+        ...profileWithRoleStack,
+        accountName: profileWithRoleStack.accountName?.trim() ?? "",
+        accountNameReady: true,
+      };
+      if (memberId === userId && resolvedProfile.accountName) {
+        setRegisteredAccountName(resolvedProfile.accountName);
+      }
       communityProfileCacheRef.current.set(memberId, resolvedProfile);
       setCommunityMembers((current) => current.map((item) => item.id === memberId ? {
         ...item,
@@ -944,7 +942,8 @@ export default function CommunityPage() {
         communityProfileCacheRef.current.set(member.id, {
           userId: member.id,
           memberNumber: member.member_number ?? null,
-          accountName: communityAccountHandle(member.full_name),
+          accountName: member.id === userId ? registeredAccountName.trim() : "",
+          accountNameReady: member.id === userId && Boolean(registeredAccountName.trim()),
           displayName: member.full_name,
           avatarUrl: member.avatar_url,
           bannerUrl: member.banner_url ?? null,
@@ -1503,18 +1502,11 @@ export default function CommunityPage() {
         return;
       }
       setUserId(user.id);
-      const registeredHandle = [
-        user.user_metadata?.user_name,
-        user.user_metadata?.preferred_username,
-        user.user_metadata?.username,
-        user.user_metadata?.handle,
-      ].find((value) => typeof value === "string" && value.trim().length > 0);
-      const registeredName = [
-        registeredHandle,
-        user.user_metadata?.full_name,
-        user.user_metadata?.name,
-      ].find((value) => typeof value === "string" && value.trim().length > 0);
-      setRegisteredAccountName(communityAccountHandle(typeof registeredName === "string" ? registeredName : ""));
+      const registeredName = [user.user_metadata?.full_name, user.user_metadata?.name]
+        .find((value) => typeof value === "string" && value.trim().length > 0);
+      setRegisteredAccountName(typeof registeredName === "string"
+        ? registeredName.trim().replace(/^@+/, "").slice(0, 80)
+        : "");
 
       // Read the same canonical accountName used by the public profile card.
       // The dock must never invent a handle from profiles.full_name or email.

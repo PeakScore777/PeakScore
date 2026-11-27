@@ -20,7 +20,7 @@ import "../community-name-effects.css";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 
 import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
-import { displayNameColorForEffect, displayNameSolidColor } from "@/components/community/display-name-color";
+import { displayNameColorForEffect, displayNameSolidColor, readableProfileTextColor } from "@/components/community/display-name-color";
 
 type CommunitySpace = {
   id: string;
@@ -1341,7 +1341,7 @@ export default function CommunityPage() {
       mentionProfilesResult,
     ] = await Promise.all([
       supabase.from("community_member_profiles")
-        .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors")
+        .select("user_id,display_name,avatar_path,status_text,card_color,theme_color_secondary,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors")
         .in("user_id", authorIds),
       supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color,position,mentionable,hoist")
@@ -1417,6 +1417,7 @@ export default function CommunityPage() {
 
     const authorRows = (authors ?? []) as Array<{
       user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
+      card_color?: string | null; theme_color_secondary?: string | null;
       display_name_style?: CommunityDisplayNameStyle | null; display_name_effect?: CommunityDisplayNameEffect | null;
       display_name_animation?: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings?: FuzzyTextSettings | null;
       display_name_color?: CommunityDisplayNameColor | null; display_name_gradient_start?: string | null; display_name_gradient_end?: string | null; display_name_prism_colors?: string[] | null;
@@ -1429,6 +1430,8 @@ export default function CommunityPage() {
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(author.avatar_path).data.publicUrl
           : null,
         status_text: author.status_text ?? "",
+        card_color: author.card_color ?? "#B7D7C3",
+        theme_color_secondary: author.theme_color_secondary ?? "#8FB9A6",
         display_name_style: author.display_name_style ?? "classic",
         display_name_effect: author.display_name_effect ?? "plain",
         display_name_animation: communityNameAnimation(author.display_name_animation),
@@ -2701,7 +2704,7 @@ export default function CommunityPage() {
                                         "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
                                         "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF",
                                         "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                                        "--name-solid-color": displayNameSolidColor(message.author.display_name_color, message.author.display_name_gradient_start),
+                                        "--name-solid-color": displayNameSolidColor(message.author.display_name_color, message.author.display_name_gradient_start, readableProfileTextColor(message.author.card_color, message.author.theme_color_secondary)),
                                       } as React.CSSProperties}
                                     />
                                   </button>
@@ -3020,7 +3023,7 @@ export default function CommunityPage() {
                                     "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
                                     "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
                                     "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                                    "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start),
+                                    "--name-solid-color": displayNameSolidColor(member.display_name_color, member.display_name_gradient_start, readableProfileTextColor(member.card_color, member.theme_color_secondary)),
                                   } as React.CSSProperties}
                                 />
                                 {member.status_text && <small>{member.status_text}</small>}
@@ -3130,7 +3133,7 @@ export default function CommunityPage() {
                 "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF",
                 "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF",
                 "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",
-                "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart),
+                "--name-solid-color": displayNameSolidColor(selectedCommunityProfile.displayNameColor, selectedCommunityProfile.displayNameGradientStart, readableProfileTextColor(selectedCommunityProfile.cardColor, selectedCommunityProfile.themeColorSecondary)),
               } as CSSProperties}>
               <div className="ps-community-editor-banner-anchor">
                 <div className={"ps-community-editor-preview-banner" + (selectedCommunityProfile.bannerUrl ? " has-user-banner" : " is-peakscore-banner")}

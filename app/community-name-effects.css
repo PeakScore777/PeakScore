@@ -490,12 +490,13 @@
 
 /* Solid swatches must remain a single ink on every community surface.
    The selected swatch is already resolved into --name-solid-color by the
-   community renderer. Keep that exact pigment and clear inherited gradient,
-   text-fill, shadow and filter treatments on the real member list and chat. */
-:is(.community-member-nameplate,.community-chat-author).effect-plain:not(.color-custom-gradient) {
+   community renderer. Keep that exact pigment in members and chat even when
+   an older saved text-finish class tries to add a blue bevel or gradient.
+   The explicit custom-gradient swatch remains the only gradient exception. */
+:is(.community-member-nameplate,.community-chat-author):not(.color-custom-gradient) {
   color:var(--name-solid-color,currentColor)!important;
   -webkit-text-fill-color:var(--name-solid-color,currentColor)!important;
-  background:transparent!important;
+  background:none!important;
   background-color:transparent!important;
   background-image:none!important;
   background-clip:border-box!important;
@@ -503,4 +504,6 @@
   text-shadow:none!important;
   -webkit-text-stroke:0 transparent!important;
   filter:none!important;
+  opacity:1!important;
+  mix-blend-mode:normal!important;
 }

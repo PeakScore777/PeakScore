@@ -7,51 +7,48 @@ const [page, styles] = await Promise.all([
   readFile(new URL("../app/community-member-profile-ui.css", import.meta.url), "utf8"),
 ]);
 
-testCase("clicking a member opens a contextual card instead of auto-opening on hover", () => {
-  assert.match(page, /onClick=\{\(event\) => \{/);
-  assert.match(page, /openMemberHoverPreview\(member, \{/);
-  assert.doesNotMatch(page, /onMouseEnter=\{\(event\) => openMemberHoverPreview\(member, event\)\}/);
-  assert.match(page, /ps-community-member-popout/);
-  assert.match(page, /memberPopoutRef/);
-  assert.match(page, /handleOutsidePointer/);
-  assert.match(page, /event\.key === "Escape"/);
-});
-
-testCase("the compact profile menu opens the full member profile and offers useful actions", () => {
-  assert.match(page, /ps-community-member-popout__menu/);
-  assert.match(page, /Ver perfil completo/);
-  assert.match(page, /openCommunityProfile\(hoverCommunityProfile\.userId\)/);
-  assert.match(page, /Mencionar/);
-  assert.match(page, /Copiar nombre/);
-  assert.match(page, /Compartir perfil/);
-  assert.match(page, /Copiar enlace/);
-  assert.match(page, /communityMemberProfileUrl/);
-  assert.match(page, /new URLSearchParams\(window\.location\.search\)\.get\("member"\)/);
-  assert.match(page, /openCommunityProfileRef\.current\(memberId\)/);
-  assert.match(page, /ps-community-member-popout__banner-image/);
-  assert.match(page, /ps-community-member-popout__roles/);
-  assert.match(page, /ps-community-member-popout__about/);
-});
-
-testCase("the full profile view uses the member banner, identity, roles, bio and membership facts", () => {
+testCase("clicking a member or chat author opens the read-only profile dialog without a hover popout", () => {
+  assert.match(page, /async function openCommunityProfile\(memberId: string\)/);
+  assert.match(page, /void openCommunityProfile\(member\.id\)/);
+  assert.match(page, /onClick=\{\(\) => message\.author && void openCommunityProfile\(message\.author\.id\)\}/);
+  assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(message\.author!\.id\)\}/);
   assert.match(page, /ps-community-profile-overlay/);
   assert.match(page, /ps-community-profile-dialog/);
-  assert.match(page, /ps-community-profile-banner-image/);
-  assert.match(page, /ps-community-profile-avatar/);
-  assert.match(page, /ps-community-profile-roles/);
-  assert.match(page, /ps-community-profile-about/);
-  assert.match(page, /ps-community-profile-facts/);
+  assert.doesNotMatch(page, /openMemberHoverPreview|hoverCommunityProfile|ps-community-member-popout/);
+});
+
+testCase("the full profile is read-only and only its owner can open the profile editor", () => {
+  assert.match(page, /ps-community-profile-dialog/);
+  assert.match(page, /ps-community-profile-live-readonly-body/);
+  assert.match(page, /ps-community-profile-bio-readonly/);
+  assert.match(
+    page,
+    /selectedCommunityProfile\.isOwnProfile\s*&&\s*\(\s*<button[^>]*className="ps-community-profile-editor-button"/,
+  );
+  assert.match(page, /Abrir editor de perfil/);
+  assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
+  assert.match(page, /CommunityProfileStudio/);
+});
+
+testCase("the full profile shows banner, identity, roles, biography and membership details", () => {
+  assert.match(page, /ps-community-editor-preview-banner/);
+  assert.match(page, /selectedCommunityProfile\.bannerUrl \?/);
+  assert.match(page, /ps-community-editor-preview-avatar/);
+  assert.match(page, /ps-community-editor-presence-dot/);
+  assert.match(page, /ps-community-editor-preview-name-static/);
+  assert.match(page, /ps-community-profile-role-list/);
+  assert.match(page, /ps-community-editor-preview-about/);
+  assert.match(page, /ps-community-profile-bio-readonly/);
+  assert.match(page, /ps-community-editor-preview-meta/);
   assert.match(page, /MIEMBRO DESDE/);
 });
 
-testCase("profile UI is responsive, accessible and no generic online heading is rendered above roles", () => {
-  assert.match(page, /aria-haspopup="menu"/);
-  assert.match(page, /aria-expanded=\{memberProfileMenuOpen\}/);
-  assert.doesNotMatch(page, /community-member-online-heading/);
-  assert.match(styles, /\.ps-community-member-popout \{/);
-  assert.match(styles, /\.ps-community-member-popout__menu \{/);
-  assert.match(styles, /\.ps-community-profile-overlay \{/);
-  assert.match(styles, /\.ps-community-profile-dialog \{/);
+testCase("the profile dialog is responsive, accessible and respects reduced motion", () => {
+  assert.match(page, /role="dialog"\s+aria-modal="true"/);
+  assert.match(page, /aria-labelledby="ps-community-profile-title"/);
+  assert.match(page, /aria-label="Cerrar perfil"/);
+  assert.match(styles, /\.ps-community-profile-overlay\s*\{/);
+  assert.match(styles, /\.ps-community-profile-dialog\s*\{/);
   assert.match(styles, /@media \(max-width: 560px\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });

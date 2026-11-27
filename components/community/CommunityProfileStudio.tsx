@@ -495,6 +495,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [portalReady, setPortalReady] = useState(false);
   const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
   const editorDialogRef = useRef<HTMLDivElement | null>(null);
+  const editorShakeAnimationRef = useRef<Animation | null>(null);
   const closeDirtyRef = useRef(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
@@ -831,21 +832,25 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setCloseConfirmationOpen(true);
       const dialog = editorDialogRef.current;
       if (dialog && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        // Discord-style unsaved-change feedback: a damped horizontal shake.
-        // Cancel and replay so every blocked close attempt triggers the motion.
-        dialog.getAnimations().forEach((animation) => animation.cancel());
-        dialog.animate(
+        // Use the independent translate property so the editor's !important
+        // transform styles cannot suppress the shake. Replay on every attempt.
+        editorShakeAnimationRef.current?.cancel();
+        editorShakeAnimationRef.current = dialog.animate(
           [
-            { transform: "translateX(0)" },
-            { transform: "translateX(-6px)" },
-            { transform: "translateX(5px)" },
-            { transform: "translateX(-4px)" },
-            { transform: "translateX(3px)" },
-            { transform: "translateX(-2px)" },
-            { transform: "translateX(1px)" },
-            { transform: "translateX(0)" },
+            { translate: "0px 0", offset: 0 },
+            { translate: "-16px 0", offset: 0.08 },
+            { translate: "14px 0", offset: 0.17 },
+            { translate: "-12px 0", offset: 0.26 },
+            { translate: "10px 0", offset: 0.35 },
+            { translate: "-8px 0", offset: 0.44 },
+            { translate: "7px 0", offset: 0.53 },
+            { translate: "-6px 0", offset: 0.62 },
+            { translate: "4px 0", offset: 0.71 },
+            { translate: "-3px 0", offset: 0.8 },
+            { translate: "2px 0", offset: 0.9 },
+            { translate: "0px 0", offset: 1 },
           ],
-          { duration: 560, easing: "cubic-bezier(.36,.07,.19,.97)", fill: "none" },
+          { duration: 1100, easing: "linear", fill: "none" },
         );
       }
     } else {

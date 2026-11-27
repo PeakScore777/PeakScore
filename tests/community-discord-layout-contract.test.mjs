@@ -168,7 +168,7 @@ testCase("PeakScore role rail always shows the five fixed groups and profile bad
   assert.match(page, /\/images\/community\/roles\/admin\.png/);
   assert.match(page, /\/images\/community\/roles\/moderator\.png/);
   assert.match(page, /\/images\/community\/roles\/professor\.png/);
-  assert.match(page, /\/images\/community\/roles\/member\.png/);
+  assert.match(page, /\/images\/community\/roles\/miembro\.png/);
   assert.match(page, /function effectiveCommunityRoleKeys/);
   assert.match(page, /withInheritedCommunityMemberRoles/);
   assert.match(page, /withInheritedCommunityProfileRoles/);

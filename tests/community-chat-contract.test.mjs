@@ -136,8 +136,11 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /role="listbox" aria-label="Personas para mencionar"/);
   assert.match(page, /function insertMention\(member: MentionMember\)/);
   assert.match(page, /onClick=\{\(\) => insertMention\(member\)\}/);
-  assert.match(page, /ps-community-editor-preview-role-row/);
-  assert.match(profileUiStyles, /\.ps-community-editor-preview-role-row/);
+  assert.match(page, /ps-community-profile-role-section/);
+  assert.match(page, /ps-community-profile-role-list/);
+  assert.match(page, /ps-community-profile-role-item/);
+  assert.match(profileUiStyles, /\.ps-community-profile-role-list/);
+  assert.match(profileUiStyles, /\.ps-community-profile-role-item/);
   assert.match(page, /onlineMemberIds/);
   assert.match(page, /community-presence/);
   assert.match(page, /community-user-presence/);

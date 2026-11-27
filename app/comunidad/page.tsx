@@ -605,8 +605,8 @@ export default function CommunityPage() {
       isOwnProfile: member.id === userId,
     };
     setHoverProfilePosition({
-      left: Math.max(12, Math.min(event.clientX - 360, window.innerWidth - 365)),
-      top: Math.max(12, Math.min(event.clientY - 80, window.innerHeight - 470)),
+      left: Math.max(12, Math.min(event.clientX - 405, window.innerWidth - 400)),
+      top: Math.max(12, Math.min(event.clientY - 105, window.innerHeight - 545)),
     });
     setHoverCommunityProfile(preview);
     if (cached) return;

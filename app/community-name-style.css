@@ -9381,3 +9381,12 @@ body:has(.ps-community-picker-modal.is-name-style-modal) .ps-community-editor-ov
     grid-template-columns:repeat(5,minmax(0,1fr))!important;
   }
 }
+
+/* Dark and neutral solid inks for display names. */
+.color-black { color: #000000 !important; }
+.color-charcoal { color: #242424 !important; }
+.color-graphite { color: #3A3A3A !important; }
+.color-slate { color: #64748B !important; }
+.color-navy { color: #172554 !important; }
+.color-midnight { color: #0B1020 !important; }
+.color-cream { color: #FFF7E6 !important; }

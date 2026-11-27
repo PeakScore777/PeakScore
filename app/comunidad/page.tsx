@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
-  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus, Trash2, Star, UserPlus,
+  PanelRight, Palette, Headphones, Mic, Settings2, ChevronDown, Settings, Plus, FolderPlus, Trash2, Star,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import communityTheme from "./peakscore-community-theme.module.css";
@@ -3138,9 +3138,9 @@ export default function CommunityPage() {
                         setHoverCommunityProfile(null);
                       }}
                       aria-label="Mencionar miembro"
-                      title="Mencionar en el chat"
+                      title="Mencionar"
                     >
-                      <UserPlus size={17}/>
+                      <AtSign size={17}/>
                     </button>
                     <div className="ps-community-member-popout__menu-anchor">
                       <button
@@ -3190,8 +3190,6 @@ export default function CommunityPage() {
                     </div>
                   </div>
                 </div>
-
-                <div className="ps-community-member-popout__identity">                </div>
 
                 <div className="ps-community-member-popout__identity">
                   <CommunityStaticName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} className={"ps-community-name-render is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + displayNameColorForEffect(hoverCommunityProfile.displayNameEffect, hoverCommunityProfile.displayNameColor)} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")", "--name-solid-color": displayNameSolidColor(hoverCommunityProfile.displayNameColor, hoverCommunityProfile.displayNameGradientStart) } as React.CSSProperties}/>

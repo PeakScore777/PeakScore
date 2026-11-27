@@ -507,7 +507,9 @@
   opacity:1!important;
   mix-blend-mode:normal!important;
 }
-\n\n
+
+
+
 /* A custom tone must stay solid in every single-colour finish.
    Neon/Pop previously kept a dark navy text-shadow, while the legacy
    color-custom-gradient class added the default blue second stop. The actual

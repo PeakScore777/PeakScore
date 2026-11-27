@@ -489,7 +489,7 @@
 
 
 /* Solid swatches must remain a single ink on every community surface.
-/* The selected swatch is already resolved into --name-solid-color by the
+   The selected swatch is already resolved into --name-solid-color by the
    community renderer. Keep that exact pigment and clear inherited gradient,
    text-fill, shadow and filter treatments on the real member list and chat. */
 :is(.community-member-nameplate,.community-chat-author).effect-plain:not(.color-custom-gradient) {

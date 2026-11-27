@@ -71,7 +71,8 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
-  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Pipette[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Pencil[\s\S]*?\} from "lucide-react"/);
+  assert.doesNotMatch(studio, /Pipette|DisplayNameCustomColorPicker/);
   assert.doesNotMatch(studio, /<Frame size=\{13\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });
@@ -193,17 +194,14 @@ test("public member profile uses the live Discord-like banner, identity, roles a
   assert.match(profileUiCss, /prefers-reduced-motion/);
 });
 
-test("saved frames and accent colors render on the community member list, hover popout and full profile", () => {
+test("saved frames and accent colors render on the member list and full profile dialog", () => {
   assert.match(page, /member\.avatar_frame \?\? "none"/);
-  assert.match(page, /hoverCommunityProfile\.avatarFrame \?\? "none"/);
   assert.match(page, /selectedCommunityProfile\.avatarFrame \?\? "none"/);
   assert.match(page, /selectedCommunityProfile\.accentColor \?\? "#3987FF"/);
+  assert.match(page, /community-member-avatar frame-/);
   assert.match(css, /ps-community-profile-avatar\.frame-solar/);
   assert.match(css, /ps-community-profile-dialog\.is-profile-frame-aurora/);
-  assert.match(css, /ps-community-member-popout__status-bubble/);
-  assert.match(css, /ps-community-member-popout__avatar\.frame-violet/);
   assert.match(css, /--community-accent/);
-  assert.match(page, /ps-community-member-popout/);
   assert.match(page, /avatar_decoration_id/);
   assert.match(page, /profile_frame_id/);
   assert.match(page, /profile_effect_id/);
@@ -668,8 +666,8 @@ test("display name typography and colour controls remain available without entra
   assert.match(route, /display_name_prism_colors: displayNamePrismColors/);
   assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
   assert.match(studio, /DISPLAY_NAME_SPECTRUM_PRESETS/);
-  assert.match(studio, /Color inicial/);
-  assert.match(studio, /Color final/);
+  assert.match(studio, /aria-label="Paleta de colores de letra"/);
+  assert.doesNotMatch(studio, /DisplayNameCustomColorPicker|Pipette|Elegir color personalizado|Color inicial|Color final/);
   assert.match(studio, /draftDisplayNamePrismColors/);
   assert.match(nameStyleCss, /--font-name-discord-display/);
   assert.match(nameStyleCss, /prefers-reduced-motion/);
@@ -775,15 +773,21 @@ test("display-name studio offers the supported finishes and accessible motion", 
   assert.match(discordVideoEffectsRepeatMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
 });
 
-test("name color controls offer solid, gradient, spectrum and custom HSV colors", () => {
+test("name color controls offer a broad solid swatch palette and named gradient and spectrum presets", () => {
+  assert.match(studio, /const DISPLAY_NAME_COLORS/);
+  assert.match(studio, /id: "white", label: "Blanco", value: "#F8FAFC"/);
+  assert.match(studio, /id: "coral", label: "Coral", value: "#FB7185"/);
+  assert.match(studio, /id: "teal", label: "Turquesa", value: "#14B8A6"/);
+  assert.match(studio, /aria-label="Paleta de colores de letra"/);
+  assert.match(studio, /aria-label="Degradados de letra"/);
+  assert.match(studio, /aria-label="Paletas de letra"/);
+  assert.match(studio, /setDraftDisplayNameColor\(item\.id\)/);
   assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
   assert.match(studio, /DISPLAY_NAME_SPECTRUM_PRESETS/);
-  assert.match(studio, /Elegir color personalizado/);
-  assert.match(studio, /Pipette/);
   assert.match(studio, /setDraftDisplayNameGradientStart\(preset\.start\)/);
   assert.match(studio, /setDraftDisplayNameGradientEnd\(preset\.end\)/);
   assert.match(studio, /setDraftDisplayNamePrismColors\(preset\.colors\.slice\(\)\)/);
-  assert.match(studio, /ps-community-name-color-picker/);
+  assert.doesNotMatch(studio, /DisplayNameCustomColorPicker|Pipette|Elegir color personalizado|Color inicial|Color final/);
 });
 
 test("default display-name typeface is self-hosted and applied consistently", () => {
@@ -1018,7 +1022,7 @@ test("member rail keeps the selected name font inside a flexible copy column", (
 
 test("profile, member and chat names stay static while the selected font and finish stay synchronized", () => {
   assert.match(page, /function CommunityStaticName/);
-  assert.match(page, /<CommunityStaticName key=\{hoverCommunityProfile\.userId\}/);
+  assert.match(page, /<CommunityStaticName[\s\S]*?value=\{member\.full_name\}/);
   assert.match(page, /<CommunityAnimatedName key=\{selectedCommunityProfile\.userId\}/);
   assert.equal((page.match(/<CommunityAnimatedName/g) ?? []).length, 1);
   assert.match(page, /<CommunityStaticName[\s\S]*?value=\{message\.author\.full_name\}/);
@@ -1146,7 +1150,6 @@ test("member and chat swatches use the same canonical color values as the editor
   assert.match(nameColorHelper, /displayNameSolidColor/);
   assert.match(page, /displayNameSolidColor\(message\.author\.display_name_color/);
   assert.match(page, /displayNameSolidColor\(member\.display_name_color/);
-  assert.match(page, /displayNameSolidColor\(hoverCommunityProfile\.displayNameColor/);
   assert.match(page, /displayNameSolidColor\(selectedCommunityProfile\.displayNameColor/);
   assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\s\S]*?color:var\(--name-solid-color,#A88AF2\) !important/);
   assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gummy,[\s\S]*?background-image:var\(--name-prism-gradient/);
@@ -1211,36 +1214,32 @@ test("desktop name-style scrollbars stay invisible until the pointer reaches the
   assert.match(nameStyleCss, /overscroll-behavior-y:contain/);
 });
 
-test("name colour picker reuses the exact profile-theme HSV selector without rerendering the full editor while dragging", () => {
-  assert.match(studio, /function DisplayNameCustomColorPicker/);
+test("profile banner keeps its HSV theme editor while name colors use fixed swatches", () => {
+  assert.match(studio, /function hexToHsv\(/);
+  assert.match(studio, /function hsvToHex\(/);
+  assert.match(studio, /function updateCardColorFromPlane\(/);
+  assert.match(studio, /function updateCardHue\(/);
+  assert.match(studio, /function openThemeColorPicker\(/);
   assert.match(studio, /className="ps-community-color-picker-plane"/);
   assert.match(studio, /className="ps-community-color-picker-hue-wrap"/);
   assert.match(studio, /className="ps-community-color-picker-hex"/);
   assert.match(studio, /className="ps-community-color-picker-recent"/);
-  assert.match(studio, /className="ps-community-color-picker-actions"/);
-  assert.doesNotMatch(studio, /\)\} \)\}/);
-  assert.match(studio, /className="ps-community-color-picker-actions"[\s\S]*?<button type="button" onClick=\{\(\) => \{ apply\(\); setOpen\(false\); \}\}>Listo<\/button>/);
-  assert.match(studio, /className="ps-community-color-picker ps-community-editor-sidebar-color-picker ps-community-name-custom-picker"/);
-  assert.match(studio, /setDraft\(normalized\)/);
-  assert.doesNotMatch(studio, /draftRef/);
-  assert.match(studio, /onPointerMove=\{\(event\) => \{ if \(event\.buttons === 1\) updateFromPlane\(event\); \}\}/);
-  assert.match(studio, /const nextColor = updateFromPlane\(event\);[\s\S]*?requestAnimationFrame\(\(\) => apply\(nextColor\)\)/);
-  assert.match(studio, /onApply\(normalized\)/);
-  assert.doesNotMatch(studio, /input type="color" aria-label="Elegir color personalizado"/);
-  assert.match(studio, /ps-community-name-custom-picker\{position:static/);
-  assert.match(studio, /grid-column:1\/-1!important;grid-row:2!important;/);
-  assert.doesNotMatch(studio, /ps-community-name-custom-picker\{position:absolute/);
-  assert.match(studio, /value=\{hue\}/);
+  assert.match(studio, /openThemeColorPicker\("top"\)/);
+  assert.match(studio, /openThemeColorPicker\("bottom"\)/);
+  assert.match(studio, /setColorPickerOpen\(true\)/);
+  assert.match(studio, /setColorPickerOpen\(false\)/);
+  assert.match(studio, /aria-label="Paleta de colores de letra"/);
+  assert.doesNotMatch(studio, /DisplayNameCustomColorPicker|ps-community-name-custom-picker|Pipette|Elegir color personalizado/);
 });
 
-test("custom color picker stays open while adjusting color and closes only with Listo", () => {
-  const applyStart = studio.indexOf("function apply(color = draft)");
-  const applyEnd = studio.indexOf("\n  }", applyStart);
-  assert.ok(applyStart >= 0 && applyEnd > applyStart);
-  const applyBody = studio.slice(applyStart, applyEnd);
-  assert.ok(!applyBody.includes("setOpen(false)"));
-  assert.ok(studio.includes("onClick={() => { apply(); setOpen(false); }}>Listo"));
-  assert.ok(studio.includes("setLocalColor(value); setOpen(false); }}>Restablecer"));
+test("profile banner HSV controls update the active theme stop and provide reset and close actions", () => {
+  assert.match(studio, /updateActiveThemeColor\(hsvToHex\(cardHue, saturation, value\)\)/);
+  assert.match(studio, /updateActiveThemeColor\(hsvToHex\(nextHue, hsv\.s, hsv\.v\)\)/);
+  assert.match(studio, /setCardColorDraft\(color\.slice\(1\)\)/);
+  assert.match(studio, /setCardHue\(hexToHsv\(color\)\.h\)/);
+  assert.match(studio, /setColorPickerOpen\(true\)/);
+  assert.match(studio, /Restablecer/);
+  assert.match(studio, /onClick=\{\(\) => setColorPickerOpen\(false\)\}>Listo/);
 });
 
 test("profile preview solid text uses the selected color and member preview has no badge frame", () => {
@@ -1259,15 +1258,14 @@ test("founder-intro keeps profile theme color controls and removes name-finish c
   assert.doesNotMatch(studio, /Colores del degradado|Paleta del espectro|Color del nombre/);
 });
 
-test("name color presets and custom HSV picker remain available in the matching mode", () => {
-  assert.match(studio, /ps-community-name-color-picker/);
-  assert.match(studio, /role="group" aria-label="Colores de letra"/);
+test("name color presets are directly selectable and no freeform picker remains", () => {
+  assert.match(studio, /ps-community-name-color-grid/);
+  assert.match(studio, /role="group" aria-label="Paleta de colores de letra"/);
   assert.ok(studio.includes('DISPLAY_NAME_COLORS.filter((item) => !["default", "custom-gradient"].includes(item.id))'));
-  assert.match(studio, /Elegir color personalizado/);
   assert.match(studio, /aria-pressed=\{draftDisplayNameColor === item\.id\}/);
-  assert.match(studio, /Color inicial/);
-  assert.match(studio, /Color final/);
+  assert.match(studio, /setDraftDisplayNameColor\(item\.id\)/);
   assert.match(studio, /Paletas de letra/);
+  assert.doesNotMatch(studio, /DisplayNameCustomColorPicker|Pipette|Elegir color personalizado|Color inicial|Color final/);
 });
 
 test("name atelier groups all 29 fonts into four curated families without removing any styles", () => {

@@ -832,33 +832,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setCloseConfirmationOpen(true);
       const dialog = editorDialogRef.current;
       if (dialog && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        // Independent translate/rotate properties keep the editor's layout and
-        // dimensions untouched. The shrinking orbital path feels like an object
-        // rolling around the inside of a cup, then settling back at dead center.
+        // Discord-like error nudge: quick, short, straight-line directional
+        // jolts. Each attempt picks a slightly different path, then snaps home.
+        // Only the independent translate property animates; size/layout never change.
         editorShakeAnimationRef.current?.cancel();
+        const shakePaths: Array<Array<[number, number]>> = [
+          [[0, 0], [6, 3], [-10, -9], [5, 0], [-7, 2], [0, 0]],
+          [[0, 0], [-3, 5], [2, 3], [4, 9], [1, 7], [3, 4], [0, 0]],
+          [[0, 0], [-7, -5], [-5, 1], [-8, 10], [3, 7], [0, 0]],
+          [[0, 0], [-4, -1], [-9, 7], [-7, 4], [-1, 8], [-6, -7], [0, 0]],
+        ];
+        const shakePath = shakePaths[Math.floor(Math.random() * shakePaths.length)];
         editorShakeAnimationRef.current = dialog.animate(
-          [
-            { translate: "0px 0px", rotate: "0deg", offset: 0 },
-            { translate: "-7px -4px", rotate: "-0.35deg", offset: 0.045 },
-            { translate: "-13px -1px", rotate: "-0.7deg", offset: 0.09 },
-            { translate: "-10px 5px", rotate: "-0.55deg", offset: 0.145 },
-            { translate: "-2px 8px", rotate: "-0.18deg", offset: 0.20 },
-            { translate: "8px 5px", rotate: "0.38deg", offset: 0.255 },
-            { translate: "13px -1px", rotate: "0.72deg", offset: 0.31 },
-            { translate: "9px -6px", rotate: "0.5deg", offset: 0.365 },
-            { translate: "1px -7px", rotate: "0.12deg", offset: 0.42 },
-            { translate: "-6px -3px", rotate: "-0.32deg", offset: 0.475 },
-            { translate: "-7px 3px", rotate: "-0.38deg", offset: 0.53 },
-            { translate: "-1px 5px", rotate: "-0.08deg", offset: 0.59 },
-            { translate: "5px 2px", rotate: "0.28deg", offset: 0.65 },
-            { translate: "5px -3px", rotate: "0.24deg", offset: 0.71 },
-            { translate: "0px -4px", rotate: "0deg", offset: 0.77 },
-            { translate: "-3px 0px", rotate: "-0.16deg", offset: 0.83 },
-            { translate: "0px 2px", rotate: "-0.02deg", offset: 0.89 },
-            { translate: "1px -1px", rotate: "0.04deg", offset: 0.945 },
-            { translate: "0px 0px", rotate: "0deg", offset: 1 },
-          ],
-          { duration: 1100, easing: "linear", fill: "none" },
+          shakePath.map(([x, y], index) => ({
+            translate: `${x}px ${y}px`,
+            offset: index / (shakePath.length - 1),
+          })),
+          { duration: 380, easing: "linear", fill: "none" },
         );
       }
     } else {

@@ -15,7 +15,7 @@ type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" 
 type DisplayNameFontCategory = "core" | "editorial" | "gaming" | "artistic";
 type DisplayNameEffect = "plain" | "gradient" | "gradient-flow" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
-type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "coral" | "salmon" | "orange" | "amber" | "yellow" | "lime" | "emerald" | "mint" | "teal" | "cyan" | "sky" | "ice" | "indigo" | "violet" | "lavender" | "fuchsia" | "plum" | "crimson" | "peach" | "periwinkle" | "orchid" | "silver" | "white" | "gray" | "brown" | "black" | "charcoal" | "graphite" | "slate" | "navy" | "midnight" | "cream" | "custom-gradient";
+type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "coral" | "salmon" | "orange" | "amber" | "yellow" | "lime" | "emerald" | "mint" | "teal" | "cyan" | "sky" | "ice" | "indigo" | "violet" | "lavender" | "fuchsia" | "plum" | "crimson" | "peach" | "periwinkle" | "orchid" | "silver" | "white" | "gray" | "brown" | "charcoal" | "graphite" | "slate" | "navy" | "midnight" | "cream" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
@@ -238,7 +238,6 @@ const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string 
   { id: "white", label: "Blanco", value: "#F8FAFC" },
   { id: "gray", label: "Gris", value: "#94A3B8" },
   { id: "brown", label: "Marrón", value: "#A16207" },
-  { id: "black", label: "Negro", value: "#000000" },
   { id: "charcoal", label: "Carbón", value: "#242424" },
   { id: "graphite", label: "Grafito", value: "#3A3A3A" },
   { id: "slate", label: "Pizarra", value: "#64748B" },
@@ -1992,8 +1991,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <div className="ps-community-name-chat-meta">
                             <DisplayNameMotionPreview tag="strong" value={displayName || "Tu nombre"}
                               animation={draftDisplayNameAnimation}
-                              className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
+                              className={"ps-community-name-render community-chat-author is-name-style-" + draftDisplayNameStyle}
                             />
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>

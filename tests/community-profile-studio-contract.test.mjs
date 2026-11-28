@@ -1263,10 +1263,11 @@ test("founder-intro keeps profile theme color controls and removes name-finish c
   assert.doesNotMatch(studio, /Colores del degradado|Paleta del espectro|Color del nombre/);
 });
 
-test("the pure black swatch is removed and gray remains available", () => {
+test("gray is the darkest neutral swatch and near-black options are not selectable", () => {
   assert.match(studio, /id: "gray", label: "Gris", value: "#94A3B8"/);
-  assert.doesNotMatch(studio, /id: "black", label: "Negro"/);
-  assert.doesNotMatch(route, /"brown", "black", "charcoal"/);
+  assert.match(studio, /id: "brown", label: "Marrón", value: "#C58B50"/);
+  assert.doesNotMatch(studio, /id: "(?:black|charcoal|graphite|slate|navy|midnight)"/);
+  assert.doesNotMatch(route, /"(?:black|charcoal|graphite|slate|navy|midnight)"/);
 });
 
 test("name color presets are directly selectable and no freeform picker remains", () => {

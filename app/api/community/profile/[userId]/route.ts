@@ -101,8 +101,10 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("member_number")
       .eq("user_id", userId)
       .maybeSingle(),
-    // A handle migration may be rolling out independently; never let it block the profile.
-    supabase.from("community_member_profiles")
+    // The authenticated read above already establishes that this profile is visible.
+    // Resolve its public handle server-side so RLS/Data API rollout differences
+    // cannot silently turn a real handle into an empty string in the editor.
+    supabaseAdmin.from("community_member_profiles")
       .select("account_name")
       .eq("user_id", userId)
       .maybeSingle(),
@@ -117,6 +119,10 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   if (rolesResult.error) {
     console.warn("[Community] Optional public role badges unavailable.", { code: rolesResult.error.code });
   }
+  if (accountNameResult.error) {
+    console.warn("[Community] Public account handle unavailable.", { code: accountNameResult.error.code });
+  }
+
   const appearance = appearanceResult.data;
   const statusExpiresAt = appearanceReady ? appearance?.status_expires_at ?? null : null;
   const statusExpired = Boolean(statusExpiresAt && Date.parse(statusExpiresAt) <= Date.now());

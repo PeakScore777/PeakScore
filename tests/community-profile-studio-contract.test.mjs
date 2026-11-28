@@ -1142,18 +1142,22 @@ test("every font card uses the same Aa specimen so typefaces can be compared fai
   assert.ok(samples.every((sample) => sample === "Aa"));
 });
 
-test("member and chat swatches use the same canonical color values as the editor", () => {
+test("member/profile names use canonical swatches while channel chat names stay white", () => {
   assert.match(nameColorHelper, /DISPLAY_NAME_SOLID_PALETTE/);
   assert.match(nameColorHelper, /pink: "#F06AA8"/);
   assert.match(nameColorHelper, /green: "#55CFA3"/);
   assert.match(nameColorHelper, /blue: "#63A9F5"/);
   assert.match(nameColorHelper, /purple: "#A88AF2"/);
   assert.match(nameColorHelper, /displayNameSolidColor/);
-  assert.match(page, /displayNameSolidColor\(message\.author\.display_name_color/);
-  assert.match(page, /displayNameSolidColor\(member\.display_name_color/);
-  assert.match(page, /displayNameSolidColor\(selectedCommunityProfile\.displayNameColor/);
-  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-neon,[\s\S]*?color:var\(--name-solid-color,#A88AF2\) !important/);
-  assert.match(nameStyleCss, /\.ps-community-name-static\.effect-gummy,[\s\S]*?background-image:var\(--name-prism-gradient/);
+  assert.doesNotMatch(page, /displayNameSolidColor\\(message\\.author\\.display_name_color/);
+  assert.match(page, /community-chat-name-render is-name-style-/);
+  assert.doesNotMatch(page, /community-chat-author[^\\n]*effect-/);
+  assert.doesNotMatch(page, /community-chat-author[^\\n]*color-/);
+  assert.match(nameEffectsCss, /\\.community-chat-author\\s*\\{[\\s\\S]*?color:#FFFFFF !important[\\s\\S]*?-webkit-text-fill-color:#FFFFFF !important/);
+  assert.match(page, /displayNameSolidColor\\(member\\.display_name_color/);
+  assert.match(page, /displayNameSolidColor\\(selectedCommunityProfile\\.displayNameColor/);
+  assert.match(nameStyleCss, /\\.ps-community-name-static\\.effect-neon,[\\s\\S]*?color:var\\(--name-solid-color,#A88AF2\\) !important/);
+  assert.match(nameStyleCss, /\\.ps-community-name-static\\.effect-gummy,[\\s\\S]*?background-image:var\\(--name-prism-gradient/);
 });
 
 test("display-name color controls follow the selected effect and expose relevant palettes", () => {
@@ -1257,6 +1261,12 @@ test("founder-intro keeps profile theme color controls and removes name-finish c
   assert.match(studio, /openThemeColorPicker\("top"\)/);
   assert.match(studio, /openThemeColorPicker\("bottom"\)/);
   assert.doesNotMatch(studio, /Colores del degradado|Paleta del espectro|Color del nombre/);
+});
+
+test("the pure black swatch is removed and gray remains available", () => {
+  assert.match(studio, /id: "gray", label: "Gris", value: "#94A3B8"/);
+  assert.doesNotMatch(studio, /id: "black", label: "Negro"/);
+  assert.doesNotMatch(route, /"brown", "black", "charcoal"/);
 });
 
 test("name color presets are directly selectable and no freeform picker remains", () => {

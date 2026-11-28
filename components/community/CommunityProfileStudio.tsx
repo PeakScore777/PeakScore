@@ -518,23 +518,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const previewScrollbarThumbRef = useRef<HTMLSpanElement>(null);
   const previewScrollbarDragRef = useRef<{ pointerId: number; grabOffset: number } | null>(null);
 
-  // The profile modal opens immediately from the member cache. Its account
-  // handle may arrive a moment later from the canonical profile request.
-  // Keep the editor preview and identification plate in sync without resetting
-  // any editable draft fields or marking the profile as dirty.
-  useEffect(() => {
-    const canonicalHandle = accountTag(initialProfile.accountName);
-    if (!canonicalHandle) return;
-
-    setProfile((current) => current.accountName === canonicalHandle
-      ? current
-      : { ...current, accountName: canonicalHandle });
-    setSavedSnapshot((current) => current.accountName === canonicalHandle
-      ? current
-      : { ...current, accountName: canonicalHandle });
-  }, [initialProfile.accountName]);
-
-
   useEffect(() => {
     return () => {
       if (avatarCropUrl) URL.revokeObjectURL(avatarCropUrl);
@@ -737,6 +720,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     document.addEventListener("pointerdown", handleOutsidePointerDown, true);
     return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
   }, [colorPickerOpen, avatarMenuOpen, statusEditorOpen, statusEmojiOpen, statusDurationOpen, appearancePicker, avatarCropUrl]);
+
+  // Prefer the freshly resolved canonical handle prop over the editor's initial
+  // local snapshot. This lets the @handle appear even when the profile request
+  // finishes after the editor has already mounted.
+  const profileAccountName = accountTag(initialProfile.accountName) || profileAccountName;
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
@@ -1352,7 +1340,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </span>
                 <span className="ps-community-editor-nameplate-copy">
                   <strong className={"is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
-                  <small>{accountTag(profile.accountName)}</small>
+                  <small>{profileAccountName}</small>
                 </span>
                 <PlusCircle size={20}/>
               </button>
@@ -1507,9 +1495,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : displayNameColor === "default" ? profileThemeInk : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk,
                     } as CSSProperties}
                   />                  <div className="ps-community-editor-preview-identity-line">
-                    {accountTag(profile.accountName) && (
+                    {profileAccountName && (
                       <>
-                        <span className="ps-community-editor-preview-tag ps-community-profile-account-handle">{"@" + accountTag(profile.accountName)}</span>
+                        <span className="ps-community-editor-preview-tag ps-community-profile-account-handle">{"@" + profileAccountName}</span>
                         <span className="ps-community-editor-preview-identity-separator" aria-hidden="true">•</span>
                       </>
                     )}
@@ -1900,7 +1888,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className={"ps-community-picker-avatar-large frame-" + draftAvatarFrame}>
                       {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    <strong>{displayName || "Tu nombre"}</strong><small>{accountTag(profile.accountName)}</small>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{profileAccountName}</small>
                   </div>
                 )}
                 {appearancePicker === "avatarDecoration" && (
@@ -1908,7 +1896,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className={"ps-community-picker-avatar-large is-decoration-" + draftDecorationId}>
                       {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    <strong>{displayName || "Tu nombre"}</strong><small>{accountTag(profile.accountName)}</small>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{profileAccountName}</small>
                   </div>
                 )}
                 {appearancePicker === "profileFrame" && (
@@ -1921,7 +1909,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           : initials(displayName || "PeakScore")}
                       </span>
                       <strong>{displayName || "Tu nombre"}</strong>
-                      <small>{accountTag(profile.accountName)}</small>
+                      <small>{profileAccountName}</small>
                       <span>PERFIL DE COMUNIDAD</span>
                     </div>
                   </article>
@@ -1936,7 +1924,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           : initials(displayName || "PeakScore")}
                       </span>
                       <strong>{displayName || "Tu nombre"}</strong>
-                      <small>{accountTag(profile.accountName)}</small>
+                      <small>{profileAccountName}</small>
                       <span>VISTA PREVIA DEL EFECTO</span>
                     </div>
                     <span className="ps-community-picker-card-preview-art" aria-hidden="true">
@@ -1971,7 +1959,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             className={"ps-community-name-render ps-community-profile-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + displayNameColorForEffect(draftDisplayNameEffect, draftDisplayNameColor)}
                             style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "default" ? profileThemeInk : draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? profileThemeInk } as CSSProperties}
                           />
-                          <small className="ps-community-name-style-profile-handle">{accountTag(profile.accountName) ? "@" + accountTag(profile.accountName) : ""}</small>
+                          <small className="ps-community-name-style-profile-handle">{profileAccountName ? "@" + profileAccountName : ""}</small>
                         </div>
                       </article>
                     </section>
@@ -2190,7 +2178,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   className={"ps-community-name-render ps-community-profile-name is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColorForEffect(displayNameEffect, displayNameColor)}
                   style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? profileThemeInk } as CSSProperties}
                 />
-                <small>{accountTag(profile.accountName)}</small>
+                <small>{profileAccountName}</small>
                 {pronouns && <small>{pronouns}</small>}
               </div>
             </div>

@@ -2721,23 +2721,11 @@ export default function CommunityPage() {
                                 <>
                                   <button type="button"
                                     onClick={() => void openCommunityProfile(message.author!.id)}
-                                    className="community-chat-author-link"
-                                    style={{
-                                      "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
-                                      "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF",
-                                      "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                                      "--name-solid-color": message.author.display_name_color === "custom-gradient" ? message.author.display_name_gradient_start ?? "#B86BFF" : message.author.display_name_color === "pink" ? "#F72585" : message.author.display_name_color === "green" ? "#25E66B" : message.author.display_name_color === "blue" ? "#269EE5" : message.author.display_name_color === "purple" ? "#A72CF0" : message.author.display_name_color === "magenta" ? "#E60063" : message.author.display_name_color === "red" ? "#F2382E" : message.author.display_name_color === "gold" ? "#D1B11B" : "currentColor",
-                                    } as React.CSSProperties}>
+                                    className="community-chat-author-link">
                                     <CommunityStaticName
                                       tag="span"
                                       value={message.author.full_name}
-                                      className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + displayNameColorForEffect(message.author.display_name_effect, message.author.display_name_color)}
-                                      style={{
-                                        "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
-                                        "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF",
-                                        "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
-                                        "--name-solid-color": displayNameSolidColor(message.author.display_name_color, message.author.display_name_gradient_start, readableProfileTextColor(message.author.card_color, message.author.theme_color_secondary)),
-                                      } as React.CSSProperties}
+                                      className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic")}
                                     />
                                   </button>
                                 </>

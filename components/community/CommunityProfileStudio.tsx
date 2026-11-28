@@ -237,12 +237,7 @@ const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string 
   { id: "silver", label: "Plata", value: "#CBD5E1" },
   { id: "white", label: "Blanco", value: "#F8FAFC" },
   { id: "gray", label: "Gris", value: "#94A3B8" },
-  { id: "brown", label: "Marrón", value: "#A16207" },
-  { id: "charcoal", label: "Carbón", value: "#242424" },
-  { id: "graphite", label: "Grafito", value: "#3A3A3A" },
-  { id: "slate", label: "Pizarra", value: "#64748B" },
-  { id: "navy", label: "Azul marino", value: "#172554" },
-  { id: "midnight", label: "Medianoche", value: "#0B1020" },
+  { id: "brown", label: "Marrón", value: "#C58B50" },
   { id: "cream", label: "Marfil", value: "#FFF7E6" },
   { id: "custom-gradient", label: "Degradado guardado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
 ];

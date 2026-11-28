@@ -39,12 +39,7 @@ const DISPLAY_NAME_SOLID_PALETTE: Record<string, string> = {
   silver: "#CBD5E1",
   white: "#F8FAFC",
   gray: "#94A3B8",
-  brown: "#A16207",
-  charcoal: "#242424",
-  graphite: "#3A3A3A",
-  slate: "#64748B",
-  navy: "#172554",
-  midnight: "#0B1020",
+  brown: "#C58B50",
   cream: "#FFF7E6",
 };
 

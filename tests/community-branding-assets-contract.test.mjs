@@ -10,6 +10,7 @@ const [
   founderStudio,
   brandingMigration,
   channelMigration,
+  preicfesMigration,
   sanitizer,
 ] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
@@ -18,6 +19,7 @@ const [
   readFile(new URL("../app/api/community/channels/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityFounderStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261125183625_community_banner_gif_assets.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261124230200_community_spaces_and_preicfes_isolation.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261124230100_community_role_and_channel_control.sql", import.meta.url), "utf8"),
   readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
 ]);
@@ -66,7 +68,7 @@ testCase("the branding editor exposes GIF only on the banner picker and avoids a
 testCase("only the Founder can administer text and PreICFES channels", () => {
   assert.match(channelsRoute, /verifyCommunityFounder\(user\.id\)/);
   assert.match(channelsRoute, /manage_community_channel/);
-  assert.match(channelsRoute, /manage_community_space_channel/);
+  assert.match(preicfesMigration, /Only the founder can manage PreICFES channels/);
   assert.match(channelMigration, /Only the founder can manage community channels/);
   assert.match(channelMigration, /Only the founder can manage PreICFES channels/);
   assert.match(channelMigration, /private\.is_community_founder\(\)/);

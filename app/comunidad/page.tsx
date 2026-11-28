@@ -485,6 +485,8 @@ export default function CommunityPage() {
   const [mobileChannelsOpen, setMobileChannelsOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [onlineMemberIds, setOnlineMemberIds] = useState<string[]>([]);
+  // Presence IDs are scoped to the currently selected community space.
+  const activeSpaceOnlineUsers = onlineMemberIds;
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberSummary[]>([]);
   const [memberListOpen, setMemberListOpen] = useState(true);
   const [collapsedMemberGroups, setCollapsedMemberGroups] = useState<Record<string, boolean>>({});

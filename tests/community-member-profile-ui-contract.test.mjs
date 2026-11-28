@@ -66,8 +66,8 @@ testCase("every community member handle is loaded before profile opening", async
 
   assert.match(communityPage, /\.select\("user_id,account_name"\)/);
   assert.match(communityPage, /memberAccountNames\.set\(row\.user_id, row\.account_name\.trim\(\)\)/);
-  assert.match(communityPage, /accountName: member\?\.account_name\?\.trim\(\) \?\? ""/);
-  assert.match(communityPage, /accountNameReady: Boolean\(member\?\.account_name\?\.trim\(\)\)/);
+  assert.match(communityPage, /accountName: member\?\.account_name\?\.trim\(\) \|\| \(memberId === userId \? registeredAccountName\.trim\(\) : ""\)/);
+  assert.match(communityPage, /accountNameReady: Boolean\(member\?\.account_name\?\.trim\(\) \|\| \(memberId === userId && registeredAccountName\.trim\(\)\)\)/);
   assert.match(communityPage, /account_name: memberAccountNames\.get\(member\.user_id\) \?\? null/);
   assert.match(communityPage, /selectedCommunityProfile\.accountName/);
   assert.match(communityPage, /"@" \+ selectedCommunityProfile\.accountName\.trim\(\)/);

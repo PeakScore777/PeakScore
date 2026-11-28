@@ -518,6 +518,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const previewScrollbarThumbRef = useRef<HTMLSpanElement>(null);
   const previewScrollbarDragRef = useRef<{ pointerId: number; grabOffset: number } | null>(null);
 
+  // The profile modal opens immediately from the member cache. Its account
+  // handle may arrive a moment later from the canonical profile request.
+  // Keep the editor preview and identification plate in sync without resetting
+  // any editable draft fields or marking the profile as dirty.
+  useEffect(() => {
+    const canonicalHandle = accountTag(initialProfile.accountName);
+    if (!canonicalHandle) return;
+
+    setProfile((current) => current.accountName === canonicalHandle
+      ? current
+      : { ...current, accountName: canonicalHandle });
+    setSavedSnapshot((current) => current.accountName === canonicalHandle
+      ? current
+      : { ...current, accountName: canonicalHandle });
+  }, [initialProfile.accountName]);
+
 
   useEffect(() => {
     return () => {

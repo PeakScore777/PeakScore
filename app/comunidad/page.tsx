@@ -62,7 +62,7 @@ function communityNameAnimation(value?: string | null): CommunityDisplayNameAnim
     ? value as CommunityDisplayNameAnimation
     : "decrypt";
 }
-type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
+type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "coral" | "salmon" | "orange" | "amber" | "yellow" | "lime" | "emerald" | "mint" | "teal" | "cyan" | "sky" | "ice" | "indigo" | "violet" | "lavender" | "fuchsia" | "plum" | "crimson" | "peach" | "periwinkle" | "orchid" | "silver" | "white" | "gray" | "brown" | "cream" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
 type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";

@@ -32,7 +32,7 @@ testCase("unread channel markers restore per-user reads and count messages from 
 });
 
 testCase("community appearance supports black, gray, white, custom color and a Chroma toggle", () => {
-  assert.match(page, /useState<"server" \\| "black" \\| "gray" \\| "white" \\| "custom">\\("server"\\)/);
+  assert.match(page, /useState<"server" \| "black" \| "gray" \| "white" \| "custom">\("server"\)/);
   assert.match(page, /appearanceMode === "gray"/);
   assert.match(page, /appearanceMode === "white"/);
   assert.match(page, /appearanceMode === "custom"/);

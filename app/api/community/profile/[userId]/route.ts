@@ -68,7 +68,12 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
 
   // Social identity is independent: never seed it from public.profiles or account email.
   if (!profileResult.data && !profileResult.error && userId === user.id) {
-    const metadata = user.user_metadata ?? {};
+    const { data: targetUserData, error: targetUserError } =
+      await supabaseAdmin.auth.admin.getUserById(userId);
+    if (targetUserError || !targetUserData.user) {
+      return fail("No se encontró la cuenta del miembro.", 404);
+    }
+    const metadata = targetUserData.user.user_metadata ?? user.user_metadata ?? {};
     const candidate = [metadata.full_name, metadata.name, metadata.user_name]
       .find((value) => typeof value === "string" && value.trim().length > 0);
     const displayName = (typeof candidate === "string" ? candidate.trim() : "Miembro").slice(0, 32);

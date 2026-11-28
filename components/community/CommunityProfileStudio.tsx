@@ -724,7 +724,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   // Prefer the freshly resolved canonical handle prop over the editor's initial
   // local snapshot. This lets the @handle appear even when the profile request
   // finishes after the editor has already mounted.
-  const profileAccountName = accountTag(initialProfile.accountName) || profileAccountName;
+  const profileAccountName = accountTag(initialProfile.accountName) || accountTag(profile.accountName);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
